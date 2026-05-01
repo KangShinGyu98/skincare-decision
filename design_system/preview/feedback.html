@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Noto+Sans+KR:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Roboto','Noto Sans KR',sans-serif; background: #fff; padding: 20px; }
+  .label { font-size: 11px; font-weight: 700; color: #262626; margin-bottom: 10px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+
+  .alert { display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px; border-radius: 2px; border: 1px solid; font-size: 13px; line-height: 1.5; }
+  .alert-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+  .alert-content .title { font-weight: 500; margin-bottom: 2px; }
+  .alert-success { background: #f6ffed; border-color: #b7eb8f; color: #262626; }
+  .alert-success .alert-icon { color: #52c41a; }
+  .alert-info    { background: #e6f7ff; border-color: #91d5ff; color: #262626; }
+  .alert-info .alert-icon { color: #1890ff; }
+  .alert-warning { background: #fffbe6; border-color: #ffe58f; color: #262626; }
+  .alert-warning .alert-icon { color: #faad14; }
+  .alert-error   { background: #fff1f0; border-color: #ffa39e; color: #262626; }
+  .alert-error .alert-icon { color: #ff4d4f; }
+
+  .progress-wrap { margin-bottom: 14px; }
+  .progress-label { font-size: 12px; color: #595959; margin-bottom: 4px; display: flex; justify-content: space-between; }
+  .progress-track { height: 8px; background: #f0f0f0; border-radius: 100px; overflow: hidden; }
+  .progress-bar { height: 100%; border-radius: 100px; transition: width 0.3s; }
+
+  .skeleton { background: #f0f0f0; border-radius: 2px; }
+  .skeleton-line { height: 14px; margin-bottom: 8px; border-radius: 2px; }
+  .skeleton-shimmer { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+</style>
+</head>
+<body>
+  <div class="label">Alerts</div>
+  <div class="grid">
+    <div class="alert alert-success">
+      <span class="alert-icon">✓</span>
+      <div class="alert-content"><div class="title">지금은 새 제품을 봐도 괜찮아요</div><div style="color:#595959;font-size:12px;">기본 루틴이 안정되어 있습니다.</div></div>
+    </div>
+    <div class="alert alert-warning">
+      <span class="alert-icon">△</span>
+      <div class="alert-content"><div class="title">주의가 필요한 성분이 있어요</div><div style="color:#595959;font-size:12px;">향료 민감 반응 가능성이 있습니다.</div></div>
+    </div>
+    <div class="alert alert-error">
+      <span class="alert-icon">✕</span>
+      <div class="alert-content"><div class="title">지금은 새 제품 구매를 보류해요</div><div style="color:#595959;font-size:12px;">최근 자극 반응이 있었습니다.</div></div>
+    </div>
+    <div class="alert alert-info">
+      <span class="alert-icon">ℹ</span>
+      <div class="alert-content"><div class="title">선크림 루틴이 먼저예요</div><div style="color:#595959;font-size:12px;">야외 활동이 많아 선크림이 우선입니다.</div></div>
+    </div>
+  </div>
+
+  <div class="label">Progress</div>
+  <div class="progress-wrap">
+    <div class="progress-label"><span>Priority Gate 완료</span><span style="color:#1890ff">100%</span></div>
+    <div class="progress-track"><div class="progress-bar" style="width:100%;background:#1890ff;"></div></div>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-label"><span>필터 적용 중</span><span style="color:#52c41a">66%</span></div>
+    <div class="progress-track"><div class="progress-bar" style="width:66%;background:#52c41a;"></div></div>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-label"><span>성분 분석</span><span style="color:#faad14">33%</span></div>
+    <div class="progress-track"><div class="progress-bar" style="width:33%;background:#faad14;"></div></div>
+  </div>
+
+  <div class="label" style="margin-top:10px;">Skeleton</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+    <div>
+      <div class="skeleton-line skeleton-shimmer" style="width:60%;"></div>
+      <div class="skeleton-line skeleton-shimmer" style="width:90%;"></div>
+      <div class="skeleton-line skeleton-shimmer" style="width:75%;"></div>
+    </div>
+    <div>
+      <div class="skeleton-line skeleton-shimmer" style="width:80%;"></div>
+      <div class="skeleton-line skeleton-shimmer" style="width:55%;"></div>
+      <div class="skeleton-line skeleton-shimmer" style="width:90%;"></div>
+    </div>
+  </div>
+</body></html>

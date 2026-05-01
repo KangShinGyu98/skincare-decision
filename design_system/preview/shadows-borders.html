@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Roboto',sans-serif; background: #f0f2f5; padding: 20px; }
+  .label { font-size: 11px; font-weight: 700; color: #262626; margin-bottom: 12px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+  .card { background: #fff; border-radius: 2px; padding: 12px 14px; min-width: 130px; }
+  .card-label { font-size: 11px; color: #8c8c8c; margin-top: 6px; }
+  .card-val { font-size: 10px; color: #bfbfbf; font-family: Menlo,monospace; margin-top: 2px; word-break: break-all; }
+  .border-row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .border-box { border-radius: 2px; padding: 8px 14px; font-size: 12px; color: #595959; }
+</style>
+</head>
+<body>
+  <div class="label">Shadow System</div>
+  <div class="row">
+    <div>
+      <div class="card" style="box-shadow: 0 1px 2px rgba(0,0,0,0.06);">Card Level 1</div>
+      <div class="card-label">--shadow-1</div>
+      <div class="card-val">0 1px 2px rgba(0,0,0,.06)</div>
+    </div>
+    <div>
+      <div class="card" style="box-shadow: 0 2px 8px rgba(0,0,0,0.15);">Card / Dropdown</div>
+      <div class="card-label">--shadow-2</div>
+      <div class="card-val">0 2px 8px rgba(0,0,0,.15)</div>
+    </div>
+    <div>
+      <div class="card" style="box-shadow: 0 4px 12px rgba(0,0,0,0.15);">Elevated Card</div>
+      <div class="card-label">--shadow-3</div>
+      <div class="card-val">0 4px 12px rgba(0,0,0,.15)</div>
+    </div>
+    <div>
+      <div class="card" style="background:#1890ff;color:#fff;box-shadow:0 2px 0 rgba(0,0,0,0.016);">Button</div>
+      <div class="card-label">--shadow-btn</div>
+      <div class="card-val">0 2px 0 rgba(0,0,0,.016)</div>
+    </div>
+    <div>
+      <div class="card" style="box-shadow: 0 0 0 2px rgba(24,144,255,0.2); border: 1px solid #1890ff;">Input Focus</div>
+      <div class="card-label">--shadow-focus</div>
+      <div class="card-val">0 0 0 2px rgba(24,144,255,.2)</div>
+    </div>
+  </div>
+
+  <div class="label">Border Styles</div>
+  <div class="border-row">
+    <div class="border-box" style="border: 1px solid #d9d9d9;">Default 1px #d9d9d9</div>
+    <div class="border-box" style="border: 1px solid #1890ff; color: #1890ff;">Active #1890ff</div>
+    <div class="border-box" style="border: 1px solid #ff4d4f; color: #ff4d4f;">Error #ff4d4f</div>
+    <div class="border-box" style="border: 1px dashed #d9d9d9;">Dashed</div>
+    <div class="border-box" style="border-top: 1px solid #f0f0f0; background: #fff;">Divider #f0f0f0</div>
+  </div>
+</body></html>

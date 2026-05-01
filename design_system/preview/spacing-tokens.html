@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Roboto',sans-serif; background: #fff; padding: 20px; }
+  .label { font-size: 11px; font-weight: 700; color: #262626; margin-bottom: 12px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .tokens { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+  .token { display: flex; align-items: center; gap: 8px; }
+  .bar-wrap { width: 80px; height: 14px; background: #f0f0f0; border-radius: 2px; overflow: hidden; }
+  .bar { height: 100%; background: #1890ff; border-radius: 2px; }
+  .token-name { font-size: 11px; color: #595959; width: 60px; }
+  .token-val { font-size: 11px; color: #8c8c8c; font-family: Menlo,monospace; }
+  .heights { display: flex; gap: 12px; align-items: flex-end; margin-bottom: 20px; }
+  .h-box { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .h-block { background: #e6f7ff; border: 1px solid #91d5ff; border-radius: 2px; width: 48px; }
+  .h-label { font-size: 10px; color: #8c8c8c; }
+  .h-val { font-size: 10px; font-weight: 500; color: #1890ff; font-family: Menlo,monospace; }
+  .radius-row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .r-box { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .r-block { width: 40px; height: 30px; background: #e6f7ff; border: 1px solid #91d5ff; }
+  .r-label { font-size: 10px; color: #8c8c8c; }
+</style>
+</head>
+<body>
+  <div class="label">Spacing Scale (4px base)</div>
+  <div class="tokens">
+    <div class="token"><div class="bar-wrap"><div class="bar" style="width:4px"></div></div><span class="token-name">--space-1</span><span class="token-val">4px</span></div>
+    <div class="token"><div class="bar-wrap"><div class="bar" style="width:8px"></div></div><span class="token-name">--space-2</span><span class="token-val">8px</span></div>
+    <div class="token"><div class="bar-wrap"><div class="bar" style="width:12px"></div></div><span class="token-name">--space-3</span><span class="token-val">12px</span></div>
+    <div class="token"><div class="bar-wrap"><div class="bar" style="width:16px"></div></div><span class="token-name">--space-4</span><span class="token-val">16px</span></div>
+    <div class="token"><div class="bar-wrap"><div class="bar" style="width:20px"></div></div><span class="token-name">--space-5</span><span class="token-val">20px</span></div>
+    <div class="token"><div class="bar-wrap"><div class="bar" style="width:24px"></div></div><span class="token-name">--space-6</span><span class="token-val">24px</span></div>
+    <div class="token"><div class="bar-wrap"><div class="bar" style="width:32px"></div></div><span class="token-name">--space-8</span><span class="token-val">32px</span></div>
+    <div class="token"><div class="bar-wrap"><div class="bar" style="width:48px"></div></div><span class="token-name">--space-12</span><span class="token-val">48px</span></div>
+    <div class="token"><div class="bar-wrap"><div class="bar" style="width:64px"></div></div><span class="token-name">--space-16</span><span class="token-val">64px</span></div>
+    <div class="token"><div class="bar-wrap"><div class="bar" style="width:80px"></div></div><span class="token-name">--space-20</span><span class="token-val">80px</span></div>
+  </div>
+
+  <div class="label">Component Heights</div>
+  <div class="heights">
+    <div class="h-box"><div class="h-block" style="height:24px"></div><div class="h-val">24px</div><div class="h-label">Small</div></div>
+    <div class="h-box"><div class="h-block" style="height:32px"></div><div class="h-val">32px</div><div class="h-label">Default</div></div>
+    <div class="h-box"><div class="h-block" style="height:40px"></div><div class="h-val">40px</div><div class="h-label">Large</div></div>
+  </div>
+
+  <div class="label">Border Radius</div>
+  <div class="radius-row">
+    <div class="r-box"><div class="r-block" style="border-radius:2px"></div><div class="r-label">2px — base</div></div>
+    <div class="r-box"><div class="r-block" style="border-radius:4px"></div><div class="r-label">4px — md</div></div>
+    <div class="r-box"><div class="r-block" style="border-radius:8px"></div><div class="r-label">8px — lg</div></div>
+    <div class="r-box"><div class="r-block" style="border-radius:100px;width:50px"></div><div class="r-label">pill</div></div>
+  </div>
+</body></html>

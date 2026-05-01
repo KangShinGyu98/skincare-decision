@@ -1,0 +1,383 @@
+/**
+ * K-Beauty Decision Design System
+ * CSS Variables — Colors, Typography, Spacing, Shadows
+ * Based on Ant Design 4.x tokens
+ */
+
+/* ─────────────────────────────────────────────
+   Google Fonts
+   ───────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap');
+
+:root {
+  /* ─────────────────────────────────────────
+     COLOR PALETTE — Ant Design Base Colors
+     ───────────────────────────────────────── */
+
+  /* Daybreak Blue (Brand Primary) */
+  --blue-1: #e6f7ff;
+  --blue-2: #bae7ff;
+  --blue-3: #91d5ff;
+  --blue-4: #69c0ff;
+  --blue-5: #40a9ff;
+  --blue-6: #1890ff;   /* PRIMARY */
+  --blue-7: #096dd9;
+  --blue-8: #0050b3;
+  --blue-9: #003a8c;
+  --blue-10: #002766;
+
+  /* Polar Green (Success) */
+  --green-1: #f6ffed;
+  --green-2: #d9f7be;
+  --green-3: #b7eb8f;
+  --green-4: #95de64;
+  --green-5: #73d13d;
+  --green-6: #52c41a;  /* SUCCESS */
+  --green-7: #389e0d;
+  --green-8: #237804;
+  --green-9: #135200;
+  --green-10: #092b00;
+
+  /* Calendula Gold (Warning) */
+  --gold-1: #fffbe6;
+  --gold-2: #fff1b8;
+  --gold-3: #ffe58f;
+  --gold-4: #ffd666;
+  --gold-5: #ffc53d;
+  --gold-6: #faad14;   /* WARNING */
+  --gold-7: #d48806;
+  --gold-8: #ad6800;
+  --gold-9: #874d00;
+  --gold-10: #613400;
+
+  /* Dust Red (Error/Danger) */
+  --red-1: #fff1f0;
+  --red-2: #ffccc7;
+  --red-3: #ffa39e;
+  --red-4: #ff7875;
+  --red-5: #ff4d4f;    /* ERROR */
+  --red-6: #f5222d;
+  --red-7: #cf1322;
+  --red-8: #a8071a;
+  --red-9: #820014;
+  --red-10: #5c0011;
+
+  /* Geek Blue (accent) */
+  --geekblue-1: #f0f5ff;
+  --geekblue-5: #597ef7;
+  --geekblue-6: #2f54eb;
+
+  /* Golden Purple (accent) */
+  --purple-1: #f9f0ff;
+  --purple-5: #9254de;
+  --purple-6: #722ed1;
+
+  /* Magenta (accent) */
+  --magenta-1: #fff0f6;
+  --magenta-5: #f759ab;
+  --magenta-6: #eb2f96;
+
+  /* Cyan (accent) */
+  --cyan-1: #e6fffb;
+  --cyan-5: #36cfc9;
+  --cyan-6: #13c2c2;
+
+  /* Neutral Grays */
+  --gray-1:  #ffffff;
+  --gray-2:  #fafafa;
+  --gray-3:  #f5f5f5;
+  --gray-4:  #f0f0f0;
+  --gray-5:  #d9d9d9;
+  --gray-6:  #bfbfbf;
+  --gray-7:  #8c8c8c;
+  --gray-8:  #595959;
+  --gray-9:  #434343;
+  --gray-10: #262626;
+  --gray-11: #1f1f1f;
+  --gray-12: #141414;
+  --gray-13: #000000;
+
+  /* ─────────────────────────────────────────
+     SEMANTIC COLORS
+     ───────────────────────────────────────── */
+
+  /* Brand */
+  --color-primary:         var(--blue-6);
+  --color-primary-hover:   var(--blue-5);
+  --color-primary-active:  var(--blue-7);
+  --color-primary-light:   var(--blue-1);
+  --color-primary-border:  var(--blue-3);
+
+  /* Status */
+  --color-success:         var(--green-6);
+  --color-success-light:   var(--green-1);
+  --color-warning:         var(--gold-6);
+  --color-warning-light:   var(--gold-1);
+  --color-error:           var(--red-5);
+  --color-error-light:     var(--red-1);
+  --color-info:            var(--blue-6);
+  --color-info-light:      var(--blue-1);
+
+  /* Text */
+  --color-text-primary:    #262626;   /* gray-10 */
+  --color-text-secondary:  #595959;   /* gray-8 */
+  --color-text-tertiary:   #8c8c8c;   /* gray-7 */
+  --color-text-disabled:   #bfbfbf;   /* gray-6 */
+  --color-text-inverse:    #ffffff;
+  --color-text-link:       var(--blue-6);
+  --color-text-link-hover: var(--blue-5);
+  --color-text-heading:    #262626;
+
+  /* Background */
+  --color-bg-page:         #f0f2f5;   /* Ant page background */
+  --color-bg-component:    #fafafa;
+  --color-bg-white:        #ffffff;
+  --color-bg-dark:         #001529;   /* header/sider dark */
+  --color-bg-dark-hover:   #002140;
+
+  /* Border */
+  --color-border:          #d9d9d9;
+  --color-border-strong:   #bfbfbf;
+  --color-border-light:    #f0f0f0;
+  --color-border-split:    rgba(0, 0, 0, 0.06);
+
+  /* ─────────────────────────────────────────
+     TYPOGRAPHY
+     ───────────────────────────────────────── */
+
+  /* Font Families */
+  --font-sans:   'Roboto', 'Noto Sans KR', 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+  --font-kr:     'Noto Sans KR', 'PingFang SC', sans-serif;  /* Korean-first stack */
+  --font-mono:   'Menlo', 'Monaco', 'Courier New', monospace;
+
+  /* Font Sizes */
+  --font-size-xs:   12px;
+  --font-size-sm:   13px;
+  --font-size-base: 14px;
+  --font-size-md:   16px;
+  --font-size-lg:   20px;
+  --font-size-xl:   24px;
+  --font-size-2xl:  30px;
+  --font-size-3xl:  38px;
+
+  /* Font Weights */
+  --font-weight-regular: 400;
+  --font-weight-medium:  500;
+  --font-weight-bold:    700;
+
+  /* Line Heights */
+  --line-height-tight:   1.25;
+  --line-height-normal:  1.5714;  /* 22px at 14px — Ant standard */
+  --line-height-relaxed: 1.75;
+
+  /* Letter Spacing */
+  --letter-spacing-tight:  -0.01em;
+  --letter-spacing-normal:  0;
+  --letter-spacing-wide:    0.02em;
+
+  /* ─────────────────────────────────────────
+     SPACING (4px base grid)
+     ───────────────────────────────────────── */
+
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+
+  /* Semantic Spacing */
+  --padding-xs:   var(--space-1);
+  --padding-sm:   var(--space-2);
+  --padding-md:   var(--space-3);
+  --padding-base: var(--space-4);
+  --padding-lg:   var(--space-6);
+  --padding-xl:   var(--space-8);
+
+  --margin-xs:   var(--space-1);
+  --margin-sm:   var(--space-2);
+  --margin-md:   var(--space-4);
+  --margin-base: var(--space-4);
+  --margin-lg:   var(--space-6);
+  --margin-xl:   var(--space-8);
+
+  /* Component Heights */
+  --height-sm:   24px;
+  --height-base: 32px;
+  --height-lg:   40px;
+
+  /* ─────────────────────────────────────────
+     BORDERS & RADII
+     ───────────────────────────────────────── */
+
+  --border-width: 1px;
+  --border-style: solid;
+  --border-base:  1px solid var(--color-border);
+
+  --radius-sm:   2px;   /* Ant default — buttons, inputs, tags, most components */
+  --radius-base: 2px;
+  --radius-md:   4px;
+  --radius-lg:   8px;
+  --radius-pill: 100px;
+
+  /* ─────────────────────────────────────────
+     SHADOWS
+     ───────────────────────────────────────── */
+
+  --shadow-1:  0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-2:  0 2px 8px rgba(0, 0, 0, 0.15);   /* card, dropdown */
+  --shadow-3:  0 4px 12px rgba(0, 0, 0, 0.15);  /* elevated card */
+  --shadow-btn: 0 2px 0 rgba(0, 0, 0, 0.016);   /* button press shadow */
+  --shadow-focus: 0 0 0 2px rgba(24, 144, 255, 0.2); /* focus ring */
+  --shadow-inset: inset 0 1px 0 var(--color-border-light);
+
+  /* ─────────────────────────────────────────
+     Z-INDEX
+     ───────────────────────────────────────── */
+
+  --z-below:    -1;
+  --z-base:      0;
+  --z-raised:    1;
+  --z-dropdown:  1050;
+  --z-sticky:    1100;
+  --z-overlay:   1200;
+  --z-modal:     1000;
+  --z-toast:     1300;
+  --z-tooltip:   1400;
+
+  /* ─────────────────────────────────────────
+     TRANSITIONS
+     ───────────────────────────────────────── */
+
+  --transition-base:  0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+  --transition-fast:  0.15s cubic-bezier(0.645, 0.045, 0.355, 1);
+  --transition-slow:  0.5s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+/* ─────────────────────────────────────────────
+   BASE RESET & DEFAULTS
+   ───────────────────────────────────────────── */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-page);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─────────────────────────────────────────────
+   SEMANTIC TYPE ELEMENTS
+   ───────────────────────────────────────────── */
+
+h1 {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  color: var(--color-text-heading);
+  margin: 0 0 var(--space-4);
+}
+
+h2 {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  color: var(--color-text-heading);
+  margin: 0 0 var(--space-4);
+}
+
+h3 {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.35;
+  color: var(--color-text-heading);
+  margin: 0 0 var(--space-3);
+}
+
+h4 {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.4;
+  color: var(--color-text-heading);
+  margin: 0 0 var(--space-2);
+}
+
+h5 {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.5;
+  color: var(--color-text-heading);
+  margin: 0 0 var(--space-2);
+}
+
+h6 {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-heading);
+  margin: 0 0 var(--space-1);
+}
+
+p {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-4);
+  text-wrap: pretty;
+}
+
+p.secondary {
+  color: var(--color-text-secondary);
+}
+
+p.caption, small {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
+a {
+  color: var(--color-text-link);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--color-text-link-hover);
+}
+
+code, pre {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  background: var(--color-bg-component);
+  border-radius: var(--radius-sm);
+  border: var(--border-base);
+}
+
+code {
+  padding: 2px 6px;
+}
+
+pre {
+  padding: var(--space-4);
+  overflow-x: auto;
+}
+
+/* Korean body text utility */
+.text-kr {
+  font-family: var(--font-kr);
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}

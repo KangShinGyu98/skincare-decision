@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>K-Beauty Decision</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Roboto','Noto Sans KR','PingFang SC',sans-serif;
+  background: #f0f2f5;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+:root {
+  --blue-1: #e6f7ff; --blue-5: #40a9ff; --blue-6: #1890ff; --blue-7: #096dd9;
+  --green-1: #f6ffed; --green-6: #52c41a;
+  --gold-1: #fffbe6; --gold-6: #faad14;
+  --red-1: #fff1f0; --red-5: #ff4d4f;
+  --gray-3: #f5f5f5; --gray-4: #f0f0f0; --gray-5: #d9d9d9;
+  --gray-6: #bfbfbf; --gray-7: #8c8c8c; --gray-8: #595959; --gray-10: #262626;
+  --page-bg: #f0f2f5;
+  --radius: 2px;
+  --transition: 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d9d9d9; border-radius: 3px; }
+/* Animations */
+@keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+.fade-in { animation: fadeIn 0.25s ease forwards; }
+@keyframes tagScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+.tag-scroll-inner { display: flex; gap: 10px; animation: tagScroll 18s linear infinite; white-space: nowrap; }
+.tag-scroll-inner:hover { animation-play-state: paused; }
+.tag-scroll-wrap { overflow: hidden; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+/* ──────────────── DESIGN TOKENS ──────────────── */
+const T = {
+  primary: '#1890ff', primaryHover: '#40a9ff', primaryActive: '#096dd9',
+  primaryLight: '#e6f7ff', success: '#52c41a', successLight: '#f6ffed',
+  warning: '#faad14', warningLight: '#fffbe6',
+  error: '#ff4d4f', errorLight: '#fff1f0',
+  textPrimary: '#262626', textSecondary: '#595959', textTertiary: '#8c8c8c',
+  textDisabled: '#bfbfbf', textInverse: '#ffffff',
+  border: '#d9d9d9', borderLight: '#f0f0f0',
+  bgPage: '#f0f2f5', bgWhite: '#ffffff', bgComponent: '#fafafa',
+  bgDark: '#001529', shadow2: '0 2px 8px rgba(0,0,0,0.15)',
+};
+
+/* ──────────────── SHARED COMPONENTS ──────────────── */
+function Btn({ children, type='default', size='md', onClick, style={}, disabled=false }) {
+  const base = {
+    display:'inline-flex', alignItems:'center', justifyContent:'center', gap:6,
+    borderRadius:2, fontFamily:'inherit', cursor: disabled ? 'not-allowed' : 'pointer',
+    border:'1px solid transparent', transition:'all 0.3s', fontWeight:400,
+    ...(size === 'sm' ? { height:24, padding:'1px 7px', fontSize:12 } :
+        size === 'lg' ? { height:40, padding:'6px 24px', fontSize:16 } :
+        { height:32, padding:'4px 15px', fontSize:14 }),
+  };
+  const variants = {
+    primary:  { background: disabled ? '#f5f5f5' : T.primary,  borderColor: disabled ? '#d9d9d9' : T.primary,  color: disabled ? T.textDisabled : '#fff', boxShadow:'0 2px 0 rgba(0,0,0,.016)' },
+    default:  { background: '#fff', borderColor: T.border, color: disabled ? T.textDisabled : T.textPrimary, boxShadow:'0 2px 0 rgba(0,0,0,.016)' },
+    dashed:   { background: '#fff', borderStyle:'dashed', borderColor: T.border, color: T.textPrimary },
+    text:     { background:'transparent', borderColor:'transparent', color: T.primary },
+    danger:   { background: T.error, borderColor: T.error, color:'#fff', boxShadow:'0 2px 0 rgba(0,0,0,.016)' },
+    ghost:    { background:'transparent', borderColor:'#fff', color:'#fff' },
+  };
+  return <button style={{...base, ...variants[type], ...style}} onClick={!disabled ? onClick : undefined}>{children}</button>;
+}
+
+function Tag({ children, color='default', style={} }) {
+  const variants = {
+    default: { bg:'#fafafa', border:'#d9d9d9', text: T.textPrimary },
+    blue:    { bg:'#e6f7ff', border:'#91d5ff', text:'#096dd9' },
+    green:   { bg:'#f6ffed', border:'#b7eb8f', text:'#389e0d' },
+    red:     { bg:'#fff1f0', border:'#ffa39e', text:'#cf1322' },
+    gold:    { bg:'#fffbe6', border:'#ffe58f', text:'#d48806' },
+    purple:  { bg:'#f9f0ff', border:'#d3adf7', text:'#531dab' },
+    cyan:    { bg:'#e6fffb', border:'#87e8de', text:'#08979c' },
+    selected:{ bg: T.primary, border: T.primary, text:'#fff' },
+  };
+  const v = variants[color] || variants.default;
+  return <span style={{ display:'inline-flex', alignItems:'center', borderRadius:2, fontSize:12, padding:'2px 8px', lineHeight:'20px', border:`1px solid ${v.border}`, background:v.bg, color:v.text, ...style }}>{children}</span>;
+}
+
+function Alert({ type='info', title, desc }) {
+  const cfg = {
+    success: { icon:'✓', bg:'#f6ffed', border:'#b7eb8f', iconColor:'#52c41a' },
+    info:    { icon:'ℹ', bg:'#e6f7ff', border:'#91d5ff', iconColor:'#1890ff' },
+    warning: { icon:'△', bg:'#fffbe6', border:'#ffe58f', iconColor:'#faad14' },
+    error:   { icon:'✕', bg:'#fff1f0', border:'#ffa39e', iconColor:'#ff4d4f' },
+  };
+  const c = cfg[type];
+  return (
+    <div style={{ display:'flex', gap:8, padding:'10px 12px', borderRadius:2, border:`1px solid ${c.border}`, background:c.bg }}>
+      <span style={{ color:c.iconColor, fontWeight:700, flexShrink:0, marginTop:1 }}>{c.icon}</span>
+      <div>
+        {title && <div style={{ fontSize:14, fontWeight:500, color:T.textPrimary, marginBottom:2 }}>{title}</div>}
+        {desc && <div style={{ fontSize:13, color:T.textSecondary, lineHeight:1.6, wordBreak:'keep-all' }}>{desc}</div>}
+      </div>
+    </div>
+  );
+}
+
+function Card({ title, extra, children, style={} }) {
+  return (
+    <div style={{ background:'#fff', border:`1px solid ${T.border}`, borderRadius:2, ...style }}>
+      {title && (
+        <div style={{ padding:'12px 16px', borderBottom:`1px solid ${T.borderLight}`, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+          <span style={{ fontSize:16, fontWeight:500, color:T.textPrimary }}>{title}</span>
+          {extra && <span style={{ fontSize:14, color:T.primary, cursor:'pointer' }}>{extra}</span>}
+        </div>
+      )}
+      <div style={{ padding:'14px 16px' }}>{children}</div>
+    </div>
+  );
+}
+
+function TopNav({ onNav }) {
+  const [scrolled, setScrolled] = useState(false);
+  return (
+    <div style={{ position:'sticky', top:0, zIndex:100, background: T.bgDark, height:48, display:'flex', alignItems:'center', padding:'0 24px', gap:24, boxShadow: T.shadow2 }}>
+      <div style={{ color:'#fff', fontSize:16, fontWeight:700, letterSpacing:'0.01em', cursor:'pointer' }} onClick={() => onNav('landing')}>
+        K-Beauty Decision
+      </div>
+      <div style={{ display:'flex', gap:16, marginLeft:8 }}>
+        {[['priority','Priority Gate'],['matrix','Product Matrix'],['traceback','Traceback']].map(([key, label]) => (
+          <span key={key} onClick={() => onNav(key)} style={{ color:'rgba(255,255,255,0.65)', fontSize:14, cursor:'pointer', padding:'0 4px' }}>{label}</span>
+        ))}
+      </div>
+      <div style={{ marginLeft:'auto' }}>
+        <Btn type="primary" size="sm" onClick={() => onNav('priority')}>시작하기</Btn>
+      </div>
+    </div>
+  );
+}
+
+function Steps({ current, items }) {
+  return (
+    <div style={{ background:'#fff', borderBottom:`1px solid ${T.borderLight}`, padding:'14px 24px', display:'flex', alignItems:'center' }}>
+      {items.map((item, i) => (
+        <React.Fragment key={i}>
+          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+            <div style={{
+              width:24, height:24, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center',
+              fontSize:12, fontWeight:500, flexShrink:0,
+              background: i < current ? T.primary : i === current ? '#fff' : '#fff',
+              border: i < current ? `2px solid ${T.primary}` : i === current ? `2px solid ${T.primary}` : `2px solid ${T.border}`,
+              color: i < current ? '#fff' : i === current ? T.primary : T.textTertiary,
+            }}>
+              {i < current ? '✓' : i + 1}
+            </div>
+            <span style={{ fontSize:14, fontWeight: i === current ? 500 : 400, color: i < current ? T.primary : i === current ? T.textPrimary : T.textTertiary }}>
+              {item}
+            </span>
+          </div>
+          {i < items.length - 1 && <div style={{ flex:1, height:1, background: i < current ? T.primary : T.border, margin:'0 8px', minWidth:20 }} />}
+        </React.Fragment>
+      ))}
+    </div>
+  );
+}
+
+function FilterTag({ label, on, onClick }) {
+  return (
+    <span onClick={onClick} style={{
+      display:'inline-flex', alignItems:'center', gap:4, borderRadius:100,
+      fontSize:13, padding:'4px 12px', border:`1px solid ${on ? T.primary : T.border}`,
+      background: on ? '#e6f7ff' : '#fff', color: on ? T.primary : T.textSecondary,
+      fontWeight: on ? 500 : 400, cursor:'pointer', transition:'all 0.2s', userSelect:'none',
+    }}>{on && <span style={{ fontSize:10 }}>✓</span>}{label}</span>
+  );
+}
+
+function FitBadge({ fit }) {
+  const cfg = {
+    pass:    { icon:'✓', label:'적합', bg:'#f6ffed', color:'#52c41a' },
+    caution: { icon:'△', label:'주의', bg:'#fffbe6', color:'#d48806' },
+    fail:    { icon:'✕', label:'비추', bg:'#fff1f0', color:'#ff4d4f' },
+  };
+  const c = cfg[fit];
+  return <span style={{ display:'inline-flex', alignItems:'center', gap:3, borderRadius:2, fontSize:12, padding:'2px 8px', fontWeight:500, background:c.bg, color:c.color }}>{c.icon} {c.label}</span>;
+}
+
+/* ──────────────── LANDING PAGE ──────────────── */
+const CONCERN_ROWS = [
+  { label:'일회성 트러블', tags:['뾰루지','여드름','붉어짐','뒤집힘','트러블 반복','민감 반응','뾰루지','여드름','붉어짐','뒤집힘','트러블 반복','민감 반응'] },
+  { label:'일상 불편',    tags:['건조','당김','각질','번들거림','눈가 건조','입술 트임','건조','당김','각질','번들거림','눈가 건조','입술 트임'] },
+  { label:'화장 / 꾸미기', tags:['화장 뜸','밀림','쿠션 추천','파운데이션 고민','선크림 추천','립 제품','화장 뜸','밀림','쿠션 추천','파운데이션 고민','선크림 추천','립 제품'] },
+  { label:'컴플렉스',     tags:['잡티','다크서클','홍조','모공','피부톤','탄력','잡티','다크서클','홍조','모공','피부톤','탄력'] },
+];
+
+const SEGMENTS = [
+  { key:'A', title:'어디서부터 손댈지 모름', desc:'지금 무엇부터 정리해야 할지 모르는 상태', icon:'?' },
+  { key:'B', title:'고민은 있는데 카테고리를 모름', desc:'문제는 있지만 어떤 제품군이 필요한지 모름', icon:'💭' },
+  { key:'C', title:'이미 찾는 제품군이 있음', desc:'선크림, 세럼 등 보고 싶은 제품군이 있음', icon:'→' },
+  { key:'D', title:'실패 원인 추적형', desc:'특정 제품 사용 후 피부 반응이 있었던 경우', icon:'⚗' },
+];
+
+function Landing({ onNav }) {
+  return (
+    <div className="fade-in">
+      {/* Hero */}
+      <div style={{ background:'#fff', padding:'60px 24px 48px', textAlign:'center', borderBottom:`1px solid ${T.borderLight}` }}>
+        <div style={{ maxWidth:600, margin:'0 auto' }}>
+          <div style={{ fontSize:11, fontWeight:700, color:T.primary, letterSpacing:'0.1em', textTransform:'uppercase', marginBottom:16 }}>스킨케어 결정 서비스</div>
+          <h1 style={{ fontSize:38, fontWeight:700, color:T.textPrimary, lineHeight:1.2, marginBottom:16, wordBreak:'keep-all' }}>고민부터 시작해도 돼요</h1>
+          <p style={{ fontSize:16, color:T.textSecondary, lineHeight:1.7, marginBottom:32, wordBreak:'keep-all' }}>
+            어떤 제품이 필요한지 몰라도 괜찮아요.<br/>
+            지금 상태와 고민에 맞춰 필요한 카테고리로 이어드립니다.
+          </p>
+          <div style={{ display:'flex', gap:10, justifyContent:'center', flexWrap:'wrap' }}>
+            <Btn type="primary" size="lg" onClick={() => onNav('priority')}>시작하기</Btn>
+            <Btn type="default" size="lg" onClick={() => onNav('matrix')}>제품 바로 보기</Btn>
+          </div>
+        </div>
+      </div>
+
+      {/* Segment Selection */}
+      <div style={{ maxWidth:800, margin:'0 auto', padding:'40px 24px' }}>
+        <h2 style={{ fontSize:20, fontWeight:500, color:T.textPrimary, marginBottom:8, textAlign:'center', wordBreak:'keep-all' }}>어디서 시작할까요?</h2>
+        <p style={{ fontSize:14, color:T.textSecondary, textAlign:'center', marginBottom:24 }}>지금 상황에 맞는 시작점을 고르세요</p>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+          {SEGMENTS.map(s => (
+            <div key={s.key} onClick={() => onNav(s.key === 'D' ? 'traceback' : 'priority')}
+              style={{ background:'#fff', border:`1px solid ${T.border}`, borderRadius:2, padding:20, cursor:'pointer', transition:'all 0.2s' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = T.primary; e.currentTarget.style.boxShadow = '0 2px 8px rgba(24,144,255,0.15)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.boxShadow = 'none'; }}>
+              <div style={{ fontSize:22, marginBottom:8 }}>{s.icon}</div>
+              <div style={{ fontSize:15, fontWeight:500, color:T.textPrimary, marginBottom:4, wordBreak:'keep-all' }}>{s.title}</div>
+              <div style={{ fontSize:13, color:T.textSecondary, wordBreak:'keep-all', lineHeight:1.6 }}>{s.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Concern Carousel */}
+      <div style={{ background:'#fff', borderTop:`1px solid ${T.borderLight}`, borderBottom:`1px solid ${T.borderLight}`, padding:'40px 0' }}>
+        <div style={{ textAlign:'center', marginBottom:24, padding:'0 24px' }}>
+          <h2 style={{ fontSize:20, fontWeight:500, color:T.textPrimary, marginBottom:8, wordBreak:'keep-all' }}>고민 유형으로 시작하기</h2>
+          <p style={{ fontSize:14, color:T.textSecondary }}>고민 태그를 클릭하면 카테고리로 이어드립니다</p>
+        </div>
+        <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+          {CONCERN_ROWS.map((row, ri) => (
+            <div key={ri}>
+              <div style={{ fontSize:11, fontWeight:700, color:T.textTertiary, letterSpacing:'0.05em', textTransform:'uppercase', padding:'0 24px', marginBottom:6 }}>{row.label}</div>
+              <div className="tag-scroll-wrap" style={{ padding:'4px 0' }}>
+                <div className="tag-scroll-inner" style={{ animationDuration: `${18 + ri * 3}s`, animationDirection: ri % 2 === 0 ? 'normal' : 'reverse', paddingLeft:24 }}>
+                  {row.tags.map((tag, ti) => (
+                    <span key={ti} onClick={() => onNav('matrix')}
+                      style={{ display:'inline-block', padding:'6px 14px', border:`1px solid ${T.border}`, borderRadius:100, fontSize:13, color:T.textSecondary, background:'#fff', cursor:'pointer', flexShrink:0, whiteSpace:'nowrap', transition:'all 0.2s' }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = T.primary; e.currentTarget.style.color = T.primary; e.currentTarget.style.background = '#e6f7ff'; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.textSecondary; e.currentTarget.style.background = '#fff'; }}>
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Fast Lane categories */}
+      <div style={{ maxWidth:800, margin:'0 auto', padding:'40px 24px' }}>
+        <h2 style={{ fontSize:20, fontWeight:500, color:T.textPrimary, marginBottom:8, textAlign:'center' }}>빠른 제품군 선택</h2>
+        <p style={{ fontSize:14, color:T.textSecondary, textAlign:'center', marginBottom:20 }}>이미 찾는 제품군이 있다면 바로 시작하세요</p>
+        <div style={{ display:'flex', gap:10, flexWrap:'wrap', justifyContent:'center' }}>
+          {['선크림','세럼','립케어','로션 / 크림','클렌저','앰플','에센스','토너패드'].map(cat => (
+            <Btn key={cat} type="default" onClick={() => onNav('matrix')}>{cat}</Btn>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────── PRIORITY GATE ──────────────── */
+const LIFE_CHECKS = [
+  { key:'irritation', q:'최근 7일 안에 따가움, 붉어짐, 가려움이 반복됐나요?' },
+  { key:'new_products', q:'최근 2주 안에 새 제품을 2개 이상 추가했나요?' },
+  { key:'outdoor', q:'낮에 밖에 있는 시간이 많은 편인가요?' },
+  { key:'sunscreen', q:'선크림을 거의 매일 바르나요?' },
+  { key:'cleansing', q:'선크림/메이크업 후 클렌징이 잘 되고 있나요?' },
+  { key:'dry', q:'세안 후 당김, 건조, 따가움이 자주 있나요?' },
+  { key:'moisturizer', q:'보습제를 매일 꾸준히 사용하나요?' },
+  { key:'makeup', q:'베이스 메이크업을 자주 하나요?' },
+];
+const PRODUCT_CATS = ['클렌징 오일/밤/워터','폼클렌저/젤클렌저','토너','스킨','에센스','세럼','앰플','로션','크림','선크림','각질제거제','레티놀 제품','비타민C 제품','AHA/BHA 제품','마스크팩','립케어'];
+
+function PriorityGate({ onNav }) {
+  const [checks, setChecks] = useState({});
+  const [products, setProducts] = useState({});
+  const [result, setResult] = useState(null);
+
+  const toggle = (key, map, setMap) => setMap(prev => ({ ...prev, [key]: !prev[key] }));
+
+  const evaluate = () => {
+    if (checks.irritation || checks.new_products) {
+      setResult({ type:'hold', title:'지금은 새 제품보다 피부 반응 안정화가 먼저예요.', desc:'최근 자극이 있거나 루틴 변경이 많아 지금은 새 제품보다 현재 루틴을 7~14일 고정하는 것이 좋습니다.' });
+    } else if (checks.outdoor && !checks.sunscreen) {
+      setResult({ type:'caution', title:'선크림 루틴이 먼저예요.', desc:'야외 활동이 많은데 선크림이 안정화되지 않았어요. 매일 쓸 수 있는 선크림을 먼저 찾아야 합니다.' });
+    } else if (checks.dry && !checks.moisturizer) {
+      setResult({ type:'caution', title:'기능성 제품보다 보습 루틴 고정이 먼저예요.', desc:'세안 후 당김이 반복된다면 수분 세럼보다 매일 쓸 수 있는 로션/크림이 먼저입니다.' });
+    } else {
+      setResult({ type:'pass', title:'지금은 기능성 제품군을 봐도 괜찮아요.', desc:'기본 루틴이 안정되어 있고 최근 자극이 없어 새 제품을 탐색해도 됩니다.' });
+    }
+  };
+
+  return (
+    <div className="fade-in">
+      <Steps current={0} items={['Priority Gate','기본 맥락','제품군 기준','결과 확인']} />
+      <div style={{ maxWidth:900, margin:'0 auto', padding:'24px 24px' }}>
+        <h2 style={{ fontSize:24, fontWeight:700, color:T.textPrimary, marginBottom:8 }}>지금 제품을 사야 하는 상태인가요?</h2>
+        <p style={{ fontSize:14, color:T.textSecondary, marginBottom:24, wordBreak:'keep-all', lineHeight:1.7 }}>
+          제품을 고르기 전에, 지금 사도 되는 상태인지 먼저 확인해요.<br/>
+          최근 자극, 루틴 변경, 선크림, 클렌징, 보습 상태를 확인합니다.
+        </p>
+
+        {result ? (
+          <div className="fade-in" style={{ display:'flex', flexDirection:'column', gap:16 }}>
+            <Alert type={result.type === 'pass' ? 'success' : result.type === 'hold' ? 'error' : 'warning'} title={result.title} desc={result.desc} />
+            <div style={{ display:'flex', gap:10 }}>
+              <Btn type="primary" onClick={() => onNav('category')}>다음: 기본 맥락 확인 →</Btn>
+              <Btn type="default" onClick={() => setResult(null)}>다시 체크하기</Btn>
+            </div>
+          </div>
+        ) : (
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
+            {/* Box 1: Life / Routine */}
+            <Card title="Life / 루틴">
+              <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+                {LIFE_CHECKS.map(item => (
+                  <label key={item.key} style={{ display:'flex', gap:10, alignItems:'flex-start', cursor:'pointer' }}>
+                    <input type="checkbox" checked={!!checks[item.key]} onChange={() => toggle(item.key, checks, setChecks)}
+                      style={{ marginTop:2, accentColor:T.primary, flexShrink:0 }} />
+                    <span style={{ fontSize:13, color:T.textPrimary, lineHeight:1.6, wordBreak:'keep-all' }}>{item.q}</span>
+                  </label>
+                ))}
+              </div>
+            </Card>
+
+            {/* Box 2: Products */}
+            <Card title="사용 중인 Skin Care 제품">
+              <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+                {PRODUCT_CATS.map(cat => (
+                  <label key={cat} style={{ display:'flex', gap:5, alignItems:'center', cursor:'pointer' }}>
+                    <input type="checkbox" checked={!!products[cat]} onChange={() => toggle(cat, products, setProducts)}
+                      style={{ accentColor:T.primary }} />
+                    <span style={{ fontSize:12, color:T.textPrimary }}>{cat}</span>
+                  </label>
+                ))}
+              </div>
+              <div style={{ marginTop:16 }}>
+                <Btn type="primary" onClick={evaluate} style={{ width:'100%', justifyContent:'center' }}>결과 확인하기</Btn>
+              </div>
+            </Card>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────── CATEGORY DECISION ──────────────── */
+const CATEGORY_QS = {
+  sunscreen: [
+    { key:'outdoor',   q:'야외 활동이 많은 편인가요?',                 type:'yn' },
+    { key:'eye_sting', q:'선크림을 바르면 눈이 시린 편인가요?',        type:'yn' },
+    { key:'white_cast',q:'백탁이 있으면 사용하기 어려운가요?',         type:'yn' },
+    { key:'makeup',    q:'선크림 위에 베이스 메이크업을 하나요?',       type:'yn' },
+    { key:'portable',  q:'밖에서 덧바를 수 있는 형태가 필요한가요?',   type:'yn' },
+    { key:'usage',     q:'주로 어떤 환경에서 사용할 예정인가요?',      type:'select', options:['집에서','야외에서','둘 다'] },
+  ],
+};
+
+function CategoryDecision({ onNav }) {
+  const [step, setStep] = useState(0); // 0=context, 1=criteria, 2=result
+  const [answers, setAnswers] = useState({});
+  const qs = CATEGORY_QS.sunscreen;
+
+  const answered = qs.filter(q => answers[q.key] !== undefined).length;
+  const progress = Math.round((answered / qs.length) * 100);
+
+  return (
+    <div className="fade-in">
+      <Steps current={step + 1} items={['Priority Gate','기본 맥락','제품군 기준','결과 확인']} />
+      <div style={{ maxWidth:760, margin:'0 auto', padding:'24px' }}>
+        {/* Category selector */}
+        <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:24 }}>
+          <span style={{ fontSize:14, color:T.textSecondary }}>제품군:</span>
+          {['선크림','세럼','립케어','로션 / 크림'].map(cat => (
+            <Btn key={cat} type={cat === '선크림' ? 'primary' : 'default'} size="sm" onClick={() => {}}>{cat}</Btn>
+          ))}
+        </div>
+
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
+          {/* Box 1: Context */}
+          <Card title="기본 확인" extra={`${answered}/${qs.length}`}>
+            <div style={{ marginBottom:10 }}>
+              <div style={{ height:4, background:'#f0f0f0', borderRadius:2, overflow:'hidden' }}>
+                <div style={{ height:'100%', width:`${progress}%`, background:T.primary, transition:'width 0.3s', borderRadius:2 }} />
+              </div>
+            </div>
+            <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+              {qs.map(q => (
+                <div key={q.key}>
+                  <div style={{ fontSize:13, color:T.textPrimary, marginBottom:6, wordBreak:'keep-all', lineHeight:1.5 }}>{q.q}</div>
+                  {q.type === 'yn' ? (
+                    <div style={{ display:'flex', gap:8 }}>
+                      {['예','아니오'].map(opt => (
+                        <Btn key={opt} type={answers[q.key] === opt ? 'primary' : 'default'} size="sm"
+                          onClick={() => setAnswers(p => ({ ...p, [q.key]: opt }))}>{opt}</Btn>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+                      {q.options.map(opt => (
+                        <Btn key={opt} type={answers[q.key] === opt ? 'primary' : 'default'} size="sm"
+                          onClick={() => setAnswers(p => ({ ...p, [q.key]: opt }))}>{opt}</Btn>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          {/* Box 2: Category Criteria */}
+          <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+            <Card title="선크림 핵심 기준">
+              <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginBottom:10 }}>
+                {['SPF 50 이상','PA++++','발림성 우수','눈시림 낮음','백탁 적음','메이크업 궁합'].map(t => (
+                  <Tag key={t} color="blue">{t}</Tag>
+                ))}
+              </div>
+              <div style={{ fontSize:12, color:T.textTertiary, lineHeight:1.6, wordBreak:'keep-all' }}>
+                좋은 선크림의 기본 조건입니다. 추가로 개인화 필터가 자동으로 적용됩니다.
+              </div>
+            </Card>
+
+            <Card title="개인화 필터 (자동 적용)">
+              <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+                {answers.eye_sting === '예' && <Tag color="blue">눈시림 낮음</Tag>}
+                {answers.white_cast === '예' && <Tag color="blue">백탁 없음</Tag>}
+                {answers.makeup === '예' && <Tag color="green">메이크업 궁합</Tag>}
+                {answers.portable === '예' && <Tag color="blue">휴대형</Tag>}
+                {answers.outdoor === '예' && <Tag color="blue">야외 사용 적합</Tag>}
+                {Object.keys(answers).length === 0 && <span style={{ fontSize:12, color:T.textTertiary }}>위 질문에 답하면 필터가 자동으로 선택됩니다</span>}
+              </div>
+            </Card>
+
+            <div style={{ marginTop:'auto' }}>
+              <Btn type="primary" style={{ width:'100%', justifyContent:'center' }} onClick={() => onNav('matrix')}>
+                제품 후보 보기 →
+              </Btn>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────── PRODUCT MATRIX ──────────────── */
+const PRODUCTS = [
+  { id:1, name:'라운드랩 자작나무 수분 선크림', brand:'라운드랩', price:18000, band:'under20', tags:['SPF50+','PA++++','눈시림 낮음','백탁 낮음'], fit:'pass', spf:50, eye_sting:'low', white_cast:'low', makeup:'good', portable:true },
+  { id:2, name:'닥터지 그린 마일드 업 선크림', brand:'닥터지', price:22000, band:'under20', tags:['SPF50+','PA++++','발림성 우수'], fit:'pass', spf:50, eye_sting:'low', white_cast:'medium', makeup:'good', portable:false },
+  { id:3, name:'이니스프리 퍼펙트 UV 프로텍션', brand:'이니스프리', price:16000, band:'under20', tags:['SPF50+','PA++++'], fit:'caution', spf:50, eye_sting:'medium', white_cast:'medium', makeup:'fair', portable:true },
+  { id:4, name:'아누아 어성초 톤업 선크림', brand:'아누아', price:29000, band:'20to50', tags:['SPF50+','PA++++','메이크업 궁합','백탁 낮음'], fit:'pass', spf:50, eye_sting:'low', white_cast:'low', makeup:'good', portable:false },
+  { id:5, name:'스킨1004 센텔라 에어리 선크림', brand:'스킨1004', price:24000, band:'20to50', tags:['SPF50+','PA++++','눈시림 낮음'], fit:'pass', spf:50, eye_sting:'low', white_cast:'low', makeup:'fair', portable:true },
+  { id:6, name:'퓨어힐스 멀티 프로텍션 UV', brand:'퓨어힐스', price:35000, band:'20to50', tags:['SPF50+','PA++++','민감성 적합'], fit:'caution', spf:50, eye_sting:'medium', white_cast:'low', makeup:'good', portable:false },
+  { id:7, name:'설화수 컴포팅 워터 선크림', brand:'설화수', price:62000, band:'over50', tags:['SPF50+','PA++++','보습 우수'], fit:'pass', spf:50, eye_sting:'low', white_cast:'none', makeup:'good', portable:false },
+];
+
+const BASIC_FILTERS = ['SPF 50 이상','PA++++','발림성 우수','눈시림 낮음','백탁 적음','메이크업 궁합'];
+const PERSONAL_FILTERS = ['민감성 피부','휴대성','야외 활동','눈시림 경험','향료 없음'];
+
+function ProductMatrix({ onNav }) {
+  const [activeFilters, setActiveFilters] = useState(new Set(['SPF 50 이상','눈시림 낮음']));
+  const [cat, setCat] = useState('선크림');
+
+  const toggleFilter = (f) => setActiveFilters(prev => {
+    const n = new Set(prev);
+    n.has(f) ? n.delete(f) : n.add(f);
+    return n;
+  });
+
+  const grouped = {
+    under20: PRODUCTS.filter(p => p.band === 'under20'),
+    '20to50': PRODUCTS.filter(p => p.band === '20to50'),
+    over50: PRODUCTS.filter(p => p.band === 'over50'),
+  };
+
+  return (
+    <div className="fade-in">
+      {/* Tabs */}
+      <div style={{ background:'#fff', borderBottom:`1px solid ${T.borderLight}`, padding:'0 24px', display:'flex' }}>
+        {['선크림','세럼','립케어','로션 / 크림','클렌저'].map(c => (
+          <div key={c} onClick={() => setCat(c)} style={{
+            padding:'12px 16px', fontSize:14, cursor:'pointer', borderBottom:`2px solid ${c === cat ? T.primary : 'transparent'}`,
+            color: c === cat ? T.primary : T.textSecondary, fontWeight: c === cat ? 500 : 400,
+            marginBottom:-1, transition:'all 0.2s',
+          }}>{c}</div>
+        ))}
+      </div>
+
+      <div style={{ maxWidth:1100, margin:'0 auto', padding:'20px 24px' }}>
+        {/* Filters */}
+        <div style={{ background:'#fff', border:`1px solid ${T.border}`, borderRadius:2, padding:'14px 16px', marginBottom:16 }}>
+          <div style={{ marginBottom:10 }}>
+            <span style={{ fontSize:12, fontWeight:700, color:T.textTertiary, letterSpacing:'0.05em', textTransform:'uppercase' }}>좋은 선크림의 조건</span>
+            <span style={{ fontSize:11, color:T.textTertiary, marginLeft:8 }}>기본 선택</span>
+          </div>
+          <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginBottom:14 }}>
+            {BASIC_FILTERS.map(f => <FilterTag key={f} label={f} on={activeFilters.has(f)} onClick={() => toggleFilter(f)} />)}
+          </div>
+          <div style={{ marginBottom:8 }}>
+            <span style={{ fontSize:12, fontWeight:700, color:T.textTertiary, letterSpacing:'0.05em', textTransform:'uppercase' }}>개인화 필터</span>
+          </div>
+          <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+            {PERSONAL_FILTERS.map(f => <FilterTag key={f} label={f} on={activeFilters.has(f)} onClick={() => toggleFilter(f)} />)}
+            <Btn type="dashed" size="sm" onClick={() => {}}>+ 필터 추가</Btn>
+          </div>
+        </div>
+
+        {/* Product tiers */}
+        {[['~2만원', grouped.under20], ['2~5만원', grouped['20to50']], ['5만원+', grouped.over50]].map(([band, prods]) => (
+          <div key={band} style={{ marginBottom:20 }}>
+            <div style={{ fontSize:13, fontWeight:700, color:T.textSecondary, marginBottom:8, paddingLeft:2 }}>{band}</div>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(240px, 1fr))', gap:12 }}>
+              {prods.map(p => (
+                <div key={p.id} style={{ background:'#fff', border:`1px solid ${T.border}`, borderRadius:2, padding:14, cursor:'pointer', transition:'all 0.2s' }}
+                  onMouseEnter={e => { e.currentTarget.style.boxShadow = T.shadow2; e.currentTarget.style.borderColor = '#bfbfbf'; }}
+                  onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = T.border; }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:6 }}>
+                    <FitBadge fit={p.fit} />
+                    <span style={{ fontSize:15, fontWeight:700, color:T.textPrimary }}>{p.price.toLocaleString()}원</span>
+                  </div>
+                  <div style={{ fontSize:14, fontWeight:500, color:T.textPrimary, marginBottom:3, wordBreak:'keep-all', lineHeight:1.4 }}>{p.name}</div>
+                  <div style={{ fontSize:12, color:T.textTertiary, marginBottom:8 }}>{p.brand}</div>
+                  <div style={{ display:'flex', flexWrap:'wrap', gap:4, marginBottom:10 }}>
+                    {p.tags.map(t => <Tag key={t} color="blue" style={{ fontSize:11, padding:'1px 6px' }}>{t}</Tag>)}
+                  </div>
+                  <div style={{ display:'flex', gap:6 }}>
+                    <Btn type="primary" size="sm" style={{ flex:1, justifyContent:'center' }}>구매하기</Btn>
+                    <Btn type="default" size="sm">상세</Btn>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────── REACTION TRACEBACK ──────────────── */
+const SUSPECTED = [
+  { rank:1, group:'향료 / Fragrance 계열', confidence:'HIGH', reason:'문제 제품에 포함, 괜찮은 제품에는 없음' },
+  { rank:2, group:'에센셜오일 계열', confidence:'MEDIUM', reason:'문제 제품 3개 중 2개에 포함' },
+  { rank:3, group:'자외선 차단 필터 계열', confidence:'LOW', reason:'문제 제품에 포함, 괜찮은 제품에도 일부 포함' },
+];
+
+function ReactionTraceback({ onNav }) {
+  const [problemProducts, setProblemProducts] = useState(['토니모리 선크림 SPF50']);
+  const [okProducts, setOkProducts] = useState(['라운드랩 자작나무 선크림']);
+  const [newProb, setNewProb] = useState('');
+  const [newOk, setNewOk] = useState('');
+  const [analyzed, setAnalyzed] = useState(false);
+
+  const confColor = { HIGH:'#ff4d4f', MEDIUM:'#faad14', LOW:'#8c8c8c' };
+  const confLabel = { HIGH:'높음', MEDIUM:'중간', LOW:'낮음' };
+
+  return (
+    <div className="fade-in">
+      <div style={{ background:'#fff', borderBottom:`1px solid ${T.borderLight}`, padding:'16px 24px' }}>
+        <h2 style={{ fontSize:20, fontWeight:700, color:T.textPrimary, marginBottom:4 }}>Reaction Traceback</h2>
+        <p style={{ fontSize:13, color:T.textSecondary, wordBreak:'keep-all' }}>
+          어떤 제품 때문에 뒤집어졌는지 모르겠다면 — 문제 상품과 괜찮은 상품을 비교해 원인 후보를 추측합니다.
+        </p>
+      </div>
+
+      <div style={{ maxWidth:1000, margin:'0 auto', padding:'20px 24px' }}>
+        <Alert type="info" desc="확정 진단이 아니라, 다음 선택에서 피해야 할 가능성을 줄이는 도구입니다." />
+        <div style={{ height:16 }} />
+
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginBottom:16 }}>
+          {/* Problem products */}
+          <Card title="문제 상품 등록" extra="+ 추가">
+            <div style={{ display:'flex', flexDirection:'column', gap:8, marginBottom:12 }}>
+              {problemProducts.map((p, i) => (
+                <div key={i} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'8px 10px', background:'#fff1f0', border:'1px solid #ffa39e', borderRadius:2 }}>
+                  <span style={{ fontSize:13, color:T.textPrimary }}>{p}</span>
+                  <span onClick={() => setProblemProducts(prev => prev.filter((_,j)=>j!==i))} style={{ fontSize:12, color:'#ff4d4f', cursor:'pointer' }}>✕</span>
+                </div>
+              ))}
+            </div>
+            <div style={{ display:'flex', gap:6 }}>
+              <input value={newProb} onChange={e => setNewProb(e.target.value)} placeholder="제품명 직접 입력"
+                style={{ flex:1, height:32, borderRadius:2, border:`1px solid ${T.border}`, padding:'4px 8px', fontSize:13, fontFamily:'inherit' }} />
+              <Btn type="danger" size="sm" onClick={() => { if(newProb) { setProblemProducts(p => [...p, newProb]); setNewProb(''); } }}>추가</Btn>
+            </div>
+          </Card>
+
+          {/* OK products */}
+          <Card title="괜찮은 상품 등록" extra="+ 추가">
+            <div style={{ display:'flex', flexDirection:'column', gap:8, marginBottom:12 }}>
+              {okProducts.map((p, i) => (
+                <div key={i} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'8px 10px', background:'#f6ffed', border:'1px solid #b7eb8f', borderRadius:2 }}>
+                  <span style={{ fontSize:13, color:T.textPrimary }}>{p}</span>
+                  <span onClick={() => setOkProducts(prev => prev.filter((_,j)=>j!==i))} style={{ fontSize:12, color:'#8c8c8c', cursor:'pointer' }}>✕</span>
+                </div>
+              ))}
+            </div>
+            <div style={{ display:'flex', gap:6 }}>
+              <input value={newOk} onChange={e => setNewOk(e.target.value)} placeholder="제품명 직접 입력"
+                style={{ flex:1, height:32, borderRadius:2, border:`1px solid ${T.border}`, padding:'4px 8px', fontSize:13, fontFamily:'inherit' }} />
+              <Btn type="default" size="sm" onClick={() => { if(newOk) { setOkProducts(p => [...p, newOk]); setNewOk(''); } }}>추가</Btn>
+            </div>
+          </Card>
+        </div>
+
+        {/* Analyze button */}
+        {!analyzed && (
+          <div style={{ textAlign:'center', marginBottom:20 }}>
+            <Btn type="primary" size="lg" onClick={() => setAnalyzed(true)}>성분 비교 분석하기</Btn>
+          </div>
+        )}
+
+        {/* Results */}
+        {analyzed && (
+          <div className="fade-in">
+            <Card title="원인 후보 성분군">
+              <p style={{ fontSize:13, color:T.textSecondary, marginBottom:14, wordBreak:'keep-all', lineHeight:1.7 }}>
+                문제 상품과 괜찮은 상품의 성분을 비교했습니다. 아래는 의심 성분군이며, 확정 원인이 아닙니다.
+              </p>
+              <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+                {SUSPECTED.map(s => (
+                  <div key={s.rank} style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 12px', border:`1px solid ${T.border}`, borderRadius:2, background:'#fafafa' }}>
+                    <div style={{ width:24, height:24, borderRadius:'50%', background:T.bgPage, display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, fontWeight:700, color:T.textSecondary, flexShrink:0 }}>{s.rank}</div>
+                    <div style={{ flex:1 }}>
+                      <div style={{ fontSize:14, fontWeight:500, color:T.textPrimary }}>{s.group}</div>
+                      <div style={{ fontSize:12, color:T.textTertiary, marginTop:2 }}>{s.reason}</div>
+                    </div>
+                    <div>
+                      <span style={{ fontSize:12, fontWeight:500, padding:'2px 8px', borderRadius:2, background: confColor[s.confidence] + '20', color: confColor[s.confidence] }}>
+                        신뢰도 {confLabel[s.confidence]}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop:16, display:'flex', gap:10 }}>
+                <Btn type="primary" onClick={() => onNav('matrix')}>이 결과로 Product Matrix 필터 적용 →</Btn>
+                <Btn type="default" onClick={() => setAnalyzed(false)}>다시 분석</Btn>
+              </div>
+            </Card>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────── APP SHELL ──────────────── */
+function App() {
+  const [screen, setScreen] = useState('landing');
+
+  const screenMap = {
+    landing:   <Landing onNav={setScreen} />,
+    priority:  <PriorityGate onNav={setScreen} />,
+    category:  <CategoryDecision onNav={setScreen} />,
+    matrix:    <ProductMatrix onNav={setScreen} />,
+    traceback: <ReactionTraceback onNav={setScreen} />,
+  };
+
+  return (
+    <div style={{ minHeight:'100vh', background: T.bgPage }}>
+      <TopNav onNav={setScreen} />
+      {screenMap[screen] || screenMap.landing}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

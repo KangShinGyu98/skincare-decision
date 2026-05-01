@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Roboto','Noto Sans KR',sans-serif; background: #fff; padding: 20px; }
+  .col { margin-bottom: 16px; }
+  .label { font-size: 10px; font-weight: 700; color: #8c8c8c; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+</style>
+</head>
+<body>
+  <div class="grid">
+    <div class="col">
+      <div class="label">Roboto Regular</div>
+      <div style="font-family:'Roboto';font-weight:400;font-size:14px;color:#262626;line-height:1.57;">
+        AaBbCcDd 123<br>
+        The quick brown fox<br>
+        jumps over the lazy dog
+      </div>
+    </div>
+    <div class="col">
+      <div class="label">Roboto Medium</div>
+      <div style="font-family:'Roboto';font-weight:500;font-size:14px;color:#262626;line-height:1.57;">
+        AaBbCcDd 123<br>
+        The quick brown fox<br>
+        jumps over the lazy dog
+      </div>
+    </div>
+    <div class="col">
+      <div class="label">Roboto Bold</div>
+      <div style="font-family:'Roboto';font-weight:700;font-size:14px;color:#262626;line-height:1.57;">
+        AaBbCcDd 123<br>
+        The quick brown fox<br>
+        jumps over the lazy dog
+      </div>
+    </div>
+    <div class="col">
+      <div class="label">Noto Sans KR Regular</div>
+      <div style="font-family:'Noto Sans KR';font-weight:400;font-size:14px;color:#262626;line-height:1.7;word-break:keep-all;">
+        고민부터 시작해도 돼요.<br>
+        지금 피부 상태와 루틴에 맞게<br>
+        필요한 제품을 찾아드립니다.
+      </div>
+    </div>
+    <div class="col">
+      <div class="label">Noto Sans KR Medium</div>
+      <div style="font-family:'Noto Sans KR';font-weight:500;font-size:14px;color:#262626;line-height:1.7;word-break:keep-all;">
+        선크림 · 세럼 · 립케어<br>
+        SPF 50 이상 · 눈시림 낮음<br>
+        ✓ 적합 △ 주의 ✕ 비추
+      </div>
+    </div>
+    <div class="col">
+      <div class="label">Monospace (Menlo)</div>
+      <div style="font-family:Menlo,Monaco,monospace;font-size:12px;color:#262626;line-height:1.6;background:#fafafa;border:1px solid #f0f0f0;border-radius:2px;padding:8px;">
+        spf: 50<br>
+        pa: "++++",<br>
+        eye_sting: "low"<br>
+        fragrance: false
+      </div>
+    </div>
+  </div>
+</body></html>
