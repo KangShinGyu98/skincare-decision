@@ -206,18 +206,21 @@
 
 | # | fact_key | 질문 | input_type | options |
 |---|---|---|---|---|
-| 1 | `life.recent_irritation` | 최근 7일 안에 따가움, 붉어짐, 가려움이 반복됐나요? | BOOLEAN | 예 / 아니오 |
-| 2 | `life.recent_new_products` | 최근 2주 안에 새 제품을 2개 이상 추가했나요? | BOOLEAN | 예 / 아니오 |
-| 3 | `life.outdoor_activity` | 낮에 밖에 있는 시간이 많은 편인가요? | SINGLE_SELECT | `high` / `medium` / `low` |
-| 4 | `routine.sunscreen_frequency` | 선크림을 얼마나 자주 바르나요? | SINGLE_SELECT | `daily` / `sometimes` / `rarely` / `never` |
-| 5 | `routine.cleansing_stable` | 선크림이나 메이크업 후 클렌징이 잘 되고 있나요? | BOOLEAN | 예 / 아니오 |
-| 6 | `routine.recent_dry_tight` | 세안 후 당김, 건조, 따가움이 자주 있나요? | BOOLEAN | 예 / 아니오 |
-| 7 | `routine.moisturizer_daily` | 보습제를 매일 꾸준히 사용하나요? | BOOLEAN | 예 / 아니오 |
-| 8 | `routine.makeup_frequent` | 베이스 메이크업을 자주 하나요? | BOOLEAN | 예 / 아니오 |
-| 9 | `flow.current_concern` | 지금 가장 해결하고 싶은 고민은 무엇인가요? | SINGLE_SELECT | 트러블 / 건조 / 잡티 / 주름 / 모공 / 입술 / 기타 |
+| 1 | `life.recent_irritation` | 최근 따가움, 붉어짐, 가려움 같은 문제가 있나요? | BOOLEAN | 예 / 아니오 |
+| 2 | `life.outdoor_activity` | 하루 기준, 낮에 밖에 있는 시간은 어느 정도인가요? | SINGLE_SELECT | `under_1h` / `1_3h` / `over_3h` |
+| 3 | `routine.sunscreen_frequency` | 외출할 때 선크림을 바르나요? | SINGLE_SELECT | `daily (외출할 때 거의 항상)` / `sometimes` / `rarely` / `never` |
+| 4 | `routine.sunscreen_reapply` | 선크림을 가지고 다니면서 덧바르나요? | BOOLEAN | 예 / 아니오 |
+| 5 | `routine.cleansing_stable` | 선크림이나 메이크업을 지울 때 1차 세안 제품(오일/밤/워터/패드)을 따로 쓰나요? | BOOLEAN | 예 / 아니오 |
+| 6 | `routine.foam_enough` | 클렌징 폼을 쓸 때 거품을 충분히 내서 쓰는 편인가요? | BOOLEAN | 예 / 아니오 |
+| 7 | `routine.eye_irritation_history` | 화장이나 세안 중 눈이 따갑거나 눈에 들어가는 경험이 자주 있나요? | BOOLEAN | 예 / 아니오 |
+| 8 | `routine.recent_dry_tight` | 세안 후 당김, 건조, 따가움 같은 문제가 있나요? | BOOLEAN | 예 / 아니오 |
+| 9 | `routine.makeup_frequent` | 선크림 위에 베이스 메이크업을 자주 올리는 편인가요? | BOOLEAN | 예 / 아니오 |
+| 10 | `routine.brush_wash_cycle` | 브러시는 주기적으로 세척하나요? | SINGLE_SELECT | `regularly` / `sometimes` / `rarely` / `not_applicable` |
+| 11 | `routine.puff_age` | 퍼프는 산 지 얼마나 됐나요? | SINGLE_SELECT | `under_1_month` / `1_to_3_months` / `over_3_months` / `not_applicable` |
+| 12 | `flow.current_concern` | 지금 가장 해결하고 싶은 고민은 무엇인가요? | SINGLE_SELECT | 트러블 / 건조 / 잡티 / 주름 / 모공 / 입술 / 기타 |
 
 Concern preset으로 진입한 경우에는 관련 질문을 먼저 보여준다.  
-예: `acne`, `recurring_trouble`, `breakout_reaction`, `sensitivity_reaction`은 `life.recent_irritation`, `life.recent_new_products`, `routine.cleansing_stable`를 먼저 확인하고, `dryness`, `tightness`, `flaky_texture`는 `routine.recent_dry_tight`, `routine.moisturizer_daily`를 먼저 확인한다.
+예: `acne`, `recurring_trouble`, `breakout_reaction`, `sensitivity_reaction`은 `life.recent_irritation`, `routine.cleansing_stable`, `routine.eye_irritation_history`를 먼저 확인하고, `dryness`, `tightness`, `flaky_texture`는 `routine.recent_dry_tight`, `life.outdoor_activity`, `routine.sunscreen_frequency`를 먼저 확인한다.
 
 ## 3. Box 2 — 사용 중인 Skin Care 제품
 
@@ -272,15 +275,14 @@ Concern preset으로 진입한 경우에는 관련 질문을 먼저 보여준다
 
 | # | fact_key | 질문 | input_type | options | 노출 제품군 |
 |---|---|---|---|---|---|
-| 1 | `context.skin_type` | 피부 타입에 가장 가까운 것은 무엇인가요? | SINGLE_SELECT | `dry` / `oily` / `combination` / `sensitive` / `normal` / `acne_prone` / `aging` / `unknown` | toner, sunscreen, serum, moisturizer, cleanser |
+| 1 | `context.skin_type` | 피부 타입에 가장 가까운 것은 무엇인가요? | SINGLE_SELECT | `dry` / `oily` / `combination_tzone_oily` / `combination_uzone_dry` / `combination_balanced` / `sensitive` / `normal` / `acne_prone` / `aging` / `unknown` | toner, sunscreen, serum, moisturizer, cleanser |
 | 2 | `context.usage_place` | 주로 어디서 사용할 건가요? | SINGLE_SELECT | `indoor` / `outdoor` / `both` | sunscreen, lipcare, moisturizer |
-| 3 | `context.usage_time` | 언제 사용할 제품인가요? | SINGLE_SELECT | `morning` / `night` / `both` | toner, sunscreen, serum, moisturizer, cleanser |
+| 3 | `context.usage_time` | 이 제품을 주로 언제 바를 예정인가요? | SINGLE_SELECT | `morning (출근 전)` / `night (퇴근 후)` / `both (아침/저녁 둘 다)` | toner, sunscreen, serum, moisturizer, cleanser |
 | 4 | `context.portable` | 외출 시 들고 다니며 사용할 예정인가요? | BOOLEAN | 예 / 아니오 | sunscreen, lipcare |
-| 5 | `context.budget` | 예산대를 정해두셨나요? | SINGLE_SELECT | `UNDER_20000` / `BETWEEN_20000_50000` / `OVER_50000` / `ANY` | all |
-| 6 | `preference.fragrance_sensitive` | 향이 강한 제품이 불편한가요? | BOOLEAN | 예 / 아니오 | all |
-| 7 | `preference.alcohol_sensitive` | 알코올감이 있는 제품이 불편한가요? | BOOLEAN | 예 / 아니오 | toner, sunscreen, serum, moisturizer, cleanser |
-| 8 | `context.avoid_texture` | 피하고 싶은 사용감이 있나요? | MULTI_SELECT | 끈적임 / 답답함 / 무거움 / 건조함 / 화한 느낌 / 없음 | sunscreen, serum, moisturizer, cleanser, lipcare |
-| 9 | `context.past_failure` | 이전에 불편했던 사용감이나 성분이 있나요? | TAG | 향 / 화한 느낌 / 따가움 / 백탁 / 눈시림 / 밀림 / 없음 | all |
+| 5 | `preference.fragrance_sensitive` | 향이 강한 제품이 불편한가요? | BOOLEAN | 예 / 아니오 | all |
+| 6 | `preference.alcohol_sensitive` | 알코올감이 있는 제품이 불편한가요? | BOOLEAN | 예 / 아니오 | toner, sunscreen, serum, moisturizer, cleanser |
+| 7 | `context.avoid_texture` | 피하고 싶은 사용감이 있나요? | MULTI_SELECT | 끈적임 / 답답함 / 무거움 / 건조함 / 화한 느낌 / 없음 | sunscreen, serum, moisturizer, cleanser, lipcare |
+| 8 | `context.past_failure` | 이전에 불편했던 사용감이나 성분이 있나요? | TAG | 향 / 화한 느낌 / 따가움 / 백탁 / 눈시림 / 밀림 / 없음 | all |
 
 ## 3. 노출 원칙
 
@@ -311,23 +313,21 @@ Concern preset으로 진입한 경우에는 관련 질문을 먼저 보여준다
 
 | # | fact_key | 질문 | input_type | options |
 |---|---|---|---|---|
-| 1 | `context.toner_method` | 닦아내는 용도로 쓸 건가요, 바르는 용도로 쓸 건가요? | SINGLE_SELECT | `wipe` / `press` / `both` / `unknown` |
-| 2 | `context.toner_purpose` | 토너로 가장 기대하는 것은 무엇인가요? | SINGLE_SELECT | `hydration` / `exfoliation` / `balancing` / `oil_control` / `calming` / `brightening` / `anti_aging` / `barrier` |
-| 3 | `context.exfoliation_sensitive` | 각질 케어 제품을 쓰면 따갑거나 건조해지는 편인가요? | BOOLEAN | 예 / 아니오 |
-| 4 | `context.oil_control_need` | 번들거림이나 피지 조절이 필요하신가요? | BOOLEAN | 예 / 아니오 |
-| 5 | `context.daily_use` | 매일 아침저녁으로 사용할 제품을 찾고 있나요? | BOOLEAN | 예 / 아니오 |
-| 6 | `context.acne_prone` | 모공 막힘이나 트러블이 걱정되나요? | BOOLEAN | 예 / 아니오 |
+| 1 | `context.exfoliation_sensitive` | 각질 케어 제품을 쓰면 따갑거나 건조해지는 편인가요? | BOOLEAN | 예 / 아니오 |
+| 2 | `context.oil_control_need` | 번들거림이나 피지 조절이 필요하신가요? | BOOLEAN | 예 / 아니오 |
+| 3 | `context.daily_use` | 매일 아침저녁으로 사용할 제품을 찾고 있나요? | BOOLEAN | 예 / 아니오 |
+| 4 | `context.acne_prone` | 모공 막힘이나 트러블을 경험한 적이 있나요? | BOOLEAN | 예 / 아니오 |
 
 ## 3. Sunscreen 질문
 
 | # | fact_key | 질문 | input_type | options |
 |---|---|---|---|---|
-| 1 | `life.outdoor_activity` | 낮에 야외 활동이 많은 편인가요? | SINGLE_SELECT | `high` / `medium` / `low` |
+| 1 | `life.outdoor_activity` | 하루 기준, 낮에 밖에 있는 시간은 어느 정도인가요? | SINGLE_SELECT | `under_1h` / `1_3h` / `over_3h` |
 | 2 | `context.eye_sting` | 선크림을 바르면 눈이 시린 편인가요? | BOOLEAN | 예 / 아니오 |
 | 3 | `context.white_cast_sensitive` | 백탁이 있으면 사용하기 어려운가요? | BOOLEAN | 예 / 아니오 |
 | 4 | `context.sunscreen_skip_reason` | 끈적임이나 답답함 때문에 선크림을 생략한 적이 있나요? | BOOLEAN | 예 / 아니오 |
-| 5 | `context.makeup_use` | 선크림 위에 베이스 메이크업을 하나요? | BOOLEAN | 예 / 아니오 |
-| 6 | `context.touch_up` | 밖에서 덧바를 수 있는 형태가 필요한가요? | BOOLEAN | 예 / 아니오 |
+| 5 | `context.makeup_use` | 선크림 위에 베이스 메이크업을 덧바르나요? | BOOLEAN | 예 / 아니오 |
+| 6 | `context.touch_up` | 선크림을 가지고 다니면서 덧바를 계획인가요? | BOOLEAN | 예 / 아니오 |
 | 7 | `context.water_sweat_exposure` | 수영, 운동, 땀 나는 활동이 있나요? | BOOLEAN | 예 / 아니오 |
 
 ## 4. Serum 질문
@@ -335,11 +335,11 @@ Concern preset으로 진입한 경우에는 관련 질문을 먼저 보여준다
 | # | fact_key | 질문 | input_type | options |
 |---|---|---|---|---|
 | 1 | `context.serum_purpose` | 세럼으로 해결하고 싶은 고민은 무엇인가요? | SINGLE_SELECT | `brightening` / `anti_aging` / `calming` / `pore_care` / `acne` / `hydration` / `barrier` |
-| 2 | `life.recent_irritation` | 최근 따가움, 붉어짐, 건조함이 있었나요? | BOOLEAN | 예 / 아니오 |
+| 2 | `life.recent_irritation` | 최근 따가움, 붉어짐, 가려움 같은 문제가 있었나요? | BOOLEAN | 예 / 아니오 |
 | 3 | `product.owned_actives` | 현재 레티놀, 비타민C, AHA/BHA 제품을 사용 중인가요? | MULTI_SELECT | `retinol` / `vitamin_c` / `aha` / `bha` / `none` |
-| 4 | `context.usage_time` | 아침에 사용할 제품인가요, 밤에 사용할 제품인가요? | SINGLE_SELECT | `morning` / `night` / `both` |
+| 4 | `context.usage_time` | 언제 사용할 제품인가요? | SINGLE_SELECT | `morning (출근 전)` / `night (퇴근 후)` / `both (아침/저녁 둘 다)` |
 | 5 | `context.expectation_speed` | 빠른 변화보다 천천히 안정적인 변화를 원하나요? | BOOLEAN | 예 / 아니오 |
-| 6 | `routine.sunscreen_frequency` | 세럼 사용 후 선크림을 꾸준히 바를 수 있나요? | SINGLE_SELECT | `daily` / `sometimes` / `rarely` / `never` |
+| 6 | `routine.sunscreen_frequency` | 세럼을 쓰는 날, 외출할 때 선크림까지 바를 수 있나요? | SINGLE_SELECT | `daily (대부분 가능)` / `sometimes` / `rarely` / `never` |
 
 ## 5. Lipcare 질문
 
@@ -357,11 +357,11 @@ Concern preset으로 진입한 경우에는 관련 질문을 먼저 보여준다
 
 | # | fact_key | 질문 | input_type | options |
 |---|---|---|---|---|
-| 1 | `context.moisturizer_goal` | 로션/크림에서 가장 중요한 것은 무엇인가요? | SINGLE_SELECT | `hydration` / `barrier` / `oil_control` / `makeup_base` / `winter_rich` / `anti_aging` |
+| 1 | `context.moisturizer_goal` | 로션/크림에서 가장 먼저 해결하고 싶은 상황은 무엇인가요? | SINGLE_SELECT | `hydration (세안 후 당김 줄이기)` / `barrier (예민함 진정)` / `oil_control (번들거림 줄이기)` / `makeup_base (메이크업 전에 가볍게)` / `winter_rich (겨울철 진한 보습)` / `anti_aging (탄력 보조)` |
 | 2 | `routine.recent_dry_tight` | 세안 후 당김이나 건조가 자주 있나요? | BOOLEAN | 예 / 아니오 |
 | 3 | `context.prefer_lightweight` | 무겁거나 답답한 크림이 불편한가요? | BOOLEAN | 예 / 아니오 |
 | 4 | `context.makeup_use` | 보습제 위에 베이스 메이크업을 하나요? | BOOLEAN | 예 / 아니오 |
-| 5 | `context.acne_prone` | 모공 막힘이나 트러블이 걱정되나요? | BOOLEAN | 예 / 아니오 |
+| 5 | `context.acne_prone` | 모공 막힘이나 트러블을 경험한 적이 있나요? | BOOLEAN | 예 / 아니오 |
 | 6 | `context.season` | 주로 어느 계절에 사용할 제품인가요? | SINGLE_SELECT | `spring` / `summer` / `autumn` / `winter` / `all_season` |
 | 7 | `context.moisturizer_form` | 선호하는 제형이 있나요? | SINGLE_SELECT | `lotion` / `gel_cream` / `water_cream` / `cream` / `any` |
 
@@ -369,13 +369,13 @@ Concern preset으로 진입한 경우에는 관련 질문을 먼저 보여준다
 
 | # | fact_key | 질문 | input_type | options |
 |---|---|---|---|---|
-| 1 | `context.cleanser_usage` | 언제 사용할 클렌저인가요? | SINGLE_SELECT | `morning` / `night` / `both` |
+| 1 | `context.cleanser_usage` | 언제 사용할 클렌저인가요? | SINGLE_SELECT | `morning (출근 전)` / `night (퇴근 후)` / `both (아침/저녁 둘 다)` |
 | 2 | `context.makeup_sunscreen_level` | 평소 지우는 제품은 어느 정도인가요? | SINGLE_SELECT | `none` / `sunscreen` / `light_makeup` / `heavy_makeup` / `waterproof` |
-| 3 | `routine.cleansing_stable` | 클렌징이 안정적으로 잘 되고 있다고 느끼나요? | BOOLEAN | 예 / 아니오 |
+| 3 | `routine.cleansing_stable` | 현재 1차 세안 제품(오일/밤/워터/패드)을 따로 쓰나요? | BOOLEAN | 예 / 아니오 |
 | 4 | `routine.recent_dry_tight` | 세안 후 당김, 건조, 따가움이 자주 있나요? | BOOLEAN | 예 / 아니오 |
 | 5 | `context.scrub_sensitive` | 알갱이 스크럽이나 강한 세안감이 불편한가요? | BOOLEAN | 예 / 아니오 |
 | 6 | `context.cleanser_form` | 선호하는 클렌저 형태가 있나요? | SINGLE_SELECT | `foam` / `gel` / `oil` / `balm` / `water` / `cream` / `milk` / `any` |
-| 7 | `context.double_cleanse_needed` | 1차 세안과 2차 세안을 나눠서 하고 싶나요? | BOOLEAN | 예 / 아니오 |
+| 7 | `context.double_cleanse_needed` | 세안을 두 번에 나눠서 할 수 있나요? | BOOLEAN | 예 / 아니오 |
 
 ---
 
@@ -411,8 +411,6 @@ Concern preset으로 진입한 경우에는 관련 질문을 먼저 보여준다
 | `preference.menthol_sensitive = true` | 멘톨이나 화한 성분이 있는 립케어는 제외해요. |
 | `routine.recent_dry_tight = true` | 당김이 반복되면 수분 공급보다 장벽과 수분 잠금까지 같이 봐야 해요. |
 | `context.makeup_sunscreen_level IN [heavy_makeup, waterproof]` | 진한 메이크업이나 워터프루프 제품은 세정력과 이중 세안 역할을 같이 봐요. |
-| `context.budget != ANY` | 선택한 가격대 안에서만 제품 후보를 보여줘요. |
-
 전체 메시지 조건은 `matching_rules_revised.md`의 Category Decision Result Message Rules를 사용한다.
 
 ## 4. 제품 카드
@@ -481,7 +479,7 @@ Concern preset으로 진입한 경우에는 관련 질문을 먼저 보여준다
 | source fact | category | filter_key | 표시 라벨 |
 |---|---|---|---|
 | `context.skin_type = oily` | toner | `oil_control` | 피지 조절 |
-| `context.toner_purpose = exfoliation` | toner | `gentle_exfoliation` | 각질 케어 |
+| `flow.concern = flaky_texture` | toner | `gentle_exfoliation` | 각질 케어 |
 | `context.eye_sting = true` | sunscreen | `no_eye_sting` | 눈시림 회피 |
 | `context.white_cast_sensitive = true` | sunscreen | `no_white_cast` | 백탁 회피 |
 | `context.sunscreen_skip_reason = true` | sunscreen | `low_sticky` | 끈적임 낮음 |
@@ -643,12 +641,15 @@ Concern preset으로 진입한 경우에는 관련 질문을 먼저 보여준다
 | `preference.alcohol_sensitive` | BOOLEAN | 알코올감 민감 여부 |
 | `context.avoid_texture` | MULTI_ENUM | 피하고 싶은 사용감 |
 | `context.past_failure` | MULTI_ENUM | 과거 불편 경험 |
-| `context.toner_method` | ENUM | 토너 사용 방식 |
-| `context.toner_purpose` | ENUM | 토너 목적 |
+| `routine.sunscreen_reapply` | BOOLEAN | 선크림 덧바름 여부 |
+| `routine.foam_enough` | BOOLEAN | 클렌징 폼 거품 충분히 사용 여부 |
+| `routine.eye_irritation_history` | BOOLEAN | 화장/세안 중 눈 자극 경험 |
+| `routine.brush_wash_cycle` | ENUM | 브러시 세척 주기 |
+| `routine.puff_age` | ENUM | 퍼프 사용 기간 |
 | `context.exfoliation_sensitive` | BOOLEAN | 각질 케어 자극 민감 |
 | `context.oil_control_need` | BOOLEAN | 피지 조절 필요 |
 | `context.daily_use` | BOOLEAN | 매일 사용 목적 |
-| `context.acne_prone` | BOOLEAN | 트러블/모공 막힘 우려 |
+| `context.acne_prone` | BOOLEAN | 트러블/모공 막힘 경험 |
 | `context.sunscreen_skip_reason` | BOOLEAN | 사용감 때문에 선크림 생략 경험 |
 | `context.touch_up` | BOOLEAN | 덧바르기 필요 |
 | `context.water_sweat_exposure` | BOOLEAN | 물·땀 노출 여부 |
@@ -660,7 +661,7 @@ Concern preset으로 진입한 경우에는 관련 질문을 먼저 보여준다
 | `context.lip_outdoor` | BOOLEAN | 야외 립케어 필요 |
 | `context.lip_form` | ENUM | 립케어 선호 형태 |
 | `context.lip_night_care` | BOOLEAN | 야간 립케어 필요 |
-| `context.moisturizer_goal` | ENUM | 보습제 목적 |
+| `context.moisturizer_goal` | ENUM | 보습제에서 먼저 해결하고 싶은 상황 |
 | `context.prefer_lightweight` | BOOLEAN | 가벼운 제형 선호 |
 | `context.season` | ENUM | 사용 계절 |
 | `context.moisturizer_form` | ENUM | 보습제 선호 제형 |
@@ -668,7 +669,7 @@ Concern preset으로 진입한 경우에는 관련 질문을 먼저 보여준다
 | `context.makeup_sunscreen_level` | ENUM | 지워야 할 제품 강도 |
 | `context.scrub_sensitive` | BOOLEAN | 물리 스크럽 민감 |
 | `context.cleanser_form` | ENUM | 클렌저 선호 제형 |
-| `context.double_cleanse_needed` | BOOLEAN | 이중 세안 필요 |
+| `context.double_cleanse_needed` | BOOLEAN | 세안을 두 번에 나눠서 할 수 있는지 |
 | `flow.concern` | ENUM | Concern Mapper 진입 태그 |
 
 ---

@@ -274,7 +274,8 @@ ingredient_groups
 
 ```json
 { "key": "life.recent_irritation", "label": "최근 자극 여부", "group": "LIFE", "value_type": "BOOLEAN" }
-{ "key": "routine.sunscreen_frequency", "label": "선크림 사용 빈도", "group": "ROUTINE", "value_type": "ENUM", "options": ["daily","sometimes","rarely","never"] }
+{ "key": "life.outdoor_activity", "label": "낮 야외 활동 시간", "group": "LIFE", "value_type": "ENUM", "options": ["under_1h","1_3h","over_3h"] }
+{ "key": "routine.sunscreen_frequency", "label": "외출 시 선크림 사용 여부", "group": "ROUTINE", "value_type": "ENUM", "options": ["daily","sometimes","rarely","never"] }
 ```
 
 ---
@@ -301,7 +302,7 @@ ingredient_groups
 예시:
 
 ```json
-{ "fact_key": "life.recent_irritation", "question": "최근 7일 안에 따가움, 붉어짐, 가려움이 반복됐나요?", "screen": "priority_gate", "ui_section": "life_routine" }
+{ "fact_key": "life.recent_irritation", "question": "최근 따가움, 붉어짐, 가려움 같은 문제가 있나요?", "screen": "priority_gate", "ui_section": "life_routine" }
 { "fact_key": "product.owned_categories", "question": "현재 사용 중인 제품을 선택해주세요.", "screen": "priority_gate", "ui_section": "owned_products" }
 ```
 
@@ -334,7 +335,7 @@ ingredient_groups
 | fact_key | 조건 예시 | 설명 |
 |----------|-----------|------|
 | `category.selected` | `EQ "sunscreen"` | 선크림 카테고리 선택 시만 노출 |
-| `life.outdoor_activity` | `EQ "high"` | 야외 활동이 많은 경우만 노출 |
+| `life.outdoor_activity` | `IN ["1_3h","over_3h"]` | 야외 활동 시간이 긴 경우만 노출 |
 | `routine.sunscreen_frequency` | `IN ["rarely","never"]` | 선크림을 잘 안 쓰는 경우 노출 |
 | `product.owned_categories` | `CONTAINS "retinol"` | 레티놀 사용 중인 경우 노출 |
 | `context.usage_time` | `EQ "morning"` | 아침 사용 제품 고를 때만 노출 |
@@ -386,9 +387,9 @@ REQUIRED: context.usage_place EQ "outdoor"
 예시:
 
 ```json
-{ "device_id": "dev_abc", "user_id": null, "session_id": "sess_001", "fact_key": "life.outdoor_activity", "value": "high", "source": "priority_gate" }
-{ "device_id": "dev_abc", "user_id": null, "session_id": "sess_001", "fact_key": "life.outdoor_activity", "value": "low", "source": "priority_gate" }
-{ "device_id": "dev_abc", "user_id": "user_123", "session_id": "sess_002", "fact_key": "life.outdoor_activity", "value": "low", "source": "priority_gate" }
+{ "device_id": "dev_abc", "user_id": null, "session_id": "sess_001", "fact_key": "life.outdoor_activity", "value": "over_3h", "source": "priority_gate" }
+{ "device_id": "dev_abc", "user_id": null, "session_id": "sess_001", "fact_key": "life.outdoor_activity", "value": "under_1h", "source": "priority_gate" }
+{ "device_id": "dev_abc", "user_id": "user_123", "session_id": "sess_002", "fact_key": "life.outdoor_activity", "value": "under_1h", "source": "priority_gate" }
 ```
 
 > 세 번째 row: 로그인 후 자동 병합으로 `user_id`가 채워진 상태.
@@ -449,7 +450,7 @@ Priority Rule 발동 조건.
 ```
 Rule: 선크림 루틴 우선
 REQUIRED:
-  - life.outdoor_activity = "high"
+  - life.outdoor_activity IN ["1_3h", "over_3h"]
   - routine.sunscreen_frequency IN ["rarely", "never"]
 EXCLUDED:
   - life.recent_irritation = true
@@ -559,7 +560,7 @@ Priority Gate뿐 아니라 Category Decision, Product Matrix 결과까지 저장
 
 ```json
 { "key": "spf", "label": "SPF", "value_type": "NUMBER" }
-{ "key": "eye_sting_risk", "label": "눈시림 위험", "value_type": "ENUM", "options": ["low","medium","high"] }
+{ "key": "eye_sting", "label": "눈시림 위험", "value_type": "ENUM", "options": ["none","low","medium","high"] }
 ```
 
 ---
@@ -591,7 +592,7 @@ Priority Gate뿐 아니라 Category Decision, Product Matrix 결과까지 저장
   "spf": 50,
   "pa": "++++",
   "filter_type": "hybrid",
-  "eye_sting_risk": "low",
+  "eye_sting": "low",
   "white_cast": "low",
   "texture": "light",
   "makeup_compatibility": "good",
@@ -647,7 +648,7 @@ Priority Gate뿐 아니라 Category Decision, Product Matrix 결과까지 저장
 | source_fact_key | source 조건 | attribute_key | attribute 조건 | filter_mode | filter_label |
 |-----------------|-------------|---------------|----------------|-------------|--------------|
 | `context.eye_sting` | `EQ true` | `eye_sting` | `IN ["none","low"]` | `HARD_FILTER` | 눈시림 낮음 |
-| `life.outdoor_activity` | `EQ "high"` | `spf` | `GTE 50` | `HARD_FILTER` | 야외 사용 적합 |
+| `life.outdoor_activity` | `IN ["1_3h","over_3h"]` | `spf` | `GTE 50` | `HARD_FILTER` | 야외 사용 적합 |
 | `context.white_cast_sensitive` | `EQ true` | `white_cast` | `IN ["none","low"]` | `HARD_FILTER` | 백탁 없음 |
 | `preference.fragrance_sensitive` | `EQ true` | `fragrance` | `EQ false` | `HARD_FILTER` | 향료 없음 |
 | `context.usage_place` | `EQ "outdoor"` | `spf` | `GTE 50` | `TAG` | 야외 사용 적합 |
@@ -880,15 +881,18 @@ WHERE category_id = :category_id
 
 | fact_key | group | value_type | 설명 |
 |----------|-------|------------|------|
-| `life.recent_irritation` | LIFE | BOOLEAN | 최근 7일 내 따가움·붉어짐·가려움 반복 여부 |
-| `life.recent_new_products` | LIFE | BOOLEAN | 최근 2주 내 신제품 2개 이상 추가 여부 |
-| `life.outdoor_activity` | LIFE | ENUM | 낮 야외 활동 빈도 (`high` / `medium` / `low`) |
-| `routine.sunscreen_use` | ROUTINE | BOOLEAN | 선크림 거의 매일 사용 여부 |
-| `routine.sunscreen_frequency` | ROUTINE | ENUM | 선크림 사용 빈도 (`daily` / `sometimes` / `rarely` / `never`) |
-| `routine.cleansing_stable` | ROUTINE | BOOLEAN | 클렌징이 안정적으로 되고 있는지 |
-| `routine.moisturizer_daily` | ROUTINE | BOOLEAN | 보습제 매일 꾸준히 사용 여부 |
-| `routine.recent_dry_tight` | ROUTINE | BOOLEAN | 세안 후 당김·건조·따가움 반복 여부 |
-| `routine.makeup_frequent` | ROUTINE | BOOLEAN | 베이스 메이크업 자주 사용 여부 |
+| `life.recent_irritation` | LIFE | BOOLEAN | 최근 따가움·붉어짐·가려움 같은 문제 여부 |
+| `life.outdoor_activity` | LIFE | ENUM | 낮 야외 활동 시간 (`under_1h` / `1_3h` / `over_3h`) |
+| `routine.sunscreen_use` | ROUTINE | BOOLEAN | 외출 시 선크림 사용 여부 파생값 |
+| `routine.sunscreen_frequency` | ROUTINE | ENUM | 외출 시 선크림 사용 빈도 (`daily` / `sometimes` / `rarely` / `never`) |
+| `routine.sunscreen_reapply` | ROUTINE | BOOLEAN | 선크림을 들고 다니며 덧바르는지 |
+| `routine.cleansing_stable` | ROUTINE | BOOLEAN | 1차 세안 제품(오일/밤/워터/패드)을 따로 쓰는지 |
+| `routine.foam_enough` | ROUTINE | BOOLEAN | 클렌징 폼 거품을 충분히 내서 쓰는지 |
+| `routine.eye_irritation_history` | ROUTINE | BOOLEAN | 화장/세안 중 눈 자극 경험이 잦은지 |
+| `routine.recent_dry_tight` | ROUTINE | BOOLEAN | 세안 후 당김·건조·따가움 같은 문제 여부 |
+| `routine.makeup_frequent` | ROUTINE | BOOLEAN | 선크림 위에 베이스 메이크업을 자주 올리는지 |
+| `routine.brush_wash_cycle` | ROUTINE | ENUM | 브러시 세척 주기 (`regularly` / `sometimes` / `rarely` / `not_applicable`) |
+| `routine.puff_age` | ROUTINE | ENUM | 퍼프 사용 기간 (`under_1_month` / `1_to_3_months` / `over_3_months` / `not_applicable`) |
 | `product.owned_categories` | PRODUCT | MULTI_ENUM | 현재 사용 중인 제품군 목록 |
 | `category.selected` | CATEGORY | ENUM | 선택한 제품군 key (`sunscreen` / `serum` / `lipcare` 등) |
 | `context.usage_place` | CONTEXT | ENUM | 사용 장소 (`outdoor` / `indoor`) |

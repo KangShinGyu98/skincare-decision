@@ -90,6 +90,7 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 | derived_fact | source | 계산 |
 |---|---|---|
 | `routine.sunscreen_use` | `routine.sunscreen_frequency` | `daily`, `sometimes`이면 true. `rarely`, `never`이면 false |
+| `routine.tool_hygiene_risk` | `routine.brush_wash_cycle`, `routine.puff_age` | 브러시 세척이 `rarely`이거나 퍼프 사용 기간이 `over_3_months`이면 true |
 | `product.active_overload` | `product.owned_categories` | `retinol`, `vitamin_c`, `aha_bha`를 모두 포함하면 true |
 | `product.functional_overlap` | `product.owned_categories` | `essence`, `serum`, `ampoule` 중 2개 이상 포함하면 true |
 | `product.toner_overlap` | `product.owned_categories` | `toner`, `skin`, `toner_pad` 중 2개 이상 포함하면 true |
@@ -117,13 +118,13 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 | `recent_irritation_hold` | 1 | HOLD | 지금은 새 제품보다 피부 반응 안정화가 먼저예요. | 현재 루틴 점검하기 | `/routine-check` |
 | `active_overload_hold` | 2 | HOLD | 자극 가능성이 높아 새 세럼이나 필링 제품은 보류하는 게 좋아요. | 병행 성분 정리하기 | `/routine-check?focus=active` |
 | `functional_overlap_hold` | 3 | HOLD | 새 기능성 제품은 잠시 보류하고 루틴을 단순화하는 게 좋아요. | 기능성 제품 정리하기 | `/routine-check?focus=functional` |
-| `recent_new_products_hold` | 4 | HOLD | 지금은 새 제품보다 현재 루틴을 7~14일 고정하는 게 먼저예요. | 루틴 고정하기 | `/routine-check` |
-| `cleansing_route` | 5 | ROUTE_CATEGORY | 새 제품보다 클렌징 루틴 점검이 먼저예요. | 클렌저 보기 | `/category-decision?category=cleanser` |
-| `outdoor_sunscreen_route` | 6 | ROUTE_CATEGORY | 세럼보다 선크림 루틴이 먼저예요. | 선크림 보기 | `/category-decision?category=sunscreen` |
-| `sunscreen_daily_route` | 7 | ROUTE_CATEGORY | 매일 쓸 수 있는 선크림을 먼저 찾아야 해요. | 선크림 보기 | `/category-decision?category=sunscreen` |
-| `dry_barrier_route` | 8 | ROUTE_CATEGORY | 기능성 제품보다 보습 루틴 고정이 먼저예요. | 로션/크림 보기 | `/category-decision?category=moisturizer` |
-| `moisturizer_daily_route` | 9 | ROUTE_CATEGORY | 수분 세럼보다 매일 쓸 수 있는 로션/크림이 먼저예요. | 로션/크림 보기 | `/category-decision?category=moisturizer` |
-| `makeup_compat_caution` | 10 | CAUTION | 선크림, 보습제, 베이스 궁합을 같이 봐야 해요. | 궁합 기준으로 보기 | `/category-decision?category=sunscreen` |
+| `cleansing_route` | 4 | ROUTE_CATEGORY | 메이크업이나 선크림 제거 방식부터 점검하는 게 좋아요. | 클렌저 보기 | `/category-decision?category=cleanser` |
+| `outdoor_sunscreen_route` | 5 | ROUTE_CATEGORY | 세럼보다 선크림 루틴이 먼저예요. | 선크림 보기 | `/category-decision?category=sunscreen` |
+| `sunscreen_daily_route` | 6 | ROUTE_CATEGORY | 외출할 때 바를 수 있는 선크림을 먼저 찾아야 해요. | 선크림 보기 | `/category-decision?category=sunscreen` |
+| `dry_barrier_route` | 7 | ROUTE_CATEGORY | 기능성 제품보다 보습 루틴 고정이 먼저예요. | 로션/크림 보기 | `/category-decision?category=moisturizer` |
+| `eye_irritation_caution` | 8 | CAUTION | 눈가 자극이 잦다면 저자극 세안/선크림 기준을 먼저 봐야 해요. | 눈 자극 기준으로 보기 | `/category-decision?category=cleanser` |
+| `makeup_compat_caution` | 9 | CAUTION | 선크림, 보습제, 베이스 궁합을 같이 봐야 해요. | 궁합 기준으로 보기 | `/category-decision?category=sunscreen` |
+| `tool_hygiene_caution` | 10 | CAUTION | 브러시와 퍼프 위생도 같이 점검해보세요. | 도구 위생 점검하기 | `/routine-check?focus=tool-hygiene` |
 | `duplicate_role_caution` | 11 | CAUTION | 새로 사기보다 기존 제품을 먼저 정리해요. | 보유 제품 정리하기 | `/routine-check?focus=duplicate` |
 | `priority_pass` | 12 | PASS | 지금은 기능성 제품군을 봐도 괜찮아요. | 제품군 고르기 | `/category-decision` |
 
@@ -134,13 +135,13 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 | `recent_irritation_hold` | REQUIRED `life.recent_irritation EQ true` |
 | `active_overload_hold` | REQUIRED `product.active_overload EQ true` |
 | `functional_overlap_hold` | REQUIRED `product.functional_overlap EQ true` |
-| `recent_new_products_hold` | REQUIRED `life.recent_new_products EQ true` |
-| `cleansing_route` | REQUIRED `routine.cleansing_stable EQ false` |
-| `outdoor_sunscreen_route` | REQUIRED `life.outdoor_activity EQ high`; REQUIRED `routine.sunscreen_use EQ false`; EXCLUDED `life.recent_irritation EQ true` |
+| `cleansing_route` | REQUIRED `routine.cleansing_stable EQ false` OR `routine.foam_enough EQ false` |
+| `outdoor_sunscreen_route` | REQUIRED `life.outdoor_activity IN [1_3h, over_3h]`; REQUIRED `routine.sunscreen_use EQ false`; EXCLUDED `life.recent_irritation EQ true` |
 | `sunscreen_daily_route` | REQUIRED `routine.sunscreen_frequency IN [rarely, never]`; EXCLUDED `life.recent_irritation EQ true` |
 | `dry_barrier_route` | REQUIRED `routine.recent_dry_tight EQ true`; EXCLUDED `life.recent_irritation EQ true` |
-| `moisturizer_daily_route` | REQUIRED `routine.moisturizer_daily EQ false`; EXCLUDED `life.recent_irritation EQ true` |
+| `eye_irritation_caution` | REQUIRED `routine.eye_irritation_history EQ true` |
 | `makeup_compat_caution` | REQUIRED `routine.makeup_frequent EQ true`; EXCLUDED `life.recent_irritation EQ true` |
+| `tool_hygiene_caution` | REQUIRED `routine.tool_hygiene_risk EQ true` |
 | `duplicate_role_caution` | REQUIRED `product.toner_overlap EQ true` OR `product.moisturizer_overlap EQ true` OR `product.functional_overlap EQ true` |
 | `priority_pass` | fallback |
 
@@ -165,7 +166,6 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 | `context.usage_place` | `category.selected IN [sunscreen, lipcare, moisturizer]` | - |
 | `context.usage_time` | `category.selected IN [toner, sunscreen, serum, moisturizer, cleanser]` | - |
 | `context.portable` | `category.selected IN [sunscreen, lipcare]` | - |
-| `context.budget` | - | - |
 | `preference.fragrance_sensitive` | - | - |
 | `preference.alcohol_sensitive` | `category.selected IN [toner, sunscreen, serum, moisturizer, cleanser]` | `category.selected EQ lipcare` |
 | `context.avoid_texture` | `category.selected IN [sunscreen, serum, moisturizer, cleanser, lipcare]` | - |
@@ -175,7 +175,7 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 
 | category | 질문 fact_key |
 |---|---|
-| `toner` | `context.toner_method`, `context.toner_purpose`, `context.exfoliation_sensitive`, `context.oil_control_need`, `context.daily_use`, `context.acne_prone` |
+| `toner` | `context.exfoliation_sensitive`, `context.oil_control_need`, `context.daily_use`, `context.acne_prone` |
 | `sunscreen` | `life.outdoor_activity`, `context.eye_sting`, `context.white_cast_sensitive`, `context.sunscreen_skip_reason`, `context.makeup_use`, `context.touch_up`, `context.water_sweat_exposure` |
 | `serum` | `context.serum_purpose`, `life.recent_irritation`, `product.owned_actives`, `context.usage_time`, `context.expectation_speed`, `routine.sunscreen_frequency` |
 | `lipcare` | `context.lip_severity`, `preference.menthol_sensitive`, `preference.fragrance_sensitive`, `context.lip_reapply`, `context.lip_outdoor`, `context.lip_form`, `context.lip_night_care` |
@@ -187,11 +187,11 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 | question | 추가 노출 조건 |
 |---|---|
 | `context.touch_up` | `category.selected EQ sunscreen` AND `context.usage_place IN [outdoor, both]` |
-| `context.water_sweat_exposure` | `category.selected EQ sunscreen` AND `life.outdoor_activity IN [high, medium]` |
+| `context.water_sweat_exposure` | `category.selected EQ sunscreen` AND `life.outdoor_activity IN [1_3h, over_3h]` |
 | `routine.sunscreen_frequency` for serum | `category.selected EQ serum` AND `context.serum_purpose IN [brightening, anti_aging, acne, texture]` |
 | `context.lip_outdoor` | `category.selected EQ lipcare` AND `context.usage_place IN [outdoor, both]` |
 | `context.lip_night_care` | `category.selected EQ lipcare` AND `context.lip_severity EQ true` |
-| `context.makeup_use` for moisturizer | `category.selected EQ moisturizer` AND `routine.makeup_frequent EQ true` OR `context.usage_time EQ morning` |
+| `context.makeup_use` for moisturizer | `category.selected EQ moisturizer` AND `routine.makeup_frequent EQ true` OR `context.usage_time IN [morning, morning (출근 전)]` |
 | `context.double_cleanse_needed` | `category.selected EQ cleanser` AND `context.makeup_sunscreen_level IN [sunscreen, light_makeup, heavy_makeup, waterproof]` |
 
 ---
@@ -269,17 +269,6 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 | `moisturizer` | `barrier_ingredients`, `triple_moisture`, `mild_ph`, `low_irritation` |
 | `cleanser` | `mild_ph`, `low_sls`, `low_irritation` |
 
-## 6.3 예산 필터
-
-| source_fact | source_value | product condition | filter_mode | filter_key |
-|---|---|---|---|---|
-| `context.budget` | `UNDER_20000` | `products.price_band EQ UNDER_20000` | HARD_FILTER | `budget_under_20000` |
-| `context.budget` | `BETWEEN_20000_50000` | `products.price_band EQ BETWEEN_20000_50000` | HARD_FILTER | `budget_20k_50k` |
-| `context.budget` | `OVER_50000` | `products.price_band EQ OVER_50000` | HARD_FILTER | `budget_over_50k` |
-| `context.budget` | `ANY` | no condition | TAG | `budget_any` |
-
----
-
 # 7. Product Filter Mapping Seed — BASIC_CONDITION
 
 ## 7.1 Toner BASIC_CONDITION
@@ -347,21 +336,15 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 | `preference.alcohol_sensitive` | `EQ true` | toner, sunscreen, serum, moisturizer, cleanser | `alcohol EQ false` | HARD_FILTER | `no_alcohol` | 알코올 회피 |
 | `context.skin_type` | `EQ sensitive` | toner, sunscreen, serum, moisturizer, cleanser | `irritation_risk EQ low` | HARD_FILTER | `sensitive_low_irritation` | 민감 피부 저자극 |
 | `context.skin_type` | `EQ acne_prone` | sunscreen, serum, moisturizer, cleanser, toner | `non_comedogenic EQ true` | HARD_FILTER | `non_comedogenic` | 논코메도제닉 |
-| `context.budget` | `EQ UNDER_20000` | all | `price_band EQ UNDER_20000` | HARD_FILTER | `budget_under_20000` | ~2만원 |
-| `context.budget` | `EQ BETWEEN_20000_50000` | all | `price_band EQ BETWEEN_20000_50000` | HARD_FILTER | `budget_20k_50k` | 2~5만원 |
-| `context.budget` | `EQ OVER_50000` | all | `price_band EQ OVER_50000` | HARD_FILTER | `budget_over_50k` | 5만원+ |
 
 ## 8.2 Toner PERSONALIZED
 
 | source_fact_key | source condition | attribute condition | mode | filter_key | label |
 |---|---|---|---|---|---|
-| `context.skin_type` | `EQ dry` | `hydration_level EQ high` | SORT | `dry_skin_hydration` | 건성 수분 토너 |
-| `context.skin_type` | `EQ oily` | `oil_control IN [medium, high]` | SORT | `oil_control` | 피지 조절 |
+| `context.skin_type` | `IN [dry, combination_uzone_dry]` | `hydration_level EQ high` | SORT | `dry_skin_hydration` | 건성 수분 토너 |
+| `context.skin_type` | `IN [oily, combination_tzone_oily]` | `oil_control IN [medium, high]` | SORT | `oil_control` | 피지 조절 |
 | `context.skin_type` | `EQ sensitive` | `fragrance EQ false` AND `alcohol EQ false` | HARD_FILTER | `sensitive_toner` | 민감 토너 |
-| `context.toner_method` | `EQ wipe` | `application_method IN [wipe, both]` | HARD_FILTER | `wipe_toner` | 닦토 |
-| `context.toner_method` | `EQ press` | `application_method IN [press, both]` | HARD_FILTER | `press_toner` | 흡토 |
-| `context.toner_purpose` | `EQ hydration` | `purposes CONTAINS hydration` AND `hydration_level IN [medium, high]` | HARD_FILTER | `hydrating_toner` | 수분 토너 |
-| `context.toner_purpose` | `EQ exfoliation` | `exfoliation_type IN [aha, bha, pha, mixed]` | HARD_FILTER | `gentle_exfoliation` | 각질 케어 |
+| `flow.concern` | `EQ flaky_texture` | `exfoliation_type IN [aha, bha, pha, mixed]` | HARD_FILTER | `gentle_exfoliation` | 각질 케어 |
 | `context.exfoliation_sensitive` | `EQ true` | `exfoliation_type IN [none, pha]` AND `irritation_risk EQ low` | HARD_FILTER | `gentle_exfoliation_sensitive` | 저자극 각질 |
 | `context.oil_control_need` | `EQ true` | `oil_control IN [medium, high]` | SORT | `oil_control` | 피지 조절 |
 | `context.acne_prone` | `EQ true` | `non_comedogenic EQ true` | HARD_FILTER | `non_comedogenic` | 모공 막힘 주의 |
@@ -371,7 +354,7 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 
 | source_fact_key | source condition | attribute condition | mode | filter_key | label |
 |---|---|---|---|---|---|
-| `life.outdoor_activity` | `EQ high` | `spf GTE 50` AND `pa EQ ++++` | HARD_FILTER | `outdoor_use` | 야외 사용 |
+| `life.outdoor_activity` | `IN [1_3h, over_3h]` | `spf GTE 50` AND `pa EQ ++++` | HARD_FILTER | `outdoor_use` | 야외 사용 |
 | `context.usage_place` | `EQ outdoor` | `spf GTE 50` | HARD_FILTER | `outdoor_use` | 야외 사용 |
 | `context.water_sweat_exposure` | `EQ true` | `water_resistant EQ true` | HARD_FILTER | `water_resistant` | 물·땀 저항 |
 | `context.eye_sting` | `EQ true` | `eye_sting IN [none, low]` | HARD_FILTER | `no_eye_sting` | 눈시림 회피 |
@@ -381,8 +364,8 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 | `context.makeup_use` | `EQ true` | `makeup_compatibility EQ good` | HARD_FILTER | `makeup_compat_good` | 메이크업 궁합 |
 | `context.touch_up` | `EQ true` | `portable EQ true` | SORT | `portable` | 덧바르기 쉬움 |
 | `context.portable` | `EQ true` | `portable EQ true` | SORT | `portable` | 휴대형 |
-| `context.skin_type` | `EQ oily` | `oil_free EQ true` AND `non_comedogenic EQ true` AND `finish EQ matte` | SORT | `oily_skin_fit` | 지성 피부 적합 |
-| `context.skin_type` | `EQ dry` | `hydration_level IN [medium, high]` | SORT | `dry_skin_sunscreen` | 건성 보습감 |
+| `context.skin_type` | `IN [oily, combination_tzone_oily]` | `oil_free EQ true` AND `non_comedogenic EQ true` AND `finish EQ matte` | SORT | `oily_skin_fit` | 지성 피부 적합 |
+| `context.skin_type` | `IN [dry, combination_uzone_dry]` | `hydration_level IN [medium, high]` | SORT | `dry_skin_sunscreen` | 건성 보습감 |
 | `context.skin_type` | `EQ sensitive` | `filter_type EQ physical` AND `fragrance EQ false` AND `alcohol EQ false` | SORT | `sensitive_skin_fit` | 민감 피부 적합 |
 
 ## 8.4 Serum PERSONALIZED
@@ -401,14 +384,14 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 | `context.serum_purpose` | `EQ barrier` | `target_concerns CONTAINS barrier` | HARD_FILTER | `barrier_fit` | 장벽 케어 |
 | `life.recent_irritation` | `EQ true` | `irritation_risk EQ low` | HARD_FILTER | `low_irritation` | 자극 낮음 |
 | `life.recent_irritation` | `EQ true` | `fragrance EQ false` AND `alcohol EQ false` | HARD_FILTER | `no_irritant_base` | 향료/알코올 회피 |
-| `context.usage_time` | `EQ morning` | `usage_time IN [morning, both]` | HARD_FILTER | `morning_use` | 아침 사용 |
-| `context.usage_time` | `EQ night` | `usage_time IN [night, both]` | HARD_FILTER | `night_use` | 밤 사용 |
+| `context.usage_time` | `IN [morning, morning (출근 전)]` | `usage_time IN [morning, both]` | HARD_FILTER | `morning_use` | 아침 사용 |
+| `context.usage_time` | `IN [night, night (퇴근 후)]` | `usage_time IN [night, both]` | HARD_FILTER | `night_use` | 밤 사용 |
 | `context.expectation_speed` | `EQ true` | `irritation_risk IN [low, medium]` AND `effect_timeline EQ gradual` | SORT | `gradual_safe` | 안정적 변화 |
 | `product.owned_actives` | `CONTAINS retinol` | `conflict_ingredients CONTAINS retinol` | CAUTION | `retinol_conflict_caution` | 레티놀 병행 주의 |
 | `product.owned_actives` | `CONTAINS vitamin_c` | `conflict_ingredients CONTAINS vitamin_c` | CAUTION | `vitamin_c_conflict_caution` | 비타민C 병행 주의 |
 | `product.owned_actives` | `CONTAINS aha` | `conflict_ingredients CONTAINS aha` | CAUTION | `aha_conflict_caution` | AHA 병행 주의 |
 | `product.owned_actives` | `CONTAINS bha` | `conflict_ingredients CONTAINS bha` | CAUTION | `bha_conflict_caution` | BHA 병행 주의 |
-| `context.skin_type` | `EQ oily` | `oil_free EQ true` AND `non_comedogenic EQ true` | SORT | `oily_skin_fit` | 지성 피부 적합 |
+| `context.skin_type` | `IN [oily, combination_tzone_oily]` | `oil_free EQ true` AND `non_comedogenic EQ true` | SORT | `oily_skin_fit` | 지성 피부 적합 |
 | `context.skin_type` | `EQ acne_prone` | `non_comedogenic EQ true` | HARD_FILTER | `acne_non_comedogenic` | 트러블 피부 |
 
 ## 8.5 Lipcare PERSONALIZED
@@ -442,8 +425,8 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 | `context.makeup_use` | `EQ true` | `sticky IN [none, low]` | SORT | `low_sticky` | 끈적임 낮음 |
 | `context.acne_prone` | `EQ true` | `non_comedogenic EQ true` | HARD_FILTER | `non_comedogenic` | 논코메도제닉 |
 | `context.acne_prone` | `EQ true` | `oil_free EQ true` | SORT | `oil_free` | 오일프리 |
-| `context.skin_type` | `EQ dry` | `hydration_level EQ high` AND `occlusive_level IN [medium, high]` | SORT | `dry_skin_moisturizer` | 건성 보습 |
-| `context.skin_type` | `EQ oily` | `texture EQ light` AND `oiliness EQ low` | SORT | `oily_skin_moisturizer` | 지성 산뜻함 |
+| `context.skin_type` | `IN [dry, combination_uzone_dry]` | `hydration_level EQ high` AND `occlusive_level IN [medium, high]` | SORT | `dry_skin_moisturizer` | 건성 보습 |
+| `context.skin_type` | `IN [oily, combination_tzone_oily]` | `texture EQ light` AND `oiliness EQ low` | SORT | `oily_skin_moisturizer` | 지성 산뜻함 |
 | `context.skin_type` | `EQ sensitive` | `irritation_risk EQ low` AND `fragrance EQ false` AND `alcohol EQ false` | HARD_FILTER | `sensitive_moisturizer` | 민감 피부 |
 | `context.season` | `EQ summer` | `form IN [lotion, gel_cream, water_cream]` AND `texture EQ light` | SORT | `summer_lightweight` | 여름 산뜻함 |
 | `context.season` | `EQ winter` | `occlusive_level IN [medium, high]` AND `texture IN [medium, rich]` | SORT | `winter_rich` | 겨울 보습 |
@@ -455,7 +438,7 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 
 | source_fact_key | source condition | attribute condition | mode | filter_key | label |
 |---|---|---|---|---|---|
-| `context.cleanser_usage` | `EQ morning` | `cleansing_power IN [low, medium]` AND `after_feel IN [moist, neutral]` | HARD_FILTER | `morning_cleanser` | 아침 세안 |
+| `context.cleanser_usage` | `IN [morning, morning (출근 전)]` | `cleansing_power IN [low, medium]` AND `after_feel IN [moist, neutral]` | HARD_FILTER | `morning_cleanser` | 아침 세안 |
 | `context.makeup_sunscreen_level` | `EQ sunscreen` | `makeup_removal_power IN [low, medium, high]` | SORT | `sunscreen_removal` | 선크림 세정 |
 | `context.makeup_sunscreen_level` | `EQ light_makeup` | `makeup_removal_power IN [medium, high]` | HARD_FILTER | `makeup_removal` | 메이크업 세정 |
 | `context.makeup_sunscreen_level` | `EQ heavy_makeup` | `makeup_removal_power EQ high` | HARD_FILTER | `heavy_makeup_removal` | 진한 메이크업 세정 |
@@ -464,8 +447,8 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 | `routine.recent_dry_tight` | `EQ true` | `after_feel IN [moist, neutral]` | HARD_FILTER | `moist_after_feel` | 당김 적음 |
 | `routine.recent_dry_tight` | `EQ true` | `ph GTE 5.0` AND `ph LTE 6.5` | SORT | `mild_ph` | 약산성 |
 | `context.scrub_sensitive` | `EQ true` | `physical_scrub_risk IN [none, low]` | HARD_FILTER | `no_physical_scrub` | 스크럽 회피 |
-| `context.skin_type` | `EQ dry` | `cleanser_type IN [cream, milk, lotion, oil]` AND `after_feel EQ moist` | SORT | `dry_skin_cleanser` | 건성 클렌저 |
-| `context.skin_type` | `EQ oily` | `cleanser_type IN [gel, foam]` AND `cleansing_power IN [medium, high]` | SORT | `oily_skin_cleanser` | 지성 클렌저 |
+| `context.skin_type` | `IN [dry, combination_uzone_dry]` | `cleanser_type IN [cream, milk, lotion, oil]` AND `after_feel EQ moist` | SORT | `dry_skin_cleanser` | 건성 클렌저 |
+| `context.skin_type` | `IN [oily, combination_tzone_oily]` | `cleanser_type IN [gel, foam]` AND `cleansing_power IN [medium, high]` | SORT | `oily_skin_cleanser` | 지성 클렌저 |
 | `context.skin_type` | `EQ sensitive` | `sulfate_free EQ true` AND `fragrance EQ false` AND `alcohol EQ false` AND `soap_free EQ true` | HARD_FILTER | `sensitive_cleanser` | 민감 클렌저 |
 | `context.acne_prone` | `EQ true` | `non_comedogenic EQ true` | HARD_FILTER | `non_comedogenic` | 논코메도제닉 |
 | `context.cleanser_form` | `EQ foam` | `cleanser_type EQ foam` | SORT | `form_foam` | 폼 |
@@ -597,7 +580,7 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 | 원칙 | 설명 |
 |---|---|
 | 최대 노출 | 3개 메시지만 표시 |
-| 우선순위 | 자극/안전 > 루틴 안정 > 제품군 핵심 기준 > 사용감 > 예산 |
+| 우선순위 | 자극/안전 > 루틴 안정 > 제품군 핵심 기준 > 사용감 |
 | 중복 제거 | 같은 의미의 메시지는 하나만 표시 |
 | CTA | 항상 Product Matrix로 연결 |
 
@@ -618,9 +601,9 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 | 11 | `preference.menthol_sensitive EQ true` | 멘톨이나 화한 성분이 있는 립케어는 제외해요. |
 | 12 | `routine.recent_dry_tight EQ true` | 당김이 반복되면 보습제는 수분 공급보다 장벽과 수분 잠금까지 같이 봐야 해요. |
 | 13 | `context.makeup_use EQ true` | 베이스 메이크업 전 사용할 제품이라 밀림과 끈적임을 같이 봐요. |
-| 14 | `context.makeup_sunscreen_level IN [heavy_makeup, waterproof]` | 진한 메이크업이나 워터프루프 제품은 세정력과 이중 세안 역할을 같이 봐요. |
-| 15 | `context.scrub_sensitive EQ true` | 굵은 물리적 스크럽이나 강한 세안감은 피해서 봐요. |
-| 16 | `context.budget NEQ ANY` | 선택한 가격대 안에서만 제품 후보를 보여줘요. |
+| 14 | `routine.eye_irritation_history EQ true` | 눈가 자극 경험이 잦다면 저자극 세안과 눈시림 기준을 같이 봐요. |
+| 15 | `context.makeup_sunscreen_level IN [heavy_makeup, waterproof]` | 진한 메이크업이나 워터프루프 제품은 세정력과 이중 세안 역할을 같이 봐요. |
+| 16 | `context.scrub_sensitive EQ true` | 굵은 물리적 스크럽이나 강한 세안감은 피해서 봐요. |
 
 ---
 
@@ -744,7 +727,7 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 
 | 입력 | 기대 결과 |
 |---|---|
-| `category.selected = sunscreen`, `context.eye_sting = true`, `context.makeup_use = true`, `life.outdoor_activity = high` | `spf_50_plus`, `pa_4_plus`, `broad_spectrum`, `no_eye_sting`, `makeup_compat_good`, `outdoor_use` 적용 |
+| `category.selected = sunscreen`, `context.eye_sting = true`, `context.makeup_use = true`, `life.outdoor_activity = over_3h` | `spf_50_plus`, `pa_4_plus`, `broad_spectrum`, `no_eye_sting`, `makeup_compat_good`, `outdoor_use` 적용 |
 
 ## 16.2 세럼
 
@@ -774,7 +757,7 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 
 | 입력 | 기대 결과 |
 |---|---|
-| `category.selected = toner`, `context.toner_purpose = exfoliation`, `context.exfoliation_sensitive = true`, `preference.alcohol_sensitive = true` | `gentle_exfoliation_sensitive`, `no_alcohol`, `low_irritation`, `mild_ph` 적용 |
+| `category.selected = toner`, `flow.concern = flaky_texture`, `context.exfoliation_sensitive = true`, `preference.alcohol_sensitive = true` | `gentle_exfoliation`, `gentle_exfoliation_sensitive`, `no_alcohol`, `low_irritation` 적용 |
 
 ---
 
