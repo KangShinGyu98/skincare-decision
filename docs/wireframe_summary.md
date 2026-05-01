@@ -36,7 +36,7 @@ _00~21 Codex 문서 종합 | 2026-04-23_ + 명세 정리, 개발자 의도 정�
 > 고민부터 시작해도 돼요
 
 어떤 제품이 필요한지 몰라도 괜찮아요.  
-지금 상태와 고민에 맞춰 필요한 카테고리로 이어드립니다.
+지금 상태와 고민에 맞춰 무엇을 먼저 해야 하는지부터 정리하고, 필요하면 카테고리로 이어드립니다.
 
 ### Segment 선택 영역
 
@@ -178,7 +178,7 @@ Hero 아래에 2x2 구조의 세그먼트 선택 카드를 배치한다.
 > 고민부터 시작해도 돼요
 
 어떤 제품이 필요한지 몰라도 괜찮아요.  
-고민 유형을 고르면 카테고리로 이어드립니다.
+고민 유형을 고르면 무엇을 먼저 점검해야 하는지부터 정리해드려요.
 
 ### 캐러셀 구조
 
@@ -199,20 +199,27 @@ Hero 아래에 2x2 구조의 세그먼트 선택 카드를 배치한다.
 
 고민 태그는 **MVP에서 프론트엔드 상수**로 관리한다. DB 테이블 없음.
 
+Concern Mapper는 제품군 라우터가 아니라 **Priority Gate preset**으로 동작한다.
+
 태그 클릭 시 흐름:
 
 1. `session_events`에 `concern_clicked` 이벤트 저장
-2. 프론트 상수에서 해당 고민의 `routeCategory` 결정
-3. `user_facts`에 `category.selected` 저장 (`source: "concern"`)
-4. 해당 카테고리의 Product Matrix로 이동, 고민에 맞는 기본 필터가 선택 상태로 시작
+2. `user_facts`에 `flow.concern` 저장 (`source: "concern"`)
+3. 관련 `preset_facts`를 초기 선택 상태로 저장하거나 프론트 상태에 유지
+4. `route_target = "priority_gate"`면 S02로 이동하고 관련 Life / 루틴 질문을 우선 노출
+5. `route_target = "category_decision"`면 `category.selected = suggested_category`를 seed한 뒤 S03로 이동
+6. `suggested_filters`는 Product Matrix 직행용이 아니라, 이후 Category Decision CTA에서만 `CONCERN_PRESET` 힌트로 반영
 
 ```
-[입술 트임] 클릭
-  → session_events: concern_clicked { concern: "lip_chapped" }
-  → 프론트 상수: routeCategory = "lipcare"
-  → user_facts: category.selected = "lipcare"
-  → Product Matrix (lipcare, 보습 지속력 필터 기본 선택)
+[여드름] 클릭
+  → session_events: concern_clicked { concern: "acne" }
+  → user_facts: flow.concern = "acne"
+  → preset_facts: life / reaction / routine 질문 우선 노출
+  → Priority Gate
+  → 게이트 결과에 따라 루틴 점검 / 클렌저 추천 / Category Decision / Product Matrix
 ```
+
+`preset_facts`는 확정 답변이 아니라 초기 선택 상태다. 이후 사용자가 직접 답한 Priority Gate / Context 답변이 최종값으로 취급된다.
 
 추후 태그 목록 변경이 잦아지면 DB로 이관 가능. MVP에서는 코드 변경으로 충분하다.
 
@@ -528,14 +535,14 @@ Product Matrix는 사용자가 선택한 제품군에서 **좋은 제품의 기�
 이 Feature는 사용자 세그먼트 중 **B. 고민은 있는데 카테고리를 모름**에 해당한다.
 
 ```txt
-고민 → 카테고리 → 제품
+고민 → Priority Gate / Category Decision → 제품
 
 [헤드라인]
 고민부터 시작해도 돼요
 
 [서브텍스트]
 어떤 제품이 필요한지 몰라도 괜찮아요.
-고민 유형을 고르면 카테고리를 이어드립니다.
+고민 유형을 고르면 무엇을 먼저 점검해야 하는지부터 정리해드려요.
 
 ----------------------------------------
 
@@ -768,7 +775,7 @@ Box 2와 Box 3의 각 항목은 3가지 상태로 관리한다.
 
 ### Product Matrix 필터 자동 생성
 
-Category Decision CTA 또는 Concern 태그 클릭으로 Product Matrix에 진입하면, context 답변과 `product_filter_mappings`를 바탕으로 개인화 필터가 자동으로 선택 상태로 시작된다.
+Category Decision CTA로 Product Matrix에 진입하면, context 답변과 `product_filter_mappings`를 바탕으로 개인화 필터가 자동으로 선택 상태로 시작된다. Concern preset의 `suggested_filters`가 있다면 최종 category가 일치할 때만 함께 반영된다.
 
 예를 들어 사용자가 이렇게 답했다면:
 
@@ -946,7 +953,7 @@ Priority Gate를 거쳐 지금 제품을 사야 하는 상태인지 먼저 판�
 S01 → S02 (Priority Gate) → S03 → S04 → S05 → S06 → S07
 ```
 
-고민 유형(트러블 / 건조 / 화장 등)을 선택하면 적합한 카테고리로 이어진다. Priority Gate를 거친 뒤 Category Decision → Product Matrix 순서로 진행한다.
+고민 유형을 선택하면 concern preset이 먼저 저장되고, 기본적으로 Priority Gate를 거쳐 루틴 안정 여부를 먼저 판단한다. 이후 Category Decision → Product Matrix 순서로 진행한다. 입술 트임, 선크림 추천, 립 제품, 메이크업 궁합 계열처럼 제품군이 비교적 명확한 일부 고민은 Category Decision부터 시작할 수 있다.
 
 ---
 

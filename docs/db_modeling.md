@@ -41,20 +41,22 @@
 |----------|-----------|
 | concern_groups | Concern 태그는 프론트 상수로 관리. DB 불필요 |
 | concern_tags | 동일 |
-| concern_category_mappings | 동일. 태그 → 카테고리 라우팅은 코드 상수로 처리 |
+| concern_category_mappings | 동일. 태그 → `route_target`, `preset_facts`, `suggested_category`, `suggested_filters`는 코드 상수로 처리 |
 
 > **Concern Mapper / 고민 캐러셀은 DB 관리 대상이 아니다.**  
-> 태그 목록과 태그 → 카테고리 매핑은 프론트엔드 상수(코드)로 관리한다.  
+> 태그 목록과 태그 → `route_target` / `preset_facts` / `suggested_category` / `suggested_filters` 매핑은 프론트엔드 상수(코드)로 관리한다.  
 > 태그 클릭 이벤트는 `session_events`에 `concern_clicked`로 저장하고,  
-> 라우팅 결과(`category.selected`)만 `user_facts`에 저장한다.
+> `user_facts`에는 최소 `flow.concern`을 저장하고, 필요하면 `preset_facts`도 `source = concern`으로 저장할 수 있다.  
+> 단 `source = concern`은 확정 답변이 아니라 초기 선택 상태이며, 이후 `priority_gate` / `context`에서 사용자가 직접 답한 값이 최종 판단에 우선한다.
 >
 > 예시 흐름:
 > ```
-> [입술 트임] 클릭
->   → session_events: { event_name: "concern_clicked", payload: { concern: "lip_chapped" } }
->   → 프론트 상수에서 routeCategory = "lipcare" 결정
->   → user_facts: { fact_key: "category.selected", value: "lipcare", source: "concern" }
->   → product_matrix_filter_states 생성 (lipcare 기본 필터 포함)
+> [여드름] 클릭
+>   → session_events: { event_name: "concern_clicked", payload: { concern: "acne" } }
+>   → 프론트 상수에서 route_target = "priority_gate", suggested_category = "cleanser" 결정
+>   → user_facts: { fact_key: "flow.concern", value: "acne", source: "concern" }
+>   → 필요 시 preset_facts 저장 또는 프론트 초기 선택 상태로 유지
+>   → Priority Gate 진입
 > ```
 
 ---
@@ -377,6 +379,9 @@ REQUIRED: context.usage_place EQ "outdoor"
 > append-only 이력 테이블. 답변 수정 시 새 row INSERT.  
 > 최신 값: `ORDER BY created_at DESC LIMIT 1`  
 > 비로그인 조회: `WHERE device_id = ?` / 로그인 조회: `WHERE user_id = ?`
+>
+> `source = concern` row는 확정 답변이 아니라 concern preset에서 온 초기 선택 상태다.  
+> 동일 fact_key에 대해 이후 `priority_gate` 또는 `context` row가 있으면 그 값을 우선 사용한다.
 
 예시:
 
@@ -694,7 +699,7 @@ WHERE category_id = :category_id
 | user_id     | UUID FK → users.id NULLABLE                                                  | 로그인 시 병합, 비로그인 null |
 | session_id  | UUID FK → user_sessions.id                                                   | 세션 ID                      |
 | category_id | UUID FK → product_categories.id                                              | 제품군                       |
-| source      | ENUM('DIRECT','CATEGORY_DECISION_CTA','CONCERN_ENTRY','MANUAL','RESTORED')   | 필터 상태 생성 경로          |
+| source      | ENUM('DIRECT','CATEGORY_DECISION_CTA','MANUAL','RESTORED')                   | 필터 상태 생성 경로          |
 | filters     | JSONB                                                                        | 현재 적용된 필터 목록        |
 | is_active   | BOOLEAN DEFAULT true                                                         | 활성 여부                    |
 | created_at  | TIMESTAMP WITH TIME ZONE                                                     | 생성일                       |
@@ -706,7 +711,6 @@ WHERE category_id = :category_id
 |--------|------|
 | `DIRECT` | 직접 Product Matrix 접근 (기존 filter_state 복원) |
 | `CATEGORY_DECISION_CTA` | Category Decision 결과에서 CTA로 진입, context 답변 기반 필터 자동 생성 |
-| `CONCERN_ENTRY` | Concern 태그 클릭 후 진입, 해당 카테고리 기본 필터 자동 생성 |
 | `MANUAL` | 사용자가 필터를 직접 추가/삭제 |
 | `RESTORED` | 이전 session에서 복원 |
 
@@ -714,7 +718,7 @@ WHERE category_id = :category_id
 
 - Product Matrix 단순 접근 시: 해당 category의 최신 active filter_state 조회해서 복원
 - Category Decision CTA 진입 시: context 답변을 `product_filter_mappings`로 변환해 새 filter_state 생성
-- Concern 태그 클릭 진입 시: 해당 카테고리 기본 필터로 새 filter_state 생성
+- Concern preset이 있고 최종 `category.selected`가 `suggested_category`와 일치하면 `suggested_filters`를 `CONCERN_PRESET` source_type으로 합성
 - 사용자가 필터 추가/삭제: `filters` JSONB 업데이트 + `session_events`에 이벤트 저장
 - 실제 조회 결과는 `decision_runs`에 snapshot으로 저장
 
@@ -728,7 +732,7 @@ WHERE category_id = :category_id
 | `PERSONALIZED` | 사용자 답변(user_facts)에서 변환된 개인화 필터 — `product_filter_mappings` 경유 |
 | `MANUAL` | 사용자가 직접 추가/삭제한 필터 |
 | `TRACEBACK` | Reaction Traceback avoidance_rules에서 자동 생성된 필터 |
-| `CONCERN_PRESET` | Concern 태그 클릭 진입 시 해당 카테고리 기본 필터 |
+| `CONCERN_PRESET` | Concern preset의 `suggested_filters`가 최종 category와 일치해 Product Matrix에 반영된 힌트 필터 |
 
 예시:
 
@@ -984,4 +988,3 @@ WHERE category_id = :category_id
 | `no_fragrance` | PERSONALIZED | 향료 민감 맞춤 |
 | `spf_included` | PERSONALIZED | 야외 사용 SPF 포함 |
 | `portable` | PERSONALIZED | 휴대형 |
-
