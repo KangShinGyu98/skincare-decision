@@ -1,0 +1,56 @@
+=== ALL a[href] containing page numbers ===
+https://www.cosmeticsinhot.com/Skin-Care-ic3745146.html | English
+/ar/Skin-Care-ic3745146.html | العربية
+/fr/Skin-Care-ic3745146.html | Français
+/ru/Skin-Care-ic3745146.html | Русский
+/es/Skin-Care-ic3745146.html | Español
+/pt/Skin-Care-ic3745146.html | Português
+/de/Skin-Care-ic3745146.html | Deutsch
+/it/Skin-Care-ic3745146.html | italiano
+/ja/Skin-Care-ic3745146.html | 日本語
+/nl/Skin-Care-ic3745146.html | Nederlands
+/vi/Skin-Care-ic3745146.html | Tiếng Việt
+/th/Skin-Care-ic3745146.html | ไทย
+/pl/Skin-Care-ic3745146.html | Polski
+/tr/Skin-Care-ic3745146.html | Türkçe
+/fil/Skin-Care-ic3745146.html | Filipino
+/id/Skin-Care-ic3745146.html | Bahasa Indonesia
+/mn/Skin-Care-ic3745146.html | Монгол
+/uz/Skin-Care-ic3745146.html | Oʻzbekcha
+/az/Skin-Care-ic3745146.html | Azərbaycan dili
+/ug/Skin-Care-ic3745146.html | ئۇيغۇرچە‎
+https://www.cosmeticsinhot.com/Skin-Care-ic3745146.html | English
+/ar/Skin-Care-ic3745146.html | العربية
+/fr/Skin-Care-ic3745146.html | Français
+/ru/Skin-Care-ic3745146.html | Русский
+/es/Skin-Care-ic3745146.html | Español
+/pt/Skin-Care-ic3745146.html | Português
+/de/Skin-Care-ic3745146.html | Deutsch
+/it/Skin-Care-ic3745146.html | italiano
+/ja/Skin-Care-ic3745146.html | 日本語
+/nl/Skin-Care-ic3745146.html | Nederlands
+/vi/Skin-Care-ic3745146.html | Tiếng Việt
+/th/Skin-Care-ic3745146.html | ไทย
+/pl/Skin-Care-ic3745146.html | Polski
+/tr/Skin-Care-ic3745146.html | Türkçe
+/fil/Skin-Care-ic3745146.html | Filipino
+/id/Skin-Care-ic3745146.html | Bahasa Indonesia
+/mn/Skin-Care-ic3745146.html | Монгол
+/uz/Skin-Care-ic3745146.html | Oʻzbekcha
+/az/Skin-Care-ic3745146.html | Azərbaycan dili
+/ug/Skin-Care-ic3745146.html | ئۇيغۇرچە‎
+javascript:tempftfOGNAksVKZ('ftfOGNAksVKZ','2', '') | 2
+javascript:tempftfOGNAksVKZ('ftfOGNAksVKZ','3', '') | 3
+javascript:tempftfOGNAksVKZ('ftfOGNAksVKZ','4', '') | 4
+javascript:tempftfOGNAksVKZ('ftfOGNAksVKZ','47', '') | 47
+
+=== page input or select ===
+<div class="pagination">
+<ul class="paging" data-mark="ftfOGNAksVKZ">
+<li class="active"><span>1</span></li>
+<li><a href="javascript:tempftfOGNAksVKZ('ftfOGNAksVKZ','2', '')">2</a></li>
+<li><a href="j
+<ul class="paging" data-mark="ftfOGNAksVKZ">
+<li class="active"><span>1</span></li>
+<li><a href="javascript:tempftfOGNAksVKZ('ftfOGNAksVKZ','2', '')">2</a></li>
+<li><a href="javascript:tempftfOGNAksVK

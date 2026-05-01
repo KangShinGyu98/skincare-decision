@@ -1,106 +1,116 @@
-# Product Attribute Schema (MVP)
+# Product Attributes (MVP)
 
-> 목적: Product Matrix에서 사용할 제품 속성(attribute) 정의  
-> 사용 위치: products.attributes (JSONB)
+> 목적: Product Matrix에서 사용할 attribute 정의  
+> 원칙:
+>
+> - 개수 제한 없음
+> - "선택에 영향 주는 것만" Core로 사용
+> - 나머지는 Optional
+> - 스킨/토너(toner로 통일), 선크림(sunscreen), 에센스/세럼/앰플(serum), 립케어(lipcare), 로션,크림(moisturizer/보습제), 클렌저(cleanser)
 
 ---
 
-## 1. Sunscreen (선크림)
+## 1. 스킨 / 토너
 
-spf: number                # 예: 30, 50, 50+  
-pa: "+" | "++" | "+++" | "++++"  
+### Core
 
-filter_type: physical | chemical | hybrid  
+hydration_level: low | medium | high  
+texture: water | viscous  
+absorption_speed: slow | medium | fast  
+irritation_risk: low | medium | high
 
+### Optional
+
+layer_compatibility: good | fair | poor
+
+---
+
+## 2. 선크림
+
+### Core
+
+spf: number  
 eye_sting: none | low | medium | high  
 white_cast: none | low | medium | high  
+texture: light | medium | rich
 
-texture: light | medium | rich  
-sticky: none | low | medium | high  
+### Optional
 
 makeup_compatibility: good | fair | poor  
-
-portable: true | false  
-fragrance: true | false  
+filter_type: physical | chemical | hybrid  
+portable: true | false
 
 ---
 
-## 2. Serum (세럼)
+## 3. 에센스 / 세럼 / 앰플
 
-active_ingredients:
-- retinol
-- vitamin_c
-- niacinamide
-- peptide
-- aha
-- bha
-- calming
+### Core
 
+active_ingredients: [retinol, vitamin_c, niacinamide, peptide, aha, bha, calming]  
 irritation_risk: low | medium | high  
+conflict_ingredients: [retinol, vitamin_c, aha, bha]  
+usage_time: morning | night | both
 
-conflict_ingredients:
-- retinol
-- vitamin_c
-- aha
-- bha
+### Optional
 
-usage_time: morning | night | both  
-effect_timeline: fast | gradual  
-
-texture: water | gel | oil | cream  
-
-fragrance: true | false  
+texture: water | gel | oil | cream
 
 ---
 
-## 3. Lipcare (립케어)
+## 4. 립케어
+
+### Core
+
+moisture_lasting: low | medium | high  
+occlusive_level: low | medium | high
+
+### Optional
 
 menthol: true | false  
 fragrance: true | false  
-
-spf: number        # 없으면 0  
-
-moisture_lasting: low | medium | high  
-
-form: stick | tube | balm | tint  
-
-portable: true | false  
+form: stick | tube | balm | tint
 
 ---
 
-## 4. Moisturizer (로션 / 크림)
+## 5. 로션 / 크림
 
-texture: light | medium | rich  
+### Core
+
+hydration_level: low | medium | high  
+oiliness: low | medium | high  
+texture: light | medium | rich
+
+### Optional
+
 sticky: none | low | medium | high  
-
-barrier: true | false        # 세라마이드 등 포함 여부  
-fragrance: true | false  
-
-portable: true | false  
-
-finish: fresh | neutral | heavy  
+absorption_speed: slow | medium | fast
 
 ---
 
-## 5. Cleanser (클렌저)
+## 6. 클렌저
 
-type: foam | gel | oil | balm | water  
-
-ph_level: low | neutral | high  
+### Core
 
 cleansing_power: low | medium | high  
-
 after_feel: moist | neutral | dry  
+irritation_risk: low | medium | high
 
-irritation_risk: low | medium | high  
+### Optional
 
-fragrance: true | false  
+type: foam | gel | oil | balm | water  
+ph_level: low | neutral | high
 
 ---
 
-## 공통 규칙
+## 핵심 원칙
 
-- 모든 attribute는 products.attributes JSONB에 저장  
-- ENUM / BOOLEAN / NUMBER만 사용  
-- "좋다/나쁘다" 판단 금지 → 상태만 기록  
-- 필터링은 product_filter_mappings에서 처리
+- Core = 필터에 직접 사용
+- Optional = 태그 / 정렬 / 보조 판단
+- attribute 개수는 제한하지 않는다
+
+---
+
+## 한 줄 정리
+
+> 중요한 건 개수가 아니라  
+> "이 attribute가 선택을 바꾸냐"이다

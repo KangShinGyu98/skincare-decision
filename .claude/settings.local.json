@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python scripts/crawl_titles.py)",
+      "Bash(python -c ' *)"
+    ]
+  }
+}
