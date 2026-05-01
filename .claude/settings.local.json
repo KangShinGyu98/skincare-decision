@@ -2,7 +2,13 @@
   "permissions": {
     "allow": [
       "Bash(python scripts/crawl_titles.py)",
-      "Bash(python -c ' *)"
+      "Bash(python -c ' *)",
+      "Bash(python -c \"import playwright; print\\('ok'\\)\")",
+      "Bash(python -c \"from selenium import webdriver; print\\('selenium ok'\\)\")",
+      "Bash(python -c \"from playwright.sync_api import sync_playwright; print\\('playwright ready'\\)\")",
+      "Bash(python scripts/find_api.py)",
+      "Bash(python scripts/find_api2.py)",
+      "Bash(python scripts/crawl_articles.py)"
     ]
   }
 }
