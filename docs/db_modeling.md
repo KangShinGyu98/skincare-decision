@@ -303,6 +303,7 @@ ingredient_groups
 
 ```json
 { "fact_key": "life.recent_irritation", "question": "최근 따가움, 붉어짐, 가려움 같은 문제가 있나요?", "screen": "priority_gate", "ui_section": "life_routine" }
+{ "fact_key": "routine.cleansing_before_sleep", "question": "잠들기 전에 세안은 하고 자는 편인가요?", "screen": "priority_gate", "ui_section": "life_routine" }
 { "fact_key": "product.owned_categories", "question": "현재 사용 중인 제품을 선택해주세요.", "screen": "priority_gate", "ui_section": "owned_products" }
 ```
 
@@ -891,8 +892,12 @@ WHERE category_id = :category_id
 | `routine.eye_irritation_history` | ROUTINE | BOOLEAN | 화장/세안 중 눈 자극 경험이 잦은지 |
 | `routine.recent_dry_tight` | ROUTINE | BOOLEAN | 세안 후 당김·건조·따가움 같은 문제 여부 |
 | `routine.makeup_frequent` | ROUTINE | BOOLEAN | 선크림 위에 베이스 메이크업을 자주 올리는지 |
-| `routine.brush_wash_cycle` | ROUTINE | ENUM | 브러시 세척 주기 (`regularly` / `sometimes` / `rarely` / `not_applicable`) |
+| `routine.brush_wash_cycle` | ROUTINE | ENUM | 브러시 마지막 세척 시점 (`under_1_week` / `1_to_2_weeks` / `over_2_weeks` / `not_applicable`) |
 | `routine.puff_age` | ROUTINE | ENUM | 퍼프 사용 기간 (`under_1_month` / `1_to_3_months` / `over_3_months` / `not_applicable`) |
+| `routine.pillowcase_change_cycle` | ROUTINE | ENUM | 배갯잎 마지막 교체 시점 (`under_3_days` / `3_to_7_days` / `over_7_days` / `not_sure`) |
+| `routine.morning_face_condition` | ROUTINE | ENUM | 기상 직후 얼굴 상태 (`comfortable` / `oily_sticky` / `dry_tight` / `new_bumps`) |
+| `routine.bedtime_routine` | ROUTINE | BOOLEAN | 취침 전 스킨케어 루틴 여부 |
+| `routine.cleansing_before_sleep` | ROUTINE | BOOLEAN | 취침 전 세안 여부 |
 | `product.owned_categories` | PRODUCT | MULTI_ENUM | 현재 사용 중인 제품군 목록 |
 | `category.selected` | CATEGORY | ENUM | 선택한 제품군 key (`sunscreen` / `serum` / `lipcare` 등) |
 | `context.usage_place` | CONTEXT | ENUM | 사용 장소 (`outdoor` / `indoor`) |
@@ -900,7 +905,7 @@ WHERE category_id = :category_id
 | `context.portable` | CONTEXT | BOOLEAN | 외출 시 휴대 필요 여부 |
 | `context.eye_sting` | CONTEXT | BOOLEAN | 선크림 사용 시 눈시림 경험 여부 |
 | `context.white_cast_sensitive` | CONTEXT | BOOLEAN | 백탁에 민감한 여부 |
-| `context.makeup_use` | CONTEXT | BOOLEAN | 선크림 위에 베이크업 사용 여부 |
+| `context.makeup_use` | CONTEXT | BOOLEAN | 선크림 위에 베이스 메이크업 사용 여부 |
 | `preference.fragrance_sensitive` | CONTEXT | BOOLEAN | 향료 민감 여부 |
 | `preference.menthol_sensitive` | CONTEXT | BOOLEAN | 멘톨·화한 사용감 불편 여부 |
 

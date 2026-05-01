@@ -90,7 +90,8 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 | derived_fact | source | 계산 |
 |---|---|---|
 | `routine.sunscreen_use` | `routine.sunscreen_frequency` | `daily`, `sometimes`이면 true. `rarely`, `never`이면 false |
-| `routine.tool_hygiene_risk` | `routine.brush_wash_cycle`, `routine.puff_age` | 브러시 세척이 `rarely`이거나 퍼프 사용 기간이 `over_3_months`이면 true |
+| `routine.tool_hygiene_risk` | `routine.brush_wash_cycle`, `routine.puff_age` | 브러시 세척 시점이 `over_2_weeks`이거나 퍼프 사용 기간이 `over_3_months`이면 true |
+| `routine.sleep_hygiene_risk` | `routine.pillowcase_change_cycle`, `routine.morning_face_condition`, `routine.bedtime_routine`, `routine.cleansing_before_sleep` | 배갯잎 교체 시점이 `over_7_days` 또는 `not_sure`이거나, 잠들기 전 세안을 하지 않거나, 잠들기 전 루틴이 없고 아침 얼굴 상태가 `oily_sticky` / `dry_tight` / `new_bumps` 중 하나면 true |
 | `product.active_overload` | `product.owned_categories` | `retinol`, `vitamin_c`, `aha_bha`를 모두 포함하면 true |
 | `product.functional_overlap` | `product.owned_categories` | `essence`, `serum`, `ampoule` 중 2개 이상 포함하면 true |
 | `product.toner_overlap` | `product.owned_categories` | `toner`, `skin`, `toner_pad` 중 2개 이상 포함하면 true |
@@ -125,8 +126,9 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 | `eye_irritation_caution` | 8 | CAUTION | 눈가 자극이 잦다면 저자극 세안/선크림 기준을 먼저 봐야 해요. | 눈 자극 기준으로 보기 | `/category-decision?category=cleanser` |
 | `makeup_compat_caution` | 9 | CAUTION | 선크림, 보습제, 베이스 궁합을 같이 봐야 해요. | 궁합 기준으로 보기 | `/category-decision?category=sunscreen` |
 | `tool_hygiene_caution` | 10 | CAUTION | 브러시와 퍼프 위생도 같이 점검해보세요. | 도구 위생 점검하기 | `/routine-check?focus=tool-hygiene` |
-| `duplicate_role_caution` | 11 | CAUTION | 새로 사기보다 기존 제품을 먼저 정리해요. | 보유 제품 정리하기 | `/routine-check?focus=duplicate` |
-| `priority_pass` | 12 | PASS | 지금은 기능성 제품군을 봐도 괜찮아요. | 제품군 고르기 | `/category-decision` |
+| `night_hygiene_caution` | 11 | CAUTION | 밤 루틴과 침구 위생도 같이 점검해보세요. | 밤 루틴 점검하기 | `/routine-check?focus=night-routine` |
+| `duplicate_role_caution` | 12 | CAUTION | 새로 사기보다 기존 제품을 먼저 정리해요. | 보유 제품 정리하기 | `/routine-check?focus=duplicate` |
+| `priority_pass` | 13 | PASS | 지금은 기능성 제품군을 봐도 괜찮아요. | 제품군 고르기 | `/category-decision` |
 
 ## 3.3 Priority Rule Conditions
 
@@ -142,6 +144,7 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 | `eye_irritation_caution` | REQUIRED `routine.eye_irritation_history EQ true` |
 | `makeup_compat_caution` | REQUIRED `routine.makeup_frequent EQ true`; EXCLUDED `life.recent_irritation EQ true` |
 | `tool_hygiene_caution` | REQUIRED `routine.tool_hygiene_risk EQ true` |
+| `night_hygiene_caution` | REQUIRED `routine.sleep_hygiene_risk EQ true` |
 | `duplicate_role_caution` | REQUIRED `product.toner_overlap EQ true` OR `product.moisturizer_overlap EQ true` OR `product.functional_overlap EQ true` |
 | `priority_pass` | fallback |
 
@@ -710,7 +713,7 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 | 3 | `fact_definitions` 기본 + 추가 key 등록 |
 | 4 | `context_questions` S02~S04 질문 등록 |
 | 5 | `question_visibility_conditions` 등록 |
-| 6 | `priority_rules` 12개 등록 |
+| 6 | `priority_rules` 13개 등록 |
 | 7 | `priority_rule_conditions` 등록 |
 | 8 | `product_filter_mappings` BASIC_CONDITION 등록 |
 | 9 | `product_filter_mappings` PERSONALIZED 등록 |

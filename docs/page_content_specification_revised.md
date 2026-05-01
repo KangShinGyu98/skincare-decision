@@ -120,7 +120,7 @@
 
 | 섹션 | Heading | Body |
 |---|---|---|
-| Priority Gate | 제품을 고르기 전에, 지금 사도 되는 상태인지 먼저 확인해요. | 최근 자극, 루틴 변경, 선크림 사용, 클렌징, 보습 상태를 확인해 새 제품을 사야 할지 알려줍니다. |
+| Priority Gate | 제품을 고르기 전에, 지금 사도 되는 상태인지 먼저 확인해요. | 최근 자극, 선크림 사용, 클렌징, 밤 루틴, 침구/도구 위생을 확인해 새 제품을 사야 할지 알려줍니다. |
 | Context | 제품마다 점검할 기준이 다릅니다. | 립밤을 고르는데 피부 타입을 묻지 않고, 선크림을 고를 때는 눈시림, 백탁, 메이크업 궁합을 묻습니다. |
 | Product Matrix | 제품을 끝없이 나열하지 않아요. | 좋은 제품의 조건과 개인화 필터를 기준으로 가격대별 추천 후보를 비교합니다. |
 | Reaction Traceback | 어떤 제품 때문에 뒤집어졌는지 모르겠다면 | 문제 상품과 괜찮았던 상품을 함께 등록해 원인 후보 성분군을 추측합니다. |
@@ -215,12 +215,16 @@
 | 7 | `routine.eye_irritation_history` | 화장이나 세안 중 눈이 따갑거나 눈에 들어가는 경험이 자주 있나요? | BOOLEAN | 예 / 아니오 |
 | 8 | `routine.recent_dry_tight` | 세안 후 당김, 건조, 따가움 같은 문제가 있나요? | BOOLEAN | 예 / 아니오 |
 | 9 | `routine.makeup_frequent` | 선크림 위에 베이스 메이크업을 자주 올리는 편인가요? | BOOLEAN | 예 / 아니오 |
-| 10 | `routine.brush_wash_cycle` | 브러시는 주기적으로 세척하나요? | SINGLE_SELECT | `regularly` / `sometimes` / `rarely` / `not_applicable` |
+| 10 | `routine.brush_wash_cycle` | 브러시 세척한 지 얼마나 됐나요? | SINGLE_SELECT | `under_1_week` / `1_to_2_weeks` / `over_2_weeks` / `not_applicable` |
 | 11 | `routine.puff_age` | 퍼프는 산 지 얼마나 됐나요? | SINGLE_SELECT | `under_1_month` / `1_to_3_months` / `over_3_months` / `not_applicable` |
-| 12 | `flow.current_concern` | 지금 가장 해결하고 싶은 고민은 무엇인가요? | SINGLE_SELECT | 트러블 / 건조 / 잡티 / 주름 / 모공 / 입술 / 기타 |
+| 12 | `routine.pillowcase_change_cycle` | 배갯잎은 마지막으로 바꾼 지 얼마나 됐나요? | SINGLE_SELECT | `under_3_days` / `3_to_7_days` / `over_7_days` / `not_sure` |
+| 13 | `routine.morning_face_condition` | 아침에 일어났을 때 얼굴 상태는 어떤 편인가요? | SINGLE_SELECT | `comfortable` / `oily_sticky` / `dry_tight` / `new_bumps` |
+| 14 | `routine.bedtime_routine` | 잠들기 전에 스킨케어 루틴을 하고 자는 편인가요? | BOOLEAN | 예 / 아니오 |
+| 15 | `routine.cleansing_before_sleep` | 잠들기 전에 세안은 하고 자는 편인가요? | BOOLEAN | 예 / 아니오 |
+| 16 | `flow.current_concern` | 지금 가장 해결하고 싶은 고민은 무엇인가요? | SINGLE_SELECT | 트러블 / 건조 / 잡티 / 주름 / 모공 / 입술 / 기타 |
 
 Concern preset으로 진입한 경우에는 관련 질문을 먼저 보여준다.  
-예: `acne`, `recurring_trouble`, `breakout_reaction`, `sensitivity_reaction`은 `life.recent_irritation`, `routine.cleansing_stable`, `routine.eye_irritation_history`를 먼저 확인하고, `dryness`, `tightness`, `flaky_texture`는 `routine.recent_dry_tight`, `life.outdoor_activity`, `routine.sunscreen_frequency`를 먼저 확인한다.
+예: `acne`, `recurring_trouble`, `breakout_reaction`, `sensitivity_reaction`은 `life.recent_irritation`, `routine.cleansing_stable`, `routine.eye_irritation_history`, `routine.cleansing_before_sleep`, `routine.pillowcase_change_cycle`, `routine.morning_face_condition`을 먼저 확인하고, `dryness`, `tightness`, `flaky_texture`는 `routine.recent_dry_tight`, `life.outdoor_activity`, `routine.sunscreen_frequency`, `routine.bedtime_routine`을 먼저 확인한다.
 
 ## 3. Box 2 — 사용 중인 Skin Care 제품
 
@@ -644,8 +648,12 @@ Concern preset으로 진입한 경우에는 관련 질문을 먼저 보여준다
 | `routine.sunscreen_reapply` | BOOLEAN | 선크림 덧바름 여부 |
 | `routine.foam_enough` | BOOLEAN | 클렌징 폼 거품 충분히 사용 여부 |
 | `routine.eye_irritation_history` | BOOLEAN | 화장/세안 중 눈 자극 경험 |
-| `routine.brush_wash_cycle` | ENUM | 브러시 세척 주기 |
+| `routine.brush_wash_cycle` | ENUM | 브러시 마지막 세척 시점 |
 | `routine.puff_age` | ENUM | 퍼프 사용 기간 |
+| `routine.pillowcase_change_cycle` | ENUM | 배갯잎 마지막 교체 시점 |
+| `routine.morning_face_condition` | ENUM | 기상 직후 얼굴 상태 |
+| `routine.bedtime_routine` | BOOLEAN | 취침 전 스킨케어 루틴 여부 |
+| `routine.cleansing_before_sleep` | BOOLEAN | 취침 전 세안 여부 |
 | `context.exfoliation_sensitive` | BOOLEAN | 각질 케어 자극 민감 |
 | `context.oil_control_need` | BOOLEAN | 피지 조절 필요 |
 | `context.daily_use` | BOOLEAN | 매일 사용 목적 |
@@ -695,7 +703,7 @@ Concern preset으로 진입한 경우에는 관련 질문을 먼저 보여준다
 | P0 | Product Matrix 6개 카테고리 BASIC_CONDITION seed |
 | P0 | `category_attribute_definitions` P0 key 등록 |
 | P0 | `product_filter_mappings` BASIC/PERSONALIZED seed |
-| P1 | Priority Gate 12개 Rule seed |
+| P1 | Priority Gate 13개 Rule seed |
 | P1 | Category Decision 질문 + visibility condition seed |
 | P1 | Concern route_target + preset_facts 24개 mapping 상수 |
 | P2 | Product Detail attribute 요약 UI |
