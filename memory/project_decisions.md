@@ -85,4 +85,42 @@
 
 ---
 
+## [2026-05-02] 기술 스택 표 세분화 및 AWS 매핑 명시화
+
+**배경:** 초기 스택 표는 행이 9개로 압축되어 있어 (1) Next.js의 렌더링 전략, (2) 캐시·CDN·도메인이 어떤 AWS 리소스에 매핑되는지가 모호했다. Phase 6/7 인프라 작업 직전 명확히 하기 위해 표를 재구성한다.
+
+**결정:**
+
+| 영역            | 스택                                                                          |
+| --------------- | ----------------------------------------------------------------------------- |
+| Backend API     | TypeScript · NestJS · Prisma                                                  |
+| Database        | AWS RDS PostgreSQL 16 (products.attributes는 JSONB)                           |
+| Cache           | AWS ElastiCache Redis 7                                                       |
+| Frontend Web    | Next.js App Router · React · TypeScript                                       |
+| Rendering       | SSR · SSG · ISR                                                               |
+| Validation      | Zod (FE 입력, BE DTO ↔ Prisma 모델 contract)                                  |
+| 상태 관리       | TanStack Query · Zustand                                                      |
+| UI              | Tailwind CSS · shadcn/ui                                                      |
+| Storage         | AWS S3                                                                        |
+| CDN / Edge      | CloudFront                                                                    |
+| Infra           | Docker · AWS ECS Fargate · ECR · ALB · RDS · ElastiCache · S3 · CloudFront    |
+| Domain / HTTPS  | Route 53 · ACM                                                                |
+| CI/CD           | GitHub Actions → ECR → ECS Fargate 배포                                       |
+
+핵심 변경:
+- Backend 행에서 PostgreSQL 제거(중복) → "Backend API"로 라벨 변경.
+- Cache: 자체 Redis가 아닌 **AWS ElastiCache Redis 7** 명시.
+- Frontend: 라벨을 "Frontend Web"으로 바꾸고 React 명시. 별도 "Rendering" 행에 SSR/SSG/ISR 명시.
+- Storage / CDN / Domain·HTTPS를 별도 행으로 분리하여 AWS 리소스 매핑을 표면화.
+- Infra 행에 ALB와 ElastiCache 추가.
+- CI/CD 흐름을 "GitHub Actions → ECR → ECS Fargate 배포"로 명시.
+
+**이유:**
+- SSR/SEO가 Next.js 채택의 1차 이유다 — 표에 명시해 추후 누군가 SPA로 바꾸려는 시도를 사전 차단.
+- ALB는 ECS service 노출에 필수이고, ElastiCache는 자체 Redis와 운영 부담이 다름 — Phase 7 IaC 작업 시 혼란 없도록 표에 못 박는다.
+- Route 53 + ACM은 도메인/HTTPS 발급 경로를 단일 출처로 고정.
+- 동기화 대상: [README.md](../README.md), [CLAUDE.md](../CLAUDE.md), 본 파일.
+
+---
+
 <!-- 새 결정은 여기에 추가 -->

@@ -18,7 +18,9 @@ infra/
 ├─ aws/
 │  ├─ ecs/                    ← task definition, service, ALB
 │  ├─ rds/                    ← Postgres parameter group, snapshot 정책
+│  ├─ elasticache/            ← Redis 7 subnet group / parameter group
 │  ├─ s3-cloudfront/          ← S3 정적 자산 + CloudFront 배포
+│  ├─ route53-acm/            ← 도메인 / 인증서
 │  └─ iam/                    ← role / policy
 └─ scripts/
    ├─ build-backend.sh

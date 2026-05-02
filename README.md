@@ -40,17 +40,21 @@
 
 ## 2. 기술 스택
 
-| 영역            | 스택                                                          |
-| --------------- | ------------------------------------------------------------- |
-| Backend         | TypeScript · NestJS · Prisma · PostgreSQL                     |
-| Database        | AWS RDS PostgreSQL 16 (`products.attributes`는 JSONB)         |
-| Cache           | Redis 7                                                       |
-| Frontend        | Next.js (App Router) · TypeScript                             |
-| Validation      | Zod (FE 입력, BE DTO ↔ Prisma 모델 contract)                  |
-| 상태 관리       | TanStack Query · Zustand                                      |
-| UI              | Tailwind CSS · shadcn/ui                                      |
-| Infra           | Docker · AWS ECS Fargate · ECR · RDS · S3 · CloudFront        |
-| CI/CD           | GitHub Actions                                                |
+| 영역            | 스택                                                                          |
+| --------------- | ----------------------------------------------------------------------------- |
+| Backend API     | TypeScript · NestJS · Prisma                                                  |
+| Database        | AWS RDS PostgreSQL 16 (products.attributes는 JSONB)                           |
+| Cache           | AWS ElastiCache Redis 7                                                       |
+| Frontend Web    | Next.js App Router · React · TypeScript                                       |
+| Rendering       | SSR · SSG · ISR                                                               |
+| Validation      | Zod (FE 입력, BE DTO ↔ Prisma 모델 contract)                                  |
+| 상태 관리       | TanStack Query · Zustand                                                      |
+| UI              | Tailwind CSS · shadcn/ui                                                      |
+| Storage         | AWS S3                                                                        |
+| CDN / Edge      | CloudFront                                                                    |
+| Infra           | Docker · AWS ECS Fargate · ECR · ALB · RDS · ElastiCache · S3 · CloudFront    |
+| Domain / HTTPS  | Route 53 · ACM                                                                |
+| CI/CD           | GitHub Actions → ECR → ECS Fargate 배포                                        |
 
 상세 디렉터리 매핑 / 레이어 규칙은 [CLAUDE.md](CLAUDE.md) 참조.
 

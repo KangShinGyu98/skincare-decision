@@ -607,10 +607,10 @@ docker compose up --build
 - VPC + 2 public + 2 private subnet
 - ECR repo 2개 (`kb-backend`, `kb-frontend`)
 - RDS Postgres 16 (private subnet, t4g.micro for dev)
-- ElastiCache Redis 7 (또는 self-hosted EC2)
+- ElastiCache Redis 7 (cluster mode disabled, single-AZ for dev / multi-AZ for prod)
 - S3 bucket (frontend 정적 자산 + CloudFront origin)
 - CloudFront distribution
-- ACM 인증서 (도메인 보유 시)
+- Route 53 hosted zone + ACM 인증서 (도메인 보유 시)
 - ALB + ECS Fargate cluster
 - Secrets Manager: `kb-beauty/prod/database`, `kb-beauty/prod/app`
 - IAM OIDC role for GitHub Actions

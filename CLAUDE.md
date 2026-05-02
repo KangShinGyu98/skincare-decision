@@ -46,18 +46,21 @@
 
 ## 기술 스택
 
-| 영역            | 스택                                                          |
-| --------------- | ------------------------------------------------------------- |
-| Backend         | TypeScript + NestJS + Prisma + PostgreSQL                     |
-| Database        | AWS RDS PostgreSQL                                            |
-| 가변 제품 속성  | PostgreSQL JSONB (`products.attributes`)                      |
-| Cache           | Redis (priority rule, filter mapping, product matrix snapshot) |
-| Frontend        | Next.js App Router + TypeScript                               |
-| Validation      | Zod (FE 입력 검증, BE DTO ↔ Prisma 모델 사이 contract)        |
-| 상태 관리       | TanStack Query (server state) + Zustand (client state)         |
-| UI              | Tailwind CSS + shadcn/ui                                      |
-| Infra           | Docker + AWS ECS Fargate + ECR + RDS + S3 + CloudFront        |
-| CI/CD           | GitHub Actions                                                |
+| 영역            | 스택                                                                          |
+| --------------- | ----------------------------------------------------------------------------- |
+| Backend API     | TypeScript · NestJS · Prisma                                                  |
+| Database        | AWS RDS PostgreSQL 16 (가변 제품 속성은 `products.attributes` JSONB)          |
+| Cache           | AWS ElastiCache Redis 7 (priority rule, filter mapping, matrix snapshot)      |
+| Frontend Web    | Next.js App Router · React · TypeScript                                       |
+| Rendering       | SSR · SSG · ISR (SEO 및 LCP 최적화 목적)                                      |
+| Validation      | Zod (FE 입력 검증, BE DTO ↔ Prisma 모델 contract)                             |
+| 상태 관리       | TanStack Query (server state) · Zustand (client state)                        |
+| UI              | Tailwind CSS · shadcn/ui                                                      |
+| Storage         | AWS S3 (제품 이미지, 정적 자산)                                               |
+| CDN / Edge      | CloudFront (정적 자산 + Next.js 캐시 가속)                                    |
+| Infra           | Docker · AWS ECS Fargate · ECR · ALB · RDS · ElastiCache · S3 · CloudFront    |
+| Domain / HTTPS  | Route 53 · ACM                                                                |
+| CI/CD           | GitHub Actions → ECR → ECS Fargate 배포                                       |
 
 ## 황금 원칙 (Golden Rules)
 

@@ -48,4 +48,19 @@
 
 ---
 
+## [2026-05-02] 기술 스택 표 세분화 동기화
+
+### 변경 내용
+- README.md / CLAUDE.md / memory/project_decisions.md / EXECUTION_PLAN.md / infra/AGENTS.md에서 스택 표·인프라 리소스 목록을 동일한 기준으로 갱신.
+- 핵심: ElastiCache Redis 7 명시, Route 53 + ACM, ALB, S3, CloudFront 분리. Next.js Rendering 행에 SSR · SSG · ISR 명시.
+- EXECUTION_PLAN Phase 7 사전 셋업에서 "ElastiCache 또는 self-hosted EC2" 옵션 제거 → ElastiCache 단일.
+- infra/AGENTS.md aws/ 하위에 `elasticache/`, `route53-acm/` 폴더 추가.
+
+### 다음 작업 우선순위 (변동 없음)
+1. EXECUTION_PLAN.md Phase 1 실행 (pnpm workspace + 공통 toolchain)
+2. Phase 2: NestJS init + Prisma schema 1차 작성
+3. Phase 3: Next.js init + shadcn/ui + Tailwind 토큰 매핑
+
+---
+
 <!-- 새 세션 요약은 여기에 추가 -->
