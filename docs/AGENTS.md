@@ -17,6 +17,7 @@
 | [admin_product_input_spec.md](admin_product_input_spec.md) | 관리자 제품 등록 폼 명세 (카테고리별 필드 + S3 업로드 + `effective_dose_met` 자동 판정). |
 | [data_source_catalog.md](data_source_catalog.md) | 외부 데이터 출처 카탈로그 (Naver / 식약처 3종 / AIHub OCR / 브랜드 공식) 응답 샘플 + 매핑.   |
 | [ingredient_efficacy_thresholds.md](ingredient_efficacy_thresholds.md) | 성분 유효 농도 기준 단일 진실 (식약처 별표4 기반 시드, 6개 기능 항목).         |
+| [product_scope_and_limits.md](product_scope_and_limits.md) | 제품이 실제로 다루는 범위(루틴/제품 루틴/국민템 추천)와 한계, 큐레이터 책임, 확장 가능성 정리. |
 
 ## 진입 규칙
 
