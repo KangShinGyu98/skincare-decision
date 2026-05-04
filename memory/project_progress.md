@@ -63,4 +63,25 @@
 
 ---
 
+## [2026-05-02] 관리자 화면 착수 전 결정 카탈로그 3종 + 결정 2 확정
+
+### 변경 내용
+- 신규 docs 3종:
+  - [docs/admin_product_input_spec.md](../docs/admin_product_input_spec.md) — 카테고리별 필드 체크리스트 (공통 + 6개 카테고리 attribute + S3 업로드 흐름 + 자동 판정 로직)
+  - [docs/data_source_catalog.md](../docs/data_source_catalog.md) — 출처별 응답 샘플 + 필드 매핑 매트릭스 (식약처 3개 API + Naver 쇼핑 + AIHub OCR + 브랜드 공식)
+  - [docs/ingredient_efficacy_thresholds.md](../docs/ingredient_efficacy_thresholds.md) — 식약처 기능성 6개 항목 1차 시드 (미백 8 / 주름 4 / 자외선 10+ / 여드름 3 / 장벽 4 / 건조 4 entry)
+- memory/project_decisions.md에 결정 2 확정 + 결정 1 보류 2건 append.
+
+### 다음 작업 우선순위
+1. **사용자 카탈로그 검토** → 결정 1 (조합 X/Y/Z) 확정.
+2. EXECUTION_PLAN Phase 1 (pnpm workspace) 실행.
+3. Phase 2 NestJS init 시 `backend/src/services/efficacy/thresholds.ts` 시드 작성.
+
+### 미해결 TODO
+- `docs/ingredient_efficacy_thresholds.md`의 폴리에톡실레이티드레틴아마이드 정확 함량 — 식약처 PDF 별표4 직접 확인 필요.
+- 자외선 차단 성분 전체 목록 — 식약처 「화장품 안전기준 등에 관한 규정」 별표7 옮겨야 함.
+- 피부장벽/건조 카테고리 INTERNAL_REVIEW entry → 식약처 별표4 자료 면제 항목으로 승격 검토.
+
+---
+
 <!-- 새 세션 요약은 여기에 추가 -->

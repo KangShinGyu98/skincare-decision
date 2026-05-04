@@ -11,7 +11,15 @@
       "Bash(python scripts/crawl_articles.py)",
       "Bash(python -c \"import anthropic; print\\(anthropic.__version__\\)\")",
       "Bash(pip install *)",
-      "Bash(python scripts/organize_articles.py)"
+      "Bash(python scripts/organize_articles.py)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\rkdtl\\\\Desktop\\\\K-Beauty Decision Project\" -Recurse -Directory)",
+      "Bash(Select-Object -First 20)",
+      "WebSearch",
+      "WebFetch(domain:www.law.go.kr)",
+      "WebFetch(domain:easylaw.go.kr)",
+      "WebFetch(domain:developers.naver.com)",
+      "WebFetch(domain:www.data.go.kr)",
+      "WebFetch(domain:blog.bluedawn.kr)"
     ]
   }
 }

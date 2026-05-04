@@ -14,6 +14,9 @@
 | [product_taxonomy.md](product_taxonomy.md)       | MVP 6개 카테고리 정의와 포함/제외 범위.                                                    |
 | [skincare_product_selection_rule.md](skincare_product_selection_rule.md) | 카테고리별 선택 기준 원자료.                                          |
 | [content_plan.md](content_plan.md)               | 룰 추출/검증 파이프라인 메모 (P0~P4 단계).                                                  |
+| [admin_product_input_spec.md](admin_product_input_spec.md) | 관리자 제품 등록 폼 명세 (카테고리별 필드 + S3 업로드 + `effective_dose_met` 자동 판정). |
+| [data_source_catalog.md](data_source_catalog.md) | 외부 데이터 출처 카탈로그 (Naver / 식약처 3종 / AIHub OCR / 브랜드 공식) 응답 샘플 + 매핑.   |
+| [ingredient_efficacy_thresholds.md](ingredient_efficacy_thresholds.md) | 성분 유효 농도 기준 단일 진실 (식약처 별표4 기반 시드, 6개 기능 항목).         |
 
 ## 진입 규칙
 

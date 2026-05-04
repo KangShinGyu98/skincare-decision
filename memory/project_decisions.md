@@ -123,4 +123,56 @@
 
 ---
 
+## [2026-05-02] 결정 2 확정 — 성분 유효 농도 기준 출처 + 시드 범위
+
+**배경:** Product Matrix가 P0 화면이고, 세럼 카테고리의 `effective_dose_met` BOOLEAN attribute가 BASIC_CONDITION 필터 `effective_dose`로 직결된다. 이 BOOLEAN을 누가/무엇을 근거로 판정할지 정하지 않으면 관리자 화면 작업 시 "관리자 임의 판단"으로 빠지면서 일관성이 깨진다.
+
+**결정:**
+- 성분 유효 농도 기준의 1차 출처는 **식약처 「기능성화장품 기준 및 시험방법」 별표4** (자료 제출 면제 성분·함량).
+- MVP 1차 시드 범위 = **식약처 기능성 화장품 인정 11개 항목 중 MVP 6개 카테고리에 적용 가능한 6개 항목 전체**: 미백 / 주름개선 / 자외선 차단 / 여드름성 피부 완화 / 피부장벽 기능 회복 / 건조함·갈라짐.
+- 출처 우선순위: `MFDS_FUNCTIONAL_NOTICE` > `MFDS_FUNCTIONAL_REPORT` > `CIR_OPINION` / `SCCS_OPINION` > `PEER_REVIEWED` > `INTERNAL_REVIEW`.
+- 저장 형식: MVP는 코드 상수(`backend/src/services/efficacy/thresholds.ts`) + 명세 단일 진실 [docs/ingredient_efficacy_thresholds.md](../docs/ingredient_efficacy_thresholds.md). entry 30+ 누적 시 `ingredient_efficacy_thresholds` 테이블로 마이그레이션 (Phase 6+).
+- `effective_dose_met` 자동 판정 + 관리자 override(`attributes.effective_dose_met_override_reason` 메모) 모두 허용.
+
+**이유:**
+- 식약처 별표4는 한국 시장에서 법적 근거를 갖는 유일한 출처 — 분쟁 시 방어 가능.
+- 자료 면제 성분 목록은 이미 검증된 농도 범위를 제시(예: 알부틴 2~5%, 닥나무추출물 2%, 레티놀 2,500 IU/g, 살리실산 0.5% 인체세정용).
+- 6개 항목 전체 시드는 MVP에서 모든 기능성 카테고리의 `effective_dose_met`을 기계적으로 판정 가능하게 만든다.
+- 코드 상수 우선은 Phase 4의 변경 비용(배포 1회)이 DB UI(어드민 CRUD 화면) 비용보다 압도적으로 작기 때문.
+
+**관련 산출물:**
+- [docs/ingredient_efficacy_thresholds.md](../docs/ingredient_efficacy_thresholds.md) — 시드 entry 표
+- [docs/admin_product_input_spec.md §10](../docs/admin_product_input_spec.md#10) — 자동 판정 알고리즘
+- (Phase 4) `backend/src/services/efficacy/thresholds.ts` 코드 상수
+- (Phase 4) `backend/src/services/efficacy/__tests__/effective-dose-met.spec.ts` 단위 테스트
+
+---
+
+## [2026-05-02] 결정 1 보류 — 데이터 출처 조합은 카탈로그 검토 후 확정
+
+**배경:** 사용자가 "어떤 필드를 채워야 하고 API가 어떤 형태인지 모르는 상태에서는 조합을 못 정한다"고 판단. 결정을 카탈로그 산출물 이후로 미루기로 합의.
+
+**결정:**
+- **이미지 저장 정책**: S3 직접 업로드 강제 (외부 hot-link 금지). 이는 즉시 확정.
+- **데이터 출처 조합 X / Y / Z**: 보류. 아래 카탈로그를 본 뒤 별도 entry로 확정.
+- 카탈로그 산출물 3종을 즉시 작성:
+  - [docs/admin_product_input_spec.md](../docs/admin_product_input_spec.md) — 카테고리별 필드 체크리스트
+  - [docs/data_source_catalog.md](../docs/data_source_catalog.md) — 출처별 응답 샘플 + 필드 매핑
+  - [docs/ingredient_efficacy_thresholds.md](../docs/ingredient_efficacy_thresholds.md) — 결정 2 시드
+- 조합 후보:
+  - **X (Lean)**: 100% 수동, 외부 API 0개. 즉시 시작.
+  - **Y (Hybrid)**: Naver 쇼핑 API + 식약처 기능성 보고 API. 가격/이미지/효능 자동 채움. 1~2주 추가.
+  - **Z (Full)**: Y + 식약처 화장품 원료성분 OpenAPI로 `ingredients` 마스터 일괄 시드. 2~3주 추가.
+
+**이유:**
+- "필드 명세 + 응답 샘플 + 임계값"이 한 페이지로 보여야 운영자/개발자가 ROI를 합리적으로 판단 가능.
+- 이미지 hot-link는 약관과 무관하게 운영 위험(Naver 이미지 URL이 차단/변경되면 전체 카탈로그 깨짐) — 즉시 확정.
+- 조합 결정이 보류되어도 §S3 업로드 강제는 결정 1과 독립이므로 관리자 화면 설계에 즉시 반영 가능.
+
+**다음 작업:**
+- 사용자 카탈로그 검토 → 조합 X/Y/Z 중 하나 선택 → 본 파일에 새 entry append.
+- (조합 Y/Z 선택 시) `backend/src/providers/external/{naver-shopping,mfds-functional}.ts` Phase 4에 추가.
+
+---
+
 <!-- 새 결정은 여기에 추가 -->

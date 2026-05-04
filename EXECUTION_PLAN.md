@@ -410,12 +410,15 @@ pnpm run build  # 타입 에러 0인지 확인
 
 | 우선순위 | 화면              | 핵심 BE                                                  | 핵심 FE                                                  |
 | -------- | ----------------- | -------------------------------------------------------- | -------------------------------------------------------- |
+| P0       | 관리자 — 제품 등록 | `POST /admin/products`, `POST /admin/upload-image`, (Y/Z) `GET /admin/external/{naver,mfds-functional}` + `services/efficacy/thresholds.ts` | `/admin/products/new` 동적 폼 ([admin_product_input_spec.md](docs/admin_product_input_spec.md) 기준) |
 | P0       | S06 Product Matrix | `GET /product-matrix`, `POST /product-matrix/filter-state` | `/product-matrix` 페이지 + filter chip + product card    |
 | P1       | S01 Landing       | (없음, 정적 + 캐러셀)                                    | `/` 4-segment + concern carousel + fast lane             |
 | P1       | S02 Priority Gate | `POST /priority-gate/evaluate`                           | `/priority-gate` 폼 + 결과 카드                          |
 | P1       | S03~S05 Category Decision | `POST /category-decision/seed`, `GET /facts/questions` | `/category-decision/[category]` 3-step wizard           |
 | P2       | S07 Product Detail | `GET /products/:id`                                      | `/products/[id]` 상세                                    |
 | P3       | S08 Traceback     | `POST /reactions/reports`, `POST /reactions/avoidance-rules` | `/reaction-traceback` 폼 + 결과                       |
+
+> **관리자 제품 등록(P0)**은 Product Matrix가 표시할 데이터를 채우기 위한 선행 작업이다. 데이터 출처 조합(X / Y / Z)은 [memory/project_decisions.md](memory/project_decisions.md)에서 확정한 값을 따른다 — Y/Z 선택 시 `backend/src/providers/external/{naver-shopping,mfds-functional}.ts` 어댑터 추가.
 
 ### 4.2 화면별 작업 체크리스트
 
@@ -425,6 +428,7 @@ pnpm run build  # 타입 에러 0인지 확인
 - [ ] `docs/wireframe_summary.md`의 해당 섹션 (흐름)
 - [ ] `docs/matching_rules_revised.md`의 해당 룰 (FE/BE 어디에 두는지)
 - [ ] `memory/api_contracts.md`의 endpoint 시그니처
+- [ ] (관리자 화면 한정) `docs/admin_product_input_spec.md`의 해당 카테고리 attribute 표
 
 작업 완료 후:
 
@@ -432,6 +436,20 @@ pnpm run build  # 타입 에러 0인지 확인
 - [ ] `memory/project_decisions.md`에 비표준 결정 기록
 - [ ] BE: 단위 테스트 + e2e 1개 추가
 - [ ] FE: 화면을 브라우저에서 실제 사용하며 골든패스 확인
+
+### 4.2.1 관리자 제품 등록(P0) 작업 체크리스트
+
+- [ ] `docs/admin_product_input_spec.md` 전체 정독 (필드 12~14절 포함)
+- [ ] `docs/data_source_catalog.md`에서 결정된 조합(X/Y/Z) 확인
+- [ ] BE: `POST /admin/products` Zod schema (카테고리별 discriminated union)
+- [ ] BE: `POST /admin/upload-image` (S3 presigned URL — 외부 URL은 reject)
+- [ ] BE: `services/efficacy/thresholds.ts` 코드 상수 + `effective-dose-met.spec.ts` (niacinamide 4 → false / 5 → true)
+- [ ] BE (Y/Z 시): `providers/external/naver-shopping.ts` + `providers/external/mfds-functional.ts`
+- [ ] FE: 카테고리 선택 → 동적 attribute 폼 렌더링 (6개 카테고리 schema 모두)
+- [ ] FE: 이미지 드래그&드롭 + presigned URL 업로드
+- [ ] FE: (Y/Z 시) "Naver에서 가져오기" / "식약처에서 검증" 버튼 + 후보 미리보기
+- [ ] FE: `effective_dose_met` 자동 판정 배지 + override 입력 UI
+- [ ] e2e: sunscreen 1건 등록 → Product Matrix에 노출되는지 확인
 
 ### 4.3 공통 결정 로직 위치 가이드
 
