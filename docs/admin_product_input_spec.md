@@ -97,22 +97,31 @@ price_band = (
 
 | 필드 | 마크 | 타입 | 옵션 | 비고 |
 |---|---|---|---|---|
-| `form` | 🟥 | enum | `water` / `viscous` / `pad` / `mist` | |
-| `application_method` | 🟥 | enum | `wipe` / `press` / `both` | |
-| `purposes` | 🟥 | multi_enum | `hydration` / `exfoliation` / `balancing` / `oil_control` / `calming` / `brightening` / `anti_aging` / `barrier` | 1개 이상 |
-| `hydration_level` | 🟥 | enum | `low` / `medium` / `high` | |
-| `exfoliation_type` | 🟥 | enum | `none` / `aha` / `bha` / `pha` / `mixed` | |
+| `form` | 🟥 | enum | `water` / `viscous` / `milky` / `pad` / `mist` | `milky`는 밀크토너/크림스킨 |
+| `role_tags` | 🟥 | multi_enum | `hydration` / `calming` / `exfoliation` / `oil_control` / `barrier` | 1개 이상. "결 정돈"은 단일 옵션 없음 — 메커니즘 단위(`exfoliation` + `hydration`)로 해체 입력 |
+| `hydration_level` | 🟥 | enum | `low` / `medium` / `high` | 수분감 |
+| `emollient_level` | 🟥 | enum | `none` / `low` / `medium` / `high` | 유분감/영양감. **`oil_control`과 다름** |
+| `film_level` | 🟥 | enum | `none` / `low` / `medium` / `high` | 쫀쫀함, 막감 |
+| `finish` | 🟥 | enum | `fresh` / `moist` / `dewy` / `rich` | 마무리감 (toner 전용) |
+| `exfoliation_type` | 🟥 | enum | `none` / `aha` / `bha` / `pha` / `lha` / `enzyme` / `mixed` | |
+| `exfoliation_strength` | 🟥 | enum | `none` / `low` / `medium` / `high` | |
 | `irritation_risk` | 🟥 | enum | `low` / `medium` / `high` | |
 | `alcohol` | 🟥 | boolean | | 변성알코올/에탄올 등 |
-| `fragrance` | 🟥 | boolean | | |
-| `ph` | 🟨 | number | 예: 5.5 | 불명확 시 null |
-| `astringent_level` | 🟨 | enum | `none` / `low` / `medium` / `high` | |
-| `oil_control` | 🟨 | enum | `none` / `low` / `medium` / `high` | |
-| `non_comedogenic` | 🟨 | boolean | | |
+| `fragrance` | 🟥 | boolean | | 향료 |
+| `essential_oil` | 🟥 | boolean | | 티트리/스피어민트/유칼립투스 등. **`fragrance = false`여도 자극원**이 될 수 있어 별도 표기 |
+| `ph_value` | 🟨 | number | 예: 5.5 | 실제 수치 없으면 null |
+| `ph_label` | 🟨 | enum | `strong_acidic` / `weak_acidic` / `mild_acidic` / `neutral` / `unknown` | `ph_value`가 null일 때 폴백. 큐레이터가 직접 판단해 입력 |
+| `astringent_level` | 🟨 | enum | `none` / `low` / `medium` / `high` | 수렴감 (위치하젤 등) |
+| `oil_control` | 🟨 | enum | `none` / `low` / `medium` / `high` | 피지 조절 효과. **`emollient_level`과 다름** |
+| `cooling_feel` | 🟨 | enum | `none` / `low` / `medium` / `high` | 화한 느낌 |
+| `application_methods` | 🟨 | multi_enum | `wipe` / `press` / `pack` / `mist` | 대부분 겸용이라 Core 필터 가치 낮음 |
+| `wipe_caution` | 🟨 | boolean | | 닦토 사용 시 자극/마찰 주의 필요 |
+| `cotton_pad_fit` | ⬜ | enum | `good` / `fair` / `poor` | 화장솜 적합도 |
+| `sun_caution` | 🟨 | enum | `none` / `low` / `medium` / `high` | 산 성분 등으로 인한 낮 사용 주의 강도 (기존 `photosensitive` 대체) |
+| `functional_claims` | ⬜ | multi_enum | `brightening` / `anti_aging` / `acne_relief` | **식약처 기능성 인정 받은 항목만 입력**. 미인증 제품은 비움 |
 | `active_ingredients` | ⬜ | multi_enum | (스키마 §2.2 참조) | |
 | `absorption_speed` | ⬜ | enum | `slow` / `medium` / `fast` | |
 | `layer_compatibility` | ⬜ | enum | `good` / `fair` / `poor` | |
-| `photosensitive` | ⬜ | boolean | | AHA/BHA 사용 시 권장 |
 | `recommended_frequency` | ⬜ | enum | `daily` / `weekly_1_3` / `as_needed` | |
 
 ---
