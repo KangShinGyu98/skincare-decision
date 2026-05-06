@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Admin Product Matrix Uploader</title>
+  <style>
+    :root{--bg:#f5efe6;--card:#fffdf9;--line:#d8cbba;--text:#201b17;--muted:#6d6459;--accent:#b95b31;--accent2:#f1d8c9}
+    *{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#faf6f0,#f1e9dd);color:var(--text);font:14px/1.5 "Pretendard","Noto Sans KR",system-ui,sans-serif;padding:18px}
+    .app{display:grid;grid-template-columns:300px 1fr;gap:18px}.card{background:rgba(255,253,249,.94);border:1px solid var(--line);border-radius:18px;box-shadow:0 18px 40px rgba(30,25,20,.08)}
+    .side,.main{padding:18px}.main{display:grid;gap:16px}.hero{padding:20px;background:linear-gradient(135deg,rgba(185,91,49,.08),rgba(255,253,249,.95))}
+    h1,h2,h3{margin:0;letter-spacing:-.03em}h1{font-size:32px;line-height:1.05}h2{font-size:18px;margin-bottom:10px}h3{font-size:15px}
+    p,li,.hint,small{color:var(--muted)}.pill{display:inline-block;padding:5px 9px;border-radius:999px;background:var(--accent2);font-size:11px;font-weight:700;color:var(--accent)}
+    .row,.toolbar,.meta,.stats,.imgs,.twocol{display:grid;gap:12px}.toolbar,.stats,.twocol{grid-template-columns:repeat(2,minmax(0,1fr))}.stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .section{padding:16px}.stat{padding:14px;border:1px solid var(--line);border-radius:14px;background:#fff}.stat strong{display:block;font-size:28px;margin-top:6px}
+    label{display:grid;gap:7px;font-weight:700;font-size:13px}input,select,textarea,button{font:inherit}input[type=text],input[type=number],input[type=url],select,textarea{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--text)}
+    textarea{min-height:96px;resize:vertical}.readonly{background:#f3ede5;color:var(--muted)}.checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px;padding:12px;border:1px solid var(--line);border-radius:12px;background:#fbf6ef}
+    .checks label{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:7px;font-weight:600;font-size:12px}.drop{padding:15px;border:1px dashed var(--accent);border-radius:14px;background:linear-gradient(180deg,rgba(241,216,201,.5),#fffdf9)}
+    .img{padding:10px;border:1px solid var(--line);border-radius:14px;background:#fff;display:grid;gap:8px}.img img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:10px;background:#f2ebe2}
+    .record{padding:11px;border:1px solid var(--line);border-radius:14px;background:#fff;cursor:pointer;display:grid;gap:5px}.record.active{border-color:var(--accent)}.list{display:grid;gap:8px;max-height:56vh;overflow:auto}
+    .status{padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:#f5ede4;font-weight:700}.ok{background:rgba(42,122,79,.1);border-color:rgba(42,122,79,.25);color:#2a7a4f}.warn{background:rgba(176,94,26,.1);border-color:rgba(176,94,26,.2);color:#8d5816}
+    button{padding:10px 12px;border:0;border-radius:12px;font-weight:700;cursor:pointer}.primary{background:var(--accent);color:#fff}.secondary{background:#efe4d5}.ghost{background:transparent;border:1px solid var(--line)}.danger{background:#f5d6cd;color:#7b2e1b}
+    pre{margin:0;padding:14px;border-radius:14px;background:#231e19;color:#f5efe6;overflow:auto;min-height:250px;font:12px/1.6 Consolas,monospace}
+    .required::after{content:" *";color:var(--accent)}@media (max-width:1080px){.app,.toolbar,.stats,.twocol{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="card side">
+      <span class="pill">Admin Tool</span>
+      <div class="row" style="margin-top:12px">
+        <h2>Product Matrix Builder</h2>
+        <p>카테고리별 attribute 입력, 이미지 매칭, JSON 저장용 단일 HTML입니다.</p>
+      </div>
+      <div class="stats" style="margin-top:16px">
+        <div class="stat"><small>레코드</small><strong id="sCount">0</strong></div>
+        <div class="stat"><small>카테고리</small><strong>6</strong></div>
+        <div class="stat"><small>이미지</small><strong id="sImg">0</strong></div>
+      </div>
+      <div class="row" style="margin-top:16px">
+        <button class="primary" id="pickDir">저장 폴더 선택</button>
+        <button class="ghost" id="clearLocal">로컬 기록 비우기</button>
+        <small id="dirLabel">선택된 폴더 없음</small>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <div class="status" id="status">브라우저 상태 확인 중...</div>
+      </div>
+      <div class="row" style="margin-top:16px">
+        <div class="pill">루틴 점검</div><div class="pill">제품 루틴 점검</div><div class="pill">국민템 큐레이션</div><div class="pill">큐레이터 메모</div>
+      </div>
+      <div class="row" style="margin-top:18px">
+        <div style="display:flex;justify-content:space-between;align-items:center"><h3>저장된 레코드</h3><button class="secondary" id="newRec">새 레코드</button></div>
+        <input id="search" type="text" placeholder="브랜드 / 제품명 검색">
+      </div>
+      <div class="list" id="recordList"></div>
+    </aside>
+
+    <main class="card main">
+      <section class="card hero">
+        <span class="pill">Condition Based</span>
+        <h1>지성 피부 → 제품 1 이 아니라<br>조건 1, 2, 3 → 후보군 구조</h1>
+        <p>`docs/admin_product_input_spec.md`, `docs/product_attribute_schema.md`, `docs/product_scope_and_limits.md`를 기준으로 만든 관리자 입력 도구입니다. 자동 효능 판정보다 조건 기반 필터링과 큐레이터 메모 저장에 초점을 둡니다.</p>
+      </section>
+
+      <section class="twocol">
+        <div class="card section">
+          <h2>컬렉션 제어</h2>
+          <div class="toolbar">
+            <button class="primary" id="saveRecord">현재 폼 저장/수정</button>
+            <button class="secondary" id="saveJson">JSON 저장하기</button>
+            <button class="ghost" id="loadJson">기존 JSON 불러오기</button>
+            <button class="danger" id="deleteRecord">현재 레코드 삭제</button>
+          </div>
+          <p class="hint" style="margin-top:10px">폴더가 선택되어 있으면 `products/{category}/{slug}` 아래에 `record.json`과 `images/`를 씁니다. 미지원 브라우저에서는 JSON 다운로드로 폴백합니다.</p>
+        </div>
+        <div class="card section">
+          <h2>현재 레코드 메타</h2>
+          <div class="meta">
+            <small>레코드 ID: <span id="mId">새 레코드</span></small>
+            <small>Slug: <span id="mSlug">-</span></small>
+            <small>카테고리: <span id="mCat">-</span></small>
+            <small>가격대: <span id="mBand">-</span></small>
+            <small>수정 시각: <span id="mUpdated">-</span></small>
+          </div>
+        </div>
+      </section>
+
+      <section class="card section">
+        <h2>공통 필드</h2>
+        <div class="twocol" id="common"></div>
+      </section>
+
+      <section class="card section">
+        <h2>카테고리별 Attribute</h2>
+        <p id="catDesc" class="hint"></p>
+        <div class="twocol" id="category"></div>
+      </section>
+
+      <section class="twocol">
+        <div class="card section">
+          <h2>이미지 업로드</h2>
+          <div class="drop" id="drop">
+            <strong>이미지 드래그 앤 드롭 / 파일 선택</strong>
+            <p class="hint">첫 번째 이미지를 대표 이미지로 저장합니다. 저장 전 레코드 전환 시 미저장 파일은 다시 선택해야 할 수 있습니다.</p>
+            <div class="row">
+              <input id="images" type="file" accept="image/png,image/jpeg,image/webp" multiple>
+              <button class="ghost" id="clearImages">이미지 비우기</button>
+            </div>
+          </div>
+          <div class="imgs" id="imageList" style="margin-top:12px"></div>
+        </div>
+        <div class="card section">
+          <h2>JSON 미리보기</h2>
+          <pre id="preview">{}</pre>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const K={records:"pm_records",draft:"pm_draft",selected:"pm_selected"};
+    const B="true:false",L="low:medium:high",D="none:low:medium:high",C="good:fair:poor",T="light:medium:rich",U="morning:night:both",A="slow:medium:fast";
+    const P=(s)=>s.split(":");
+    const CAT={
+      toner:{label:"토너",desc:"수분/각질/밸런싱 역할과 자극 리스크를 함께 보는 제품군",f:[["form","형태","e",1,"water:viscous:pad:mist"],["application_method","사용 방식","e",1,"wipe:press:both"],["purposes","목적","m",1,"hydration:exfoliation:balancing:oil_control:calming:brightening:anti_aging:barrier"],["hydration_level","수분감","e",1,L],["exfoliation_type","각질 타입","e",1,"none:aha:bha:pha:mixed"],["irritation_risk","자극 리스크","e",1,L],["alcohol","알코올 포함","b",1,B],["fragrance","향료 포함","b",1,B],["ph","pH","n"],["astringent_level","수렴 성향","e",0,D],["oil_control","피지 조절","e",0,D],["non_comedogenic","논코메도","b",0,B],["active_ingredients","주요 성분","m",0,"hyaluronic_acid:glycerin:niacinamide:witch_hazel:tea_tree:centella:panthenol:aloe:chamomile:rose_water:ceramide:vitamin_c:peptide:green_tea"],["absorption_speed","흡수 속도","e",0,A],["layer_compatibility","레이어링 궁합","e",0,C],["photosensitive","광민감성 주의","b",0,B],["recommended_frequency","권장 빈도","e",0,"daily:weekly_1_3:as_needed"]]},
+      sunscreen:{label:"선크림",desc:"백탁/눈시림/메이크업 궁합/덧바름 적합도를 함께 보는 제품군",f:[["spf","SPF","n",1],["pa","PA","e",1,"+:++:+++:++++"],["broad_spectrum","광범위 차단","b",1,B],["filter_type","자차 타입","e",1,"physical:chemical:hybrid"],["eye_sting","눈시림","e",1,D],["white_cast","백탁","e",1,D],["texture","제형 무게감","e",1,T],["sticky","끈적임","e",1,D],["finish","마무리감","e",1,"matte:natural:dewy"],["makeup_compatibility","메이크업 궁합","e",1,C],["portable","휴대 적합","b",1,B],["water_resistant","워터 레지스턴트","b",1,B],["fragrance","향료 포함","b",1,B],["alcohol","알코올 포함","b",1,B],["oil_free","오일 프리","b",1,B],["non_comedogenic","논코메도","b",1,B],["hydration_level","보습감","e",1,L],["tone_up","톤업 여부","b",0,B],["reapplication_fit","덧바르기 적합도","e",0,L],["sweat_resistant","땀 저항성","b",0,B],["uv_filters","자외선 필터","m",0,"zinc_oxide:titanium_dioxide:avobenzone:octocrylene:octinoxate:oxybenzone:tinosorb_s:uvinul_a_plus:uvinul_t150"],["moisturizing_ingredients","보습 성분","m",0,"hyaluronic_acid:glycerin:panthenol:ceramide:squalane:aloe"]]},
+      serum:{label:"세럼",desc:"활성 성분, 사용 시간대, 충돌 성분, 큐레이터 근거 메모가 중요한 제품군",f:[["active_ingredients","활성 성분","m",1,"retinol:retinal:bakuchiol:vitamin_c:vitamin_c_derivative:niacinamide:peptide:hyaluronic_acid:glycerin:ceramide:squalane:aha:bha:pha:salicylic_acid:glycolic_acid:lactic_acid:azelaic_acid:tranexamic_acid:arbutin:licorice:centella:madecassoside:panthenol:aloe:chamomile:green_tea:tea_tree:vitamin_e:ferulic_acid:pdrn:adenosine"],["target_concerns","타깃 고민","m",1,"brightening:anti_aging:acne:hydration:calming:pore_care:barrier:texture:pigmentation"],["irritation_risk","자극 리스크","e",1,L],["conflict_ingredients","충돌 성분","m",0,"retinol:vitamin_c:aha:bha:benzoyl_peroxide:peeling"],["usage_time","사용 시간대","e",1,U],["effective_dose_met","effective_dose_met","b",0,B],["effective_dose_met_override_reason","override 메모","a"],["fragrance","향료 포함","b",1,B],["alcohol","알코올 포함","b",1,B],["oil_free","오일 프리","b",1,B],["non_comedogenic","논코메도","b",1,B],["texture","제형","e",0,"water:gel:oil:cream"],["concentration_level","농도 체감","e",0,L],["ingredient_concentrations","성분 농도 JSON","a"],["packaging","용기","e",0,"opaque:transparent:airless:dropper:tube"],["stability_packaging","안정성 패키징","e",0,C],["photosensitive","광민감성 주의","b",0,B],["effect_timeline","효과 체감 시점","e",0,"fast:gradual"]]},
+      lipcare:{label:"립케어",desc:"보습 지속력과 멘톨/캠퍼/향료 리스크를 함께 보는 제품군",f:[["moisture_lasting","보습 지속력","e",1,L],["humectant_level","humectant 수준","e",1,L],["occlusive_level","occlusive 수준","e",1,L],["irritation_risk","자극 리스크","e",1,L],["menthol","멘톨 포함","b",1,B],["fragrance","향료 포함","b",1,B],["alcohol","알코올 포함","b",1,B],["camphor","캠퍼 포함","b",1,B],["salicylic_acid","살리실산 포함","b",1,B],["colorant","색소 포함","b",1,B],["spf","SPF","n",1],["form","형태","e",1,"stick:tube:balm:mask:essence"],["portable","휴대 적합","b",1,B],["night_care","야간 케어 적합","b",0,B],["makeup_base_fit","메이크업 베이스 궁합","e",0,C],["key_ingredients","주요 성분","m",0,"shea_butter:hyaluronic_acid:glycerin:aloe:vitamin_e:beeswax:petrolatum:lanolin:ceramide:panthenol:squalane:jojoba_oil:argan_oil:coconut_oil:honey"],["absorption_speed","흡수 속도","e",0,A],["finish","마무리감","e",0,"matte:natural:glossy"]]},
+      moisturizer:{label:"로션 / 크림",desc:"보습 3요소, 장벽 보강, 계절 적합도, 메이크업 궁합을 함께 보는 제품군",f:[["form","형태","e",1,"lotion:gel_cream:water_cream:cream"],["hydration_level","수분감","e",1,L],["humectant_level","humectant 수준","e",1,L],["emollient_level","emollient 수준","e",1,L],["occlusive_level","occlusive 수준","e",1,L],["oiliness","유분감","e",1,L],["texture","제형 무게감","e",1,T],["barrier_repair","장벽 보강","e",1,L],["irritation_risk","자극 리스크","e",1,L],["fragrance","향료 포함","b",1,B],["alcohol","알코올 포함","b",1,B],["oil_free","오일 프리","b",1,B],["non_comedogenic","논코메도","b",1,B],["ph","pH","n"],["sticky","끈적임","e",1,D],["makeup_compatibility","메이크업 궁합","e",1,C],["absorption_speed","흡수 속도","e",0,A],["seasonal_fit","계절 적합도","m",0,"spring:summer:autumn:winter:all_season"],["active_ingredients","주요 성분","m",0,"retinol:vitamin_c:niacinamide:peptide:ceramide:hyaluronic_acid:glycerin:centella:panthenol:squalane:shea_butter:petrolatum:urea:aloe:chamomile:oat"],["finish","마무리감","e",0,"matte:natural:dewy"],["layer_compatibility","레이어링 궁합","e",0,C]]},
+      cleanser:{label:"클렌저",desc:"세정력, 이중세안 역할, 세안 후 느낌을 함께 보는 제품군",f:[["cleanser_type","클렌저 타입","e",1,"foam:gel:oil:balm:water:cream:milk:lotion"],["cleansing_power","세정력","e",1,L],["after_feel","세안 후 느낌","e",1,"moist:neutral:dry"],["irritation_risk","자극 리스크","e",1,L],["ph","pH","n"],["sulfate_free","설페이트 프리","b",1,B],["fragrance","향료 포함","b",1,B],["alcohol","알코올 포함","b",1,B],["colorant","색소 포함","b",1,B],["soap_free","soap_free","b",1,B],["non_comedogenic","논코메도","b",1,B],["makeup_removal_power","메이크업 제거력","e",1,D],["double_cleanse_role","이중세안 역할","e",1,"first:second:both"],["physical_scrub_risk","물리 스크럽 리스크","e",1,D],["exfoliation","각질 제거 방식","e",0,"none:physical:chemical:mixed"],["active_ingredients","주요 성분","m",0,"salicylic_acid:bha:aha:tea_tree:niacinamide:glycerin:hyaluronic_acid:centella:panthenol:aloe:ceramide:green_tea:charcoal"],["surfactant_type","계면활성제 타입","e",0,"amino_acid:amphoteric:sulfate:soap:mixed:unknown"],["morning_fit","아침 세안 적합도","e",0,C],["waterproof_makeup_fit","워터프루프 메이크업 적합도","e",0,C]]}
+    };
+    const COMMON=[["brand_name","브랜드명","t",1],["brand_id","브랜드 UUID 또는 내부 키","t"],["category_key","카테고리","e",1,Object.keys(CAT).join(":")],["name","제품명","t",1],["volume","용량","t"],["barcode","바코드","t"],["price","가격(원)","n",1],["price_band","자동 가격대","r"],["purchase_url","구매 URL","u"],["sort_order","정렬 순서","n"],["is_active","활성 여부","b",1,B],["mfds_functional_status","기능성 확인 상태","e",0,"reviewed:reported:not_found:unknown"],["evidence_level","근거 수준","e",0,"official_verified:brand_disclosed:inferred:unknown"],["functional_claim_note","기능성 / 근거 메모","a"],["curator_notes","큐레이터 메모","a"]];
+    const S={records:[],id:null,pending:[],stored:[],dir:null,api:!!window.showDirectoryPicker};
+    const $=(s)=>document.querySelector(s), $$=(s)=>[...document.querySelectorAll(s)];
+    const E={common:$("#common"),category:$("#category"),catDesc:$("#catDesc"),preview:$("#preview"),list:$("#recordList"),images:$("#images"),imageList:$("#imageList"),status:$("#status"),dirLabel:$("#dirLabel"),search:$("#search"),sCount:$("#sCount"),sImg:$("#sImg"),mId:$("#mId"),mSlug:$("#mSlug"),mCat:$("#mCat"),mBand:$("#mBand"),mUpdated:$("#mUpdated")};
+
+    const fieldHTML=([k,l,t,r,o])=>{
+      const req=r?'required':'';
+      if(t==="a")return `<label class="${req}"><span>${l}</span><textarea data-k="${k}" placeholder="${k==='ingredient_concentrations'?'{"niacinamide":5}':''}"></textarea></label>`;
+      if(t==="m")return `<label class="${req}"><span>${l}</span><div class="checks">${P(o).map(v=>`<label><input type="checkbox" data-k="${k}" value="${v}"><span>${v}</span></label>`).join("")}</div></label>`;
+      if(t==="e"||t==="b")return `<label class="${req}"><span>${l}</span><select data-k="${k}"><option value="">선택</option>${P(o).map(v=>`<option value="${v}">${v}</option>`).join("")}</select></label>`;
+      if(t==="r")return `<label><span>${l}</span><input class="readonly" data-k="${k}" type="text" readonly></label>`;
+      const ty=t==="n"?"number":t==="u"?"url":"text"; return `<label class="${req}"><span>${l}</span><input data-k="${k}" type="${ty}"></label>`;
+    };
+    function renderCommon(){E.common.innerHTML=COMMON.map(fieldHTML).join(""); set("category_key","toner"); set("is_active","true")}
+    function renderCategory(cat){E.category.innerHTML=CAT[cat].f.map(fieldHTML).join(""); E.catDesc.textContent=CAT[cat].desc; sync()}
+    function get(k){const n=$$(`[data-k="${k}"]`); if(!n.length)return""; if(n[0].type==="checkbox")return n.filter(x=>x.checked).map(x=>x.value); return n[0].value}
+    function set(k,v){const n=$$(`[data-k="${k}"]`); if(!n.length)return; if(n[0].type==="checkbox"){n.forEach(x=>x.checked=Array.isArray(v)&&v.includes(x.value)); return} n[0].value=v??""}
+    function band(){const p=Number(get("price")); let v=""; if(!Number.isNaN(p)&&p>=0)v=p<20000?"UNDER_20000":p<50000?"BETWEEN_20000_50000":"OVER_50000"; set("price_band",v)}
+    function id(){return crypto.randomUUID?.()||`r-${Date.now()}-${Math.random().toString(36).slice(2,7)}`}
+    function slug(...parts){const raw=parts.filter(Boolean).join("-").normalize("NFKC").replace(/[<>:"/\\|?*\u0000-\u001f]/g,"").trim().replace(/\s+/g,"-").replace(/-+/g,"-").slice(0,80); return raw||`product-${Date.now()}`}
+    function parseVal(t,v){if(t==="m")return v.length?v:undefined; if(t==="b")return v==="true"?true:v==="false"?false:undefined; if(t==="n")return v===""?undefined:Number(v); if(t==="a"&&v&&v.trim()&&v.trim().startsWith("{")){try{return JSON.parse(v)}catch{return v}} return v===""?undefined:v}
+    function attrs(cat){const out={}; for(const f of CAT[cat].f){const v=parseVal(f[2],get(f[0])); if(v!==undefined)out[f[0]]=v} return out}
+    function record(){band(); const cat=get("category_key")||"toner"; const existing=S.records.find(x=>x.id===S.id); const r={id:existing?.id||id(),brand_name:get("brand_name"),brand_id:get("brand_id")||null,category_key:cat,category_label:CAT[cat].label,name:get("name"),slug:slug(get("brand_name"),get("name"),cat),volume:get("volume")||null,barcode:get("barcode")||null,price:get("price")===""?null:Number(get("price")),price_band:get("price_band")||null,purchase_url:get("purchase_url")||null,sort_order:get("sort_order")===""?null:Number(get("sort_order")),is_active:get("is_active")==="true",mfds_functional_status:get("mfds_functional_status")||null,evidence_level:get("evidence_level")||null,functional_claim_note:get("functional_claim_note")||null,curator_notes:get("curator_notes")||null,attributes:attrs(cat),images:structuredClone(S.stored),created_at:existing?.created_at||new Date().toISOString(),updated_at:new Date().toISOString()}; return r}
+    function validate(r){for(const f of COMMON.filter(x=>x[3])){if(r[f[0]]===null||r[f[0]]===undefined||r[f[0]]==="")throw Error(`공통 필드 누락: ${f[1]}`)} for(const f of CAT[r.category_key].f.filter(x=>x[3])){const v=r.attributes[f[0]]; if(v===null||v===undefined||v===""||(Array.isArray(v)&&!v.length))throw Error(`카테고리 필드 누락: ${f[1]}`)} if(!r.price_band)throw Error("price_band 자동 계산 실패")}
+    function upsert(r){const i=S.records.findIndex(x=>x.id===r.id); i>=0?S.records.splice(i,1,r):S.records.unshift(r); S.id=r.id; saveLocal(); sync()}
+    function hydrate(r){clearForm(); S.id=r.id; S.pending=[]; S.stored=structuredClone(r.images||[]); for(const f of COMMON){const v=r[f[0]]; set(f[0],typeof v==="boolean"?String(v):v??"")} renderCategory(r.category_key||"toner"); for(const f of CAT[r.category_key].f){const v=r.attributes?.[f[0]]; if(f[2]==="b")set(f[0],typeof v==="boolean"?String(v):""); else if(f[2]==="a"&&typeof v==="object"&&v) set(f[0],JSON.stringify(v,null,2)); else set(f[0],v??"")} sync()}
+    function clearForm(){$$("[data-k]").forEach(n=>n.type==="checkbox"?n.checked=false:n.value=""); set("category_key","toner"); set("is_active","true")}
+    function saveLocal(){localStorage.setItem(K.records,JSON.stringify(S.records)); localStorage.setItem(K.selected,S.id||""); try{localStorage.setItem(K.draft,JSON.stringify({draft:record(),stored:S.stored}))}catch{}}
+    function restore(){try{S.records=JSON.parse(localStorage.getItem(K.records)||"[]")}catch{} const d=localStorage.getItem(K.draft); if(d){try{const p=JSON.parse(d); if(p.draft){hydrate(p.draft); S.stored=p.stored||[]; return}}catch{}} if(S.records.length)hydrate(S.records[0]); else {renderCommon(); renderCategory("toner")}}
+    function preview(){try{E.preview.textContent=JSON.stringify(record(),null,2)}catch(e){E.preview.textContent=e.message} meta(); stats()}
+    function meta(){const r=safeRec(); E.mId.textContent=r?.id||"새 레코드"; E.mSlug.textContent=r?.slug||"-"; E.mCat.textContent=r?.category_label||"-"; E.mBand.textContent=r?.price_band||"-"; E.mUpdated.textContent=r?.updated_at?new Date(r.updated_at).toLocaleString("ko-KR"):"-"}
+    function stats(){E.sCount.textContent=S.records.length; E.sImg.textContent=S.pending.length+S.stored.length}
+    function safeRec(){try{return record()}catch{return null}}
+    function sync(){band(); renderList(); renderImages(); preview()}
+    function renderList(){const q=E.search.value.trim().toLowerCase(); const rows=S.records.filter(r=>`${r.brand_name||""} ${r.name||""} ${r.category_key||""}`.toLowerCase().includes(q)).map(r=>`<div class="record ${r.id===S.id?'active':''}" data-id="${r.id}"><strong>${esc(r.name||"이름 없음")}</strong><small>${esc(r.brand_name||"브랜드 없음")} · ${esc(CAT[r.category_key]?.label||r.category_key||"-")}</small><small>${esc(r.slug||"-")}</small></div>`).join(""); E.list.innerHTML=rows||`<div class="record"><small>저장된 레코드가 없습니다.</small></div>`; $$("[data-id]").forEach(n=>n.onclick=()=>hydrate(S.records.find(x=>x.id===n.dataset.id)))}
+    function renderImages(){const cards=[]; S.stored.forEach((img,i)=>cards.push(`<div class="img"><img src="${img.preview_url||fallback()}" alt=""><small>${img.file_name||img.original_name||`stored-${i+1}`}</small><small>${img.relative_path||"저장 경로 없음"}</small><button class="danger" data-rs="${i}">저장된 이미지 제거</button></div>`)); S.pending.forEach((file,i)=>cards.push(`<div class="img"><img src="${URL.createObjectURL(file)}" alt=""><small>${file.name}</small><small>${fmt(file.size)}</small><button class="danger" data-rp="${i}">대기 이미지 제거</button></div>`)); E.imageList.innerHTML=cards.join("")||`<div class="img"><small>추가된 이미지가 없습니다.</small></div>`; $$("[data-rp]").forEach(b=>b.onclick=()=>{S.pending.splice(+b.dataset.rp,1); sync(); saveLocal()}); $$("[data-rs]").forEach(b=>b.onclick=()=>{S.stored.splice(+b.dataset.rs,1); sync(); saveLocal()})}
+    function msg(t,ok){E.status.className=`status ${ok?'ok':'warn'}`; E.status.textContent=t}
+    function esc(v){return String(v).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+    function fmt(b){return b<1024?`${b} B`:b<1048576?`${(b/1024).toFixed(1)} KB`:`${(b/1048576).toFixed(2)} MB`}
+    function fallback(){return "data:image/svg+xml;charset=UTF-8,"+encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><rect width='100%' height='100%' fill='#efe5d8'/><text x='50%' y='50%' fill='#8b7a68' dominant-baseline='middle' text-anchor='middle' font-size='16'>stored image</text></svg>`)}
+    function ext(n){const m=n.match(/\.[^.]+$/); return m?m[0].toLowerCase():".bin"}
+    async function ensure(dir,path){let cur=dir; for(const seg of path.split("/").filter(Boolean))cur=await cur.getDirectoryHandle(seg,{create:true}); return cur}
+    async function writeJson(dir,name,obj){const h=await dir.getFileHandle(name,{create:true}); const w=await h.createWritable(); await w.write(JSON.stringify(obj,null,2)); await w.close()}
+    async function writeFile(dir,name,file){const h=await dir.getFileHandle(name,{create:true}); const w=await h.createWritable(); await w.write(file); await w.close()}
+    async function saveImages(slugName){const saved=structuredClone(S.stored); if(!S.pending.length||!S.dir) return saved; const folder=await ensure(S.dir,`products/${get("category_key")||"toner"}/${slugName}/images`); for(let i=0;i<S.pending.length;i++){const f=S.pending[i],nm=`${String(saved.length+1).padStart(2,"0")}-${slugName}${ext(f.name)}`; await writeFile(folder,nm,f); saved.push({role:saved.length===0?"primary":"gallery",file_name:nm,original_name:f.name,relative_path:`images/${nm}`,size:f.size,mime_type:f.type,saved_at:new Date().toISOString()})} S.pending=[]; E.images.value=""; return saved}
+    async function persistFolder(){const cur=record(); validate(cur); upsert(cur); const out=[]; for(const r of S.records){const base=await ensure(S.dir,`products/${r.category_key}/${r.slug}`); const merged=structuredClone(r.id===S.id?record():r); if(r.id===S.id){merged.images=await saveImages(merged.slug); S.stored=structuredClone(merged.images)} merged.storage={folder:`products/${merged.category_key}/${merged.slug}`,record_json:`products/${merged.category_key}/${merged.slug}/record.json`}; await writeJson(base,"record.json",merged); out.push(merged)} S.records=out; saveLocal(); return out}
+    async function saveAll(){try{const cur=record(); validate(cur); upsert(cur); const payload=S.dir&&S.api?{saved_at:new Date().toISOString(),records:await persistFolder()}:{saved_at:new Date().toISOString(),records:S.records}; if(S.dir&&S.api){await writeJson(S.dir,"product-matrix-records.json",payload); msg("선택한 폴더에 JSON과 이미지를 저장했습니다.",1)} else {const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}),u=URL.createObjectURL(blob),a=document.createElement("a"); a.href=u;a.download="product-matrix-records.json";a.click();URL.revokeObjectURL(u); msg("JSON 다운로드로 저장했습니다. 이미지 파일은 별도 보관이 필요할 수 있습니다.",0)} sync()}catch(e){msg(e.message,0)}}
+    function removeCurrent(){if(!S.id)return msg("삭제할 레코드가 없습니다.",0); S.records=S.records.filter(r=>r.id!==S.id); S.id=null; S.pending=[]; S.stored=[]; saveLocal(); clearForm(); renderCategory("toner"); msg("현재 레코드를 삭제했습니다.",1)}
+    async function chooseDir(){if(!S.api)return msg("현재 브라우저에서는 폴더 저장을 지원하지 않습니다. Chrome/Edge를 사용하세요.",0); try{S.dir=await window.showDirectoryPicker({mode:"readwrite"}); E.dirLabel.textContent=`선택된 폴더: ${S.dir.name}`; msg("저장 폴더를 선택했습니다.",1)}catch(e){if(e.name!=="AbortError")msg("폴더 선택 중 오류가 발생했습니다.",0)}}
+    function addFiles(files){const imgs=[...files].filter(f=>f.type.startsWith("image/")); if(!imgs.length)return msg("이미지 파일만 추가할 수 있습니다.",0); S.pending.push(...imgs); saveLocal(); sync(); msg(`${imgs.length}개 이미지 파일을 추가했습니다.`,1)}
+    function importJson(){const i=document.createElement("input"); i.type="file"; i.accept=".json,application/json"; i.onchange=async()=>{const f=i.files?.[0]; if(!f)return; try{const p=JSON.parse(await f.text()); S.records=Array.isArray(p)?p:(p.records||[]); saveLocal(); if(S.records.length)hydrate(S.records[0]); msg(`${S.records.length}건을 불러왔습니다.`,1)}catch(e){msg(`JSON 불러오기 실패: ${e.message}`,0)}}; i.click()}
+    renderCommon(); restore();
+    renderCategory(get("category_key")||"toner");
+    E.status.className=`status ${S.api?'ok':'warn'}`; E.status.textContent=S.api?"폴더 저장 지원: Chrome/Edge에서 JSON + 이미지 저장 가능":"폴더 저장 미지원: JSON 다운로드로만 저장 가능";
+    document.addEventListener("input",e=>{if(e.target.matches('[data-k="price"],[data-k="brand_name"],[data-k="name"]')) band(); saveLocal(); preview()});
+    document.addEventListener("change",e=>{if(e.target.matches('[data-k="category_key"]')) renderCategory(e.target.value||"toner"); saveLocal(); preview()});
+    $("#newRec").onclick=()=>{S.id=null; S.pending=[]; S.stored=[]; clearForm(); renderCategory("toner"); sync(); saveLocal()};
+    $("#saveRecord").onclick=()=>{try{const r=record(); validate(r); upsert(r); msg("현재 폼을 컬렉션에 저장했습니다.",1)}catch(e){msg(e.message,0)}};
+    $("#saveJson").onclick=saveAll; $("#loadJson").onclick=importJson; $("#deleteRecord").onclick=removeCurrent; $("#pickDir").onclick=chooseDir;
+    $("#clearLocal").onclick=()=>{localStorage.removeItem(K.records); localStorage.removeItem(K.draft); localStorage.removeItem(K.selected); S.records=[]; S.id=null; S.pending=[]; S.stored=[]; clearForm(); renderCategory("toner"); sync(); msg("로컬 기록을 비웠습니다.",1)};
+    $("#clearImages").onclick=()=>{S.pending=[]; S.stored=[]; E.images.value=""; saveLocal(); sync(); msg("현재 레코드 이미지 목록을 비웠습니다.",0)};
+    E.search.oninput=renderList; E.images.onchange=e=>addFiles(e.target.files); $("#drop").ondragover=e=>{e.preventDefault()}; $("#drop").ondrop=e=>{e.preventDefault(); addFiles(e.dataTransfer.files)};
+    sync();
+  </script>
+</body>
+</html>
