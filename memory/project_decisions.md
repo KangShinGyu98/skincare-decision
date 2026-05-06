@@ -175,4 +175,50 @@
 
 ---
 
+## [2026-05-06] Toner attribute schema 개편 (CSV 25+종 입력 결과 + Codex 분석 + 추가 판단)
+
+**배경:** `docs/화장품 성분비교.CSV`에 토너 25+종을 입력하며 기존 `docs/product_attribute_schema.md` §2 Toner 정의의 한계가 드러남:
+1. 사용자가 가장 중요시하는 "유분기/쫀쫀함/마무리감"을 표현할 attribute 없음 (`oil_control`은 피지 조절 효과지 유분 사용감이 아님)
+2. `application_method`(닦토/흡토)는 거의 모든 제품이 겸용이라 Core 필터 가치 없음
+3. `purposes`가 사용감(`hydration`/`oil_control`)과 식약처 기능성 주장(`brightening`/`anti_aging`)을 한 키에 섞음
+4. `non_comedogenic`은 토너 25+종에서 명시 사례 거의 0
+5. `ph: number` 단일이라 "약산성(추정)" 같은 출처 불명 표기 못 담음
+6. `exfoliation_type`이 LHA(녹두), 효소(파파인) 표현 못 함
+7. `essential_oil`이 별도 키로 없어 fragrance=false여도 티트리/유칼립투스 자극원 표시 불가
+
+**결정:**
+
+토너에 한해 다음 변경을 schema/admin spec/matching rules에 동시 반영:
+
+- Core 추가: `role_tags`, `emollient_level`, `film_level`, `finish`(toner 전용 옵션 `fresh/moist/dewy/rich`), `essential_oil`, `exfoliation_strength`, `ph_value` + `ph_label`
+- Core에서 제거: `application_method`, `purposes`, `ph`(단일), `non_comedogenic`
+- Optional 추가: `application_methods`(MULTI_ENUM), `wipe_caution`, `cotton_pad_fit`, `cooling_feel`, `sun_caution`(ENUM), `functional_claims`
+- Optional에서 제거: `photosensitive`(BOOLEAN) — `sun_caution` ENUM으로 교체
+- `exfoliation_type` 옵션 확장: `+lha, +enzyme`
+- `form` 옵션 확장: `+milky` (밀크토너/크림스킨)
+- `role_tags` 옵션 5개 (`hydration / calming / exfoliation / oil_control / barrier`) — "결 정돈"은 단일 옵션 도입하지 않고 `exfoliation` + `hydration` 조합으로 해체 입력
+- `functional_claims`는 식약처 기능성 인정 받은 항목만 입력 정책 (미인증은 비움)
+
+**이유 / Codex 분석과의 분기점:**
+
+- "결 정돈" 단일 옵션(Codex 안의 `texture_smoothing`)은 도입하지 않음. "결 정돈"은 각질 제거 + 수분 보습이 마케팅 용어로 묶인 것이므로 메커니즘 단위 해체가 의미 명확.
+- 출처 메타데이터(`evidence_source` 공통 enum, `ph_source`, `claim_status`)는 도입하지 않음. 큐레이터가 직접 판단해 입력하므로 별도 키 불필요. 향후 외부 데이터 소스(Naver/식약처 API 등) 자동 수집 시 재검토.
+- `humectant_level`은 토너에 추가하지 않음. 토너는 거의 전부 water + humectant 베이스라 `hydration_level`이 사실상 humectant 비중 표현.
+- `oil_control`(피지 조절 효과 — witch_hazel, BHA)와 `emollient_level`(도포 시 유분감 — 오일, 시어버터)의 의미 차이를 schema 본문에 명시.
+
+**영향 범위:**
+
+- `docs/product_attribute_schema.md` §1.4, §2.1, §2.2, §2.3, §8, §9.1, §11, §12
+- `docs/admin_product_input_spec.md` §3
+- `docs/matching_rules_revised.md` §7.1, §8.1(toner를 acne_prone non_comedogenic에서 제외), §8.2(전면 갱신, `oily_skin_fit_toner`/`dry_skin_fit_toner`/`sensitive_skin_fit_toner`/`wipe_safe` 신규), §9.5
+- 기존 토너 매핑 `non_comedogenic` HARD_FILTER → toner 전용으로 `oil_control` + `emollient_level` + `irritation_risk` 조합으로 대체
+
+**후속:**
+
+- 다른 카테고리(serum/sunscreen/lipcare/moisturizer/cleanser)에도 사용감 attribute(`emollient_level`/`film_level`) 일관성 검토는 별도 결정으로 분리
+- `functional_claims` 옵션 후보(brightening/anti_aging/acne_relief)와 식약처 인정 기준의 정확한 매핑은 `docs/ingredient_efficacy_thresholds.md` 확장 검토
+- 출처 메타데이터 도입은 외부 데이터 소스 자동 수집 시점에 재검토
+
+---
+
 <!-- 새 결정은 여기에 추가 -->

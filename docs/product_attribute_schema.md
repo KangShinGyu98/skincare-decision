@@ -73,6 +73,11 @@ MVP 제품군은 아래 6개로 제한한다.
 | usage_time | `morning` / `night` / `both` |
 | absorption_speed | `slow` / `medium` / `fast` |
 | texture_weight | `light` / `medium` / `rich` |
+| ph_label | `strong_acidic` (pH ≤ 4.5) / `weak_acidic` (pH 4.5~5.5) / `mild_acidic` (pH 5.5~7) / `neutral` (pH = 7) / `unknown` |
+
+주의:
+
+- `finish`는 카테고리별로 옵션이 다르다. sunscreen/moisturizer는 `matte / natural / dewy`, lipcare는 `matte / natural / glossy`, toner는 `fresh / moist / dewy / rich`. 키 이름이 같아도 의미와 옵션이 다르므로, 코드 단계에서 카테고리별 enum으로 분리하거나 카테고리 정의 기반으로 검증한다.
 
 ### 1.5 피부 타입은 product attribute가 아니다
 
@@ -98,27 +103,36 @@ MVP 제품군은 아래 6개로 제한한다.
 
 | key | value_type | options / range | 설명 |
 |---|---|---|---|
-| `form` | ENUM | `water` / `viscous` / `pad` / `mist` | 제품 형태 |
-| `application_method` | ENUM | `wipe` / `press` / `both` | 닦토, 흡토, 겸용 |
-| `purposes` | MULTI_ENUM | `hydration` / `exfoliation` / `balancing` / `oil_control` / `calming` / `brightening` / `anti_aging` / `barrier` | 제품 목적. 단일 `purpose` 대신 복수 목적 사용 |
-| `hydration_level` | ENUM | `low` / `medium` / `high` | 수분 공급 수준 |
-| `exfoliation_type` | ENUM | `none` / `aha` / `bha` / `pha` / `mixed` | 각질 케어 성격 |
+| `form` | ENUM | `water` / `viscous` / `milky` / `pad` / `mist` | 제품 형태. `milky`는 밀크토너/크림스킨 |
+| `role_tags` | MULTI_ENUM | `hydration` / `calming` / `exfoliation` / `oil_control` / `barrier` | 실사용 역할. 1개 이상. "결 정돈" 같은 마케팅 용어는 메커니즘 단위(`exfoliation` + `hydration`)로 해체해 표기 |
+| `hydration_level` | ENUM | `low` / `medium` / `high` | 수분감 |
+| `emollient_level` | ENUM | `none` / `low` / `medium` / `high` | 유분감/영양감. **`oil_control`과 다름** — 도포 시 느껴지는 오일/시어버터/스쿠알란 등 유분 정도 |
+| `film_level` | ENUM | `none` / `low` / `medium` / `high` | 쫀쫀함, 막 형성감 |
+| `finish` | ENUM | `fresh` / `moist` / `dewy` / `rich` | 마무리감 (toner 전용 옵션 — 다른 카테고리의 `finish`와 다름) |
+| `exfoliation_type` | ENUM | `none` / `aha` / `bha` / `pha` / `lha` / `enzyme` / `mixed` | 각질 케어 성격 |
+| `exfoliation_strength` | ENUM | `none` / `low` / `medium` / `high` | 각질 케어 강도 |
+| `oil_control` | ENUM | `none` / `low` / `medium` / `high` | 피지 분비 조절 효과. **`emollient_level`과 다름** — witch_hazel, BHA 등으로 사용 후 피지를 줄이는 성격 |
 | `irritation_risk` | ENUM | `low` / `medium` / `high` | 자극 가능성 |
 | `alcohol` | BOOLEAN | `true` / `false` | 변성알코올, 에탄올 등 자극 가능 알코올 포함 여부 |
 | `fragrance` | BOOLEAN | `true` / `false` | 향료 포함 여부 |
-| `ph` | NUMBER | 예: `5.5` | pH 수치. 불명확하면 null |
+| `essential_oil` | BOOLEAN | `true` / `false` | 티트리오일, 스피어민트오일, 유칼립투스오일 등. **`fragrance = false`여도 자극원**이 될 수 있어 별도로 표기 |
+| `ph_value` | NUMBER | 예: `5.5` | 실제 pH 수치. 불명확하면 null |
+| `ph_label` | ENUM | `ph_label` 참조 | pH 구간. `ph_value`가 null일 때 폴백. 큐레이터가 직접 판단해 입력 |
 | `astringent_level` | ENUM | `none` / `low` / `medium` / `high` | 수렴 성격. 위치하젤 등 포함 시 판단 |
-| `oil_control` | ENUM | `none` / `low` / `medium` / `high` | 피지 조절 성격 |
-| `non_comedogenic` | BOOLEAN | `true` / `false` | 논코메도제닉 여부 |
 
 ### 2.2 Optional attributes
 
 | key | value_type | options / range | 설명 |
 |---|---|---|---|
+| `application_methods` | MULTI_ENUM | `wipe` / `press` / `pack` / `mist` | 사용 방식. 대부분 토너가 겸용이므로 Core 필터로는 가치가 낮아 Optional로 둠 |
+| `wipe_caution` | BOOLEAN | `true` / `false` | 닦토 사용 시 주의 필요 여부 (자극성 또는 마찰 비권장) |
+| `cotton_pad_fit` | ENUM | `good` / `fair` / `poor` | 화장솜 사용 적합도 |
+| `cooling_feel` | ENUM | `none` / `low` / `medium` / `high` | 화한 느낌. 멘톨/에센셜오일/알코올 등에서 발생 |
+| `sun_caution` | ENUM | `none` / `low` / `medium` / `high` | 산 성분 등으로 인한 낮 사용 주의 강도. (기존 `photosensitive` BOOLEAN 대체) |
+| `functional_claims` | MULTI_ENUM | `brightening` / `anti_aging` / `acne_relief` | 기능성 주장. **식약처 기능성 인정 받은 항목만 입력** (미인증 제품은 비움) |
 | `active_ingredients` | MULTI_ENUM | `hyaluronic_acid` / `glycerin` / `niacinamide` / `witch_hazel` / `tea_tree` / `centella` / `panthenol` / `aloe` / `chamomile` / `rose_water` / `ceramide` / `vitamin_c` / `peptide` / `green_tea` | 주요 성분 |
 | `absorption_speed` | ENUM | `slow` / `medium` / `fast` | 흡수 속도 |
 | `layer_compatibility` | ENUM | `good` / `fair` / `poor` | 다음 단계 제품과의 궁합 |
-| `photosensitive` | BOOLEAN | `true` / `false` | AHA/BHA 등 사용 후 광민감성 주의 필요 여부 |
 | `recommended_frequency` | ENUM | `daily` / `weekly_1_3` / `as_needed` | 권장 사용 빈도 |
 
 ### 2.3 Toner filter mapping 후보
@@ -127,11 +141,15 @@ MVP 제품군은 아래 6개로 제한한다.
 |---|---|---|
 | `hydrating_toner` | `hydration_level IN [medium, high]` | BASIC_CONDITION |
 | `low_irritation` | `irritation_risk = low` | BASIC_CONDITION |
-| `mild_ph` | `ph >= 4.5 AND ph <= 6.0` | BASIC_CONDITION |
+| `mild_ph` | `ph_value >= 4.5 AND ph_value <= 6.0` (1차) / `ph_label IN [weak_acidic, mild_acidic]` (폴백) | BASIC_CONDITION |
 | `no_alcohol` | `alcohol = false` | PERSONALIZED |
 | `no_fragrance` | `fragrance = false` | PERSONALIZED |
 | `oil_control` | `oil_control IN [medium, high]` | PERSONALIZED |
 | `bha_exfoliation` | `exfoliation_type IN [bha, mixed]` | PERSONALIZED |
+| `oily_skin_fit_toner` | `emollient_level IN [none, low]` AND `film_level IN [none, low]` AND `finish IN [fresh, moist]` AND `hydration_level >= medium` | PERSONALIZED |
+| `dry_skin_fit_toner` | `hydration_level = high` AND `film_level >= medium` AND `emollient_level IN [low, medium]` | PERSONALIZED |
+| `sensitive_skin_fit_toner` | `alcohol = false` AND `fragrance = false` AND `essential_oil = false` AND `exfoliation_strength IN [none, low]` AND `irritation_risk = low` AND `cooling_feel IN [none, low]` | PERSONALIZED |
+| `wipe_safe` | `wipe_caution = false` | PERSONALIZED |
 
 ---
 
@@ -396,12 +414,18 @@ MVP 제품군은 아래 6개로 제한한다.
 | `PA+`, `PA++`, `PA+++`, `PA++++` | `+`, `++`, `+++`, `++++` | 값 비교 단순화 |
 | `alcohol_free: true` | `alcohol: false` | 포함 여부 기준으로 통일 |
 | `fragrance_free: true` | `fragrance: false` | Product Filter Mapping의 `fragrance = false`와 일치 |
-| `ph_level: acidic / neutral / alkaline` | `ph: number` | `mild_ph` 필터를 수치로 판단하기 위함 |
+| `ph_level: acidic / neutral / alkaline` | `ph_value: number` + `ph_label: enum` | `mild_ph` 필터를 수치 우선·구간 폴백으로 판단 |
 | `type` in cleanser | `cleanser_type` | 제품 type, category type과 의미 충돌 방지 |
 | `spf: none` in lipcare | `spf: 0` | number 타입 통일 |
 | `form: tint` in lipcare | 제거 | 색조 립 제품은 MVP 립케어 범위에서 제외 |
 | `purpose` in toner | `purposes` | 토너는 수분+진정, 피지+각질처럼 복합 목적이 많음 |
 | `ingredient_role` in moisturizer | `humectant_level`, `emollient_level`, `occlusive_level` | 보습 3요소를 필터링 가능하게 분리 |
+| `application_method` in toner (Core ENUM) | `application_methods` (Optional MULTI_ENUM, `wipe / press / pack / mist`) | 대부분 토너가 겸용이므로 Core 필터 가치 낮음. 닦토 안전성은 별도 `wipe_caution` BOOLEAN로 표현 |
+| `purposes` in toner (단일 MULTI_ENUM) | `role_tags` (실사용 역할) + `functional_claims` (식약처 기능성 인정 받은 항목만) | 사용감 필터와 기능성 주장이 섞여 있어 분리. 출처 메타데이터(`claim_status`)는 도입하지 않고 "비어 있음 = 미인증" 정책으로 운영 |
+| `ph: number` in toner | `ph_value: number` + `ph_label: enum` | "약산성(추정)"만 있는 제품 다수. ph_value 폴백으로 ph_label을 둠. 출처(`ph_source`)는 도입하지 않음 |
+| `photosensitive: boolean` in toner | `sun_caution: enum (none/low/medium/high)` | 광민감성 정도를 단계로 표현해 SORT/HARD_FILTER 양쪽 활용 가능 |
+| `exfoliation_type` in toner (`none / aha / bha / pha / mixed`) | `exfoliation_type` (`+ lha + enzyme`) + `exfoliation_strength` 신규 | LHA(녹두), 효소(파파인) 사례 다수. 강도 분리로 민감 사용자 대응 |
+| `non_comedogenic` in toner | 제거 | CSV 25+종 검토 결과 토너에서 명시 사례 거의 0. 토너의 acne_prone 매핑은 `oil_control` + `emollient_level` + `irritation_risk` 조합으로 대체 |
 
 ---
 
@@ -413,7 +437,7 @@ MVP 제품군은 아래 6개로 제한한다.
 |---|---|---|
 | `hydrating_toner` | 수분 공급 | `hydration_level IN [medium, high]` |
 | `low_irritation` | 저자극 | `irritation_risk = low` |
-| `mild_ph` | 약산성 | `ph >= 4.5 AND ph <= 6.0` |
+| `mild_ph` | 약산성 | `ph_value >= 4.5 AND ph_value <= 6.0` (1차) / `ph_label IN [weak_acidic, mild_acidic]` (폴백) |
 
 ### 9.2 Sunscreen
 
@@ -499,7 +523,7 @@ MVP 제품군은 아래 6개로 제한한다.
 | `lipcare` | `moisture_lasting`, `humectant_level`, `occlusive_level`, `irritation_risk`, `menthol`, `fragrance`, `alcohol`, `camphor`, `salicylic_acid`, `colorant`, `spf`, `form`, `portable` |
 | `moisturizer` | `form`, `hydration_level`, `humectant_level`, `emollient_level`, `occlusive_level`, `oiliness`, `texture`, `barrier_repair`, `irritation_risk`, `fragrance`, `alcohol`, `oil_free`, `non_comedogenic`, `ph`, `sticky`, `makeup_compatibility` |
 | `cleanser` | `cleanser_type`, `cleansing_power`, `after_feel`, `irritation_risk`, `ph`, `sulfate_free`, `fragrance`, `alcohol`, `colorant`, `soap_free`, `non_comedogenic`, `makeup_removal_power`, `double_cleanse_role`, `physical_scrub_risk` |
-| `toner` | `form`, `application_method`, `purposes`, `hydration_level`, `exfoliation_type`, `irritation_risk`, `alcohol`, `fragrance`, `ph`, `astringent_level`, `oil_control`, `non_comedogenic` |
+| `toner` | `form`, `role_tags`, `hydration_level`, `emollient_level`, `film_level`, `finish`, `exfoliation_type`, `exfoliation_strength`, `oil_control`, `irritation_risk`, `alcohol`, `fragrance`, `essential_oil`, `ph_value`, `ph_label`, `astringent_level` |
 
 ### P1 — Product Detail / 태그 / 정렬 보조
 
@@ -510,7 +534,7 @@ MVP 제품군은 아래 6개로 제한한다.
 | `lipcare` | `night_care`, `makeup_base_fit`, `key_ingredients`, `absorption_speed`, `finish` |
 | `moisturizer` | `absorption_speed`, `seasonal_fit`, `active_ingredients`, `finish`, `layer_compatibility` |
 | `cleanser` | `exfoliation`, `active_ingredients`, `surfactant_type`, `morning_fit`, `waterproof_makeup_fit` |
-| `toner` | `active_ingredients`, `absorption_speed`, `layer_compatibility`, `photosensitive`, `recommended_frequency` |
+| `toner` | `application_methods`, `wipe_caution`, `cotton_pad_fit`, `cooling_feel`, `sun_caution`, `functional_claims`, `active_ingredients`, `absorption_speed`, `layer_compatibility`, `recommended_frequency` |
 
 ---
 
@@ -526,3 +550,8 @@ MVP 제품군은 아래 6개로 제한한다.
 6. 클렌저는 `ph`를 숫자형으로 바꾸고 `cleanser_type`을 사용한다.
 7. 세럼은 `effective_dose_met`을 추가해 유효 함량 필터를 실제로 적용할 수 있게 했다.
 8. 피부 타입은 product attribute가 아니라 user_facts 기반 매칭 로직으로 유지한다.
+9. 토너는 사용자가 가장 많이 언급하는 "유분기/쫀쫀함/마무리감"을 표현하기 위해 `emollient_level`, `film_level`, `finish`를 Core에 추가했다. `oil_control`(피지 분비 조절 효과)와 `emollient_level`(도포 시 유분감)의 의미를 분리해 Core에 명시했다.
+10. 토너의 `application_method`(닦토/흡토)는 거의 모든 제품이 겸용이라 Core 필터 가치가 없어 `application_methods`(MULTI_ENUM) Optional로 내렸고, 닦토 안전성은 `wipe_caution` BOOLEAN으로 분리했다.
+11. 토너의 `purposes`는 사용감 필터(`role_tags`)와 식약처 기능성 주장(`functional_claims`)으로 분리했다. 출처/근거 메타데이터(claim_status, ph_source 등)는 큐레이터가 직접 판단해 입력하는 운영 정책으로 갈음하고 별도 키로 도입하지 않는다.
+12. 토너의 `exfoliation_type`에 LHA·효소(enzyme)를 추가하고, 강도는 `exfoliation_strength`로 분리해 민감 사용자 매핑을 정밀화했다.
+13. 토너의 `essential_oil` BOOLEAN은 `fragrance = false`여도 자극원이 될 수 있는 티트리/유칼립투스/스피어민트 등 에센셜오일을 별도 표기하기 위함이다.
