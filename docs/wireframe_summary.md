@@ -1,4 +1,4 @@
-# K-Beauty Decision MVP — 와이어프레임 & 핵심 Feature 정리
+# Skincare Decision MVP — 와이어프레임 & 핵심 Feature 정리
 
 _00~21 Codex 문서 종합 | 2026-04-23_ + 명세 정리, 개발자 의도 정리
 

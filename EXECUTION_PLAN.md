@@ -1,6 +1,6 @@
 # 하네스 구축 실행 계획 (EXECUTION_PLAN)
 
-> K-Beauty Decision MVP 백엔드(NestJS)와 프론트엔드(Next.js)를 처음부터 끝까지 구축하기 위한 단계별 명령서.
+> Skincare Decision MVP 백엔드(NestJS)와 프론트엔드(Next.js)를 처음부터 끝까지 구축하기 위한 단계별 명령서.
 > AI Agent든 개발자든 본 문서를 위에서 아래로 따라가면 동일한 결과가 나오도록 설계됨.
 
 ---
@@ -49,7 +49,7 @@ pnpm init -y
 
 ```json
 {
-  "name": "k-beauty-decision",
+  "name": "skincare-decision",
   "version": "0.1.0",
   "private": true,
   "packageManager": "pnpm@9.0.0",
@@ -178,7 +178,7 @@ pnpm prisma init --datasource-provider postgresql
 `backend/.env` 작성:
 
 ```bash
-DATABASE_URL="postgresql://kbeauty:kbeauty@localhost:5432/kbeauty?schema=public"
+DATABASE_URL="postgresql://skincare_decision:skincare_decision@localhost:5432/skincare_decision?schema=public"
 REDIS_URL="redis://localhost:6379"
 COOKIE_SECRET="dev-only-change-me"
 CORS_ORIGIN="http://localhost:3000"
@@ -220,9 +220,9 @@ services:
   postgres:
     image: postgres:16
     environment:
-      POSTGRES_USER: kbeauty
-      POSTGRES_PASSWORD: kbeauty
-      POSTGRES_DB: kbeauty
+      POSTGRES_USER: skincare_decision
+      POSTGRES_PASSWORD: skincare_decision
+      POSTGRES_DB: skincare_decision
     ports: ["5432:5432"]
     volumes: ["pg_data:/var/lib/postgresql/data"]
   redis:
@@ -562,7 +562,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     services:
-      postgres: {image: postgres:16, env: {POSTGRES_PASSWORD: kbeauty, POSTGRES_USER: kbeauty, POSTGRES_DB: kbeauty}, ports: ['5432:5432'], options: '--health-cmd="pg_isready" --health-interval=10s'}
+      postgres: {image: postgres:16, env: {POSTGRES_PASSWORD: skincare_decision, POSTGRES_USER: skincare_decision, POSTGRES_DB: skincare_decision}, ports: ['5432:5432'], options: '--health-cmd="pg_isready" --health-interval=10s'}
       redis: {image: redis:7, ports: ['6379:6379']}
     steps:
       - uses: actions/checkout@v4
@@ -599,10 +599,10 @@ jobs:
         id: ecr
       - name: Build & push backend
         run: |
-          docker build -f infra/docker/Dockerfile.backend -t $ECR/kb-backend:${{ github.sha }} .
-          docker push $ECR/kb-backend:${{ github.sha }}
+          docker build -f infra/docker/Dockerfile.backend -t $ECR/skincare-decision-backend:${{ github.sha }} .
+          docker push $ECR/skincare-decision-backend:${{ github.sha }}
         env:
-          ECR: ${{ steps.ecr.outputs.registry }}/kb-backend
+          ECR: ${{ steps.ecr.outputs.registry }}/skincare-decision-backend
       # frontend도 동일 패턴
 ```
 
@@ -623,20 +623,20 @@ docker compose up --build
 
 - AWS 계정 + ap-northeast-2 region
 - VPC + 2 public + 2 private subnet
-- ECR repo 2개 (`kb-backend`, `kb-frontend`)
+- ECR repo 2개 (`skincare-decision-backend`, `skincare-decision-frontend`)
 - RDS Postgres 16 (private subnet, t4g.micro for dev)
 - ElastiCache Redis 7 (cluster mode disabled, single-AZ for dev / multi-AZ for prod)
 - S3 bucket (frontend 정적 자산 + CloudFront origin)
 - CloudFront distribution
 - Route 53 hosted zone + ACM 인증서 (도메인 보유 시)
 - ALB + ECS Fargate cluster
-- Secrets Manager: `kb-beauty/prod/database`, `kb-beauty/prod/app`
+- Secrets Manager: `skincare-decision/prod/database`, `skincare-decision/prod/app`
 - IAM OIDC role for GitHub Actions
 
 ### 7.2 ECS Task Definition (요지)
 
-- `kb-backend-task`: container 1개, port 4000, env from Secrets Manager, CPU 0.5 / Mem 1GB.
-- `kb-frontend-task`: container 1개, port 3000, env로 `NEXT_PUBLIC_API_BASE_URL` 주입.
+- `skincare-decision-backend-task`: container 1개, port 4000, env from Secrets Manager, CPU 0.5 / Mem 1GB.
+- `skincare-decision-frontend-task`: container 1개, port 3000, env로 `NEXT_PUBLIC_API_BASE_URL` 주입.
 - 두 service 모두 ALB target group 연결.
 
 ### 7.3 RDS migration
@@ -664,9 +664,9 @@ jobs:
           role-to-assume: arn:aws:iam::<acct>:role/github-actions
           aws-region: ap-northeast-2
       - name: Update ECS service (backend)
-        run: aws ecs update-service --cluster kb --service kb-backend --force-new-deployment
+        run: aws ecs update-service --cluster skincare-decision --service skincare-decision-backend --force-new-deployment
       - name: Update ECS service (frontend)
-        run: aws ecs update-service --cluster kb --service kb-frontend --force-new-deployment
+        run: aws ecs update-service --cluster skincare-decision --service skincare-decision-frontend --force-new-deployment
       - name: CloudFront invalidation
         run: aws cloudfront create-invalidation --distribution-id <id> --paths "/*"
 ```
@@ -718,7 +718,7 @@ docker compose -f infra/docker/docker-compose.yml up --build
 | Next.js Hydration mismatch                                            | Server에서 device_id 읽고 client에서 다른 값  | device_id를 cookie에서만 읽고, client mount 후 부재 시 새로 발급                                           |
 | Tailwind 색이 design_system과 어긋남                                  | Tailwind config에 직접 hex 입력               | `colors_and_type.css` CSS 변수 → `tailwind.config.ts`에서 `var(--...)`로 참조                              |
 | GH Actions에서 `prisma migrate deploy` 실패                           | DATABASE_URL secret 누락 또는 RDS 보안그룹 차단 | OIDC role + Secrets Manager 사용, RDS SG에 GH runner egress IP 없으면 임시 EC2 bastion 또는 SSM session    |
-| ECS task가 즉시 stop                                                  | ENV 누락 / Secrets Manager 권한 부족          | task role IAM에 `secretsmanager:GetSecretValue` (`kb-beauty/*` resource) 추가                              |
+| ECS task가 즉시 stop                                                  | ENV 누락 / Secrets Manager 권한 부족          | task role IAM에 `secretsmanager:GetSecretValue` (`skincare-decision/*` resource) 추가                     |
 
 ---
 

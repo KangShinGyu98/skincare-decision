@@ -4,6 +4,23 @@
 
 ---
 
+## [2026-05-07] 프로젝트 명칭을 `Skincare Decision` / `skincare-decision`으로 통일
+
+**배경:** 사용자 요청으로 프로젝트 전반의 브랜드/슬러그 명칭을 `k-beauty-decision` 계열에서 `skincare-decision` 계열로 교체해야 했다.
+
+**결정:**
+- canonical display name은 `Skincare Decision`, slug는 `skincare-decision`으로 사용한다.
+- 문서 제목, 목업/프리뷰 UI 텍스트, 디자인 스킬 메타데이터, 예시 package/resource 명칭, 샘플 CDN 도메인을 새 이름으로 갱신한다.
+- 프로젝트명에 종속된 Python 스크립트 절대경로는 모두 제거하고, `Path(__file__).resolve().parents[1]` 기준의 repo-relative 경로로 바꾼다.
+- 실제 체크아웃된 워크스페이스 폴더명(`K-Beauty Decision Project`)과 `.claude/settings.local.json`의 절대경로는 이번 변경에서 유지한다.
+
+**이유:**
+- 표시명과 슬러그가 혼재하면 이후 package/infra/resource naming이 다시 갈라진다.
+- 절대경로 하드코딩은 폴더명 변경 때 가장 먼저 깨지는 지점이므로 이번에 함께 제거하는 것이 안전하다.
+- `.claude/settings.local.json`은 현재 실존 경로를 가리키는 로컬 설정이라, 폴더를 실제로 rename하지 않은 상태에서 먼저 바꾸면 로컬 도구가 깨질 수 있다.
+
+---
+
 ## [2026-05-02] 기술 스택 확정
 
 **배경:** MVP 백엔드/프론트엔드 구축 직전. 명세 문서(`docs/`)는 6개 카테고리, JSONB 기반 attribute, Rule-based filter 구조를 가정.

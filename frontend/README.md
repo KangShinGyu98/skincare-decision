@@ -1,6 +1,6 @@
 # frontend/
 
-K-Beauty Decision MVP Next.js (App Router) 프론트엔드.
+Skincare Decision MVP Next.js (App Router) 프론트엔드.
 
 ## 스택
 

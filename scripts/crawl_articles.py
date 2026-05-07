@@ -4,9 +4,10 @@ cosmeticsinhot.com 소비자 관점 기사 전문 크롤러
 - consumer_titles.txt 기준 필터링
 - 기사 전문 저장 → docs/articles/*.txt
 """
-import os, re, time, requests, sys, io
+import re, time, requests, sys, io
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 from bs4 import BeautifulSoup
+from pathlib import Path
 
 BASE = "https://www.cosmeticsinhot.com"
 API_URL = (
@@ -20,8 +21,9 @@ LIST_HEADERS = {
 }
 ART_HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
 
-OUT_DIR = r"c:\Users\rkdtl\Desktop\K-Beauty Decision Project\docs\articles"
-CONSUMER_FILE = r"c:\Users\rkdtl\Desktop\K-Beauty Decision Project\docs\consumer_titles.txt"
+ROOT_DIR = Path(__file__).resolve().parents[1]
+OUT_DIR = ROOT_DIR / "docs" / "articles"
+CONSUMER_FILE = ROOT_DIR / "docs" / "consumer_titles.txt"
 
 # 제외 키워드 (필터링 로직 동일)
 EXCLUDE = [
@@ -119,7 +121,7 @@ def fetch_article(url):
     return body.get_text(separator='\n', strip=True) if body else ''
 
 def main():
-    os.makedirs(OUT_DIR, exist_ok=True)
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
 
     print("=== Step 1: 전체 링크 수집 ===")
     all_links = collect_all_links()
@@ -132,9 +134,9 @@ def main():
     success, fail = 0, 0
     for i, (title, href) in enumerate(filtered, 1):
         fname = slug_to_filename(href)
-        fpath = os.path.join(OUT_DIR, fname)
+        fpath = OUT_DIR / fname
 
-        if os.path.exists(fpath):
+        if fpath.exists():
             print(f"[{i:03d}/{len(filtered)}] SKIP (already exists): {title[:60]}")
             success += 1
             continue
@@ -142,7 +144,7 @@ def main():
         url = BASE + href
         try:
             content = fetch_article(url)
-            with open(fpath, 'w', encoding='utf-8') as f:
+            with fpath.open('w', encoding='utf-8') as f:
                 f.write(f"TITLE: {title}\nURL: {url}\n\n{content}")
             print(f"[{i:03d}/{len(filtered)}] OK ({len(content)}chars): {title[:60]}")
             success += 1

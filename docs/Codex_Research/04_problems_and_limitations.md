@@ -1,4 +1,4 @@
-# 기존 플랫폼의 한계: K-Beauty Decision Gaps
+# 기존 플랫폼의 한계: Skincare Decision Gaps
 *Problem definition document | Codex | 2026-04-21*
 
 ---

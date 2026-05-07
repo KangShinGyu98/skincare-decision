@@ -36,7 +36,7 @@ infra/
 
 ## 시크릿
 
-- AWS Secrets Manager: `kb-beauty/{env}/database`, `kb-beauty/{env}/redis`, `kb-beauty/{env}/app`
+- AWS Secrets Manager: `skincare-decision/{env}/database`, `skincare-decision/{env}/redis`, `skincare-decision/{env}/app`
 - GitHub Actions: OIDC로 IAM role assume (long-lived AWS key 금지)
 
 ## 배포 흐름

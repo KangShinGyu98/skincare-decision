@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>K-Beauty Decision</title>
+<title>Skincare Decision</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
@@ -133,7 +133,7 @@ function TopNav({ onNav }) {
   return (
     <div style={{ position:'sticky', top:0, zIndex:100, background: T.bgDark, height:48, display:'flex', alignItems:'center', padding:'0 24px', gap:24, boxShadow: T.shadow2 }}>
       <div style={{ color:'#fff', fontSize:16, fontWeight:700, letterSpacing:'0.01em', cursor:'pointer' }} onClick={() => onNav('landing')}>
-        K-Beauty Decision
+        Skincare Decision
       </div>
       <div style={{ display:'flex', gap:16, marginLeft:8 }}>
         {[['priority','Priority Gate'],['matrix','Product Matrix'],['traceback','Traceback']].map(([key, label]) => (

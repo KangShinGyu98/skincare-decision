@@ -1,4 +1,4 @@
-# 공통 패턴 분석: K-Beauty Decision Market
+# 공통 패턴 분석: Skincare Decision Market
 *Cross-platform pattern analysis | Codex | 2026-04-21*
 
 ---

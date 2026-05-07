@@ -1,4 +1,4 @@
-# 서비스 현황 분석: K-Beauty Decision Landscape
+# 서비스 현황 분석: Skincare Decision Landscape
 *Market mapping document | Codex | 2026-04-21*
 
 ---

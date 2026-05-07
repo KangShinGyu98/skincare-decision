@@ -1,5 +1,5 @@
 
-# K-Beauty Decision — DB 모델링
+# Skincare Decision — DB 모델링
 
 데이터 구조 (테이블, 컬럼)
 

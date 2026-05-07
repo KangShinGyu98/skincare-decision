@@ -1,4 +1,4 @@
-# K-Beauty Decision Design System
+# Skincare Decision Design System
 
 > **스킨케어 결정 서비스** — A Korean skincare product recommendation service that helps users decide what to buy (or not buy) based on their skin condition, routine, and concerns.
 
@@ -6,7 +6,7 @@
 
 ## Product Overview
 
-**K-Beauty Decision** (also referred to as "Skin Care Decision" or "스킨케어 결정") is a web-first, mobile-prioritized service. Its core philosophy is:
+**Skincare Decision** (also referred to as "스킨케어 결정") is a web-first, mobile-prioritized service. Its core philosophy is:
 
 > "더 많은 추천이 아닌 더 적은 선택" (Less recommendations, fewer choices)
 

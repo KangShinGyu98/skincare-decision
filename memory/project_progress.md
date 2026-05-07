@@ -5,6 +5,30 @@
 
 ---
 
+## [2026-05-07] 프로젝트 명칭 리네이밍 정리
+
+### 변경 내용
+- 프로젝트 표시명을 `Skincare Decision`, slug를 `skincare-decision`으로 통일.
+- README / CLAUDE / EXECUTION_PLAN / backend·frontend README / design_system / docs / mockup / research header 등 프로젝트 브랜딩 문구를 새 이름으로 갱신.
+- EXECUTION_PLAN 및 infra 예시의 package/ECR/Secrets Manager/ECS naming sample을 `skincare-decision` 기준으로 재정렬.
+- `.idea` 모듈 파일을 `skincare-decision.iml`로 정리.
+- `scripts/{crawl_titles,crawl_articles,organize_articles}.py`의 프로젝트명 하드코딩 절대경로 제거 → repo-relative 경로로 변경.
+
+### 검증 결과
+- `rg "K-Beauty Decision|k-beauty-decision|kbeauty|kb-" .` 재검색 결과, 의도적으로 남긴 `.claude/settings.local.json`의 실제 워크스페이스 경로만 old name 잔존.
+- 실행 테스트: N/A (문서/설정/스크립트 경로 리팩터 수준, 런타임 미실행).
+
+### 아직 남은 작업 / 리스크
+- 실제 폴더명 `C:\Users\rkdtl\Desktop\K-Beauty Decision Project`는 아직 그대로라, 물리적 디렉터리 rename을 원하면 `.claude/settings.local.json`과 함께 후속 정리 필요.
+- `.claude/settings.local.json`은 현재 경로를 보존하려고 의도적으로 수정하지 않음.
+
+### 다음 작업 우선순위
+1. (선택) 실제 워크스페이스 폴더명까지 `skincare-decision` 계열로 rename할지 결정.
+2. EXECUTION_PLAN.md Phase 1 실행 (pnpm workspace + 공통 toolchain).
+3. Phase 2: NestJS init + Prisma schema 1차 작성.
+
+---
+
 ## [2026-05-02] 하네스 구축 완료, 백엔드/프론트엔드 init 직전
 
 ### 현재 구현 상태

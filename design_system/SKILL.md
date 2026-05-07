@@ -1,6 +1,6 @@
 ---
-name: kbeauty-decision-design
-description: Use this skill to generate well-branded interfaces and assets for K-Beauty Decision (스킨케어 결정 서비스), either for production or throwaway prototypes/mocks/etc. Contains essential design guidelines, colors, type, fonts, assets, and UI kit components for prototyping.
+name: skincare-decision-design
+description: Use this skill to generate well-branded interfaces and assets for Skincare Decision (스킨케어 결정 서비스), either for production or throwaway prototypes/mocks/etc. Contains essential design guidelines, colors, type, fonts, assets, and UI kit components for prototyping.
 user-invocable: true
 ---
 
