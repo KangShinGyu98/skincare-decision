@@ -1,7 +1,7 @@
-# K-Beauty Decision Platform Research Index
+# Skincare Decision Platform Research Index
 *Methodology adapted from `research_book_review_market/00_research_index.md` | Codex version | 2026-04-21*
 
-> 이 문서는 `K-Beauty Decision/Codex` 폴더의 01~13 리서치 문서를 요약한 인덱스다.  
+> 이 문서는 `Skincare Decision/Codex` 폴더의 01~13 리서치 문서를 요약한 인덱스다.  
 > 흐름은 기존 도서 리뷰 리서치와 동일하게 시장 이해 → 패턴 분석 → 사용자 마찰 → 결정 단계 해부 → 기회 정의 → 제품 전략 → 기능 설계 순으로 구성했다.
 
 ---

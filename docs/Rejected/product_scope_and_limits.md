@@ -1,4 +1,4 @@
-# K-Beauty Decision MVP — 제품 범위 / 한계 문서
+# Skincare Decision MVP — 제품 범위 / 한계 문서
 
 > 목적: 이 서비스가 **지금 실제로 어디까지 도와줄 수 있는지**, 그리고 **어디부터는 아직 자동화하지 않고 큐레이터 책임으로 남겨두는지**를 명확히 한다.  
 > 기준 문서: [skincare_product_selection_rule.md](skincare_product_selection_rule.md), [skincare_rules_from_articles.md](../crawl/skincare_rules_from_articles.md)  

@@ -6,7 +6,7 @@
 ## 1. 문서 목적
 
 이 문서는 `21_decision_flow_revision.md` 기준으로  
-**K-Beauty Decision MVP의 수정된 화면 구조와 화면별 핵심 컴포넌트**를 정리한 와이어프레임 문서다.
+**Skincare Decision MVP의 수정된 화면 구조와 화면별 핵심 컴포넌트**를 정리한 와이어프레임 문서다.
 
 이번 수정의 핵심은 아래 4가지다.
 

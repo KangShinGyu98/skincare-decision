@@ -1,4 +1,4 @@
-# 사용자 행동 패턴: K-Beauty Decision Users
+# 사용자 행동 패턴: Skincare Decision Users
 *User behavior research | Codex | 2026-04-21*
 
 ---

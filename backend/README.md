@@ -1,6 +1,6 @@
 # backend/
 
-K-Beauty Decision MVP NestJS 백엔드.
+Skincare Decision MVP NestJS 백엔드.
 
 ## 스택
 

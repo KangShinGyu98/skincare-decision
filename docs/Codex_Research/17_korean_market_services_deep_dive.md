@@ -241,7 +241,7 @@
 > 브랜드 안의 추천은 있지만 브랜드 밖의 독립 판단은 부족하고,  
 > 트렌드 큐레이션은 있지만 루틴 우선순위 판단은 부족하다.
 
-이 지점이 바로 K-Beauty Decision Platform의 자리다.
+이 지점이 바로 Skincare Decision Platform의 자리다.
 
 ---
 

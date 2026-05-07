@@ -1,4 +1,4 @@
-# K-Beauty Decision — Web App UI Kit
+# Skincare Decision — Web App UI Kit
 
 A hi-fi interactive prototype covering the full user flow from landing to product selection.
 

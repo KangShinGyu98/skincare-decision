@@ -5,6 +5,7 @@ AJAX API 직접 호출 방식
 import requests
 from bs4 import BeautifulSoup
 import time
+from pathlib import Path
 
 API_URL = (
     "https://www.cosmeticsinhot.com/phoenix/admin/component/dynamic/node"
@@ -16,6 +17,8 @@ HEADERS = {
     "Content-Type": "application/x-www-form-urlencoded",
     "X-Requested-With": "XMLHttpRequest",
 }
+
+ROOT_DIR = Path(__file__).resolve().parents[1]
 
 def get_titles_from_page(page_num):
     data = f"appIsDev=0&pageNum={page_num}&infoGroupId=1362304"
@@ -41,8 +44,8 @@ def crawl_all(start=1, end=47):
 if __name__ == "__main__":
     titles = crawl_all(1, 47)
 
-    out_path = r"c:\Users\rkdtl\Desktop\K-Beauty Decision Project\docs\crawled_titles.txt"
-    with open(out_path, "w", encoding="utf-8") as f:
+    out_path = ROOT_DIR / "docs" / "crawled_titles.txt"
+    with out_path.open("w", encoding="utf-8") as f:
         f.write(f"총 {len(titles)}개 제목\n\n")
         for i, t in enumerate(titles, 1):
             f.write(f"{i:03d}. {t}\n")

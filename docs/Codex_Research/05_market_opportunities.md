@@ -1,4 +1,4 @@
-# 시장 기회 분석: K-Beauty Decision Opportunities
+# 시장 기회 분석: Skincare Decision Opportunities
 *Opportunity identification document | Codex | 2026-04-21*
 
 ---

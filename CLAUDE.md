@@ -1,4 +1,4 @@
-# CLAUDE.md — K-Beauty Decision MVP 프로젝트 컨텍스트
+# CLAUDE.md — Skincare Decision MVP 프로젝트 컨텍스트
 
 > **본 파일은 프로젝트의 본체 컨텍스트(개요·황금 원칙·폴더 구조·기술 스택·범위)를 담습니다.**
 > Claude와 Codex를 번갈아 사용하므로, 어느 Agent든 본 파일을 작업 전 필독합니다.

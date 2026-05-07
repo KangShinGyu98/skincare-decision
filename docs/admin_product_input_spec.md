@@ -270,7 +270,7 @@ price_band = (
   "barcode": "8809589680293",
   "price": 16800,
   "price_band": "UNDER_20000",
-  "image_url": "https://cdn.kbeauty.app/products/sun_001.webp",
+  "image_url": "https://cdn.skincare-decision.app/products/sun_001.webp",
   "purchase_url": "https://smartstore.naver.com/...",
   "attributes": {
     "spf": 50,

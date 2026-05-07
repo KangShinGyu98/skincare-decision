@@ -3,13 +3,14 @@ crawl/articles/*.txt → crawl/notes/*.md
 각 기사를 skincare_product_selection_rule.md 형식으로 정리
 """
 import os, sys, io, time, glob, anthropic
+from pathlib import Path
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
-BASE = r"c:\Users\rkdtl\Desktop\K-Beauty Decision Project"
-IN_DIR = os.path.join(BASE, "crawl", "articles")
-OUT_DIR = os.path.join(BASE, "crawl", "notes")
-os.makedirs(OUT_DIR, exist_ok=True)
+ROOT_DIR = Path(__file__).resolve().parents[1]
+IN_DIR = ROOT_DIR / "crawl" / "articles"
+OUT_DIR = ROOT_DIR / "crawl" / "notes"
+OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 CLIENT = anthropic.Anthropic()
 
@@ -67,16 +68,16 @@ def organize(article_text: str) -> str:
     return resp.content[0].text
 
 def main():
-    files = sorted(glob.glob(os.path.join(IN_DIR, "*.txt")))
+    files = sorted(glob.glob(str(IN_DIR / "*.txt")))
     total = len(files)
     print(f"총 {total}개 파일 처리 시작")
 
     ok, skip, fail = 0, 0, 0
     for i, fpath in enumerate(files, 1):
         fname = os.path.basename(fpath).replace(".txt", ".md")
-        out_path = os.path.join(OUT_DIR, fname)
+        out_path = OUT_DIR / fname
 
-        if os.path.exists(out_path):
+        if out_path.exists():
             skip += 1
             print(f"[{i:03d}/{total}] SKIP: {fname[:60]}")
             continue
@@ -87,7 +88,7 @@ def main():
 
             result = organize(content)
 
-            with open(out_path, "w", encoding="utf-8") as f:
+            with out_path.open("w", encoding="utf-8") as f:
                 f.write(result)
 
             ok += 1

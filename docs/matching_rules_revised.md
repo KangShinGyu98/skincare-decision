@@ -1,4 +1,4 @@
-# K-Beauty Decision MVP — Matching Rules (Revised)
+# Skincare Decision MVP — Matching Rules (Revised)
 
 > 목적: `page_content_specification_revised.md`와 `product_attribute_schema_revised.md`를 기준으로 사용자 답변을 제품 attribute 조건으로 변환하는 Rule을 정의한다.  
 > 범위: Priority Gate, Concern Routing, Category Decision, Product Matrix, Product Detail, Reaction Traceback 반영 Rule  

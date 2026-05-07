@@ -574,7 +574,7 @@ Priority 통과 후에야 맥락을 묻는다.
 
 ### 지금 당장 해야 할 제품 정의
 
-**모바일 웹 기반의 K-Beauty Decision MVP**
+**모바일 웹 기반의 Skincare Decision MVP**
 
 포함:
 - 3+1 세그먼트 구조

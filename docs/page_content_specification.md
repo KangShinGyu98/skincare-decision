@@ -1,4 +1,4 @@
-# K-Beauty Decision MVP — Page Content Specification (Revised)
+# Skincare Decision MVP — Page Content Specification (Revised)
 
 > 목적: `product_attribute_schema_revised.md`와 `matching_rules_revised.md` 기준으로 실제 화면에 노출되는 텍스트, 질문, 데이터 슬롯, CTA, 동적 결과를 정의한다.  
 > 범위: MVP 6개 카테고리 — `toner`, `sunscreen`, `serum`, `lipcare`, `moisturizer`, `cleanser`  

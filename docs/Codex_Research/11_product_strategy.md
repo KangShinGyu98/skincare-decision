@@ -1,4 +1,4 @@
-# 제품 전략: K-Beauty Decision Platform
+# 제품 전략: Skincare Decision Platform
 *Product strategy document | Based on 10_product_analysis.md | Codex | 2026-04-21*
 
 ---
