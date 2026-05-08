@@ -1,3 +1,4 @@
+// Prisma schema for the Skincare Decision backend data model.
 generator client {
   provider = "prisma-client-js"
 }
@@ -5,4 +6,616 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum UserSessionSegment {
+  A
+  B
+  C
+  D
+}
+
+enum SessionStatus {
+  ACTIVE
+  COMPLETED
+  EXPIRED
+}
+
+enum FactGroup {
+  LIFE
+  ROUTINE
+  PRODUCT
+  CONTEXT
+  CATEGORY
+  REACTION
+}
+
+enum FactValueType {
+  BOOLEAN
+  ENUM
+  MULTI_ENUM
+  NUMBER
+  JSON
+}
+
+enum AttributeValueType {
+  BOOLEAN
+  ENUM
+  NUMBER
+  MULTI_ENUM
+  STRING
+}
+
+enum QuestionInputType {
+  BOOLEAN
+  SINGLE_SELECT
+  MULTI_SELECT
+  CHECKBOX
+  TAG
+}
+
+enum QuestionScreen {
+  priority_gate
+  context
+}
+
+enum ComparisonOperator {
+  EQ
+  IN
+  CONTAINS
+  GTE
+  LTE
+  NEQ
+}
+
+enum ConditionState {
+  REQUIRED
+  EXCLUDED
+}
+
+enum UserFactSource {
+  priority_gate
+  context
+  concern
+  traceback
+}
+
+enum PriorityResultType {
+  STOP
+  HOLD
+  CAUTION
+  PASS
+  ROUTE_CATEGORY
+}
+
+enum DecisionType {
+  PRIORITY_GATE
+  CATEGORY_DECISION
+  PRODUCT_MATRIX
+  REACTION_TRACEBACK
+}
+
+enum PriceBand {
+  UNDER_20000
+  BETWEEN_20000_50000
+  OVER_50000
+}
+
+enum FilterMode {
+  HARD_FILTER
+  EXCLUDE
+  CAUTION
+  SORT
+  TAG
+}
+
+enum FilterType {
+  BASIC_CONDITION
+  PERSONALIZED
+}
+
+enum ProductMatrixFilterStateSource {
+  DIRECT
+  CATEGORY_DECISION_CTA
+  MANUAL
+  RESTORED
+}
+
+enum ReactionReportProductType {
+  PROBLEM
+  OK
+}
+
+enum ConfidenceLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum AvoidanceAction {
+  AVOID
+  CAUTION
+}
+
+model User {
+  id                        String                     @id @default(uuid()) @db.Uuid
+  email                     String                     @unique @db.VarChar(255)
+  name                      String                     @db.VarChar(100)
+  role                      UserRole
+  createdAt                 DateTime                   @default(now()) @map("created_at")
+  updatedAt                 DateTime                   @updatedAt @map("updated_at")
+  avoidanceRules            AvoidanceRule[]
+  decisionRuns              DecisionRun[]
+  devices                   Device[]
+  productMatrixFilterStates ProductMatrixFilterState[]
+  reactionReports           ReactionReport[]
+  userFacts                 UserFact[]
+  userSessions              UserSession[]
+
+  @@map("users")
+}
+
+model Device {
+  id                        String                     @id @default(uuid()) @db.Uuid
+  userId                    String?                    @map("user_id") @db.Uuid
+  lastSeenAt                DateTime                   @default(now()) @map("last_seen_at")
+  createdAt                 DateTime                   @default(now()) @map("created_at")
+  avoidanceRules            AvoidanceRule[]
+  decisionRuns              DecisionRun[]
+  productMatrixFilterStates ProductMatrixFilterState[]
+  reactionReports           ReactionReport[]
+  sessionEvents             SessionEvent[]
+  user                      User?                      @relation(fields: [userId], references: [id])
+  userFacts                 UserFact[]
+  userSessions              UserSession[]
+
+  @@index([userId])
+  @@map("devices")
+}
+
+model UserSession {
+  id                        String                     @id @default(uuid()) @db.Uuid
+  deviceId                  String                     @map("device_id") @db.Uuid
+  userId                    String?                    @map("user_id") @db.Uuid
+  segment                   UserSessionSegment?
+  abVariant                 String?                    @map("ab_variant") @db.VarChar(100)
+  status                    SessionStatus
+  entryPath                 String                     @map("entry_path") @db.VarChar(255)
+  referrer                  String?                    @db.Text
+  startedAt                 DateTime                   @default(now()) @map("started_at")
+  lastSeenAt                DateTime                   @default(now()) @map("last_seen_at")
+  completedAt               DateTime?                  @map("completed_at")
+  expiresAt                 DateTime                   @map("expires_at")
+  createdAt                 DateTime                   @default(now()) @map("created_at")
+  updatedAt                 DateTime                   @updatedAt @map("updated_at")
+  decisionRuns              DecisionRun[]
+  device                    Device                     @relation(fields: [deviceId], references: [id])
+  productMatrixFilterStates ProductMatrixFilterState[]
+  reactionReports           ReactionReport[]
+  sessionEvents             SessionEvent[]
+  user                      User?                      @relation(fields: [userId], references: [id])
+  userFacts                 UserFact[]
+
+  @@index([deviceId])
+  @@index([userId])
+  @@map("user_sessions")
+}
+
+model SessionEvent {
+  id          String      @id @default(uuid()) @db.Uuid
+  sessionId   String      @map("session_id") @db.Uuid
+  deviceId    String      @map("device_id") @db.Uuid
+  eventName   String      @map("event_name") @db.VarChar(100)
+  screen      String      @db.VarChar(100)
+  elementId   String?     @map("element_id") @db.VarChar(100)
+  payload     Json
+  createdAt   DateTime    @default(now()) @map("created_at")
+  device      Device      @relation(fields: [deviceId], references: [id])
+  userSession UserSession @relation(fields: [sessionId], references: [id])
+
+  @@index([deviceId])
+  @@index([sessionId])
+  @@map("session_events")
+}
+
+model FactDefinition {
+  id                           String                        @id @default(uuid()) @db.Uuid
+  key                          String                        @unique @db.VarChar(100)
+  label                        String                        @db.VarChar(200)
+  group                        FactGroup
+  valueType                    FactValueType                 @map("value_type")
+  options                      Json?
+  isActive                     Boolean                       @default(true) @map("is_active")
+  createdAt                    DateTime                      @default(now()) @map("created_at")
+  updatedAt                    DateTime                      @updatedAt @map("updated_at")
+  contextQuestions             ContextQuestion[]
+  priorityRuleConditions       PriorityRuleCondition[]
+  productFilterMappings        ProductFilterMapping[]
+  questionVisibilityConditions QuestionVisibilityCondition[]
+  userFacts                    UserFact[]
+
+  @@map("fact_definitions")
+}
+
+model ContextQuestion {
+  id                           String                        @id @default(uuid()) @db.Uuid
+  factKey                      String                        @map("fact_key") @db.VarChar(100)
+  title                        String                        @db.VarChar(200)
+  question                     String                        @db.Text
+  inputType                    QuestionInputType             @map("input_type")
+  options                      Json?
+  screen                       QuestionScreen
+  uiSection                    String                        @map("ui_section") @db.VarChar(100)
+  sortOrder                    Int                           @default(0) @map("sort_order")
+  isActive                     Boolean                       @default(true) @map("is_active")
+  createdAt                    DateTime                      @default(now()) @map("created_at")
+  updatedAt                    DateTime                      @updatedAt @map("updated_at")
+  factDefinition               FactDefinition                @relation(fields: [factKey], references: [key])
+  questionVisibilityConditions QuestionVisibilityCondition[]
+
+  @@index([factKey])
+  @@map("context_questions")
+}
+
+model QuestionVisibilityCondition {
+  id              String             @id @default(uuid()) @db.Uuid
+  questionId      String             @map("question_id") @db.Uuid
+  factKey         String             @map("fact_key") @db.VarChar(100)
+  operator        ComparisonOperator
+  value           Json
+  state           ConditionState
+  createdAt       DateTime           @default(now()) @map("created_at")
+  contextQuestion ContextQuestion    @relation(fields: [questionId], references: [id])
+  factDefinition  FactDefinition     @relation(fields: [factKey], references: [key])
+
+  @@index([factKey])
+  @@index([questionId])
+  @@map("question_visibility_conditions")
+}
+
+model UserFact {
+  id             String         @id @default(uuid()) @db.Uuid
+  deviceId       String         @map("device_id") @db.Uuid
+  userId         String?        @map("user_id") @db.Uuid
+  sessionId      String         @map("session_id") @db.Uuid
+  factKey        String         @map("fact_key") @db.VarChar(100)
+  value          Json
+  source         UserFactSource
+  createdAt      DateTime       @default(now()) @map("created_at")
+  device         Device         @relation(fields: [deviceId], references: [id])
+  factDefinition FactDefinition @relation(fields: [factKey], references: [key])
+  user           User?          @relation(fields: [userId], references: [id])
+  userSession    UserSession    @relation(fields: [sessionId], references: [id])
+
+  @@index([deviceId, factKey, createdAt])
+  @@index([sessionId])
+  @@index([userId, factKey, createdAt])
+  @@map("user_facts")
+}
+
+model PriorityRule {
+  id                     String                  @id @default(uuid()) @db.Uuid
+  name                   String                  @db.VarChar(200)
+  priority               Int
+  isActive               Boolean                 @default(true) @map("is_active")
+  resultType             PriorityResultType      @map("result_type")
+  resultTitle            String                  @map("result_title") @db.Text
+  resultDescription      String                  @map("result_description") @db.Text
+  holdCategories         Json?                   @map("hold_categories")
+  recommendCategoryId    String?                 @map("recommend_category_id") @db.Uuid
+  ctaLabel               String?                 @map("cta_label") @db.VarChar(100)
+  ctaTarget              String?                 @map("cta_target") @db.VarChar(255)
+  createdAt              DateTime                @default(now()) @map("created_at")
+  updatedAt              DateTime                @updatedAt @map("updated_at")
+  priorityRuleConditions PriorityRuleCondition[]
+  recommendCategory      ProductCategory?        @relation(fields: [recommendCategoryId], references: [id])
+
+  @@index([priority, isActive])
+  @@index([recommendCategoryId])
+  @@map("priority_rules")
+}
+
+model PriorityRuleCondition {
+  id             String             @id @default(uuid()) @db.Uuid
+  ruleId         String             @map("rule_id") @db.Uuid
+  factKey        String             @map("fact_key") @db.VarChar(100)
+  operator       ComparisonOperator
+  value          Json
+  state          ConditionState
+  createdAt      DateTime           @default(now()) @map("created_at")
+  factDefinition FactDefinition     @relation(fields: [factKey], references: [key])
+  priorityRule   PriorityRule       @relation(fields: [ruleId], references: [id])
+
+  @@index([factKey])
+  @@index([ruleId])
+  @@map("priority_rule_conditions")
+}
+
+model DecisionRun {
+  id                       String                    @id @default(uuid()) @db.Uuid
+  deviceId                 String                    @map("device_id") @db.Uuid
+  userId                   String?                   @map("user_id") @db.Uuid
+  sessionId                String                    @map("session_id") @db.Uuid
+  decisionType             DecisionType              @map("decision_type")
+  sourceScreen             String                    @map("source_screen") @db.VarChar(100)
+  categoryId               String?                   @map("category_id") @db.Uuid
+  filterStateId            String?                   @map("filter_state_id") @db.Uuid
+  resultType               String?                   @map("result_type") @db.VarChar(50)
+  resultTitle              String?                   @map("result_title") @db.Text
+  resultDescription        String?                   @map("result_description") @db.Text
+  ctaLabel                 String?                   @map("cta_label") @db.VarChar(100)
+  ctaTarget                String?                   @map("cta_target") @db.VarChar(255)
+  inputSnapshot            Json                      @map("input_snapshot")
+  appliedFiltersSnapshot   Json                      @map("applied_filters_snapshot")
+  resultSnapshot           Json                      @map("result_snapshot")
+  createdAt                DateTime                  @default(now()) @map("created_at")
+  category                 ProductCategory?          @relation(fields: [categoryId], references: [id])
+  device                   Device                    @relation(fields: [deviceId], references: [id])
+  productMatrixFilterState ProductMatrixFilterState? @relation(fields: [filterStateId], references: [id])
+  user                     User?                     @relation(fields: [userId], references: [id])
+  userSession              UserSession               @relation(fields: [sessionId], references: [id])
+
+  @@index([categoryId])
+  @@index([deviceId, decisionType, createdAt])
+  @@index([filterStateId])
+  @@index([sessionId])
+  @@index([userId, decisionType, createdAt])
+  @@map("decision_runs")
+}
+
+model Brand {
+  id        String    @id @default(uuid()) @db.Uuid
+  name      String    @unique @db.VarChar(200)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  products  Product[]
+
+  @@map("brands")
+}
+
+model ProductCategory {
+  id                           String                        @id @default(uuid()) @db.Uuid
+  key                          String                        @unique @db.VarChar(100)
+  name                         String                        @db.VarChar(100)
+  description                  String?                       @db.Text
+  createdAt                    DateTime                      @default(now()) @map("created_at")
+  updatedAt                    DateTime                      @updatedAt @map("updated_at")
+  categoryAttributeDefinitions CategoryAttributeDefinition[]
+  decisionRuns                 DecisionRun[]
+  priorityRules                PriorityRule[]
+  productFilterMappings        ProductFilterMapping[]
+  productMatrixFilterStates    ProductMatrixFilterState[]
+  products                     Product[]
+
+  @@map("product_categories")
+}
+
+model CategoryAttributeDefinition {
+  id           String             @id @default(uuid()) @db.Uuid
+  categoryId   String             @map("category_id") @db.Uuid
+  key          String             @db.VarChar(100)
+  label        String             @db.VarChar(200)
+  valueType    AttributeValueType @map("value_type")
+  options      Json?
+  isRequired   Boolean            @default(false) @map("is_required")
+  isFilterable Boolean            @default(false) @map("is_filterable")
+  sortOrder    Int                @default(0) @map("sort_order")
+  createdAt    DateTime           @default(now()) @map("created_at")
+  updatedAt    DateTime           @updatedAt @map("updated_at")
+  category     ProductCategory    @relation(fields: [categoryId], references: [id])
+
+  @@unique([categoryId, key])
+  @@index([categoryId, sortOrder])
+  @@map("category_attribute_definitions")
+}
+
+model Product {
+  id                     String                  @id @default(uuid()) @db.Uuid
+  brandId                String                  @map("brand_id") @db.Uuid
+  categoryId             String                  @map("category_id") @db.Uuid
+  name                   String                  @db.VarChar(300)
+  barcode                String?                 @unique @db.VarChar(100)
+  price                  Int
+  priceBand              PriceBand               @map("price_band")
+  volume                 String?                 @db.VarChar(50)
+  imageUrl               String?                 @map("image_url") @db.Text
+  purchaseUrl            String?                 @map("purchase_url") @db.Text
+  attributes             Json
+  sortOrder              Int                     @default(0) @map("sort_order")
+  isActive               Boolean                 @default(true) @map("is_active")
+  createdAt              DateTime                @default(now()) @map("created_at")
+  updatedAt              DateTime                @updatedAt @map("updated_at")
+  brand                  Brand                   @relation(fields: [brandId], references: [id])
+  category               ProductCategory         @relation(fields: [categoryId], references: [id])
+  productIngredients     ProductIngredient[]
+  reactionReportProducts ReactionReportProduct[]
+
+  @@index([brandId])
+  @@index([categoryId, isActive, sortOrder])
+  @@map("products")
+}
+
+model ProductFilterMapping {
+  id                String             @id @default(uuid()) @db.Uuid
+  categoryId        String?            @map("category_id") @db.Uuid
+  sourceFactKey     String             @map("source_fact_key") @db.VarChar(100)
+  sourceOperator    ComparisonOperator @map("source_operator")
+  sourceValue       Json               @map("source_value")
+  attributeKey      String             @map("attribute_key") @db.VarChar(100)
+  attributeOperator ComparisonOperator @map("attribute_operator")
+  attributeValue    Json               @map("attribute_value")
+  filterMode        FilterMode         @map("filter_mode")
+  filterType        FilterType         @map("filter_type")
+  filterKey         String             @map("filter_key") @db.VarChar(100)
+  filterLabel       String             @map("filter_label") @db.VarChar(100)
+  tagLabel          String?            @map("tag_label") @db.VarChar(100)
+  cautionMessage    String?            @map("caution_message") @db.Text
+  sortOrder         Int                @default(0) @map("sort_order")
+  isActive          Boolean            @default(true) @map("is_active")
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+  category          ProductCategory?   @relation(fields: [categoryId], references: [id])
+  factDefinition    FactDefinition     @relation(fields: [sourceFactKey], references: [key])
+
+  @@index([categoryId, filterType, sortOrder])
+  @@index([sourceFactKey])
+  @@map("product_filter_mappings")
+}
+
+model ProductMatrixFilterState {
+  id           String                         @id @default(uuid()) @db.Uuid
+  deviceId     String                         @map("device_id") @db.Uuid
+  userId       String?                        @map("user_id") @db.Uuid
+  sessionId    String                         @map("session_id") @db.Uuid
+  categoryId   String                         @map("category_id") @db.Uuid
+  source       ProductMatrixFilterStateSource
+  filters      Json
+  isActive     Boolean                        @default(true) @map("is_active")
+  createdAt    DateTime                       @default(now()) @map("created_at")
+  updatedAt    DateTime                       @updatedAt @map("updated_at")
+  category     ProductCategory                @relation(fields: [categoryId], references: [id])
+  decisionRuns DecisionRun[]
+  device       Device                         @relation(fields: [deviceId], references: [id])
+  user         User?                          @relation(fields: [userId], references: [id])
+  userSession  UserSession                    @relation(fields: [sessionId], references: [id])
+
+  @@index([categoryId, isActive, updatedAt])
+  @@index([deviceId, categoryId, isActive, updatedAt])
+  @@index([sessionId])
+  @@index([userId, categoryId, isActive, updatedAt])
+  @@map("product_matrix_filter_states")
+}
+
+model Ingredient {
+  id                     String                  @id @default(uuid()) @db.Uuid
+  nameKo                 String                  @map("name_ko") @db.VarChar(200)
+  nameEn                 String                  @map("name_en") @db.VarChar(200)
+  inciName               String?                 @unique @map("inci_name") @db.VarChar(300)
+  createdAt              DateTime                @default(now()) @map("created_at")
+  updatedAt              DateTime                @updatedAt @map("updated_at")
+  ingredientGroupMembers IngredientGroupMember[]
+  productIngredients     ProductIngredient[]
+
+  @@map("ingredients")
+}
+
+model ProductIngredient {
+  id           String     @id @default(uuid()) @db.Uuid
+  productId    String     @map("product_id") @db.Uuid
+  ingredientId String     @map("ingredient_id") @db.Uuid
+  orderIndex   Int        @map("order_index")
+  rawText      String?    @map("raw_text") @db.Text
+  createdAt    DateTime   @default(now()) @map("created_at")
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
+  product      Product    @relation(fields: [productId], references: [id])
+
+  @@unique([productId, ingredientId])
+  @@index([ingredientId])
+  @@index([productId])
+  @@map("product_ingredients")
+}
+
+model IngredientGroup {
+  id                     String                  @id @default(uuid()) @db.Uuid
+  key                    String                  @unique @db.VarChar(100)
+  name                   String                  @db.VarChar(200)
+  description            String?                 @db.Text
+  createdAt              DateTime                @default(now()) @map("created_at")
+  updatedAt              DateTime                @updatedAt @map("updated_at")
+  avoidanceRules         AvoidanceRule[]
+  ingredientGroupMembers IngredientGroupMember[]
+  suspectedCauses        SuspectedCause[]
+
+  @@map("ingredient_groups")
+}
+
+model IngredientGroupMember {
+  id                String          @id @default(uuid()) @db.Uuid
+  ingredientId      String          @map("ingredient_id") @db.Uuid
+  ingredientGroupId String          @map("ingredient_group_id") @db.Uuid
+  ingredient        Ingredient      @relation(fields: [ingredientId], references: [id])
+  ingredientGroup   IngredientGroup @relation(fields: [ingredientGroupId], references: [id])
+
+  @@unique([ingredientId, ingredientGroupId])
+  @@index([ingredientGroupId])
+  @@map("ingredient_group_members")
+}
+
+model ReactionReport {
+  id                     String                  @id @default(uuid()) @db.Uuid
+  deviceId               String                  @map("device_id") @db.Uuid
+  userId                 String?                 @map("user_id") @db.Uuid
+  sessionId              String                  @map("session_id") @db.Uuid
+  symptoms               Json
+  affectedAreas          Json                    @map("affected_areas")
+  onsetTiming            String?                 @map("onset_timing") @db.VarChar(100)
+  memo                   String?                 @db.Text
+  createdAt              DateTime                @default(now()) @map("created_at")
+  updatedAt              DateTime                @updatedAt @map("updated_at")
+  device                 Device                  @relation(fields: [deviceId], references: [id])
+  reactionReportProducts ReactionReportProduct[]
+  suspectedCauses        SuspectedCause[]
+  user                   User?                   @relation(fields: [userId], references: [id])
+  userSession            UserSession             @relation(fields: [sessionId], references: [id])
+
+  @@index([deviceId, createdAt])
+  @@index([sessionId])
+  @@index([userId, createdAt])
+  @@map("reaction_reports")
+}
+
+model ReactionReportProduct {
+  id             String                    @id @default(uuid()) @db.Uuid
+  reportId       String                    @map("report_id") @db.Uuid
+  productId      String                    @map("product_id") @db.Uuid
+  type           ReactionReportProductType
+  usedPeriod     String?                   @map("used_period") @db.VarChar(100)
+  usedCount      Int?                      @map("used_count")
+  createdAt      DateTime                  @default(now()) @map("created_at")
+  product        Product                   @relation(fields: [productId], references: [id])
+  reactionReport ReactionReport            @relation(fields: [reportId], references: [id])
+
+  @@index([productId])
+  @@index([reportId])
+  @@map("reaction_report_products")
+}
+
+model SuspectedCause {
+  id                String          @id @default(uuid()) @db.Uuid
+  reportId          String          @map("report_id") @db.Uuid
+  ingredientGroupId String          @map("ingredient_group_id") @db.Uuid
+  confidence        ConfidenceLevel
+  reason            String?         @db.Text
+  createdAt         DateTime        @default(now()) @map("created_at")
+  ingredientGroup   IngredientGroup @relation(fields: [ingredientGroupId], references: [id])
+  reactionReport    ReactionReport  @relation(fields: [reportId], references: [id])
+
+  @@index([ingredientGroupId])
+  @@index([reportId])
+  @@map("suspected_causes")
+}
+
+model AvoidanceRule {
+  id                String          @id @default(uuid()) @db.Uuid
+  deviceId          String          @map("device_id") @db.Uuid
+  userId            String?         @map("user_id") @db.Uuid
+  ingredientGroupId String          @map("ingredient_group_id") @db.Uuid
+  action            AvoidanceAction
+  reason            String?         @db.Text
+  isActive          Boolean         @default(true) @map("is_active")
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
+  device            Device          @relation(fields: [deviceId], references: [id])
+  ingredientGroup   IngredientGroup @relation(fields: [ingredientGroupId], references: [id])
+  user              User?           @relation(fields: [userId], references: [id])
+
+  @@index([deviceId, isActive, updatedAt])
+  @@index([ingredientGroupId])
+  @@index([userId, isActive, updatedAt])
+  @@map("avoidance_rules")
 }
