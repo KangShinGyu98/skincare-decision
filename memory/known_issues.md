@@ -38,3 +38,14 @@
 ---
 
 <!-- 새 이슈는 여기에 추가 -->
+## [2026-05-09] 상위 사용자 폴더 `node_modules`가 backend Jest 실행을 오염
+
+**증상:** `pnpm --filter backend run test` 또는 `pnpm exec jest`가 `TypeError: Cannot read properties of undefined (reading 'testEnvironmentOptions')`, `0 of 1 total`, 잘못된 runner path(`C:\Users\rkdtl\node_modules\...`)를 출력하며 비정상 동작했다.
+
+**원인:** 현재 머신의 상위 경로 `C:\Users\rkdtl\node_modules`에 Jest 27 계열 패키지가 존재한다. 일반 `jest` / `jest-cli` 바이너리는 `import-local`과 Node module resolution 때문에 workspace-local Jest 29 대신 상위 패키지를 일부 섞어 사용했다.
+
+**해결책:**
+
+- [backend/run-local-jest.cjs](../backend/run-local-jest.cjs)로 로컬 pnpm store의 `jest-cli/build/index.js`를 직접 실행한다.
+- backend 스크립트는 `jest` 대신 `node ./run-local-jest.cjs --config ...`를 사용한다.
+- `backend/jest.config.js`, `backend/test/jest-e2e.config.js`에서 runner / testRunner / testSequencer / testEnvironment를 workspace-local 패키지로 명시한다.

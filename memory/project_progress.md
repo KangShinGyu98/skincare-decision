@@ -238,3 +238,36 @@
 3. Phase 2.6 — `prisma migrate dev --name init` + GIN 인덱스 raw 마이그레이션.
 
 <!-- 새 세션 요약은 여기에 추가 -->
+## [2026-05-09] Phase 2 백엔드 구축 완료
+
+### 변경 내용
+
+- [backend/prisma/schema.prisma](../backend/prisma/schema.prisma)에 `docs/db_modeling.md` 기준 25개 테이블 + enum + relation + index를 구현.
+- [backend/docker-compose.yml](../backend/docker-compose.yml) 추가, Docker Desktop daemon 확인 후 Postgres 16 / Redis 7 컨테이너 실제 기동 확인.
+- [backend/prisma/migrations/](../backend/prisma/migrations/)에 `init`, `add_jsonb_indexes` 마이그레이션 생성 및 DB 적용.
+- [backend/src/main.ts](../backend/src/main.ts), [backend/src/app.module.ts](../backend/src/app.module.ts)를 Nest 부트스트랩 형태로 교체: Config, Pino, Prisma, Redis, Zod pipe, Swagger, Throttler 등록.
+- [backend/src/modules/health/](../backend/src/modules/health/)에 `/health` endpoint와 unit/e2e 테스트 추가.
+- [backend/src/modules/](../backend/src/modules/)에 Identity / Facts / Priority / Catalog / Matrix / Traceback / Events skeleton 추가.
+- backend 테스트 실행 경로를 [backend/run-local-jest.cjs](../backend/run-local-jest.cjs) 기반으로 고정해 상위 사용자 폴더 `node_modules` shadowing 문제를 우회.
+
+### 검증 결과
+
+- `docker version` → Docker Desktop server 연결 확인.
+- `docker compose -f backend/docker-compose.yml up -d` → `backend-postgres-1`, `backend-redis-1` 기동 확인.
+- `pnpm --filter backend exec prisma validate` ✓
+- `pnpm --filter backend exec prisma migrate status` → `Database schema is up to date!`
+- `pnpm --filter backend run build` ✓
+- `pnpm --filter backend run test` ✓
+- `pnpm --filter backend run test:e2e` ✓ (`GET /health` 200)
+
+### 아직 남은 작업 / 리스크
+
+- 7개 도메인 모듈은 현재 skeleton 단계다. 실제 REST route, DTO, repository query, service logic은 Phase 4에서 채워야 한다.
+- `product-attributes.ts`는 현재 category-keyed generic entry point만 있고, 카테고리별 세부 Zod discriminated union은 아직 미구현이다.
+- Prisma `migrate dev` 재실행 중 advisory lock timeout(P1002)을 한 번 겪었으나, 직후 `migrate status`는 최신 상태를 보고했다. 장시간 실행 중 중복 migrate를 피해야 한다.
+
+### 다음 작업 우선순위
+
+1. `memory/api_contracts.md` 계획 endpoint를 실제 controller signature로 단계별 구체화.
+2. Phase 4 P0/P1 우선순위대로 Identity / Priority / Matrix route 구현.
+3. Seed orchestrator(`backend/prisma/seed.ts`)와 토너 seed JSON 생성.

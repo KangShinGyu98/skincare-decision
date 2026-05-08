@@ -10,6 +10,24 @@
 > Phase 2에서 NestJS Controller가 생기는 시점에 실제 시그니처로 갱신한다.
 > 모든 엔드포인트는 `x-device-id` 헤더 또는 cookie의 `device_id`를 요구한다.
 
+## GET /health
+
+**목적:** 로드밸런서 / 로컬 개발 환경용 liveness check.
+
+**Request:** body 없음.
+
+**Response:**
+
+```json
+{
+  "status": "ok",
+  "service": "backend",
+  "timestamp": "2026-05-09T00:00:00.000Z"
+}
+```
+
+**에러 케이스:** 없음. 앱 부팅 실패 시 endpoint 미노출.
+
 ### 인증 / 신원
 
 | METHOD | PATH           | 목적                              |

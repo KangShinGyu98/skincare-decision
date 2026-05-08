@@ -1,16 +1,16 @@
 # backend/ — NestJS + Prisma 백엔드 (구조 사양)
 
-> 본 폴더는 EXECUTION_PLAN.md Phase 2에서 `nest new .`으로 초기화된다.
-> **이 파일은 init 이전의 사양 문서이자, init 이후에도 유지되는 진입 규칙**이다.
+> 본 폴더는 EXECUTION_PLAN.md Phase 2 기준의 NestJS 11 + Prisma 6 백엔드가 이미 병합된 상태다.
+> **이 파일은 현재 구현 상태와 유지해야 할 진입 규칙**을 정의한다.
 
 ## 기술 스택
 
-- TypeScript 5 + NestJS 10
-- Prisma 5 + PostgreSQL 16
+- TypeScript 5 + NestJS 11
+- Prisma 6 + PostgreSQL 16
 - Redis 7 (`ioredis` + `@nestjs/cache-manager`)
 - Zod (DTO 검증, `nestjs-zod`)
 - Pino (logging, `nestjs-pino`)
-- Vitest 또는 Jest (NestJS 기본 Jest 권장)
+- Jest (`backend/run-local-jest.cjs`로 workspace-local toolchain 강제)
 
 ## 폴더 구조 (목표)
 
@@ -25,20 +25,18 @@ backend/
 │  ├─ migrations/
 │  └─ seed.ts             ← priority_rules / fact_definitions / product_filter_mappings 시드
 ├─ src/
-│  ├─ main.ts
 │  ├─ app.module.ts
-│  ├─ lib/                ← 공유 유틸 (date, json, pagination, error)
+│  ├─ main.ts
+│  ├─ config/             ← env loader, typed config service
+│  ├─ lib/                ← Prisma / Redis / logger / zod pipe
 │  ├─ types/              ← Zod schema, DTO, 공용 enum
 │  │  └─ product-attributes.ts  ← 카테고리별 attribute discriminated union
-│  ├─ config/             ← env loader, Prisma/Redis 모듈
-│  ├─ repositories/       ← Prisma 호출만 (Service에서만 호출)
-│  ├─ services/           ← 도메인 로직 (priority/filter mapping/traceback)
-│  ├─ providers/          ← 외부 API/캐시 어댑터
-│  ├─ controllers/        ← HTTP 라우팅 (Service만 호출)
-│  └─ modules/            ← Nest 모듈 묶음 (Identity / Facts / Priority / Catalog / Matrix / Traceback / Events)
+│  └─ modules/            ← Nest 모듈 묶음 (Health / Identity / Facts / Priority / Catalog / Matrix / Traceback / Events)
 ├─ test/                  ← e2e (supertest)
 ├─ .env.example
 ├─ docker-compose.yml     ← 로컬 Postgres/Redis
+├─ jest.config.js         ← unit test config
+├─ run-local-jest.cjs     ← 상위 사용자 node_modules shadowing 방지 런처
 ├─ tsconfig.json
 └─ package.json
 ```
@@ -54,6 +52,13 @@ backend/
 | Matrix    | product_filter_mappings + filter_state + Matrix 조회   | product_filter_mappings, product_matrix_filter_states, decision_runs                                                                                |
 | Traceback | reaction_reports, suspected_causes, avoidance_rules    | reaction_reports, reaction_report_products, suspected_causes, avoidance_rules                                                                       |
 | Events    | session_events 수집                                    | session_events                                                                                                                                      |
+
+현재 구현 상태:
+
+- `/health` liveness endpoint
+- Prisma schema + 초기 migration + JSONB GIN index migration
+- Docker compose(Postgres 16, Redis 7)
+- 7개 도메인 모듈의 controller/service/repository skeleton
 
 ## 황금 원칙 (백엔드)
 

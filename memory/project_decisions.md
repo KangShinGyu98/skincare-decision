@@ -384,3 +384,17 @@
 - `backend/prisma/schema.prisma`의 generator를 `prisma-client-js`로 되돌리고 `output` 라인 제거.
 
 <!-- 새 결정은 여기에 추가 -->
+## [2026-05-09] Backend Jest 실행은 로컬 `jest-cli` 직접 호출로 고정
+
+**배경:** 이 워크스페이스는 상위 경로 `C:\Users\rkdtl\node_modules`에 오래된 Jest 27 계열 패키지가 존재해, 일반 `jest` / `pnpm exec jest` 실행 시 backend의 Jest 29 설정과 섞이는 문제가 발생했다. 증상은 `testEnvironmentOptions` 관련 예외, `0 of 1 total` 같은 비정상 실행, 잘못된 runner path 해석이었다.
+
+**결정:**
+
+- backend 테스트 스크립트는 `jest` 바이너리를 직접 호출하지 않고 `backend/run-local-jest.cjs`를 통해 로컬 pnpm store의 `jest-cli` 29를 직접 실행한다.
+- backend Jest 설정은 `package.json` 인라인 설정 대신 `jest.config.js`, `test/jest-e2e.config.js`로 분리해 runner / testRunner / testSequencer / testEnvironment를 workspace-local 경로로 명시한다.
+- backend devDependencies에 `jest-environment-node`, `jest-runner`, `jest-circus`, `@jest/test-sequencer`를 직접 선언해 상위 경로 패키지로의 fallback을 막는다.
+
+**이유:**
+
+- 현재 머신의 상위 `node_modules` 상태를 바꾸지 않고도 저장소 내부에서 재현 가능한 테스트 실행 경로를 확보할 수 있다.
+- Jest 29 단일 라인으로 unit / e2e 설정을 고정하면 이후 다른 Agent도 같은 명령으로 같은 결과를 얻을 수 있다.
