@@ -150,4 +150,32 @@
 2. 업데이트된 EXECUTION_PLAN 기준으로 Phase 1 실제 실행.
 3. Phase 2 scaffold 병합 방식으로 NestJS init 착수.
 
+## [2026-05-08] Phase 1 완료 — 모노레포 셋업
+
+### 변경 내용
+
+- 루트 [package.json](../package.json) 재작성: `private: true`, `packageManager: "pnpm@10.32.1"`, `engines.node: ">=20"`, workspace 스크립트(`dev:backend`, `dev:frontend`, `build`, `lint`, `typecheck`, `test`, `format`) 정의. devDependencies로 `prettier@^3.8.3`, `typescript@^6.0.3` 설치.
+- [pnpm-workspace.yaml](../pnpm-workspace.yaml) 신규 — `backend`, `frontend` 두 패키지.
+- [.gitignore](../.gitignore) 보강 — `.next/`, `.pnpm-store/`, `coverage/`, `.env.local`, `.env.*.local`, `.DS_Store`, `Thumbs.db` 추가 (기존 항목 유지).
+- [.editorconfig](../.editorconfig), [.prettierrc.json](../.prettierrc.json), [.prettierignore](../.prettierignore) 신규 (EXECUTION_PLAN 1.2 기준 + `.md`만 trailing whitespace 보존).
+- 전체 저장소에 `pnpm format` 1회 적용 — AGENTS.md / CLAUDE.md / EXECUTION_PLAN.md / README.md / pnpm-workspace.yaml 포맷 통일 (single quote, table 정렬 등).
+- [EXECUTION_PLAN.md](../EXECUTION_PLAN.md) 1.1 절을 새 package.json/yaml 내용으로 갱신, 1.3 검증 명령 정정, 0.1 도구표의 pnpm 권장 버전을 9.x → 10.x로 정정, TypeScript 6.x peer 충돌 시 `^5.9` fallback 메모 추가.
+
+### 검증 결과
+
+- `pnpm -v` → `10.32.1` (`packageManager` 필드와 일치).
+- `pnpm install` → `prettier 3.8.3`, `typescript 6.0.3` 설치 + 락파일 생성 성공.
+- `pnpm exec prettier --check .` → `All matched files use Prettier code style!`.
+
+### 아직 남은 작업 / 리스크
+
+- TypeScript 6.x는 신규 메이저라 Phase 2 NestJS / Phase 3 Next.js 의존성에서 peer 충돌 가능성. 충돌 시 `^5.9`로 다운그레이드 + decisions.md 기록.
+- pnpm 11.0.8이 출시되어 자체 업데이트 안내 노출 — 현 시점은 10.32.1 고정.
+
+### 다음 작업 우선순위
+
+1. Phase 2: `backend/` scaffold 병합 방식으로 NestJS init + Prisma 의존성 추가.
+2. Phase 2: Prisma schema 1차 작성 (`docs/db_modeling.md` 25개 테이블).
+3. Phase 3: Next.js init + shadcn/ui (Phase 2 완료 후).
+
 <!-- 새 세션 요약은 여기에 추가 -->

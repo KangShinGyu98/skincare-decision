@@ -12,7 +12,7 @@
 | 도구           | 권장 버전     | 확인 명령                              |
 | -------------- | ------------- | -------------------------------------- |
 | Node.js        | 20.x LTS      | `node -v`                              |
-| pnpm           | 9.x           | `pnpm -v` (없으면 `npm i -g pnpm@9`)   |
+| pnpm           | 10.x          | `pnpm -v` (없으면 `npm i -g pnpm@10`)  |
 | Docker Desktop | 최신          | `docker -v` / `docker compose version` |
 | Git            | 2.40+         | `git --version`                        |
 | AWS CLI v2     | (Phase 7부터) | `aws --version`                        |
