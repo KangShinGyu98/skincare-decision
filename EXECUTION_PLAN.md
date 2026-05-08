@@ -63,7 +63,7 @@ pnpm init
   },
   "devDependencies": {
     "prettier": "^3.8.3",
-    "typescript": "^6.0.3"
+    "typescript": "^5.9.3"
   }
 }
 ```
@@ -78,7 +78,7 @@ packages:
 
 `packageManager` 필드는 `pnpm -v` 결과와 동일한 버전으로 맞춘다 (위 예시는 10.32.1 기준). workspace 전체를 같은 major로 고정한다.
 
-> TypeScript 6.x는 신규 메이저라 Phase 2(NestJS) / Phase 3(Next.js) 의존성 설치 시 peer 충돌이 발생하면 `^5.9`로 일시 다운그레이드한 뒤 `memory/project_decisions.md`에 사유를 남긴다.
+> TypeScript는 NestJS 11 / Next 15 공식 지원 라인인 `^5.9`로 고정한다. backend / frontend 워크스페이스 package.json에는 `typescript`를 두지 않고 루트 devDep만 사용해 단일 버전으로 관리한다 (Phase 2.2 / 3.2 진행 시 scaffold가 backend·frontend에 typescript를 추가하면 즉시 제거).
 
 ### 1.2 공통 .gitignore / .editorconfig / prettier
 
@@ -166,23 +166,27 @@ cd backend
 
 ### 2.2 의존성 추가
 
+루트에서 워크스페이스 필터로 한 번에 설치한다.
+
 ```bash
-# 핵심
-pnpm add @nestjs/config @nestjs/cache-manager cache-manager
-pnpm add @nestjs/throttler @nestjs/swagger
-pnpm add prisma @prisma/client
-pnpm add zod nestjs-zod
-pnpm add ioredis cache-manager-ioredis-yet
-pnpm add nestjs-pino pino-http pino pino-pretty
-pnpm add cookie-parser helmet
-pnpm add uuid
+# 핵심 (런타임)
+pnpm --filter backend add @nestjs/config @nestjs/cache-manager cache-manager
+pnpm --filter backend add @nestjs/throttler @nestjs/swagger
+pnpm --filter backend add prisma @prisma/client
+pnpm --filter backend add zod nestjs-zod
+pnpm --filter backend add ioredis cache-manager-ioredis-yet
+pnpm --filter backend add nestjs-pino pino-http pino pino-pretty
+pnpm --filter backend add cookie-parser helmet uuid
 
 # 개발 의존성
-pnpm add -D @types/cookie-parser
-pnpm add -D vitest @vitest/coverage-v8 supertest @types/supertest
+pnpm --filter backend add -D @types/cookie-parser
 ```
 
+테스트는 NestJS scaffold가 가져온 **jest + supertest**를 그대로 사용한다 (vitest로 갈아끼우지 않는다 — Phase 2.1 scaffold가 이미 jest 설정/스크립트/`@types/jest`/`@types/supertest`/`supertest`를 포함).
+
 `uuid`는 자체 타입을 포함하므로 `@types/uuid`는 추가하지 않는다.
+
+> **prettier / typescript 중복 정리**: scaffold가 backend devDeps에 넣은 `prettier`, `typescript`는 제거하고 루트 devDeps만 사용한다. 루트는 `typescript@^5.9.3`(NestJS 11 / Next 15가 공식 지원하는 5.x 라인)으로 고정.
 
 ### 2.3 Prisma 초기화
 

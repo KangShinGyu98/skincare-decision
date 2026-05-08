@@ -178,4 +178,35 @@
 2. Phase 2: Prisma schema 1차 작성 (`docs/db_modeling.md` 25개 테이블).
 3. Phase 3: Next.js init + shadcn/ui (Phase 2 완료 후).
 
+## [2026-05-08] Phase 2.1 / 2.2 완료 — NestJS scaffold 병합 + 의존성 구성
+
+### 변경 내용
+
+- `backend-scaffold/`로 NestJS 11 scaffold 생성 후 런타임 파일(src, test, nest-cli.json, tsconfig\*, eslint.config.mjs, package.json)만 [backend/](../backend/)로 병합. scaffold의 `.prettierrc` / `README.md`는 루트 prettier 설정 / 기존 backend README 보존을 위해 미반영. scaffold 폴더 삭제.
+- backend 런타임 의존성 일괄 추가: `@nestjs/config`, `@nestjs/cache-manager`, `cache-manager`, `@nestjs/throttler`, `@nestjs/swagger`, `prisma`, `@prisma/client`, `zod`, `nestjs-zod`, `ioredis`, `cache-manager-ioredis-yet`, `nestjs-pino`, `pino-http`, `pino`, `pino-pretty`, `cookie-parser`, `helmet`, `uuid`. dev: `@types/cookie-parser`.
+- 결정 반영: TypeScript 라인을 `^5.9.3`으로 고정 + workspace 단일 관리, backend 테스트 러너는 NestJS 기본 jest 유지([project_decisions.md](project_decisions.md) 참조).
+- 루트 [package.json](../package.json): `typescript ^6.0.3` → `^5.9.3`. backend [package.json](../backend/package.json): `prettier`, `typescript` devDep 제거 (루트 일원화).
+- [.gitignore](../.gitignore) 전면 정정: `/dist`, `/node_modules` 등 leading-slash 패턴이 서브패키지를 못 잡던 문제 수정. `node_modules/`, `dist/`, `build/`, `.next/`, `coverage/`, `*.tsbuildinfo`, `.turbo/`, `.cache/`, `.eslintcache`, `.env.*` 계열을 깊이 무관하게 ignore.
+- [EXECUTION_PLAN.md](../EXECUTION_PLAN.md) 1.1 / 2.2 절을 위 결정에 맞춰 갱신 (TS 5.9 / jest 유지 / `pnpm --filter backend` 형태로 install 예시 통일).
+
+### 검증 결과
+
+- `pnpm install` (워크스페이스 전체) ✓.
+- `pnpm --filter backend run build` ✓ — `dist/` 정상 생성, TS 컴파일 통과 (backend가 루트 typescript 5.9.3 공유 사용).
+- `git status -uall` 항목 수 4920 → 14 (node_modules / dist 깊이 무관 ignore 정상 동작).
+- 트래킹된 파일에 node_modules / dist 누설 없음 (`git ls-files | grep -c node_modules` = 0).
+
+### 아직 남은 작업 / 리스크
+
+- pnpm 빌드 스크립트 차단 경고: `@nestjs/core@11.1.19`, `@prisma/engines@7.8.0`, `@scarf/scarf@1.4.0`, `prisma@7.8.0`, `unrs-resolver@1.11.1`. Prisma는 `prisma generate` / `prisma migrate` 실행 시 엔진 다운로드를 위해 빌드 스크립트가 필요할 수 있음 → Phase 2.3 직전에 `pnpm.onlyBuiltDependencies` 화이트리스트로 명시 허용 검토.
+- Prisma 7.x 신규 메이저 도입됨 (계획서는 6 이전 가정). schema 작성 / migrate 단계에서 breaking 변경 사항(예: `previewFeatures` 정리, default driver) 재확인 필요.
+- backend `package.json`은 scaffold가 만든 description / author / license 필드가 비어 있는 채로 남아 있음 (운영 배포 직전 정리).
+
+### 다음 작업 우선순위
+
+1. **Phase 2.3 — Prisma 초기화** (`pnpm --filter backend exec prisma init --datasource-provider postgresql`) + `backend/.env`, `.env.example` 작성.
+2. Phase 2.4 — `prisma/schema.prisma` 작성 ([docs/db_modeling.md](../docs/db_modeling.md) 25개 테이블, 7단계 작성 순서).
+3. Phase 2.5 — `backend/docker-compose.yml` (postgres 16 + redis 7).
+4. Phase 2.6 — `prisma migrate dev --name init` + GIN 인덱스 raw 마이그레이션.
+
 <!-- 새 세션 요약은 여기에 추가 -->

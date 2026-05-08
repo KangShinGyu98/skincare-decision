@@ -326,4 +326,37 @@
 - `backend/`·`frontend/`는 이미 협업 문서가 들어 있는 비어 있지 않은 폴더라서, 공식 CLI가 기대하는 "새 빈 디렉터리" 흐름과 맞지 않는다.
 - 활성/보류 명세 경계를 EXECUTION_PLAN에도 반영해야 다른 Agent가 현재 MVP 범위를 잘못 확장하지 않는다.
 
+## [2026-05-08] TypeScript 라인을 `^5.9`로 고정 + 워크스페이스 단일 관리
+
+**배경:** Phase 1 진행 중 루트 devDep을 TypeScript 6.0.3으로 깔았으나, Phase 2.1에서 NestJS 11 scaffold가 `typescript@^5.7.3`을 가져왔고, 실제 NestJS 11 / Next 15는 5.x 라인을 공식 지원 라인으로 명시한다.
+
+**결정:**
+
+- 루트 `package.json` devDep `typescript`를 `^5.9.3`으로 고정.
+- backend / frontend 워크스페이스의 package.json에는 `typescript`, `prettier`를 넣지 않는다 (루트 devDeps로 일원화). scaffold가 추가하면 즉시 제거.
+- TS 6 도입은 NestJS / Next.js가 공식 지원 라인을 6.x로 올린 뒤 재논의.
+
+**이유:**
+
+- 워크스페이스 간 TS 버전이 갈라지면 IDE / `tsc` / `ts-node` / `ts-jest` 동작이 패키지마다 달라져 디버깅 비용이 커진다.
+- NestJS 11 스캐폴드 기본 핀이 5.7.x인데 6을 강제하면 `peerOptional` 경고와 빌드러너 호환성 문제를 떠안게 된다.
+
+---
+
+## [2026-05-08] Backend 테스트 러너를 jest로 통일 (vitest 도입 보류)
+
+**배경:** 초기 EXECUTION_PLAN 2.2는 vitest를 추가하는 것으로 적혀 있었으나, NestJS 11 scaffold는 jest + ts-jest + supertest + jest-e2e config + `app.controller.spec.ts` 샘플을 기본 제공한다. 두 러너를 섞으면 e2e config·jest expect API·`@nestjs/testing` 호환성을 모두 별도로 다뤄야 한다.
+
+**결정:**
+
+- backend는 NestJS 기본 jest 스택(jest, @types/jest, ts-jest, supertest, @types/supertest)을 그대로 유지.
+- vitest는 backend에서 도입하지 않는다. frontend(Phase 3)는 별개로 vitest 사용 가능.
+- EXECUTION_PLAN 2.2의 vitest 추가 명령은 제거하고, jest 그대로 사용한다는 메모로 대체.
+
+**이유:**
+
+- NestJS testing 모듈은 jest 기준 매트릭스가 가장 안정적이고, `@nestjs/testing` 예제·문서가 jest 위주.
+- vitest 마이그레이션 비용 > 이번 MVP에서 얻는 이득.
+- frontend는 jsdom·React Testing Library 호환 측면에서 vitest가 유리해 향후 도입 여지를 남긴다.
+
 <!-- 새 결정은 여기에 추가 -->

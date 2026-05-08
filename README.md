@@ -128,3 +128,57 @@ infra/               # Docker/IaC/GH Actions (Phase 6)
 ## 6. 라이선스 / 기여
 
 내부 MVP 단계. 외부 공개 전까지 라이선스 미정.
+
+## Git Commit Message Rules
+
+형식: `<type>(<scope>): <subject>` — Conventional Commits 기반.
+
+### Type
+
+| Type       | 설명                                         |
+| ---------- | -------------------------------------------- |
+| `feat`     | 새로운 기능 추가                             |
+| `fix`      | 버그 수정                                    |
+| `docs`     | 문서 변경                                    |
+| `style`    | 코드 포맷, 세미콜론 누락 등 (로직 변경 없음) |
+| `refactor` | 기능 변경 없는 코드 리팩토링                 |
+| `test`     | 테스트 코드 추가 또는 수정                   |
+| `chore`    | 빌드, 설정, 패키지 관련 변경                 |
+| `perf`     | 성능 개선                                    |
+| `ci`       | CI/CD 설정 변경                              |
+| `revert`   | 이전 커밋 되돌리기                           |
+
+### Scope (모노레포 영역 구분)
+
+모노레포이므로 `backend` / `frontend`를 별도 type으로 늘리지 않고 **scope 자리**로 표시한다.
+
+| Scope      | 쓰임                                                                             |
+| ---------- | -------------------------------------------------------------------------------- |
+| `backend`  | `backend/` 코드·설정 변경                                                        |
+| `frontend` | `frontend/` 코드·설정 변경                                                       |
+| `infra`    | `infra/`, Docker, GitHub Actions, AWS 리소스                                     |
+| `db`       | `backend/prisma/`, 마이그레이션, seed 스크립트                                   |
+| `docs`     | `docs/` 명세 (커밋 type `docs`와 별개. 예: `docs(db): …`는 DB 명세 문서 변경)    |
+| `memory`   | `memory/` 결정·진행·계약·이슈 기록                                               |
+| `deps`     | 의존성 추가/제거/bump (`chore(deps): …`)                                         |
+| `repo`     | 루트 설정 (`.gitignore`, 루트 `package.json`, workspace, prettier·editor config) |
+| `design`   | `design_system/`, `Assets/`, `ClaudeProtype/` 등 디자인/목업 자산                |
+
+여러 영역을 한 커밋에 섞지 않는 게 원칙. 부득이하면 가장 큰 영향 영역 하나만 scope로 적거나 `repo`로 묶는다.
+
+### 예시
+
+```
+feat(backend): add POST /priority-gate/evaluate
+feat(frontend): wire S02 priority gate result card
+fix(backend): correct user_facts source priority ordering
+chore(repo): align typescript to ^5.9.3 across workspace
+chore(deps): bump @nestjs/* to 11
+docs(db): document toner attribute schema
+test(backend): cover priority rule HOLD/CAUTION branches
+ci(infra): add ECR push workflow
+```
+
+### 브랜치 명 규약 (참고)
+
+`<type>/<scope>-<short-slug>` — 예: `feat/backend-priority-gate`, `chore/repo-tsconfig`.

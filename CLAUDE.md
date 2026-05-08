@@ -127,9 +127,7 @@ lib(공유 유틸) → types(Zod/DTO) → config → api(server actions / fetche
 
 ## 커밋 규칙
 
-`feat` / `fix` / `docs` / `style` / `refactor` / `test` / `chore` / `perf` / `ci` / `revert`
-
-브랜치: `feat/<scope>`, `fix/<scope>`, `chore/<scope>`. PR 단위로 머지.
+[README.md — Git Commit Message Rules](README.md#git-commit-message-rules) 단일 소스. 형식 / Type / Scope / 예시 / 브랜치 명 규약 모두 그쪽에서 관리.
 
 ## 환경 실행
 
