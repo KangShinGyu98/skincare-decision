@@ -4,14 +4,14 @@
 
 ## 파일
 
-| 파일               | 설명                                                |
-| ------------------ | --------------------------------------------------- |
-| index.html         | 단일 페이지 데모 (Landing → Gate → Matrix 흐름)     |
-| Components.jsx     | 공통 컴포넌트 (Card, Tag, Button, Badge 등)         |
-| LandingPage.jsx    | S01 — Landing                                       |
-| PriorityGate.jsx   | S02 — Priority Gate                                 |
-| ProductMatrix.jsx  | S06 — Product Matrix                                |
-| README.md          | 키트 설명 / 실행 방법                                |
+| 파일              | 설명                                            |
+| ----------------- | ----------------------------------------------- |
+| index.html        | 단일 페이지 데모 (Landing → Gate → Matrix 흐름) |
+| Components.jsx    | 공통 컴포넌트 (Card, Tag, Button, Badge 등)     |
+| LandingPage.jsx   | S01 — Landing                                   |
+| PriorityGate.jsx  | S02 — Priority Gate                             |
+| ProductMatrix.jsx | S06 — Product Matrix                            |
+| README.md         | 키트 설명 / 실행 방법                           |
 
 ## 진입 규칙
 

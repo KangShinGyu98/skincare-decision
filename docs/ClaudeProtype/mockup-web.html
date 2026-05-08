@@ -1,2091 +1,2992 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Skincare Decision — Web Mockup</title>
-<style>
-  :root {
-    --bg: #F5F3F0;
-    --surface: #FFFFFF;
-    --border: #E5E1DB;
-    --border-soft: #EEEBE6;
-    --text-primary: #1A1714;
-    --text-secondary: #6B6560;
-    --text-muted: #9E9790;
-    --accent: #C4865A;
-    --accent-soft: #F5EDE5;
-    --accent-alt: #7A6E9E;
-    --accent-alt-soft: #EEEAF5;
-    --green: #3E7C5B;
-    --green-soft: #E6F2EC;
-    --red: #B04040;
-    --red-soft: #F5E8E8;
-    --yellow: #8A7220;
-    --yellow-soft: #F5F0DC;
-    --nav-width: 240px;
-    --detail-width: 380px;
-    --radius: 12px;
-    --radius-sm: 8px;
-    --shadow: 0 2px 16px rgba(0,0,0,0.07);
-    --shadow-sm: 0 1px 4px rgba(0,0,0,0.05);
-  }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Skincare Decision — Web Mockup</title>
+    <style>
+      :root {
+        --bg: #f5f3f0;
+        --surface: #ffffff;
+        --border: #e5e1db;
+        --border-soft: #eeebe6;
+        --text-primary: #1a1714;
+        --text-secondary: #6b6560;
+        --text-muted: #9e9790;
+        --accent: #c4865a;
+        --accent-soft: #f5ede5;
+        --accent-alt: #7a6e9e;
+        --accent-alt-soft: #eeeaf5;
+        --green: #3e7c5b;
+        --green-soft: #e6f2ec;
+        --red: #b04040;
+        --red-soft: #f5e8e8;
+        --yellow: #8a7220;
+        --yellow-soft: #f5f0dc;
+        --nav-width: 240px;
+        --detail-width: 380px;
+        --radius: 12px;
+        --radius-sm: 8px;
+        --shadow: 0 2px 16px rgba(0, 0, 0, 0.07);
+        --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.05);
+      }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
 
-  body {
-    font-family: -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: var(--bg);
-    color: var(--text-primary);
-    min-height: 100vh;
-    font-size: 14px;
-    line-height: 1.5;
-  }
+      body {
+        font-family:
+          -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', BlinkMacSystemFont, 'Segoe UI',
+          sans-serif;
+        background: var(--bg);
+        color: var(--text-primary);
+        min-height: 100vh;
+        font-size: 14px;
+        line-height: 1.5;
+      }
 
-  /* ── Global Top Nav ── */
-  .top-nav {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    height: 56px;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    padding: 0 28px;
-    z-index: 100;
-    gap: 0;
-  }
-  .top-logo {
-    font-size: 15px;
-    font-weight: 900;
-    color: var(--text-primary);
-    letter-spacing: -0.02em;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-right: 40px;
-  }
-  .top-logo span { color: var(--accent); }
-  .top-nav-links {
-    display: flex;
-    gap: 2px;
-    flex: 1;
-  }
-  .top-nav-link {
-    padding: 6px 14px;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: all 0.15s;
-    border: none;
-    background: none;
-    white-space: nowrap;
-  }
-  .top-nav-link:hover { background: var(--bg); color: var(--text-primary); }
-  .top-nav-link.active { background: var(--text-primary); color: white; }
-  .top-nav-right {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-left: auto;
-  }
-  .nav-badge {
-    padding: 5px 12px;
-    border-radius: 100px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.15s;
-    border: none;
-  }
-  .nav-badge.outline { background: transparent; border: 1.5px solid var(--border); color: var(--text-secondary); }
-  .nav-badge.solid { background: var(--text-primary); color: white; }
-  .nav-badge:hover { opacity: 0.8; }
+      /* ── Global Top Nav ── */
+      .top-nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 56px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        padding: 0 28px;
+        z-index: 100;
+        gap: 0;
+      }
+      .top-logo {
+        font-size: 15px;
+        font-weight: 900;
+        color: var(--text-primary);
+        letter-spacing: -0.02em;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-right: 40px;
+      }
+      .top-logo span {
+        color: var(--accent);
+      }
+      .top-nav-links {
+        display: flex;
+        gap: 2px;
+        flex: 1;
+      }
+      .top-nav-link {
+        padding: 6px 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.15s;
+        border: none;
+        background: none;
+        white-space: nowrap;
+      }
+      .top-nav-link:hover {
+        background: var(--bg);
+        color: var(--text-primary);
+      }
+      .top-nav-link.active {
+        background: var(--text-primary);
+        color: white;
+      }
+      .top-nav-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-left: auto;
+      }
+      .nav-badge {
+        padding: 5px 12px;
+        border-radius: 100px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.15s;
+        border: none;
+      }
+      .nav-badge.outline {
+        background: transparent;
+        border: 1.5px solid var(--border);
+        color: var(--text-secondary);
+      }
+      .nav-badge.solid {
+        background: var(--text-primary);
+        color: white;
+      }
+      .nav-badge:hover {
+        opacity: 0.8;
+      }
 
-  /* ── Layout ── */
-  .layout {
-    display: grid;
-    grid-template-columns: var(--nav-width) 1fr;
-    min-height: 100vh;
-    padding-top: 56px;
-  }
+      /* ── Layout ── */
+      .layout {
+        display: grid;
+        grid-template-columns: var(--nav-width) 1fr;
+        min-height: 100vh;
+        padding-top: 56px;
+      }
 
-  /* ── Left sidebar ── */
-  .sidebar {
-    position: fixed;
-    top: 56px;
-    left: 0;
-    bottom: 0;
-    width: var(--nav-width);
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    overflow-y: auto;
-    padding: 20px 14px;
-    scrollbar-width: none;
-  }
-  .sidebar::-webkit-scrollbar { display: none; }
+      /* ── Left sidebar ── */
+      .sidebar {
+        position: fixed;
+        top: 56px;
+        left: 0;
+        bottom: 0;
+        width: var(--nav-width);
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+        overflow-y: auto;
+        padding: 20px 14px;
+        scrollbar-width: none;
+      }
+      .sidebar::-webkit-scrollbar {
+        display: none;
+      }
 
-  .sidebar-section { margin-bottom: 24px; }
-  .sidebar-label {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    padding: 0 10px;
-    margin-bottom: 6px;
-  }
-  .sidebar-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 10px;
-    border-radius: var(--radius-sm);
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: all 0.15s;
-    border: none;
-    background: none;
-    width: 100%;
-    text-align: left;
-  }
-  .sidebar-item:hover { background: var(--bg); color: var(--text-primary); }
-  .sidebar-item.active { background: var(--accent-soft); color: var(--accent); font-weight: 700; }
-  .sidebar-item .si-icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
-  .sidebar-item .si-badge {
-    margin-left: auto;
-    font-size: 10px;
-    font-weight: 700;
-    background: var(--accent);
-    color: white;
-    padding: 2px 6px;
-    border-radius: 100px;
-  }
+      .sidebar-section {
+        margin-bottom: 24px;
+      }
+      .sidebar-label {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        padding: 0 10px;
+        margin-bottom: 6px;
+      }
+      .sidebar-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        border-radius: var(--radius-sm);
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.15s;
+        border: none;
+        background: none;
+        width: 100%;
+        text-align: left;
+      }
+      .sidebar-item:hover {
+        background: var(--bg);
+        color: var(--text-primary);
+      }
+      .sidebar-item.active {
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-weight: 700;
+      }
+      .sidebar-item .si-icon {
+        font-size: 16px;
+        width: 20px;
+        text-align: center;
+        flex-shrink: 0;
+      }
+      .sidebar-item .si-badge {
+        margin-left: auto;
+        font-size: 10px;
+        font-weight: 700;
+        background: var(--accent);
+        color: white;
+        padding: 2px 6px;
+        border-radius: 100px;
+      }
 
-  .sidebar-divider { height: 1px; background: var(--border-soft); margin: 8px 0; }
+      .sidebar-divider {
+        height: 1px;
+        background: var(--border-soft);
+        margin: 8px 0;
+      }
 
-  /* Priority summary in sidebar */
-  .sidebar-result {
-    background: var(--text-primary);
-    border-radius: var(--radius);
-    padding: 14px;
-    margin: 8px 0;
-  }
-  .sr-label { font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
-  .sr-title { font-size: 13px; font-weight: 800; color: white; margin-bottom: 2px; }
-  .sr-sub { font-size: 11px; color: rgba(255,255,255,0.6); }
-  .sidebar-hold {
-    background: var(--yellow-soft);
-    border-radius: var(--radius-sm);
-    padding: 10px 12px;
-    margin-top: 6px;
-  }
-  .sh-label { font-size: 9px; font-weight: 700; color: var(--yellow); text-transform: uppercase; margin-bottom: 2px; }
-  .sh-title { font-size: 12px; font-weight: 700; color: var(--text-primary); }
+      /* Priority summary in sidebar */
+      .sidebar-result {
+        background: var(--text-primary);
+        border-radius: var(--radius);
+        padding: 14px;
+        margin: 8px 0;
+      }
+      .sr-label {
+        font-size: 9px;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.5);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 4px;
+      }
+      .sr-title {
+        font-size: 13px;
+        font-weight: 800;
+        color: white;
+        margin-bottom: 2px;
+      }
+      .sr-sub {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.6);
+      }
+      .sidebar-hold {
+        background: var(--yellow-soft);
+        border-radius: var(--radius-sm);
+        padding: 10px 12px;
+        margin-top: 6px;
+      }
+      .sh-label {
+        font-size: 9px;
+        font-weight: 700;
+        color: var(--yellow);
+        text-transform: uppercase;
+        margin-bottom: 2px;
+      }
+      .sh-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-primary);
+      }
 
-  /* ── Main content ── */
-  .main {
-    margin-left: var(--nav-width);
-    min-height: calc(100vh - 56px);
-  }
+      /* ── Main content ── */
+      .main {
+        margin-left: var(--nav-width);
+        min-height: calc(100vh - 56px);
+      }
 
-  /* Screen system */
-  .screen {
-    display: none;
-    animation: fadeIn 0.25s ease;
-  }
-  .screen.active { display: block; }
+      /* Screen system */
+      .screen {
+        display: none;
+        animation: fadeIn 0.25s ease;
+      }
+      .screen.active {
+        display: block;
+      }
 
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(6px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
 
-  /* ── Page header ── */
-  .page-header {
-    padding: 32px 40px 24px;
-    border-bottom: 1px solid var(--border);
-    background: var(--surface);
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 24px;
-  }
-  .ph-left { flex: 1; }
-  .ph-eyebrow {
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 6px;
-  }
-  .ph-title {
-    font-size: 28px;
-    font-weight: 900;
-    color: var(--text-primary);
-    letter-spacing: -0.02em;
-    line-height: 1.2;
-    margin-bottom: 8px;
-  }
-  .ph-desc {
-    font-size: 14px;
-    color: var(--text-secondary);
-    line-height: 1.6;
-  }
-  .ph-right { flex-shrink: 0; }
+      /* ── Page header ── */
+      .page-header {
+        padding: 32px 40px 24px;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface);
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 24px;
+      }
+      .ph-left {
+        flex: 1;
+      }
+      .ph-eyebrow {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 6px;
+      }
+      .ph-title {
+        font-size: 28px;
+        font-weight: 900;
+        color: var(--text-primary);
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+        margin-bottom: 8px;
+      }
+      .ph-desc {
+        font-size: 14px;
+        color: var(--text-secondary);
+        line-height: 1.6;
+      }
+      .ph-right {
+        flex-shrink: 0;
+      }
 
-  /* ── Page body ── */
-  .page-body {
-    padding: 28px 40px;
-  }
-  .page-body-narrow {
-    padding: 28px 40px;
-    max-width: 800px;
-  }
+      /* ── Page body ── */
+      .page-body {
+        padding: 28px 40px;
+      }
+      .page-body-narrow {
+        padding: 28px 40px;
+        max-width: 800px;
+      }
 
-  /* Two-column layout */
-  .two-col {
-    display: grid;
-    grid-template-columns: 1fr var(--detail-width);
-    gap: 24px;
-    align-items: start;
-  }
-  .three-col {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-  }
-  .two-col-equal {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
+      /* Two-column layout */
+      .two-col {
+        display: grid;
+        grid-template-columns: 1fr var(--detail-width);
+        gap: 24px;
+        align-items: start;
+      }
+      .three-col {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+      }
+      .two-col-equal {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
 
-  /* ── Cards ── */
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px;
-    box-shadow: var(--shadow-sm);
-  }
-  .card + .card { margin-top: 12px; }
-  .card-accent { border-left: 3px solid var(--accent); }
-  .card-green { border-left: 3px solid var(--green); }
-  .card-red { border-left: 3px solid var(--red); }
-  .card-yellow { border-left: 3px solid var(--yellow); }
+      /* ── Cards ── */
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 20px;
+        box-shadow: var(--shadow-sm);
+      }
+      .card + .card {
+        margin-top: 12px;
+      }
+      .card-accent {
+        border-left: 3px solid var(--accent);
+      }
+      .card-green {
+        border-left: 3px solid var(--green);
+      }
+      .card-red {
+        border-left: 3px solid var(--red);
+      }
+      .card-yellow {
+        border-left: 3px solid var(--yellow);
+      }
 
-  /* Section title */
-  .section-title {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: 12px;
-  }
-  .section-eyebrow {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    margin-bottom: 8px;
-  }
+      /* Section title */
+      .section-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 12px;
+      }
+      .section-eyebrow {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+      }
 
-  /* ── Segment cards (S02) ── */
-  .segment-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 14px;
-  }
-  .seg-card {
-    background: var(--surface);
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px;
-    cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: var(--shadow-sm);
-  }
-  .seg-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
-  .seg-icon { font-size: 28px; margin-bottom: 12px; }
-  .seg-title { font-size: 15px; font-weight: 800; color: var(--text-primary); margin-bottom: 6px; line-height: 1.35; }
-  .seg-desc { font-size: 12.5px; color: var(--text-secondary); line-height: 1.5; }
-  .seg-arrow { display: flex; justify-content: flex-end; margin-top: 12px; color: var(--text-muted); font-size: 16px; }
+      /* ── Segment cards (S02) ── */
+      .segment-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+      }
+      .seg-card {
+        background: var(--surface);
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius);
+        padding: 20px;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: var(--shadow-sm);
+      }
+      .seg-card:hover {
+        border-color: var(--accent);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+      }
+      .seg-icon {
+        font-size: 28px;
+        margin-bottom: 12px;
+      }
+      .seg-title {
+        font-size: 15px;
+        font-weight: 800;
+        color: var(--text-primary);
+        margin-bottom: 6px;
+        line-height: 1.35;
+      }
+      .seg-desc {
+        font-size: 12.5px;
+        color: var(--text-secondary);
+        line-height: 1.5;
+      }
+      .seg-arrow {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 12px;
+        color: var(--text-muted);
+        font-size: 16px;
+      }
 
-  /* ── Priority Gate (S03) ── */
-  .gate-grid {
-    display: grid;
-    grid-template-columns: 1fr 340px;
-    gap: 24px;
-    align-items: start;
-  }
-  .check-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border-soft);
-    cursor: pointer;
-    transition: background 0.1s;
-    border-radius: 4px;
-  }
-  .check-item:last-child { border-bottom: none; }
-  .check-item:hover { background: var(--bg); border-radius: var(--radius-sm); }
-  .check-box {
-    width: 20px; height: 20px;
-    border: 2px solid var(--border);
-    border-radius: 6px;
-    flex-shrink: 0;
-    margin-top: 1px;
-    display: flex; align-items: center; justify-content: center;
-    transition: all 0.15s;
-    background: var(--surface);
-  }
-  .check-box.checked { background: var(--accent); border-color: var(--accent); }
-  .check-box.checked::after { content: '✓'; color: white; font-size: 11px; font-weight: 800; }
-  .check-label { font-size: 13.5px; color: var(--text-primary); line-height: 1.5; }
+      /* ── Priority Gate (S03) ── */
+      .gate-grid {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: 24px;
+        align-items: start;
+      }
+      .check-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border-soft);
+        cursor: pointer;
+        transition: background 0.1s;
+        border-radius: 4px;
+      }
+      .check-item:last-child {
+        border-bottom: none;
+      }
+      .check-item:hover {
+        background: var(--bg);
+        border-radius: var(--radius-sm);
+      }
+      .check-box {
+        width: 20px;
+        height: 20px;
+        border: 2px solid var(--border);
+        border-radius: 6px;
+        flex-shrink: 0;
+        margin-top: 1px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s;
+        background: var(--surface);
+      }
+      .check-box.checked {
+        background: var(--accent);
+        border-color: var(--accent);
+      }
+      .check-box.checked::after {
+        content: '✓';
+        color: white;
+        font-size: 11px;
+        font-weight: 800;
+      }
+      .check-label {
+        font-size: 13.5px;
+        color: var(--text-primary);
+        line-height: 1.5;
+      }
 
-  /* Gate sidebar info */
-  .gate-info-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px;
-    position: sticky;
-    top: 80px;
-  }
-  .gate-score {
-    text-align: center;
-    padding: 20px;
-    background: var(--bg);
-    border-radius: var(--radius-sm);
-    margin-bottom: 16px;
-  }
-  .gate-score-num { font-size: 48px; font-weight: 900; color: var(--text-primary); line-height: 1; }
-  .gate-score-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
-  .gate-status { padding: 10px 14px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; margin-bottom: 10px; }
-  .gate-status.ok { background: var(--green-soft); color: var(--green); }
-  .gate-status.warn { background: var(--yellow-soft); color: var(--yellow); }
-  .gate-status.stop { background: var(--red-soft); color: var(--red); }
+      /* Gate sidebar info */
+      .gate-info-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 20px;
+        position: sticky;
+        top: 80px;
+      }
+      .gate-score {
+        text-align: center;
+        padding: 20px;
+        background: var(--bg);
+        border-radius: var(--radius-sm);
+        margin-bottom: 16px;
+      }
+      .gate-score-num {
+        font-size: 48px;
+        font-weight: 900;
+        color: var(--text-primary);
+        line-height: 1;
+      }
+      .gate-score-label {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-top: 4px;
+      }
+      .gate-status {
+        padding: 10px 14px;
+        border-radius: var(--radius-sm);
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 10px;
+      }
+      .gate-status.ok {
+        background: var(--green-soft);
+        color: var(--green);
+      }
+      .gate-status.warn {
+        background: var(--yellow-soft);
+        color: var(--yellow);
+      }
+      .gate-status.stop {
+        background: var(--red-soft);
+        color: var(--red);
+      }
 
-  /* ── Minimal Context (S04) ── */
-  .context-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-  }
-  .chip-group { display: flex; flex-wrap: wrap; gap: 8px; }
-  .chip {
-    padding: 7px 14px;
-    border: 1.5px solid var(--border);
-    border-radius: 100px;
-    font-size: 12.5px;
-    font-weight: 500;
-    color: var(--text-secondary);
-    background: var(--surface);
-    cursor: pointer;
-    transition: all 0.15s;
-    white-space: nowrap;
-  }
-  .chip:hover { border-color: var(--accent); color: var(--accent); }
-  .chip.selected { background: var(--accent); border-color: var(--accent); color: white; }
-  .chip.multi-selected { background: var(--accent-alt); border-color: var(--accent-alt); color: white; }
+      /* ── Minimal Context (S04) ── */
+      .context-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+      .chip-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .chip {
+        padding: 7px 14px;
+        border: 1.5px solid var(--border);
+        border-radius: 100px;
+        font-size: 12.5px;
+        font-weight: 500;
+        color: var(--text-secondary);
+        background: var(--surface);
+        cursor: pointer;
+        transition: all 0.15s;
+        white-space: nowrap;
+      }
+      .chip:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      .chip.selected {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: white;
+      }
+      .chip.multi-selected {
+        background: var(--accent-alt);
+        border-color: var(--accent-alt);
+        color: white;
+      }
 
-  /* ── Decision Result (S05) ── */
-  .result-layout {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 16px;
-    margin-bottom: 24px;
-  }
-  .result-priority {
-    background: var(--text-primary);
-    color: white;
-    border-radius: var(--radius);
-    padding: 20px;
-    grid-column: span 2;
-  }
-  .result-hold {
-    background: var(--yellow-soft);
-    border: 1px solid #DDD5A0;
-    border-radius: var(--radius);
-    padding: 20px;
-  }
-  .r-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
-  .result-priority .r-label { color: rgba(255,255,255,0.5); }
-  .result-hold .r-label { color: var(--yellow); }
-  .r-title { font-size: 20px; font-weight: 900; margin-bottom: 6px; }
-  .result-priority .r-title { color: white; }
-  .result-hold .r-title { color: var(--text-primary); font-size: 16px; }
-  .r-desc { font-size: 13px; line-height: 1.6; }
-  .result-priority .r-desc { color: rgba(255,255,255,0.72); }
-  .result-hold .r-desc { color: var(--text-secondary); font-size: 12.5px; }
+      /* ── Decision Result (S05) ── */
+      .result-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+      .result-priority {
+        background: var(--text-primary);
+        color: white;
+        border-radius: var(--radius);
+        padding: 20px;
+        grid-column: span 2;
+      }
+      .result-hold {
+        background: var(--yellow-soft);
+        border: 1px solid #ddd5a0;
+        border-radius: var(--radius);
+        padding: 20px;
+      }
+      .r-label {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+      }
+      .result-priority .r-label {
+        color: rgba(255, 255, 255, 0.5);
+      }
+      .result-hold .r-label {
+        color: var(--yellow);
+      }
+      .r-title {
+        font-size: 20px;
+        font-weight: 900;
+        margin-bottom: 6px;
+      }
+      .result-priority .r-title {
+        color: white;
+      }
+      .result-hold .r-title {
+        color: var(--text-primary);
+        font-size: 16px;
+      }
+      .r-desc {
+        font-size: 13px;
+        line-height: 1.6;
+      }
+      .result-priority .r-desc {
+        color: rgba(255, 255, 255, 0.72);
+      }
+      .result-hold .r-desc {
+        color: var(--text-secondary);
+        font-size: 12.5px;
+      }
 
-  /* Reason + Action */
-  .reason-action-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-bottom: 24px;
-  }
-  .reason-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 18px;
-  }
-  .rc-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 8px; }
-  .rc-text { font-size: 13.5px; color: var(--text-primary); line-height: 1.65; }
-  .ap-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border-soft); }
-  .ap-row:last-child { border-bottom: none; }
-  .ap-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
-  .ap-dot.muted { background: var(--border); }
-  .ap-text { font-size: 13px; }
-  .ap-text.muted { color: var(--text-muted); }
+      /* Reason + Action */
+      .reason-action-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+      .reason-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 18px;
+      }
+      .rc-label {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+      }
+      .rc-text {
+        font-size: 13.5px;
+        color: var(--text-primary);
+        line-height: 1.65;
+      }
+      .ap-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 7px 0;
+        border-bottom: 1px solid var(--border-soft);
+      }
+      .ap-row:last-child {
+        border-bottom: none;
+      }
+      .ap-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--accent);
+        flex-shrink: 0;
+      }
+      .ap-dot.muted {
+        background: var(--border);
+      }
+      .ap-text {
+        font-size: 13px;
+      }
+      .ap-text.muted {
+        color: var(--text-muted);
+      }
 
-  /* ── Category Decision Matrix (S06) ── */
-  .matrix-layout {
-    display: grid;
-    grid-template-columns: 280px 1fr;
-    gap: 0;
-    min-height: calc(100vh - 160px);
-  }
-  .matrix-left {
-    border-right: 1px solid var(--border);
-    padding: 24px;
-    position: sticky;
-    top: 80px;
-    align-self: start;
-    max-height: calc(100vh - 100px);
-    overflow-y: auto;
-    scrollbar-width: none;
-  }
-  .matrix-left::-webkit-scrollbar { display: none; }
-  .matrix-right { padding: 24px; }
+      /* ── Category Decision Matrix (S06) ── */
+      .matrix-layout {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 0;
+        min-height: calc(100vh - 160px);
+      }
+      .matrix-left {
+        border-right: 1px solid var(--border);
+        padding: 24px;
+        position: sticky;
+        top: 80px;
+        align-self: start;
+        max-height: calc(100vh - 100px);
+        overflow-y: auto;
+        scrollbar-width: none;
+      }
+      .matrix-left::-webkit-scrollbar {
+        display: none;
+      }
+      .matrix-right {
+        padding: 24px;
+      }
 
-  .criteria-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 9px 0;
-    border-bottom: 1px solid var(--border-soft);
-  }
-  .criteria-row:last-child { border-bottom: none; }
-  .criteria-name { font-size: 12.5px; color: var(--text-secondary); }
-  .criteria-value { font-size: 12.5px; font-weight: 600; color: var(--text-primary); text-align: right; max-width: 60%; }
+      .criteria-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 9px 0;
+        border-bottom: 1px solid var(--border-soft);
+      }
+      .criteria-row:last-child {
+        border-bottom: none;
+      }
+      .criteria-name {
+        font-size: 12.5px;
+        color: var(--text-secondary);
+      }
+      .criteria-value {
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--text-primary);
+        text-align: right;
+        max-width: 60%;
+      }
 
-  .fit-block {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin: 12px 0;
-  }
-  .fit-col { border-radius: var(--radius-sm); padding: 12px; }
-  .fit-col.good { background: var(--green-soft); }
-  .fit-col.skip { background: var(--red-soft); }
-  .fit-col-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
-  .fit-col.good .fit-col-label { color: var(--green); }
-  .fit-col.skip .fit-col-label { color: var(--red); }
-  .fit-col-item { font-size: 12px; color: var(--text-primary); line-height: 1.5; margin-bottom: 3px; display: flex; gap: 4px; }
-  .fit-col-item::before { content: '·'; flex-shrink: 0; }
+      .fit-block {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin: 12px 0;
+      }
+      .fit-col {
+        border-radius: var(--radius-sm);
+        padding: 12px;
+      }
+      .fit-col.good {
+        background: var(--green-soft);
+      }
+      .fit-col.skip {
+        background: var(--red-soft);
+      }
+      .fit-col-label {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 8px;
+      }
+      .fit-col.good .fit-col-label {
+        color: var(--green);
+      }
+      .fit-col.skip .fit-col-label {
+        color: var(--red);
+      }
+      .fit-col-item {
+        font-size: 12px;
+        color: var(--text-primary);
+        line-height: 1.5;
+        margin-bottom: 3px;
+        display: flex;
+        gap: 4px;
+      }
+      .fit-col-item::before {
+        content: '·';
+        flex-shrink: 0;
+      }
 
-  /* Price band */
-  .price-band {
-    display: inline-flex;
-    background: var(--bg);
-    border-radius: 10px;
-    padding: 3px;
-    border: 1px solid var(--border);
-    margin-bottom: 16px;
-  }
-  .pb-btn {
-    padding: 6px 16px;
-    border: none;
-    background: transparent;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: all 0.18s;
-  }
-  .pb-btn.active { background: var(--surface); color: var(--text-primary); box-shadow: var(--shadow-sm); }
+      /* Price band */
+      .price-band {
+        display: inline-flex;
+        background: var(--bg);
+        border-radius: 10px;
+        padding: 3px;
+        border: 1px solid var(--border);
+        margin-bottom: 16px;
+      }
+      .pb-btn {
+        padding: 6px 16px;
+        border: none;
+        background: transparent;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: all 0.18s;
+      }
+      .pb-btn.active {
+        background: var(--surface);
+        color: var(--text-primary);
+        box-shadow: var(--shadow-sm);
+      }
 
-  /* Product table */
-  .product-table { width: 100%; border-collapse: collapse; }
-  .product-table th {
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text-muted);
-    text-align: left;
-    padding: 8px 12px;
-    border-bottom: 2px solid var(--border);
-  }
-  .product-table td {
-    padding: 14px 12px;
-    border-bottom: 1px solid var(--border-soft);
-    vertical-align: middle;
-  }
-  .product-table tr:last-child td { border-bottom: none; }
-  .product-table tr:hover td { background: var(--bg); }
-  .product-table tr { cursor: pointer; transition: background 0.1s; }
-  .product-thumb-sm {
-    width: 44px; height: 44px;
-    border-radius: 10px;
-    background: linear-gradient(135deg, #F0EDE9, #E8E4DE);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 20px;
-  }
-  .product-name { font-size: 13.5px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; }
-  .product-brand { font-size: 11.5px; color: var(--text-muted); }
+      /* Product table */
+      .product-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .product-table th {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-muted);
+        text-align: left;
+        padding: 8px 12px;
+        border-bottom: 2px solid var(--border);
+      }
+      .product-table td {
+        padding: 14px 12px;
+        border-bottom: 1px solid var(--border-soft);
+        vertical-align: middle;
+      }
+      .product-table tr:last-child td {
+        border-bottom: none;
+      }
+      .product-table tr:hover td {
+        background: var(--bg);
+      }
+      .product-table tr {
+        cursor: pointer;
+        transition: background 0.1s;
+      }
+      .product-thumb-sm {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #f0ede9, #e8e4de);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+      }
+      .product-name {
+        font-size: 13.5px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 2px;
+      }
+      .product-brand {
+        font-size: 11.5px;
+        color: var(--text-muted);
+      }
 
-  /* Tags */
-  .tag {
-    display: inline-flex;
-    align-items: center;
-    padding: 3px 9px;
-    border-radius: 100px;
-    font-size: 11px;
-    font-weight: 600;
-    white-space: nowrap;
-  }
-  .tag-green { background: var(--green-soft); color: var(--green); }
-  .tag-red { background: var(--red-soft); color: var(--red); }
-  .tag-yellow { background: var(--yellow-soft); color: var(--yellow); }
-  .tag-gray { background: #F0EDE9; color: var(--text-secondary); }
-  .tag-purple { background: var(--accent-alt-soft); color: var(--accent-alt); }
+      /* Tags */
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 9px;
+        border-radius: 100px;
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      .tag-green {
+        background: var(--green-soft);
+        color: var(--green);
+      }
+      .tag-red {
+        background: var(--red-soft);
+        color: var(--red);
+      }
+      .tag-yellow {
+        background: var(--yellow-soft);
+        color: var(--yellow);
+      }
+      .tag-gray {
+        background: #f0ede9;
+        color: var(--text-secondary);
+      }
+      .tag-purple {
+        background: var(--accent-alt-soft);
+        color: var(--accent-alt);
+      }
 
-  .tag + .tag { margin-left: 4px; }
+      .tag + .tag {
+        margin-left: 4px;
+      }
 
-  /* ── Product Fit Detail (S07) ── */
-  .fit-detail-layout {
-    display: grid;
-    grid-template-columns: 1fr 360px;
-    gap: 24px;
-    align-items: start;
-  }
+      /* ── Product Fit Detail (S07) ── */
+      .fit-detail-layout {
+        display: grid;
+        grid-template-columns: 1fr 360px;
+        gap: 24px;
+        align-items: start;
+      }
 
-  .fit-hero {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    padding: 20px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    margin-bottom: 16px;
-  }
-  .fit-hero-thumb {
-    width: 80px; height: 80px;
-    border-radius: 16px;
-    background: linear-gradient(135deg, #F0EDE9, #E8E4DE);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 36px;
-    flex-shrink: 0;
-  }
-  .fit-hero-info h2 { font-size: 20px; font-weight: 900; margin-bottom: 4px; letter-spacing: -0.01em; }
-  .fit-hero-meta { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; }
-  .fit-hero-price { font-size: 18px; font-weight: 800; }
+      .fit-hero {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        padding: 20px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        margin-bottom: 16px;
+      }
+      .fit-hero-thumb {
+        width: 80px;
+        height: 80px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #f0ede9, #e8e4de);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 36px;
+        flex-shrink: 0;
+      }
+      .fit-hero-info h2 {
+        font-size: 20px;
+        font-weight: 900;
+        margin-bottom: 4px;
+        letter-spacing: -0.01em;
+      }
+      .fit-hero-meta {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+      }
+      .fit-hero-price {
+        font-size: 18px;
+        font-weight: 800;
+      }
 
-  .fit-stat-row {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-bottom: 16px;
-  }
-  .fit-stat {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 16px;
-    text-align: center;
-  }
-  .fit-stat-num { font-size: 28px; font-weight: 900; margin-bottom: 4px; }
-  .fit-stat.positive .fit-stat-num { color: var(--green); }
-  .fit-stat.warning .fit-stat-num { color: var(--yellow); }
-  .fit-stat.neutral .fit-stat-num { color: var(--accent-alt); }
-  .fit-stat-label { font-size: 11px; color: var(--text-muted); }
+      .fit-stat-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+      .fit-stat {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 16px;
+        text-align: center;
+      }
+      .fit-stat-num {
+        font-size: 28px;
+        font-weight: 900;
+        margin-bottom: 4px;
+      }
+      .fit-stat.positive .fit-stat-num {
+        color: var(--green);
+      }
+      .fit-stat.warning .fit-stat-num {
+        color: var(--yellow);
+      }
+      .fit-stat.neutral .fit-stat-num {
+        color: var(--accent-alt);
+      }
+      .fit-stat-label {
+        font-size: 11px;
+        color: var(--text-muted);
+      }
 
-  .fit-verdict-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 16px;
-  }
-  .verdict-col { border-radius: var(--radius-sm); padding: 14px; }
-  .verdict-col.fit { background: var(--green-soft); border: 1px solid #B8DCCA; }
-  .verdict-col.caution { background: var(--yellow-soft); border: 1px solid #DDD5A0; }
-  .verdict-col.avoid { background: var(--red-soft); border: 1px solid #E8CACA; }
-  .verdict-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
-  .verdict-col.fit .verdict-label { color: var(--green); }
-  .verdict-col.caution .verdict-label { color: var(--yellow); }
-  .verdict-col.avoid .verdict-label { color: var(--red); }
-  .verdict-item { font-size: 12.5px; color: var(--text-primary); margin-bottom: 4px; line-height: 1.5; display: flex; gap: 4px; }
-  .verdict-item::before { content: '·'; flex-shrink: 0; }
+      .fit-verdict-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+      .verdict-col {
+        border-radius: var(--radius-sm);
+        padding: 14px;
+      }
+      .verdict-col.fit {
+        background: var(--green-soft);
+        border: 1px solid #b8dcca;
+      }
+      .verdict-col.caution {
+        background: var(--yellow-soft);
+        border: 1px solid #ddd5a0;
+      }
+      .verdict-col.avoid {
+        background: var(--red-soft);
+        border: 1px solid #e8caca;
+      }
+      .verdict-label {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 8px;
+      }
+      .verdict-col.fit .verdict-label {
+        color: var(--green);
+      }
+      .verdict-col.caution .verdict-label {
+        color: var(--yellow);
+      }
+      .verdict-col.avoid .verdict-label {
+        color: var(--red);
+      }
+      .verdict-item {
+        font-size: 12.5px;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+        line-height: 1.5;
+        display: flex;
+        gap: 4px;
+      }
+      .verdict-item::before {
+        content: '·';
+        flex-shrink: 0;
+      }
 
-  /* Accordion */
-  .accordion { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 10px; }
-  .acc-header {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 14px 18px;
-    background: var(--surface);
-    cursor: pointer;
-    transition: background 0.15s;
-  }
-  .acc-header:hover { background: var(--bg); }
-  .acc-title { font-size: 13.5px; font-weight: 700; color: var(--text-primary); }
-  .acc-arrow { color: var(--text-muted); transition: transform 0.2s; font-size: 12px; }
-  .acc-arrow.open { transform: rotate(180deg); }
-  .acc-body { padding: 0 18px; max-height: 0; overflow: hidden; transition: all 0.3s ease; background: var(--surface); }
-  .acc-body.open { padding: 0 18px 16px; max-height: 400px; }
-  .acc-body p { font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
+      /* Accordion */
+      .accordion {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+        margin-bottom: 10px;
+      }
+      .acc-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 14px 18px;
+        background: var(--surface);
+        cursor: pointer;
+        transition: background 0.15s;
+      }
+      .acc-header:hover {
+        background: var(--bg);
+      }
+      .acc-title {
+        font-size: 13.5px;
+        font-weight: 700;
+        color: var(--text-primary);
+      }
+      .acc-arrow {
+        color: var(--text-muted);
+        transition: transform 0.2s;
+        font-size: 12px;
+      }
+      .acc-arrow.open {
+        transform: rotate(180deg);
+      }
+      .acc-body {
+        padding: 0 18px;
+        max-height: 0;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        background: var(--surface);
+      }
+      .acc-body.open {
+        padding: 0 18px 16px;
+        max-height: 400px;
+      }
+      .acc-body p {
+        font-size: 13px;
+        color: var(--text-secondary);
+        line-height: 1.7;
+      }
 
-  /* Ingredient table */
-  .ingredient-table { width: 100%; border-collapse: collapse; }
-  .ingredient-table tr { border-bottom: 1px solid var(--border-soft); }
-  .ingredient-table tr:last-child { border-bottom: none; }
-  .ingredient-table td { padding: 8px 12px; font-size: 12.5px; }
-  .ingredient-table td:first-child { font-weight: 600; color: var(--text-primary); }
-  .ingredient-table td:last-child { color: var(--text-secondary); }
+      /* Ingredient table */
+      .ingredient-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .ingredient-table tr {
+        border-bottom: 1px solid var(--border-soft);
+      }
+      .ingredient-table tr:last-child {
+        border-bottom: none;
+      }
+      .ingredient-table td {
+        padding: 8px 12px;
+        font-size: 12.5px;
+      }
+      .ingredient-table td:first-child {
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+      .ingredient-table td:last-child {
+        color: var(--text-secondary);
+      }
 
-  /* Evidence */
-  .evidence-list { display: flex; flex-direction: column; gap: 0; }
-  .evidence-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border-soft);
-  }
-  .evidence-item:last-child { border-bottom: none; }
-  .ev-avatar {
-    width: 34px; height: 34px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--accent-soft), var(--accent-alt-soft));
-    display: flex; align-items: center; justify-content: center;
-    font-size: 14px;
-    flex-shrink: 0;
-  }
-  .ev-text { font-size: 13px; color: var(--text-primary); line-height: 1.55; }
-  .ev-meta { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+      /* Evidence */
+      .evidence-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+      .evidence-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border-soft);
+      }
+      .evidence-item:last-child {
+        border-bottom: none;
+      }
+      .ev-avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent-soft), var(--accent-alt-soft));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        flex-shrink: 0;
+      }
+      .ev-text {
+        font-size: 13px;
+        color: var(--text-primary);
+        line-height: 1.55;
+      }
+      .ev-meta {
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-top: 3px;
+      }
 
-  /* ── Traceback (S08) ── */
-  .traceback-layout {
-    display: grid;
-    grid-template-columns: 1fr 360px;
-    gap: 24px;
-    align-items: start;
-  }
+      /* ── Traceback (S08) ── */
+      .traceback-layout {
+        display: grid;
+        grid-template-columns: 1fr 360px;
+        gap: 24px;
+        align-items: start;
+      }
 
-  .tab-bar {
-    display: flex;
-    border-bottom: 2px solid var(--border);
-    margin-bottom: 24px;
-    gap: 0;
-  }
-  .tab-btn {
-    padding: 12px 20px;
-    border: none;
-    background: transparent;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-muted);
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -2px;
-    transition: all 0.2s;
-  }
-  .tab-btn.active { color: var(--text-primary); border-bottom-color: var(--text-primary); }
-  .tab-btn:hover:not(.active) { color: var(--text-primary); }
+      .tab-bar {
+        display: flex;
+        border-bottom: 2px solid var(--border);
+        margin-bottom: 24px;
+        gap: 0;
+      }
+      .tab-btn {
+        padding: 12px 20px;
+        border: none;
+        background: transparent;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-muted);
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        transition: all 0.2s;
+      }
+      .tab-btn.active {
+        color: var(--text-primary);
+        border-bottom-color: var(--text-primary);
+      }
+      .tab-btn:hover:not(.active) {
+        color: var(--text-primary);
+      }
 
-  .search-input {
-    width: 100%;
-    padding: 12px 16px;
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius-sm);
-    font-size: 14px;
-    color: var(--text-primary);
-    background: var(--surface);
-    outline: none;
-    transition: border-color 0.15s;
-    font-family: inherit;
-    margin-bottom: 12px;
-  }
-  .search-input:focus { border-color: var(--accent); }
-  .search-input::placeholder { color: var(--text-muted); }
+      .search-input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius-sm);
+        font-size: 14px;
+        color: var(--text-primary);
+        background: var(--surface);
+        outline: none;
+        transition: border-color 0.15s;
+        font-family: inherit;
+        margin-bottom: 12px;
+      }
+      .search-input:focus {
+        border-color: var(--accent);
+      }
+      .search-input::placeholder {
+        color: var(--text-muted);
+      }
 
-  .problem-card {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 14px 16px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    margin-bottom: 8px;
-  }
-  .pc-icon { font-size: 24px; }
-  .pc-name { font-size: 13.5px; font-weight: 700; color: var(--text-primary); }
-  .pc-meta { font-size: 11.5px; color: var(--text-muted); }
-  .pc-tag { margin-left: auto; }
+      .problem-card {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 14px 16px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        margin-bottom: 8px;
+      }
+      .pc-icon {
+        font-size: 24px;
+      }
+      .pc-name {
+        font-size: 13.5px;
+        font-weight: 700;
+        color: var(--text-primary);
+      }
+      .pc-meta {
+        font-size: 11.5px;
+        color: var(--text-muted);
+      }
+      .pc-tag {
+        margin-left: auto;
+      }
 
-  .suspect-card {
-    background: var(--red-soft);
-    border: 1px solid #E8CACA;
-    border-radius: var(--radius);
-    padding: 18px;
-    margin-bottom: 12px;
-  }
-  .suspect-label { font-size: 10px; font-weight: 700; color: var(--red); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; }
-  .suspect-item { font-size: 13.5px; font-weight: 600; color: var(--text-primary); margin-bottom: 5px; display: flex; align-items: center; gap: 8px; }
-  .suspect-note { font-size: 12px; color: var(--text-secondary); line-height: 1.6; margin-top: 10px; padding-top: 10px; border-top: 1px solid #E8CACA; }
+      .suspect-card {
+        background: var(--red-soft);
+        border: 1px solid #e8caca;
+        border-radius: var(--radius);
+        padding: 18px;
+        margin-bottom: 12px;
+      }
+      .suspect-label {
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--red);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 10px;
+      }
+      .suspect-item {
+        font-size: 13.5px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 5px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .suspect-note {
+        font-size: 12px;
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid #e8caca;
+      }
 
-  .avoid-card {
-    background: var(--surface);
-    border: 1.5px dashed var(--border);
-    border-radius: var(--radius);
-    padding: 18px;
-    margin-bottom: 12px;
-  }
-  .avoid-label { font-size: 10px; font-weight: 700; color: var(--accent-alt); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; }
-  .avoid-item { font-size: 13px; color: var(--text-primary); display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+      .avoid-card {
+        background: var(--surface);
+        border: 1.5px dashed var(--border);
+        border-radius: var(--radius);
+        padding: 18px;
+        margin-bottom: 12px;
+      }
+      .avoid-label {
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--accent-alt);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 10px;
+      }
+      .avoid-item {
+        font-size: 13px;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 0;
+      }
 
-  /* Day tracker */
-  .day-track { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
-  .day-card {
-    background: var(--surface);
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 16px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .day-card.done { background: var(--green-soft); border-color: var(--green); }
-  .day-card.active { border-color: var(--accent); }
-  .day-card .day-num { font-size: 22px; font-weight: 900; color: var(--text-primary); margin-bottom: 4px; }
-  .day-card.done .day-num { color: var(--green); font-size: 16px; }
-  .day-card .day-label { font-size: 11px; color: var(--text-muted); }
-  .day-check { font-size: 24px; margin-bottom: 4px; }
+      /* Day tracker */
+      .day-track {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+      .day-card {
+        background: var(--surface);
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 16px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .day-card.done {
+        background: var(--green-soft);
+        border-color: var(--green);
+      }
+      .day-card.active {
+        border-color: var(--accent);
+      }
+      .day-card .day-num {
+        font-size: 22px;
+        font-weight: 900;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+      }
+      .day-card.done .day-num {
+        color: var(--green);
+        font-size: 16px;
+      }
+      .day-card .day-label {
+        font-size: 11px;
+        color: var(--text-muted);
+      }
+      .day-check {
+        font-size: 24px;
+        margin-bottom: 4px;
+      }
 
-  /* ── Buttons ── */
-  .btn-primary {
-    padding: 12px 28px;
-    background: var(--text-primary);
-    color: white;
-    border: none;
-    border-radius: var(--radius-sm);
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: opacity 0.15s;
-    font-family: inherit;
-  }
-  .btn-primary:hover { opacity: 0.85; }
-  .btn-primary.full { width: 100%; }
-  .btn-secondary {
-    padding: 11px 24px;
-    background: transparent;
-    color: var(--text-secondary);
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius-sm);
-    font-size: 13.5px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.15s;
-    font-family: inherit;
-  }
-  .btn-secondary:hover { border-color: var(--text-secondary); color: var(--text-primary); }
-  .btn-secondary.full { width: 100%; margin-top: 8px; }
+      /* ── Buttons ── */
+      .btn-primary {
+        padding: 12px 28px;
+        background: var(--text-primary);
+        color: white;
+        border: none;
+        border-radius: var(--radius-sm);
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: opacity 0.15s;
+        font-family: inherit;
+      }
+      .btn-primary:hover {
+        opacity: 0.85;
+      }
+      .btn-primary.full {
+        width: 100%;
+      }
+      .btn-secondary {
+        padding: 11px 24px;
+        background: transparent;
+        color: var(--text-secondary);
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius-sm);
+        font-size: 13.5px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.15s;
+        font-family: inherit;
+      }
+      .btn-secondary:hover {
+        border-color: var(--text-secondary);
+        color: var(--text-primary);
+      }
+      .btn-secondary.full {
+        width: 100%;
+        margin-top: 8px;
+      }
 
-  .btn-row { display: flex; gap: 10px; align-items: center; }
+      .btn-row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
 
-  /* Legal banner */
-  .legal-banner {
-    background: #F0EDE9;
-    border: 1px solid #E0DCD4;
-    border-radius: var(--radius-sm);
-    padding: 12px 16px;
-    display: flex;
-    gap: 10px;
-    align-items: flex-start;
-    font-size: 12px;
-    color: var(--text-secondary);
-    line-height: 1.6;
-    margin-top: 16px;
-  }
-  .legal-icon { flex-shrink: 0; margin-top: 1px; }
+      /* Legal banner */
+      .legal-banner {
+        background: #f0ede9;
+        border: 1px solid #e0dcd4;
+        border-radius: var(--radius-sm);
+        padding: 12px 16px;
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        font-size: 12px;
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin-top: 16px;
+      }
+      .legal-icon {
+        flex-shrink: 0;
+        margin-top: 1px;
+      }
 
-  /* ── Landing (S01) ── */
-  .landing-hero {
-    padding: 60px 60px 48px;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-  }
-  .landing-hero-inner {
-    display: grid;
-    grid-template-columns: 1fr 420px;
-    gap: 40px;
-    align-items: center;
-    max-width: 1100px;
-  }
-  .lh-eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; }
-  .lh-title { font-size: 48px; font-weight: 900; color: var(--text-primary); letter-spacing: -0.03em; line-height: 1.1; margin-bottom: 16px; }
-  .lh-desc { font-size: 15px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 28px; max-width: 480px; }
-  .lh-cta-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-  .btn-xl {
-    padding: 14px 32px;
-    background: var(--text-primary);
-    color: white;
-    border: none;
-    border-radius: var(--radius-sm);
-    font-size: 15px;
-    font-weight: 800;
-    cursor: pointer;
-    transition: opacity 0.15s;
-    font-family: inherit;
-    letter-spacing: -0.01em;
-  }
-  .btn-xl:hover { opacity: 0.85; }
-  .btn-xl.outline { background: transparent; color: var(--text-primary); border: 2px solid var(--border); }
-  .btn-xl.outline:hover { border-color: var(--text-primary); }
+      /* ── Landing (S01) ── */
+      .landing-hero {
+        padding: 60px 60px 48px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+      }
+      .landing-hero-inner {
+        display: grid;
+        grid-template-columns: 1fr 420px;
+        gap: 40px;
+        align-items: center;
+        max-width: 1100px;
+      }
+      .lh-eyebrow {
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 16px;
+      }
+      .lh-title {
+        font-size: 48px;
+        font-weight: 900;
+        color: var(--text-primary);
+        letter-spacing: -0.03em;
+        line-height: 1.1;
+        margin-bottom: 16px;
+      }
+      .lh-desc {
+        font-size: 15px;
+        color: var(--text-secondary);
+        line-height: 1.7;
+        margin-bottom: 28px;
+        max-width: 480px;
+      }
+      .lh-cta-row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .btn-xl {
+        padding: 14px 32px;
+        background: var(--text-primary);
+        color: white;
+        border: none;
+        border-radius: var(--radius-sm);
+        font-size: 15px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: opacity 0.15s;
+        font-family: inherit;
+        letter-spacing: -0.01em;
+      }
+      .btn-xl:hover {
+        opacity: 0.85;
+      }
+      .btn-xl.outline {
+        background: transparent;
+        color: var(--text-primary);
+        border: 2px solid var(--border);
+      }
+      .btn-xl.outline:hover {
+        border-color: var(--text-primary);
+      }
 
-  /* Preview card */
-  .preview-card {
-    background: var(--text-primary);
-    border-radius: var(--radius);
-    padding: 22px;
-    color: white;
-  }
-  .pc-label-sm { font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
-  .pc-title { font-size: 17px; font-weight: 800; margin-bottom: 6px; }
-  .pc-sub { font-size: 12.5px; color: rgba(255,255,255,0.65); line-height: 1.6; }
-  .preview-hold {
-    background: var(--yellow-soft);
-    border-radius: var(--radius-sm);
-    padding: 12px 14px;
-    margin-top: 12px;
-  }
-  .ph-label { font-size: 10px; font-weight: 700; color: var(--yellow); text-transform: uppercase; margin-bottom: 2px; }
-  .ph-title { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+      /* Preview card */
+      .preview-card {
+        background: var(--text-primary);
+        border-radius: var(--radius);
+        padding: 22px;
+        color: white;
+      }
+      .pc-label-sm {
+        font-size: 10px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.5);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 8px;
+      }
+      .pc-title {
+        font-size: 17px;
+        font-weight: 800;
+        margin-bottom: 6px;
+      }
+      .pc-sub {
+        font-size: 12.5px;
+        color: rgba(255, 255, 255, 0.65);
+        line-height: 1.6;
+      }
+      .preview-hold {
+        background: var(--yellow-soft);
+        border-radius: var(--radius-sm);
+        padding: 12px 14px;
+        margin-top: 12px;
+      }
+      .ph-label {
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--yellow);
+        text-transform: uppercase;
+        margin-bottom: 2px;
+      }
+      .ph-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text-primary);
+      }
 
-  /* Fast lane */
-  .fast-lane { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 0; }
-  .fast-chip {
-    padding: 8px 18px;
-    background: var(--surface);
-    border: 1.5px solid var(--border);
-    border-radius: 100px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.15s;
-    box-shadow: var(--shadow-sm);
-    white-space: nowrap;
-  }
-  .fast-chip:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+      /* Fast lane */
+      .fast-lane {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 0;
+      }
+      .fast-chip {
+        padding: 8px 18px;
+        background: var(--surface);
+        border: 1.5px solid var(--border);
+        border-radius: 100px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-primary);
+        cursor: pointer;
+        transition: all 0.15s;
+        box-shadow: var(--shadow-sm);
+        white-space: nowrap;
+      }
+      .fast-chip:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+        background: var(--accent-soft);
+      }
 
-  /* Landing features grid */
-  .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 28px; }
-  .feature-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px;
-  }
-  .feature-icon { font-size: 24px; margin-bottom: 10px; }
-  .feature-title { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
-  .feature-desc { font-size: 12.5px; color: var(--text-secondary); line-height: 1.6; }
+      /* Landing features grid */
+      .features-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-top: 28px;
+      }
+      .feature-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 20px;
+      }
+      .feature-icon {
+        font-size: 24px;
+        margin-bottom: 10px;
+      }
+      .feature-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 6px;
+      }
+      .feature-desc {
+        font-size: 12.5px;
+        color: var(--text-secondary);
+        line-height: 1.6;
+      }
 
-  /* Divider */
-  .divider { height: 1px; background: var(--border); margin: 20px 0; }
-  .section-gap { height: 24px; }
+      /* Divider */
+      .divider {
+        height: 1px;
+        background: var(--border);
+        margin: 20px 0;
+      }
+      .section-gap {
+        height: 24px;
+      }
 
-  /* Utility */
-  .flex-between { display: flex; justify-content: space-between; align-items: center; }
-  .text-muted { color: var(--text-muted); }
-  .text-small { font-size: 12px; }
-  .font-bold { font-weight: 700; }
+      /* Utility */
+      .flex-between {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .text-muted {
+        color: var(--text-muted);
+      }
+      .text-small {
+        font-size: 12px;
+      }
+      .font-bold {
+        font-weight: 700;
+      }
 
-  /* Sidebar context strip */
-  .context-strip {
-    background: var(--accent-soft);
-    border: 1px solid #E8D5C4;
-    border-radius: var(--radius-sm);
-    padding: 12px 14px;
-    font-size: 12px;
-    color: var(--text-secondary);
-    line-height: 1.7;
-    margin-bottom: 16px;
-  }
-  .context-strip strong { color: var(--text-primary); }
+      /* Sidebar context strip */
+      .context-strip {
+        background: var(--accent-soft);
+        border: 1px solid #e8d5c4;
+        border-radius: var(--radius-sm);
+        padding: 12px 14px;
+        font-size: 12px;
+        color: var(--text-secondary);
+        line-height: 1.7;
+        margin-bottom: 16px;
+      }
+      .context-strip strong {
+        color: var(--text-primary);
+      }
 
-  /* Buy section separator */
-  .buy-section {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px;
-    text-align: center;
-    margin-top: 12px;
-  }
-  .buy-label { font-size: 11px; color: var(--text-muted); margin-bottom: 10px; }
+      /* Buy section separator */
+      .buy-section {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 16px;
+        text-align: center;
+        margin-top: 12px;
+      }
+      .buy-label {
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-bottom: 10px;
+      }
 
-  /* Warning strip */
-  .warn-strip {
-    background: var(--yellow-soft);
-    border: 1px solid #DDD5A0;
-    border-radius: var(--radius-sm);
-    padding: 12px 16px;
-    display: flex;
-    gap: 10px;
-    align-items: flex-start;
-    font-size: 12.5px;
-    color: var(--text-primary);
-    line-height: 1.6;
-  }
+      /* Warning strip */
+      .warn-strip {
+        background: var(--yellow-soft);
+        border: 1px solid #ddd5a0;
+        border-radius: var(--radius-sm);
+        padding: 12px 16px;
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        font-size: 12.5px;
+        color: var(--text-primary);
+        line-height: 1.6;
+      }
 
-  /* Product count bar */
-  .product-meta-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 12px;
-  }
-  .product-count { font-size: 12px; color: var(--text-muted); }
-</style>
-</head>
-<body>
-
-<!-- ══════════════════════════════════
+      /* Product count bar */
+      .product-meta-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+      }
+      .product-count {
+        font-size: 12px;
+        color: var(--text-muted);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ══════════════════════════════════
      TOP NAVIGATION
 ══════════════════════════════════ -->
-<nav class="top-nav">
-  <div class="top-logo">🌿 Skincare <span>Decision</span></div>
-  <div class="top-nav-links">
-    <button class="top-nav-link active" onclick="showScreen('s01')">홈</button>
-    <button class="top-nav-link" onclick="showScreen('s06')">선크림 찾기</button>
-    <button class="top-nav-link" onclick="showScreen('s06')">세럼 찾기</button>
-    <button class="top-nav-link" onclick="showScreen('s08')">실패 원인 추적</button>
-  </div>
-  <div class="top-nav-right">
-    <button class="nav-badge outline" onclick="showScreen('s08')">내 기록</button>
-    <button class="nav-badge solid" onclick="showScreen('s02')">시작하기</button>
-  </div>
-</nav>
+    <nav class="top-nav">
+      <div class="top-logo">🌿 Skincare <span>Decision</span></div>
+      <div class="top-nav-links">
+        <button class="top-nav-link active" onclick="showScreen('s01')">홈</button>
+        <button class="top-nav-link" onclick="showScreen('s06')">선크림 찾기</button>
+        <button class="top-nav-link" onclick="showScreen('s06')">세럼 찾기</button>
+        <button class="top-nav-link" onclick="showScreen('s08')">실패 원인 추적</button>
+      </div>
+      <div class="top-nav-right">
+        <button class="nav-badge outline" onclick="showScreen('s08')">내 기록</button>
+        <button class="nav-badge solid" onclick="showScreen('s02')">시작하기</button>
+      </div>
+    </nav>
 
-<!-- ══════════════════════════════════
+    <!-- ══════════════════════════════════
      LAYOUT
 ══════════════════════════════════ -->
-<div class="layout">
-
-  <!-- LEFT SIDEBAR -->
-  <aside class="sidebar">
-    <div class="sidebar-section">
-      <div class="sidebar-label">의사결정 흐름</div>
-      <button class="sidebar-item" onclick="showScreen('s01')"><span class="si-icon">🏠</span>홈</button>
-      <button class="sidebar-item" onclick="showScreen('s02')"><span class="si-icon">🎯</span>진입 분기</button>
-      <button class="sidebar-item" onclick="showScreen('s03')"><span class="si-icon">🔑</span>Priority Gate</button>
-      <button class="sidebar-item" onclick="showScreen('s04')"><span class="si-icon">👤</span>내 상황 입력</button>
-      <button class="sidebar-item" onclick="showScreen('s05')"><span class="si-icon">📊</span>결정 결과</button>
-    </div>
-
-    <div class="sidebar-divider"></div>
-
-    <div class="sidebar-section">
-      <div class="sidebar-label">카테고리 탐색</div>
-      <button class="sidebar-item active" onclick="showScreen('s06')"><span class="si-icon">☀️</span>데일리 선크림 <span class="si-badge">추천</span></button>
-      <button class="sidebar-item" onclick="showScreen('s06')"><span class="si-icon">💧</span>세럼 · 앰플</button>
-      <button class="sidebar-item" onclick="showScreen('s06')"><span class="si-icon">🛡️</span>장벽 크림</button>
-      <button class="sidebar-item" onclick="showScreen('s06')"><span class="si-icon">🧼</span>클렌저</button>
-      <button class="sidebar-item" onclick="showScreen('s06')"><span class="si-icon">💋</span>립 케어</button>
-    </div>
-
-    <div class="sidebar-divider"></div>
-
-    <!-- Current priority summary -->
-    <div class="sidebar-section">
-      <div class="sidebar-label">현재 결과 요약</div>
-      <div class="sidebar-result">
-        <div class="sr-label">지금 최우선</div>
-        <div class="sr-title">☀️ 선크림 정착</div>
-        <div class="sr-sub">루틴 안정화 먼저</div>
-      </div>
-      <div class="sidebar-hold">
-        <div class="sh-label">⏸ 보류</div>
-        <div class="sh-title">비타민C 세럼</div>
-      </div>
-    </div>
-
-    <div class="sidebar-divider"></div>
-
-    <div class="sidebar-section">
-      <div class="sidebar-label">기록</div>
-      <button class="sidebar-item" onclick="showScreen('s08')"><span class="si-icon">🔍</span>실패 원인 추적</button>
-      <button class="sidebar-item" onclick="showScreen('s08')"><span class="si-icon">📝</span>사용 후 기록</button>
-    </div>
-  </aside>
-
-  <!-- MAIN CONTENT -->
-  <main class="main">
-
-    <!-- ══════ S01: Landing ══════ -->
-    <div class="screen" id="s01">
-      <!-- Hero -->
-      <div class="landing-hero">
-        <div class="landing-hero-inner">
-          <div>
-            <div class="lh-eyebrow">Skincare Decision Platform</div>
-            <h1 class="lh-title">지금 정말<br>필요한 것만<br>먼저 고릅니다</h1>
-            <p class="lh-desc">트렌드 추천이 아닙니다. 지금 내 루틴에서 무엇이 먼저인지, 무엇은 아직 필요 없는지를 먼저 말해드립니다. 덜 사는 것이 더 나은 선택일 때를 알려드립니다.</p>
-            <div class="lh-cta-row">
-              <button class="btn-xl" onclick="showScreen('s02')">내 상황부터 정리하기 →</button>
-              <button class="btn-xl outline" onclick="showScreen('s08')">실패 원인 추적하기</button>
-            </div>
-          </div>
-          <div>
-            <div class="preview-card">
-              <div class="pc-label-sm">실제 결과 예시</div>
-              <div class="pc-title">✓ 지금 최우선: 선크림 정착</div>
-              <div class="pc-sub">현재 자외선 차단이 불안정합니다. 미백 세럼을 추가하기 전에 선케어 루틴을 먼저 안정시키세요.</div>
-              <div class="preview-hold">
-                <div class="ph-label">⏸ 지금 보류</div>
-                <div class="ph-title">비타민C 세럼 추가</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="page-body">
-        <!-- Fast lane -->
-        <div class="section-eyebrow">제품군 바로 찾기</div>
-        <div class="fast-lane" style="margin-bottom:32px">
-          <div class="fast-chip" onclick="showScreen('s06')">☀️ 선크림</div>
-          <div class="fast-chip" onclick="showScreen('s06')">💧 세럼 · 앰플</div>
-          <div class="fast-chip" onclick="showScreen('s06')">🛡️ 장벽 크림</div>
-          <div class="fast-chip" onclick="showScreen('s06')">🧼 클렌저</div>
-          <div class="fast-chip" onclick="showScreen('s06')">💋 립 케어</div>
-          <div class="fast-chip" onclick="showScreen('s06')">🌿 토너패드</div>
+    <div class="layout">
+      <!-- LEFT SIDEBAR -->
+      <aside class="sidebar">
+        <div class="sidebar-section">
+          <div class="sidebar-label">의사결정 흐름</div>
+          <button class="sidebar-item" onclick="showScreen('s01')">
+            <span class="si-icon">🏠</span>홈
+          </button>
+          <button class="sidebar-item" onclick="showScreen('s02')">
+            <span class="si-icon">🎯</span>진입 분기
+          </button>
+          <button class="sidebar-item" onclick="showScreen('s03')">
+            <span class="si-icon">🔑</span>Priority Gate
+          </button>
+          <button class="sidebar-item" onclick="showScreen('s04')">
+            <span class="si-icon">👤</span>내 상황 입력
+          </button>
+          <button class="sidebar-item" onclick="showScreen('s05')">
+            <span class="si-icon">📊</span>결정 결과
+          </button>
         </div>
 
-        <!-- Features -->
-        <div class="flex-between" style="margin-bottom:16px">
-          <h2 class="section-title" style="margin:0">이 서비스가 하는 것</h2>
+        <div class="sidebar-divider"></div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-label">카테고리 탐색</div>
+          <button class="sidebar-item active" onclick="showScreen('s06')">
+            <span class="si-icon">☀️</span>데일리 선크림 <span class="si-badge">추천</span>
+          </button>
+          <button class="sidebar-item" onclick="showScreen('s06')">
+            <span class="si-icon">💧</span>세럼 · 앰플
+          </button>
+          <button class="sidebar-item" onclick="showScreen('s06')">
+            <span class="si-icon">🛡️</span>장벽 크림
+          </button>
+          <button class="sidebar-item" onclick="showScreen('s06')">
+            <span class="si-icon">🧼</span>클렌저
+          </button>
+          <button class="sidebar-item" onclick="showScreen('s06')">
+            <span class="si-icon">💋</span>립 케어
+          </button>
         </div>
-        <div class="features-grid">
-          <div class="feature-card">
-            <div class="feature-icon">🔑</div>
-            <div class="feature-title">Priority Gate</div>
-            <div class="feature-desc">제품 보기 전에 "지금 살 차례인가"를 먼저 확인합니다. 루틴이 먼저인지, 제품이 먼저인지 판별합니다.</div>
+
+        <div class="sidebar-divider"></div>
+
+        <!-- Current priority summary -->
+        <div class="sidebar-section">
+          <div class="sidebar-label">현재 결과 요약</div>
+          <div class="sidebar-result">
+            <div class="sr-label">지금 최우선</div>
+            <div class="sr-title">☀️ 선크림 정착</div>
+            <div class="sr-sub">루틴 안정화 먼저</div>
           </div>
-          <div class="feature-card">
-            <div class="feature-icon">📊</div>
-            <div class="feature-title">Category Decision Matrix</div>
-            <div class="feature-desc">선크림이냐 세럼이냐가 아니라, 이 카테고리에서 무엇을 봐야 하는지를 먼저 알려드립니다.</div>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">👥</div>
-            <div class="feature-title">유사 피부 Evidence</div>
-            <div class="feature-desc">전체 평균 별점이 아닌, 나와 비슷한 피부 타입·고민을 가진 사람들의 실제 결과를 먼저 보여드립니다.</div>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">🔍</div>
-            <div class="feature-title">Reaction Traceback</div>
-            <div class="feature-desc">예전에 안 맞았던 제품을 등록하면 공통된 의심 성분군을 찾아 이후 추천에 반영합니다.</div>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">⏸</div>
-            <div class="feature-title">보류 이유의 설득력</div>
-            <div class="feature-desc">"이걸 사세요"보다 "이건 아직 아닙니다, 왜냐면"이 더 중요합니다. 불필요한 구매를 줄여드립니다.</div>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">📅</div>
-            <div class="feature-title">Adaptation Tracker</div>
-            <div class="feature-desc">D3, D7, D21 사용 후 반응을 기록하면 다음 선택이 더 정확해집니다.</div>
+          <div class="sidebar-hold">
+            <div class="sh-label">⏸ 보류</div>
+            <div class="sh-title">비타민C 세럼</div>
           </div>
         </div>
 
-        <div class="legal-banner">
-          <div class="legal-icon">ℹ️</div>
-          <div>화장품 선택 보조 서비스입니다. 피부 질환 진단 또는 의료 조언을 제공하지 않습니다. 심한 피부 반응은 피부과 전문의와 상담하세요.</div>
+        <div class="sidebar-divider"></div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-label">기록</div>
+          <button class="sidebar-item" onclick="showScreen('s08')">
+            <span class="si-icon">🔍</span>실패 원인 추적
+          </button>
+          <button class="sidebar-item" onclick="showScreen('s08')">
+            <span class="si-icon">📝</span>사용 후 기록
+          </button>
         </div>
-      </div>
-    </div>
+      </aside>
 
-    <!-- ══════ S02: Segmentation ══════ -->
-    <div class="screen" id="s02">
-      <div class="page-header">
-        <div class="ph-left">
-          <div class="ph-eyebrow">Step 1 of 5 · 진입 분기</div>
-          <h1 class="ph-title">지금 어떤 상황인가요?</h1>
-          <p class="ph-desc">가장 가까운 상황을 골라주세요. 더 정확한 경로로 안내해 드릴게요.</p>
-        </div>
-      </div>
-      <div class="page-body">
-        <div class="segment-grid">
-          <div class="seg-card" onclick="showScreen('s03')">
-            <div class="seg-icon">🤔</div>
-            <div class="seg-title">어디서부터 손대야 할지 모르겠어요</div>
-            <div class="seg-desc">여러 제품을 써봤는데도 계속 헷갈려요. 루틴, 생활 습관, 제품 중 뭐가 문제인지 모르겠어요.</div>
-            <div class="seg-arrow">→</div>
-          </div>
-          <div class="seg-card" onclick="showScreen('s03')">
-            <div class="seg-icon">😣</div>
-            <div class="seg-title">고민은 있는데 어떤 카테고리인지 모르겠어요</div>
-            <div class="seg-desc">건조함이 있는데 보습제가 먼저인지, 세럼이 먼저인지, 선크림이 먼저인지 모르겠어요.</div>
-            <div class="seg-arrow">→</div>
-          </div>
-          <div class="seg-card" onclick="showScreen('s03')">
-            <div class="seg-icon">🎯</div>
-            <div class="seg-title">이미 찾는 제품군이 있어요</div>
-            <div class="seg-desc">"선크림 골라주세요"처럼 어떤 종류가 필요한지는 이미 알고 있어요.</div>
-            <div class="seg-arrow">→</div>
-          </div>
-          <div class="seg-card" onclick="showScreen('s08')">
-            <div class="seg-icon">🔍</div>
-            <div class="seg-title">예전에 안 맞았던 제품 원인을 알고 싶어요</div>
-            <div class="seg-desc">어떤 제품 쓰고 뒤집어진 경험이 있어요. 정확히 무엇이 문제였는지 알고 싶어요.</div>
-            <div class="seg-arrow">→</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ══════ S03: Priority Gate ══════ -->
-    <div class="screen" id="s03">
-      <div class="page-header">
-        <div class="ph-left">
-          <div class="ph-eyebrow">Step 2 of 5 · Priority Gate</div>
-          <h1 class="ph-title">제품보다 먼저 볼 것들</h1>
-          <p class="ph-desc">해당하는 항목을 모두 체크해 주세요. 제품이 필요한지, 루틴이 먼저인지를 먼저 확인합니다.</p>
-        </div>
-        <div class="ph-right">
-          <button class="btn-primary" onclick="showScreen('s04')">다음 단계 →</button>
-        </div>
-      </div>
-      <div class="page-body">
-        <div class="gate-grid">
-          <div>
-            <div class="card" style="margin-bottom:16px">
-              <div class="section-eyebrow">공통 체크리스트</div>
-              <div class="check-item" onclick="toggleCheck(this,'s03')">
-                <div class="check-box"></div>
-                <div class="check-label">최근 기본 보습/보호 루틴이 불안정하다</div>
-              </div>
-              <div class="check-item" onclick="toggleCheck(this,'s03')">
-                <div class="check-box"></div>
-                <div class="check-label">세안 후 당김이나 자극이 자주 있다</div>
-              </div>
-              <div class="check-item" onclick="toggleCheck(this,'s03')">
-                <div class="check-box"></div>
-                <div class="check-label">최근 강한 액티브, 필링, 홈케어를 했다</div>
-              </div>
-              <div class="check-item" onclick="toggleCheck(this,'s03')">
-                <div class="check-box"></div>
-                <div class="check-label">최근 여러 화장품을 한꺼번에 바꿨다</div>
-              </div>
-              <div class="check-item" onclick="toggleCheck(this,'s03')">
-                <div class="check-box"></div>
-                <div class="check-label">같은 문제가 2~4주 이상 반복된다</div>
-              </div>
-              <div class="check-item" onclick="toggleCheck(this,'s03')">
-                <div class="check-box"></div>
-                <div class="check-label">최근 수면·스트레스·식습관 변화가 크다</div>
-              </div>
-              <div class="check-item" onclick="toggleCheck(this,'s03')">
-                <div class="check-box"></div>
-                <div class="check-label">이 문제로 전문가 상담이 필요하다고 느낀다</div>
-              </div>
-            </div>
-
-            <div class="card" style="background:var(--accent-soft);border-color:#E8D5C4">
-              <div class="section-eyebrow" style="color:var(--accent)">🌞 선케어 / 색소 고민 추가 확인</div>
-              <div class="check-item" onclick="toggleCheck(this,'s03')" style="background:transparent">
-                <div class="check-box" style="border-color:var(--accent);background:white"></div>
-                <div class="check-label">매일 선크림을 바르고 있다</div>
-              </div>
-              <div class="check-item" onclick="toggleCheck(this,'s03')" style="background:transparent;border-bottom:none">
-                <div class="check-box" style="border-color:var(--accent);background:white"></div>
-                <div class="check-label">외출 시 재도포가 가능하다</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Right: live score -->
-          <div>
-            <div class="gate-info-card">
-              <div class="gate-score">
-                <div class="gate-score-num" id="gateScore">0</div>
-                <div class="gate-score-label">체크된 항목 수</div>
-              </div>
-
-              <div class="gate-status ok" id="gateStatus">
-                ✓ 제품 탐색을 진행해도 좋습니다
-              </div>
-
-              <div class="section-eyebrow">체크 수별 안내</div>
-              <div style="font-size:12.5px;color:var(--text-secondary);line-height:1.8">
-                <div><strong style="color:var(--green)">0~1개</strong> — 제품 탐색 진행</div>
-                <div><strong style="color:var(--yellow)">2~3개</strong> — 루틴 점검 먼저 권장</div>
-                <div><strong style="color:var(--red)">4개+</strong> — 새 제품 보류, 기본 루틴 안정화 필요</div>
-              </div>
-
-              <div class="divider"></div>
-
-              <div class="section-eyebrow">이 게이트의 역할</div>
-              <div style="font-size:12.5px;color:var(--text-secondary);line-height:1.7">
-                추천 전에 "지금 살 차례인가"를 먼저 판별합니다. 체크 항목이 많다면 새 제품보다 루틴 안정화가 먼저입니다.
-              </div>
-
-              <div style="margin-top:16px">
-                <button class="btn-primary full" onclick="showScreen('s04')">다음 — 내 상황 입력 →</button>
-                <button class="btn-secondary full" onclick="showScreen('s04')">건너뛰기</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ══════ S04: Minimal Context ══════ -->
-    <div class="screen" id="s04">
-      <div class="page-header">
-        <div class="ph-left">
-          <div class="ph-eyebrow">Step 3 of 5 · Minimal Context</div>
-          <h1 class="ph-title">조금만 더 알려주세요</h1>
-          <p class="ph-desc">추천을 정교하게 만들기 위한 게 아닙니다. 맞지 않는 후보를 빠르게 줄이기 위한 최소 입력입니다. 모르는 항목은 건너뛰어도 됩니다.</p>
-        </div>
-        <div class="ph-right">
-          <button class="btn-primary" onclick="showScreen('s05')">결과 보기 →</button>
-        </div>
-      </div>
-      <div class="page-body">
-        <div class="context-grid">
-          <div>
-            <div class="card">
-              <div class="section-title">민감도</div>
-              <div class="chip-group" id="ctx-sensitivity">
-                <div class="chip" onclick="selectChip(this,'ctx-sensitivity')">낮음</div>
-                <div class="chip" onclick="selectChip(this,'ctx-sensitivity')">보통</div>
-                <div class="chip selected" onclick="selectChip(this,'ctx-sensitivity')">높음</div>
-                <div class="chip" onclick="selectChip(this,'ctx-sensitivity')">잘 모름</div>
-              </div>
-            </div>
-
-            <div class="card">
-              <div class="section-title">피부 타입 / 현재 상태</div>
-              <div class="chip-group" id="ctx-skin">
-                <div class="chip" onclick="selectChip(this,'ctx-skin')">건성</div>
-                <div class="chip selected" onclick="selectChip(this,'ctx-skin')">복합성</div>
-                <div class="chip" onclick="selectChip(this,'ctx-skin')">지성</div>
-                <div class="chip" onclick="selectChip(this,'ctx-skin')">민감성</div>
-                <div class="chip" onclick="selectChip(this,'ctx-skin')">잘 모름</div>
-              </div>
-            </div>
-
-            <div class="card">
-              <div class="section-title">예산대 (제품 1개 기준)</div>
-              <div class="chip-group" id="ctx-budget">
-                <div class="chip" onclick="selectChip(this,'ctx-budget')">~1만원</div>
-                <div class="chip" onclick="selectChip(this,'ctx-budget')">1~3만원</div>
-                <div class="chip selected" onclick="selectChip(this,'ctx-budget')">3~6만원</div>
-                <div class="chip" onclick="selectChip(this,'ctx-budget')">6만원+</div>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <div class="card">
-              <div class="section-title">지금 쓰고 있는 액티브 <span style="font-size:11px;color:var(--text-muted);font-weight:500">(복수 선택)</span></div>
-              <div class="chip-group">
-                <div class="chip" onclick="toggleMulti(this)">레티노이드</div>
-                <div class="chip multi-selected" onclick="toggleMulti(this)">AHA/BHA</div>
-                <div class="chip" onclick="toggleMulti(this)">비타민C</div>
-                <div class="chip" onclick="toggleMulti(this)">나이아신아마이드</div>
-                <div class="chip" onclick="toggleMulti(this)">PDRN</div>
-                <div class="chip" onclick="toggleMulti(this)">없음</div>
-              </div>
-            </div>
-
-            <div class="card">
-              <div class="section-title">제형 선호</div>
-              <div class="chip-group" id="ctx-texture">
-                <div class="chip" onclick="selectChip(this,'ctx-texture')">가벼운 워터</div>
-                <div class="chip selected" onclick="selectChip(this,'ctx-texture')">가벼운 로션</div>
-                <div class="chip" onclick="selectChip(this,'ctx-texture')">크림</div>
-                <div class="chip" onclick="selectChip(this,'ctx-texture')">상관없음</div>
-              </div>
-            </div>
-
-            <div class="card" style="background:var(--bg)">
-              <div class="section-eyebrow">왜 이걸 묻나요</div>
-              <div style="font-size:12.5px;color:var(--text-secondary);line-height:1.7">
-                민감도가 높고 AHA를 쓰고 있다면, 특정 필터 성분이나 향료 함유 제품이 자동으로 '주의' 태그를 받습니다. 피부 타입은 제형 후보를 좁히는 데 씁니다.
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="btn-row" style="margin-top:20px">
-          <button class="btn-primary" onclick="showScreen('s05')">결과 보기 →</button>
-          <button class="btn-secondary" onclick="showScreen('s05')">잘 모르겠어요 (건너뛰기)</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ══════ S05: Decision Result ══════ -->
-    <div class="screen" id="s05">
-      <div class="page-header">
-        <div class="ph-left">
-          <div class="ph-eyebrow">Step 4 of 5 · Decision Result</div>
-          <h1 class="ph-title">지금 당신에게 필요한 순서</h1>
-          <p class="ph-desc">복합성 · 민감도 높음 · AHA 사용 중 · 3~6만원대 기준으로 도출된 결과입니다.</p>
-        </div>
-        <div class="ph-right">
-          <button class="btn-primary" onclick="showScreen('s06')">카테고리 탐색 →</button>
-        </div>
-      </div>
-      <div class="page-body">
-        <!-- Main result -->
-        <div class="result-layout">
-          <div class="result-priority">
-            <div class="r-label">지금 최우선</div>
-            <div class="r-title">☀️ 선크림 정착</div>
-            <div class="r-desc">데일리 선케어 루틴이 먼저 안정되어야, 이후 액티브 추가가 효과를 냅니다. 지금 선크림 없이 미백 세럼을 추가하면 자외선 노출로 효과가 상쇄됩니다.</div>
-          </div>
-          <div class="result-hold">
-            <div class="r-label">⏸ 지금 보류</div>
-            <div class="r-title">비타민C 세럼 추가</div>
-            <div class="r-desc">선케어 습관이 불안정한 상태에서 미백 액티브를 추가해도 효과가 제한됩니다. 2주 후 선크림 루틴 안정화 후 재검토 권장.</div>
-          </div>
-        </div>
-
-        <!-- Reason + Action Plan -->
-        <div class="reason-action-grid">
-          <div class="reason-card">
-            <div class="rc-label">왜 이런 결론인가</div>
-            <div class="rc-text">복합성 피부 + AHA 사용 중이나 선크림을 매일 바르지 않는 패턴이 확인됩니다. 자외선 차단이 먼저 안정되지 않으면, 추가 액티브의 효용이 줄고 자극 리스크가 높아집니다. 특히 AHA 병행 중에는 광감수성이 높아져 선케어가 더 중요합니다.</div>
-          </div>
-          <div class="reason-card">
-            <div class="rc-label">다음 액션 플랜</div>
-            <div class="ap-row">
-              <div class="ap-dot"></div>
-              <div class="ap-text">눈시림 낮고 가벼운 선크림 3개 후보 확인</div>
-            </div>
-            <div class="ap-row">
-              <div class="ap-dot"></div>
-              <div class="ap-text">AHA 병행 시 오전 선크림 필수 루틴화</div>
-            </div>
-            <div class="ap-row">
-              <div class="ap-dot muted"></div>
-              <div class="ap-text muted">2주 후 비타민C 세럼 추가 여부 재검토</div>
-            </div>
-            <div class="ap-row">
-              <div class="ap-dot muted"></div>
-              <div class="ap-text muted">외출 시 재도포 습관 만들기</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Category CTA -->
-        <div class="flex-between" style="margin-bottom:14px">
-          <h2 class="section-title" style="margin:0">지금 볼 카테고리</h2>
-        </div>
-        <div class="seg-card" style="max-width:500px;cursor:pointer" onclick="showScreen('s06')">
-          <div style="display:flex;align-items:center;gap:16px">
-            <div style="font-size:32px">☀️</div>
-            <div>
-              <div class="seg-title" style="margin-bottom:4px">데일리 선크림</div>
-              <div class="seg-desc">선택 기준 확인 + 가격대별 필터링된 후보 보기</div>
-            </div>
-            <div style="margin-left:auto;color:var(--text-muted);font-size:20px">→</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ══════ S06: Category Decision Matrix ══════ -->
-    <div class="screen active" id="s06">
-      <div class="page-header">
-        <div class="ph-left">
-          <div class="ph-eyebrow">Step 5 of 5 · Category Decision Matrix</div>
-          <h1 class="ph-title">데일리 선크림</h1>
-          <p class="ph-desc">이 카테고리에서 무엇을 봐야 하는지와 지금 내 상황에 맞게 필터링된 후보를 한 화면에서 확인하세요.</p>
-        </div>
-        <div class="ph-right">
-          <div class="price-band" id="priceBandWeb">
-            <button class="pb-btn active" onclick="switchPriceWeb('all',this)">전체</button>
-            <button class="pb-btn" onclick="switchPriceWeb('low',this)">~2만원</button>
-            <button class="pb-btn" onclick="switchPriceWeb('mid',this)">2~5만원</button>
-            <button class="pb-btn" onclick="switchPriceWeb('high',this)">5만원+</button>
-          </div>
-        </div>
-      </div>
-
-      <div style="display:grid;grid-template-columns:300px 1fr;min-height:600px">
-        <!-- Left: criteria -->
-        <div class="matrix-left" style="border-right:1px solid var(--border);padding:24px">
-          <div class="context-strip">
-            <strong>내 상황:</strong> 복합성 · 민감도 높음 · AHA 사용 중<br>
-            <span style="color:var(--accent);font-weight:600">눈시림 낮음 + 가벼운 제형 우선 적용</span>
-          </div>
-
-          <div class="section-eyebrow">이 카테고리에서 볼 것</div>
-          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0 12px;margin-bottom:16px">
-            <div class="criteria-row">
-              <span class="criteria-name">보호 기준</span>
-              <span class="criteria-value">SPF 50+ / PA+++ 이상</span>
-            </div>
-            <div class="criteria-row">
-              <span class="criteria-name">필터 타입</span>
-              <span class="criteria-value">화학 또는 혼합형</span>
-            </div>
-            <div class="criteria-row">
-              <span class="criteria-name">주의 사항</span>
-              <span class="criteria-value">눈시림 · 백탁 · 끈적임</span>
-            </div>
-            <div class="criteria-row">
-              <span class="criteria-name">메이크업 궁합</span>
-              <span class="criteria-value">화장 밀림 여부</span>
-            </div>
-          </div>
-
-          <div class="fit-block">
-            <div class="fit-col good">
-              <div class="fit-col-label">✓ 좋은 조건</div>
-              <div class="fit-col-item">향료 프리</div>
-              <div class="fit-col-item">유리광·세미매트</div>
-              <div class="fit-col-item">가벼운 로션형</div>
-              <div class="fit-col-item">눈 시림 낮은 필터</div>
-            </div>
-            <div class="fit-col skip">
-              <div class="fit-col-label">✕ 피할 조건</div>
-              <div class="fit-col-item">무기계 only 백탁</div>
-              <div class="fit-col-item">알코올 고함량</div>
-              <div class="fit-col-item">향 강한 제품</div>
-              <div class="fit-col-item">스틱/파우더 타입</div>
-            </div>
-          </div>
-
-          <div class="section-eyebrow" style="margin-top:8px">AHA 병행 시 추가 주의</div>
-          <div style="font-size:12px;color:var(--text-secondary);line-height:1.7;background:var(--yellow-soft);border-radius:var(--radius-sm);padding:10px 12px">
-            AHA 사용 중에는 광감수성이 증가합니다. SPF50+ 이상, 매일 사용, 외출 2~3시간마다 재도포가 더욱 중요합니다.
-          </div>
-        </div>
-
-        <!-- Right: product matrix -->
-        <div style="padding:24px">
-          <div class="product-meta-bar">
-            <div>
-              <span style="font-size:13px;font-weight:700;color:var(--text-primary)">4개 후보</span>
-              <span class="product-count" style="margin-left:8px">내 상황 기준 필터링됨</span>
-            </div>
-            <div style="display:flex;gap:8px;align-items:center">
-              <span style="font-size:12px;color:var(--text-muted)">정렬:</span>
-              <select style="font-size:12px;border:1px solid var(--border);border-radius:6px;padding:4px 8px;background:var(--surface);color:var(--text-primary);font-family:inherit;outline:none">
-                <option>적합도순</option>
-                <option>가격 낮은순</option>
-                <option>유사피부 만족도순</option>
-              </select>
-            </div>
-          </div>
-
-          <table class="product-table">
-            <thead>
-              <tr>
-                <th style="width:44px"></th>
-                <th>제품</th>
-                <th>적합도</th>
-                <th>특징</th>
-                <th style="text-align:right">가격</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr onclick="showScreen('s07')" style="background:var(--accent-soft)">
-                <td><div class="product-thumb-sm">☀️</div></td>
-                <td>
-                  <div class="product-name">라운드랩 1025 도크 선크림</div>
-                  <div class="product-brand">라운드랩 · 50mL · SPF50+/PA++++</div>
-                </td>
-                <td><span class="tag tag-green">✓ 적합</span></td>
-                <td>
-                  <span class="tag tag-gray">무향</span>
-                  <span class="tag tag-gray">혼합필터</span>
-                  <span class="tag tag-gray">눈시림낮음</span>
-                </td>
-                <td style="text-align:right;font-weight:700">21,000원</td>
-                <td style="color:var(--text-muted)">→</td>
-              </tr>
-              <tr onclick="showScreen('s07')">
-                <td><div class="product-thumb-sm">🌤️</div></td>
-                <td>
-                  <div class="product-name">아누아 어성초 77 선크림</div>
-                  <div class="product-brand">아누아 · 50mL · SPF50+/PA++++</div>
-                </td>
-                <td><span class="tag tag-green">✓ 적합</span></td>
-                <td>
-                  <span class="tag tag-gray">어성초진정</span>
-                  <span class="tag tag-gray">세미매트</span>
-                </td>
-                <td style="text-align:right;font-weight:700">23,000원</td>
-                <td style="color:var(--text-muted)">→</td>
-              </tr>
-              <tr onclick="showScreen('s07')">
-                <td><div class="product-thumb-sm">✨</div></td>
-                <td>
-                  <div class="product-name">이니스프리 시카비다 선세럼</div>
-                  <div class="product-brand">이니스프리 · 50mL · SPF50+/PA+++</div>
-                </td>
-                <td><span class="tag tag-yellow">△ 주의</span></td>
-                <td>
-                  <span class="tag tag-gray">세럼타입</span>
-                  <span class="tag tag-yellow">메이크업밀림</span>
-                </td>
-                <td style="text-align:right;font-weight:700">38,000원</td>
-                <td style="color:var(--text-muted)">→</td>
-              </tr>
-              <tr onclick="showScreen('s07')" style="opacity:0.7">
-                <td><div class="product-thumb-sm">🚫</div></td>
-                <td>
-                  <div class="product-name">아벤느 미네랄 선크림 50+</div>
-                  <div class="product-brand">아벤느 · 40mL · SPF50+</div>
-                </td>
-                <td><span class="tag tag-red">✕ 비추</span></td>
-                <td>
-                  <span class="tag tag-red">백탁심함</span>
-                  <span class="tag tag-gray">무기계only</span>
-                </td>
-                <td style="text-align:right;font-weight:700">28,000원</td>
-                <td style="color:var(--text-muted)">→</td>
-              </tr>
-            </tbody>
-          </table>
-
-          <div class="legal-banner">
-            <div class="legal-icon">ℹ️</div>
-            <div>제품 추천은 입력하신 정보를 기반으로 한 보조 도구입니다. 구매 결정 전 제품 성분표를 직접 확인하세요. 심한 피부 반응은 전문의와 상담하세요.</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ══════ S07: Product Fit Detail ══════ -->
-    <div class="screen" id="s07">
-      <div class="page-header">
-        <div class="ph-left">
-          <div class="ph-eyebrow">Product Fit Detail</div>
-          <h1 class="ph-title">라운드랩 1025 도크 선크림</h1>
-          <p class="ph-desc">이 제품이 좋다는 말이 아닙니다. 누구에게 맞고, 왜 지금 당신 상황에 적합한지를 설명합니다.</p>
-        </div>
-        <div class="ph-right">
-          <button class="btn-secondary" onclick="showScreen('s06')">← 목록으로</button>
-        </div>
-      </div>
-      <div class="page-body">
-        <div class="fit-detail-layout">
-          <!-- Left: main content -->
-          <div>
-            <!-- Hero -->
-            <div class="fit-hero">
-              <div class="fit-hero-thumb">☀️</div>
-              <div class="fit-hero-info">
-                <h2>1025 도크 선크림</h2>
-                <div class="fit-hero-meta">라운드랩 · SPF50+ PA++++ · 50mL</div>
-                <div class="fit-hero-price">21,000원</div>
-              </div>
-              <div style="margin-left:auto;display:flex;flex-direction:column;gap:6px;align-items:flex-end">
-                <span class="tag tag-green" style="font-size:13px;padding:5px 12px">✓ 적합</span>
-                <span style="font-size:12px;color:var(--text-muted)">내 상황 기준</span>
-              </div>
-            </div>
-
-            <!-- Stats -->
-            <div class="fit-stat-row">
-              <div class="fit-stat positive">
-                <div class="fit-stat-num">74%</div>
-                <div class="fit-stat-label">유사 피부 만족도</div>
-              </div>
-              <div class="fit-stat warning">
-                <div class="fit-stat-num">12%</div>
-                <div class="fit-stat-label">화장 밀림 불편</div>
-              </div>
-              <div class="fit-stat neutral">
-                <div class="fit-stat-num">4%</div>
-                <div class="fit-stat-label">자극 보고율</div>
-              </div>
-            </div>
-
-            <!-- Verdict -->
-            <div class="fit-verdict-row">
-              <div class="verdict-col fit">
-                <div class="verdict-label">✓ 적합</div>
-                <div class="verdict-item">민감성·복합성 피부</div>
-                <div class="verdict-item">AHA 병행 사용자</div>
-                <div class="verdict-item">무향 선호</div>
-                <div class="verdict-item">가벼운 제형 선호</div>
-              </div>
-              <div class="verdict-col caution">
-                <div class="verdict-label">△ 주의</div>
-                <div class="verdict-item">두꺼운 메이크업 위</div>
-                <div class="verdict-item">지성 피부 번들거림</div>
-                <div class="verdict-item">쿠션 파운데이션과 병행</div>
-              </div>
-              <div class="verdict-col avoid">
-                <div class="verdict-label">✕ 비추</div>
-                <div class="verdict-item">무기계 필터만 원하는 분</div>
-                <div class="verdict-item">극건성 피부 (보습 부족)</div>
-              </div>
-            </div>
-
-            <!-- Accordions -->
-            <div class="accordion">
-              <div class="acc-header" onclick="toggleAcc(this)">
-                <span class="acc-title">왜 이런 결론인가</span>
-                <span class="acc-arrow">▾</span>
-              </div>
-              <div class="acc-body">
-                <p>복합성 + 민감도 높음 + AHA 사용 중이라는 프로필에서, 무기계 필터 제품은 백탁과 무거움이 문제가 될 수 있습니다. 이 제품은 유기계·혼합 필터를 사용해 텍스처가 가볍고 자극 성분이 최소화됩니다. 향료 프리 포뮬러라 민감도 높은 피부에서의 자극 보고가 낮습니다.</p>
-              </div>
-            </div>
-
-            <div class="accordion">
-              <div class="acc-header" onclick="toggleAcc(this)">
-                <span class="acc-title">핵심 성분</span>
-                <span class="acc-arrow">▾</span>
-              </div>
-              <div class="acc-body">
-                <table class="ingredient-table">
-                  <tr><td>Homosalate</td><td>유기 자외선 차단 (UVB)</td></tr>
-                  <tr><td>Octisalate</td><td>UVB 차단 보조</td></tr>
-                  <tr><td>Zinc Oxide 5%</td><td>UVA 차단 보조 (혼합형)</td></tr>
-                  <tr><td>Niacinamide</td><td>톤업 · 진정 · 장벽</td></tr>
-                  <tr><td>Panthenol</td><td>보습 · 진정</td></tr>
-                </table>
-              </div>
-            </div>
-
-            <div class="accordion">
-              <div class="acc-header" onclick="toggleAcc(this)">
-                <span class="acc-title">사용 순서 · 빈도</span>
-                <span class="acc-arrow">▾</span>
-              </div>
-              <div class="acc-body">
-                <p>스킨케어 마지막 단계 → 보습제 후 2~3분 뒤 적용 → 매일 아침 필수 / 외출 시 2~3시간마다 재도포 권장. AHA 사용 중에는 광감수성이 높아지므로 생략하지 마세요.</p>
-              </div>
-            </div>
-
-            <!-- Similar skin evidence -->
-            <div class="card" style="margin-top:12px">
-              <div class="section-eyebrow">유사 피부의 실제 경험</div>
-              <div class="evidence-list">
-                <div class="evidence-item">
-                  <div class="ev-avatar">😊</div>
-                  <div>
-                    <div class="ev-text">민감성 + AHA 병행 중인데 자극 없이 잘 쓰고 있어요. 가볍고 백탁 없어서 여름에도 좋네요.</div>
-                    <div class="ev-meta">복합·민감 · AHA 사용 중 · 3개월 · 재구매 ○</div>
-                  </div>
+      <!-- MAIN CONTENT -->
+      <main class="main">
+        <!-- ══════ S01: Landing ══════ -->
+        <div class="screen" id="s01">
+          <!-- Hero -->
+          <div class="landing-hero">
+            <div class="landing-hero-inner">
+              <div>
+                <div class="lh-eyebrow">Skincare Decision Platform</div>
+                <h1 class="lh-title">지금 정말<br />필요한 것만<br />먼저 고릅니다</h1>
+                <p class="lh-desc">
+                  트렌드 추천이 아닙니다. 지금 내 루틴에서 무엇이 먼저인지, 무엇은 아직 필요
+                  없는지를 먼저 말해드립니다. 덜 사는 것이 더 나은 선택일 때를 알려드립니다.
+                </p>
+                <div class="lh-cta-row">
+                  <button class="btn-xl" onclick="showScreen('s02')">내 상황부터 정리하기 →</button>
+                  <button class="btn-xl outline" onclick="showScreen('s08')">
+                    실패 원인 추적하기
+                  </button>
                 </div>
-                <div class="evidence-item">
-                  <div class="ev-avatar">😐</div>
-                  <div>
-                    <div class="ev-text">자극은 없는데 파운데이션 위에서 살짝 밀림. 쿠션 위에서는 괜찮았어요. 재구매 고민 중.</div>
-                    <div class="ev-meta">복합성 · 메이크업 병행 · 1개월 · 재구매 미정</div>
+              </div>
+              <div>
+                <div class="preview-card">
+                  <div class="pc-label-sm">실제 결과 예시</div>
+                  <div class="pc-title">✓ 지금 최우선: 선크림 정착</div>
+                  <div class="pc-sub">
+                    현재 자외선 차단이 불안정합니다. 미백 세럼을 추가하기 전에 선케어 루틴을 먼저
+                    안정시키세요.
                   </div>
-                </div>
-                <div class="evidence-item">
-                  <div class="ev-avatar">😄</div>
-                  <div>
-                    <div class="ev-text">레티날 쓰는데 자극 없고 눈에 들어가도 시리지 않아서 계속 쓰고 있어요.</div>
-                    <div class="ev-meta">민감성 · 레티노이드 사용 중 · 5개월 · 재구매 ○</div>
+                  <div class="preview-hold">
+                    <div class="ph-label">⏸ 지금 보류</div>
+                    <div class="ph-title">비타민C 세럼 추가</div>
                   </div>
                 </div>
               </div>
             </div>
+          </div>
 
-            <!-- Common failures -->
-            <div class="card card-red" style="margin-top:12px">
-              <div class="section-eyebrow" style="color:var(--red)">흔한 실패 이유</div>
-              <div style="font-size:13px;color:var(--text-primary);line-height:1.7">
-                밀착 메이크업 베이스 위에서 화장 밀림 · 지성 피부에서 번들거림 심함 · 극건성 피부에서 보습 부족 느낌
+          <div class="page-body">
+            <!-- Fast lane -->
+            <div class="section-eyebrow">제품군 바로 찾기</div>
+            <div class="fast-lane" style="margin-bottom: 32px">
+              <div class="fast-chip" onclick="showScreen('s06')">☀️ 선크림</div>
+              <div class="fast-chip" onclick="showScreen('s06')">💧 세럼 · 앰플</div>
+              <div class="fast-chip" onclick="showScreen('s06')">🛡️ 장벽 크림</div>
+              <div class="fast-chip" onclick="showScreen('s06')">🧼 클렌저</div>
+              <div class="fast-chip" onclick="showScreen('s06')">💋 립 케어</div>
+              <div class="fast-chip" onclick="showScreen('s06')">🌿 토너패드</div>
+            </div>
+
+            <!-- Features -->
+            <div class="flex-between" style="margin-bottom: 16px">
+              <h2 class="section-title" style="margin: 0">이 서비스가 하는 것</h2>
+            </div>
+            <div class="features-grid">
+              <div class="feature-card">
+                <div class="feature-icon">🔑</div>
+                <div class="feature-title">Priority Gate</div>
+                <div class="feature-desc">
+                  제품 보기 전에 "지금 살 차례인가"를 먼저 확인합니다. 루틴이 먼저인지, 제품이
+                  먼저인지 판별합니다.
+                </div>
+              </div>
+              <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <div class="feature-title">Category Decision Matrix</div>
+                <div class="feature-desc">
+                  선크림이냐 세럼이냐가 아니라, 이 카테고리에서 무엇을 봐야 하는지를 먼저
+                  알려드립니다.
+                </div>
+              </div>
+              <div class="feature-card">
+                <div class="feature-icon">👥</div>
+                <div class="feature-title">유사 피부 Evidence</div>
+                <div class="feature-desc">
+                  전체 평균 별점이 아닌, 나와 비슷한 피부 타입·고민을 가진 사람들의 실제 결과를 먼저
+                  보여드립니다.
+                </div>
+              </div>
+              <div class="feature-card">
+                <div class="feature-icon">🔍</div>
+                <div class="feature-title">Reaction Traceback</div>
+                <div class="feature-desc">
+                  예전에 안 맞았던 제품을 등록하면 공통된 의심 성분군을 찾아 이후 추천에 반영합니다.
+                </div>
+              </div>
+              <div class="feature-card">
+                <div class="feature-icon">⏸</div>
+                <div class="feature-title">보류 이유의 설득력</div>
+                <div class="feature-desc">
+                  "이걸 사세요"보다 "이건 아직 아닙니다, 왜냐면"이 더 중요합니다. 불필요한 구매를
+                  줄여드립니다.
+                </div>
+              </div>
+              <div class="feature-card">
+                <div class="feature-icon">📅</div>
+                <div class="feature-title">Adaptation Tracker</div>
+                <div class="feature-desc">
+                  D3, D7, D21 사용 후 반응을 기록하면 다음 선택이 더 정확해집니다.
+                </div>
+              </div>
+            </div>
+
+            <div class="legal-banner">
+              <div class="legal-icon">ℹ️</div>
+              <div>
+                화장품 선택 보조 서비스입니다. 피부 질환 진단 또는 의료 조언을 제공하지 않습니다.
+                심한 피부 반응은 피부과 전문의와 상담하세요.
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- Right: sidebar -->
-          <div>
-            <!-- Alternatives -->
-            <div class="card">
-              <div class="section-eyebrow">대안 제품</div>
-              <div class="problem-card" style="cursor:pointer" onclick="showScreen('s07')">
-                <div class="pc-icon">🌤️</div>
-                <div>
-                  <div class="pc-name">아누아 어성초 77 선크림</div>
-                  <div class="pc-meta">유사 피부 만족도 71% · 23,000원</div>
+        <!-- ══════ S02: Segmentation ══════ -->
+        <div class="screen" id="s02">
+          <div class="page-header">
+            <div class="ph-left">
+              <div class="ph-eyebrow">Step 1 of 5 · 진입 분기</div>
+              <h1 class="ph-title">지금 어떤 상황인가요?</h1>
+              <p class="ph-desc">
+                가장 가까운 상황을 골라주세요. 더 정확한 경로로 안내해 드릴게요.
+              </p>
+            </div>
+          </div>
+          <div class="page-body">
+            <div class="segment-grid">
+              <div class="seg-card" onclick="showScreen('s03')">
+                <div class="seg-icon">🤔</div>
+                <div class="seg-title">어디서부터 손대야 할지 모르겠어요</div>
+                <div class="seg-desc">
+                  여러 제품을 써봤는데도 계속 헷갈려요. 루틴, 생활 습관, 제품 중 뭐가 문제인지
+                  모르겠어요.
                 </div>
-                <div class="pc-tag"><span class="tag tag-green">✓ 적합</span></div>
+                <div class="seg-arrow">→</div>
               </div>
-              <div class="problem-card" style="cursor:pointer" onclick="showScreen('s07')">
-                <div class="pc-icon">🌿</div>
-                <div>
-                  <div class="pc-name">닥터지 브라이트닝 선크림</div>
-                  <div class="pc-meta">유사 피부 만족도 66% · 32,000원</div>
+              <div class="seg-card" onclick="showScreen('s03')">
+                <div class="seg-icon">😣</div>
+                <div class="seg-title">고민은 있는데 어떤 카테고리인지 모르겠어요</div>
+                <div class="seg-desc">
+                  건조함이 있는데 보습제가 먼저인지, 세럼이 먼저인지, 선크림이 먼저인지 모르겠어요.
                 </div>
-                <div class="pc-tag"><span class="tag tag-green">✓ 적합</span></div>
+                <div class="seg-arrow">→</div>
               </div>
-            </div>
-
-            <!-- Usage guide -->
-            <div class="card">
-              <div class="section-eyebrow">루틴에서의 위치</div>
-              <div style="font-size:13px;color:var(--text-secondary);line-height:1.8">
-                토너 → 세럼 → 보습 →<br>
-                <strong style="color:var(--accent)">[ 이 제품 ]</strong><br>
-                → (선택) 메이크업
+              <div class="seg-card" onclick="showScreen('s03')">
+                <div class="seg-icon">🎯</div>
+                <div class="seg-title">이미 찾는 제품군이 있어요</div>
+                <div class="seg-desc">
+                  "선크림 골라주세요"처럼 어떤 종류가 필요한지는 이미 알고 있어요.
+                </div>
+                <div class="seg-arrow">→</div>
               </div>
-              <div class="divider"></div>
-              <div style="font-size:12px;color:var(--text-muted)">AHA 사용 후에는 반드시 이 단계를 포함하세요. 생략 시 광감수성으로 인한 색소침착 위험이 있습니다.</div>
-            </div>
-
-            <!-- Adaptation CTA -->
-            <div class="card" style="background:var(--accent-soft);border-color:#E8D5C4">
-              <div class="section-eyebrow" style="color:var(--accent)">사용 후 기록</div>
-              <div style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;line-height:1.6">이 제품을 쓰기 시작했다면 D3, D7, D21 반응을 기록해 두세요.</div>
-              <button class="btn-primary full" onclick="showScreen('s08')">사용 후 기록 시작하기</button>
-            </div>
-
-            <!-- Buy section -->
-            <div class="buy-section">
-              <div class="buy-label">외부 구매 링크 (추천 판단과 무관합니다)</div>
-              <button class="btn-secondary full" style="margin:0">올리브영에서 보기 →</button>
+              <div class="seg-card" onclick="showScreen('s08')">
+                <div class="seg-icon">🔍</div>
+                <div class="seg-title">예전에 안 맞았던 제품 원인을 알고 싶어요</div>
+                <div class="seg-desc">
+                  어떤 제품 쓰고 뒤집어진 경험이 있어요. 정확히 무엇이 문제였는지 알고 싶어요.
+                </div>
+                <div class="seg-arrow">→</div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
 
-    <!-- ══════ S08: Traceback / Tracker ══════ -->
-    <div class="screen" id="s08">
-      <div class="page-header">
-        <div class="ph-left">
-          <div class="ph-eyebrow">실패 원인 추적 · 사용 후 기록</div>
-          <h1 class="ph-title">내 피부 학습 기록</h1>
-          <p class="ph-desc">실패 경험을 등록하고, 사용 후 반응을 기록하면 추천이 점점 더 정확해집니다.</p>
-        </div>
-      </div>
-
-      <div class="page-body">
-        <div class="tab-bar">
-          <button class="tab-btn active" id="web-tab-trace" onclick="switchWebTab('trace')">🔍 실패 원인 추적</button>
-          <button class="tab-btn" id="web-tab-tracker" onclick="switchWebTab('tracker')">📅 사용 후 기록</button>
-        </div>
-
-        <!-- Traceback view -->
-        <div id="web-view-trace">
-          <div class="traceback-layout">
-            <div>
-              <div class="section-eyebrow">문제 제품 등록</div>
-              <input class="search-input" placeholder="제품명 검색 또는 바코드 스캔...">
-
-              <div class="section-eyebrow">등록된 문제 제품</div>
-              <div class="problem-card">
-                <div class="pc-icon">🧴</div>
-                <div>
-                  <div class="pc-name">오릭스 히노끼 바디로션</div>
-                  <div class="pc-meta">바디 · leave-on · 붉어짐 · 얼굴/목 · 수 시간 이내</div>
+        <!-- ══════ S03: Priority Gate ══════ -->
+        <div class="screen" id="s03">
+          <div class="page-header">
+            <div class="ph-left">
+              <div class="ph-eyebrow">Step 2 of 5 · Priority Gate</div>
+              <h1 class="ph-title">제품보다 먼저 볼 것들</h1>
+              <p class="ph-desc">
+                해당하는 항목을 모두 체크해 주세요. 제품이 필요한지, 루틴이 먼저인지를 먼저
+                확인합니다.
+              </p>
+            </div>
+            <div class="ph-right">
+              <button class="btn-primary" onclick="showScreen('s04')">다음 단계 →</button>
+            </div>
+          </div>
+          <div class="page-body">
+            <div class="gate-grid">
+              <div>
+                <div class="card" style="margin-bottom: 16px">
+                  <div class="section-eyebrow">공통 체크리스트</div>
+                  <div class="check-item" onclick="toggleCheck(this, 's03')">
+                    <div class="check-box"></div>
+                    <div class="check-label">최근 기본 보습/보호 루틴이 불안정하다</div>
+                  </div>
+                  <div class="check-item" onclick="toggleCheck(this, 's03')">
+                    <div class="check-box"></div>
+                    <div class="check-label">세안 후 당김이나 자극이 자주 있다</div>
+                  </div>
+                  <div class="check-item" onclick="toggleCheck(this, 's03')">
+                    <div class="check-box"></div>
+                    <div class="check-label">최근 강한 액티브, 필링, 홈케어를 했다</div>
+                  </div>
+                  <div class="check-item" onclick="toggleCheck(this, 's03')">
+                    <div class="check-box"></div>
+                    <div class="check-label">최근 여러 화장품을 한꺼번에 바꿨다</div>
+                  </div>
+                  <div class="check-item" onclick="toggleCheck(this, 's03')">
+                    <div class="check-box"></div>
+                    <div class="check-label">같은 문제가 2~4주 이상 반복된다</div>
+                  </div>
+                  <div class="check-item" onclick="toggleCheck(this, 's03')">
+                    <div class="check-box"></div>
+                    <div class="check-label">최근 수면·스트레스·식습관 변화가 크다</div>
+                  </div>
+                  <div class="check-item" onclick="toggleCheck(this, 's03')">
+                    <div class="check-box"></div>
+                    <div class="check-label">이 문제로 전문가 상담이 필요하다고 느낀다</div>
+                  </div>
                 </div>
-                <div class="pc-tag"><span class="tag tag-red">붉어짐</span></div>
-              </div>
-              <div class="problem-card">
-                <div class="pc-icon">💆</div>
-                <div>
-                  <div class="pc-name">○○ 린스</div>
-                  <div class="pc-meta">헤어 · rinse-off · 등 트러블 · 수일 이내</div>
+
+                <div class="card" style="background: var(--accent-soft); border-color: #e8d5c4">
+                  <div class="section-eyebrow" style="color: var(--accent)">
+                    🌞 선케어 / 색소 고민 추가 확인
+                  </div>
+                  <div
+                    class="check-item"
+                    onclick="toggleCheck(this, 's03')"
+                    style="background: transparent"
+                  >
+                    <div
+                      class="check-box"
+                      style="border-color: var(--accent); background: white"
+                    ></div>
+                    <div class="check-label">매일 선크림을 바르고 있다</div>
+                  </div>
+                  <div
+                    class="check-item"
+                    onclick="toggleCheck(this, 's03')"
+                    style="background: transparent; border-bottom: none"
+                  >
+                    <div
+                      class="check-box"
+                      style="border-color: var(--accent); background: white"
+                    ></div>
+                    <div class="check-label">외출 시 재도포가 가능하다</div>
+                  </div>
                 </div>
-                <div class="pc-tag"><span class="tag tag-red">트러블</span></div>
               </div>
 
-              <div class="section-eyebrow" style="margin-top:20px">증상 / 부위 / 발현 시점</div>
-              <div class="card">
-                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
-                  <div>
-                    <div class="section-title" style="font-size:12px">증상</div>
-                    <div class="chip-group">
-                      <div class="chip multi-selected" onclick="toggleMulti(this)">붉어짐</div>
-                      <div class="chip" onclick="toggleMulti(this)">따가움</div>
-                      <div class="chip" onclick="toggleMulti(this)">두드러기</div>
-                      <div class="chip multi-selected" onclick="toggleMulti(this)">트러블</div>
+              <!-- Right: live score -->
+              <div>
+                <div class="gate-info-card">
+                  <div class="gate-score">
+                    <div class="gate-score-num" id="gateScore">0</div>
+                    <div class="gate-score-label">체크된 항목 수</div>
+                  </div>
+
+                  <div class="gate-status ok" id="gateStatus">✓ 제품 탐색을 진행해도 좋습니다</div>
+
+                  <div class="section-eyebrow">체크 수별 안내</div>
+                  <div style="font-size: 12.5px; color: var(--text-secondary); line-height: 1.8">
+                    <div><strong style="color: var(--green)">0~1개</strong> — 제품 탐색 진행</div>
+                    <div>
+                      <strong style="color: var(--yellow)">2~3개</strong> — 루틴 점검 먼저 권장
+                    </div>
+                    <div>
+                      <strong style="color: var(--red)">4개+</strong> — 새 제품 보류, 기본 루틴
+                      안정화 필요
                     </div>
                   </div>
-                  <div>
-                    <div class="section-title" style="font-size:12px">발생 부위</div>
-                    <div class="chip-group">
-                      <div class="chip multi-selected" onclick="toggleMulti(this)">얼굴</div>
-                      <div class="chip multi-selected" onclick="toggleMulti(this)">등</div>
-                      <div class="chip" onclick="toggleMulti(this)">목</div>
-                      <div class="chip" onclick="toggleMulti(this)">두피</div>
-                    </div>
+
+                  <div class="divider"></div>
+
+                  <div class="section-eyebrow">이 게이트의 역할</div>
+                  <div style="font-size: 12.5px; color: var(--text-secondary); line-height: 1.7">
+                    추천 전에 "지금 살 차례인가"를 먼저 판별합니다. 체크 항목이 많다면 새 제품보다
+                    루틴 안정화가 먼저입니다.
                   </div>
-                  <div>
-                    <div class="section-title" style="font-size:12px">발현 시점</div>
-                    <div class="chip-group" id="ctx-timing">
-                      <div class="chip" onclick="selectChip(this,'ctx-timing')">즉시</div>
-                      <div class="chip selected" onclick="selectChip(this,'ctx-timing')">수 시간</div>
-                      <div class="chip" onclick="selectChip(this,'ctx-timing')">수일</div>
+
+                  <div style="margin-top: 16px">
+                    <button class="btn-primary full" onclick="showScreen('s04')">
+                      다음 — 내 상황 입력 →
+                    </button>
+                    <button class="btn-secondary full" onclick="showScreen('s04')">건너뛰기</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════ S04: Minimal Context ══════ -->
+        <div class="screen" id="s04">
+          <div class="page-header">
+            <div class="ph-left">
+              <div class="ph-eyebrow">Step 3 of 5 · Minimal Context</div>
+              <h1 class="ph-title">조금만 더 알려주세요</h1>
+              <p class="ph-desc">
+                추천을 정교하게 만들기 위한 게 아닙니다. 맞지 않는 후보를 빠르게 줄이기 위한 최소
+                입력입니다. 모르는 항목은 건너뛰어도 됩니다.
+              </p>
+            </div>
+            <div class="ph-right">
+              <button class="btn-primary" onclick="showScreen('s05')">결과 보기 →</button>
+            </div>
+          </div>
+          <div class="page-body">
+            <div class="context-grid">
+              <div>
+                <div class="card">
+                  <div class="section-title">민감도</div>
+                  <div class="chip-group" id="ctx-sensitivity">
+                    <div class="chip" onclick="selectChip(this, 'ctx-sensitivity')">낮음</div>
+                    <div class="chip" onclick="selectChip(this, 'ctx-sensitivity')">보통</div>
+                    <div class="chip selected" onclick="selectChip(this, 'ctx-sensitivity')">
+                      높음
                     </div>
+                    <div class="chip" onclick="selectChip(this, 'ctx-sensitivity')">잘 모름</div>
+                  </div>
+                </div>
+
+                <div class="card">
+                  <div class="section-title">피부 타입 / 현재 상태</div>
+                  <div class="chip-group" id="ctx-skin">
+                    <div class="chip" onclick="selectChip(this, 'ctx-skin')">건성</div>
+                    <div class="chip selected" onclick="selectChip(this, 'ctx-skin')">복합성</div>
+                    <div class="chip" onclick="selectChip(this, 'ctx-skin')">지성</div>
+                    <div class="chip" onclick="selectChip(this, 'ctx-skin')">민감성</div>
+                    <div class="chip" onclick="selectChip(this, 'ctx-skin')">잘 모름</div>
+                  </div>
+                </div>
+
+                <div class="card">
+                  <div class="section-title">예산대 (제품 1개 기준)</div>
+                  <div class="chip-group" id="ctx-budget">
+                    <div class="chip" onclick="selectChip(this, 'ctx-budget')">~1만원</div>
+                    <div class="chip" onclick="selectChip(this, 'ctx-budget')">1~3만원</div>
+                    <div class="chip selected" onclick="selectChip(this, 'ctx-budget')">
+                      3~6만원
+                    </div>
+                    <div class="chip" onclick="selectChip(this, 'ctx-budget')">6만원+</div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div class="card">
+                  <div class="section-title">
+                    지금 쓰고 있는 액티브
+                    <span style="font-size: 11px; color: var(--text-muted); font-weight: 500"
+                      >(복수 선택)</span
+                    >
+                  </div>
+                  <div class="chip-group">
+                    <div class="chip" onclick="toggleMulti(this)">레티노이드</div>
+                    <div class="chip multi-selected" onclick="toggleMulti(this)">AHA/BHA</div>
+                    <div class="chip" onclick="toggleMulti(this)">비타민C</div>
+                    <div class="chip" onclick="toggleMulti(this)">나이아신아마이드</div>
+                    <div class="chip" onclick="toggleMulti(this)">PDRN</div>
+                    <div class="chip" onclick="toggleMulti(this)">없음</div>
+                  </div>
+                </div>
+
+                <div class="card">
+                  <div class="section-title">제형 선호</div>
+                  <div class="chip-group" id="ctx-texture">
+                    <div class="chip" onclick="selectChip(this, 'ctx-texture')">가벼운 워터</div>
+                    <div class="chip selected" onclick="selectChip(this, 'ctx-texture')">
+                      가벼운 로션
+                    </div>
+                    <div class="chip" onclick="selectChip(this, 'ctx-texture')">크림</div>
+                    <div class="chip" onclick="selectChip(this, 'ctx-texture')">상관없음</div>
+                  </div>
+                </div>
+
+                <div class="card" style="background: var(--bg)">
+                  <div class="section-eyebrow">왜 이걸 묻나요</div>
+                  <div style="font-size: 12.5px; color: var(--text-secondary); line-height: 1.7">
+                    민감도가 높고 AHA를 쓰고 있다면, 특정 필터 성분이나 향료 함유 제품이 자동으로
+                    '주의' 태그를 받습니다. 피부 타입은 제형 후보를 좁히는 데 씁니다.
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Right: result -->
-            <div>
-              <div class="section-eyebrow">공통 의심군 분석 결과</div>
-              <div class="suspect-card">
-                <div class="suspect-label">원인 후보 (확정 아님)</div>
-                <div class="suspect-item">🌿 향료군 / 에센셜오일 계열</div>
-                <div class="suspect-item">🧴 leave-on 바디 제품 특정 보존제</div>
-                <div class="suspect-item">💆 rinse-off 헤어 제품 계면활성제</div>
-                <div class="suspect-note">⚠️ 단일 성분 알레르기 확정은 패치 테스팅을 통해서만 가능합니다. 여기서는 두 제품의 공통 특성으로 의심되는 군을 보여드립니다. 반응이 반복된다면 피부과 상담을 권장합니다.</div>
+            <div class="btn-row" style="margin-top: 20px">
+              <button class="btn-primary" onclick="showScreen('s05')">결과 보기 →</button>
+              <button class="btn-secondary" onclick="showScreen('s05')">
+                잘 모르겠어요 (건너뛰기)
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════ S05: Decision Result ══════ -->
+        <div class="screen" id="s05">
+          <div class="page-header">
+            <div class="ph-left">
+              <div class="ph-eyebrow">Step 4 of 5 · Decision Result</div>
+              <h1 class="ph-title">지금 당신에게 필요한 순서</h1>
+              <p class="ph-desc">
+                복합성 · 민감도 높음 · AHA 사용 중 · 3~6만원대 기준으로 도출된 결과입니다.
+              </p>
+            </div>
+            <div class="ph-right">
+              <button class="btn-primary" onclick="showScreen('s06')">카테고리 탐색 →</button>
+            </div>
+          </div>
+          <div class="page-body">
+            <!-- Main result -->
+            <div class="result-layout">
+              <div class="result-priority">
+                <div class="r-label">지금 최우선</div>
+                <div class="r-title">☀️ 선크림 정착</div>
+                <div class="r-desc">
+                  데일리 선케어 루틴이 먼저 안정되어야, 이후 액티브 추가가 효과를 냅니다. 지금
+                  선크림 없이 미백 세럼을 추가하면 자외선 노출로 효과가 상쇄됩니다.
+                </div>
+              </div>
+              <div class="result-hold">
+                <div class="r-label">⏸ 지금 보류</div>
+                <div class="r-title">비타민C 세럼 추가</div>
+                <div class="r-desc">
+                  선케어 습관이 불안정한 상태에서 미백 액티브를 추가해도 효과가 제한됩니다. 2주 후
+                  선크림 루틴 안정화 후 재검토 권장.
+                </div>
+              </div>
+            </div>
+
+            <!-- Reason + Action Plan -->
+            <div class="reason-action-grid">
+              <div class="reason-card">
+                <div class="rc-label">왜 이런 결론인가</div>
+                <div class="rc-text">
+                  복합성 피부 + AHA 사용 중이나 선크림을 매일 바르지 않는 패턴이 확인됩니다. 자외선
+                  차단이 먼저 안정되지 않으면, 추가 액티브의 효용이 줄고 자극 리스크가 높아집니다.
+                  특히 AHA 병행 중에는 광감수성이 높아져 선케어가 더 중요합니다.
+                </div>
+              </div>
+              <div class="reason-card">
+                <div class="rc-label">다음 액션 플랜</div>
+                <div class="ap-row">
+                  <div class="ap-dot"></div>
+                  <div class="ap-text">눈시림 낮고 가벼운 선크림 3개 후보 확인</div>
+                </div>
+                <div class="ap-row">
+                  <div class="ap-dot"></div>
+                  <div class="ap-text">AHA 병행 시 오전 선크림 필수 루틴화</div>
+                </div>
+                <div class="ap-row">
+                  <div class="ap-dot muted"></div>
+                  <div class="ap-text muted">2주 후 비타민C 세럼 추가 여부 재검토</div>
+                </div>
+                <div class="ap-row">
+                  <div class="ap-dot muted"></div>
+                  <div class="ap-text muted">외출 시 재도포 습관 만들기</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Category CTA -->
+            <div class="flex-between" style="margin-bottom: 14px">
+              <h2 class="section-title" style="margin: 0">지금 볼 카테고리</h2>
+            </div>
+            <div
+              class="seg-card"
+              style="max-width: 500px; cursor: pointer"
+              onclick="showScreen('s06')"
+            >
+              <div style="display: flex; align-items: center; gap: 16px">
+                <div style="font-size: 32px">☀️</div>
+                <div>
+                  <div class="seg-title" style="margin-bottom: 4px">데일리 선크림</div>
+                  <div class="seg-desc">선택 기준 확인 + 가격대별 필터링된 후보 보기</div>
+                </div>
+                <div style="margin-left: auto; color: var(--text-muted); font-size: 20px">→</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════ S06: Category Decision Matrix ══════ -->
+        <div class="screen active" id="s06">
+          <div class="page-header">
+            <div class="ph-left">
+              <div class="ph-eyebrow">Step 5 of 5 · Category Decision Matrix</div>
+              <h1 class="ph-title">데일리 선크림</h1>
+              <p class="ph-desc">
+                이 카테고리에서 무엇을 봐야 하는지와 지금 내 상황에 맞게 필터링된 후보를 한 화면에서
+                확인하세요.
+              </p>
+            </div>
+            <div class="ph-right">
+              <div class="price-band" id="priceBandWeb">
+                <button class="pb-btn active" onclick="switchPriceWeb('all', this)">전체</button>
+                <button class="pb-btn" onclick="switchPriceWeb('low', this)">~2만원</button>
+                <button class="pb-btn" onclick="switchPriceWeb('mid', this)">2~5만원</button>
+                <button class="pb-btn" onclick="switchPriceWeb('high', this)">5만원+</button>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 300px 1fr; min-height: 600px">
+            <!-- Left: criteria -->
+            <div class="matrix-left" style="border-right: 1px solid var(--border); padding: 24px">
+              <div class="context-strip">
+                <strong>내 상황:</strong> 복합성 · 민감도 높음 · AHA 사용 중<br />
+                <span style="color: var(--accent); font-weight: 600"
+                  >눈시림 낮음 + 가벼운 제형 우선 적용</span
+                >
               </div>
 
-              <div class="avoid-card">
-                <div class="avoid-label">🛡️ 생성된 회피 규칙</div>
-                <div class="avoid-item">✕ 향료/에센셜오일 함유 제품 우선 회피</div>
-                <div class="avoid-item">✕ leave-on 바디 제품 성분 주의</div>
-                <div class="avoid-item">→ 이후 카테고리 탐색 시 자동 반영</div>
-                <div class="avoid-item">→ 관련 제품에 '주의' 태그 표시</div>
+              <div class="section-eyebrow">이 카테고리에서 볼 것</div>
+              <div
+                style="
+                  background: var(--surface);
+                  border: 1px solid var(--border);
+                  border-radius: var(--radius-sm);
+                  padding: 0 12px;
+                  margin-bottom: 16px;
+                "
+              >
+                <div class="criteria-row">
+                  <span class="criteria-name">보호 기준</span>
+                  <span class="criteria-value">SPF 50+ / PA+++ 이상</span>
+                </div>
+                <div class="criteria-row">
+                  <span class="criteria-name">필터 타입</span>
+                  <span class="criteria-value">화학 또는 혼합형</span>
+                </div>
+                <div class="criteria-row">
+                  <span class="criteria-name">주의 사항</span>
+                  <span class="criteria-value">눈시림 · 백탁 · 끈적임</span>
+                </div>
+                <div class="criteria-row">
+                  <span class="criteria-name">메이크업 궁합</span>
+                  <span class="criteria-value">화장 밀림 여부</span>
+                </div>
               </div>
+
+              <div class="fit-block">
+                <div class="fit-col good">
+                  <div class="fit-col-label">✓ 좋은 조건</div>
+                  <div class="fit-col-item">향료 프리</div>
+                  <div class="fit-col-item">유리광·세미매트</div>
+                  <div class="fit-col-item">가벼운 로션형</div>
+                  <div class="fit-col-item">눈 시림 낮은 필터</div>
+                </div>
+                <div class="fit-col skip">
+                  <div class="fit-col-label">✕ 피할 조건</div>
+                  <div class="fit-col-item">무기계 only 백탁</div>
+                  <div class="fit-col-item">알코올 고함량</div>
+                  <div class="fit-col-item">향 강한 제품</div>
+                  <div class="fit-col-item">스틱/파우더 타입</div>
+                </div>
+              </div>
+
+              <div class="section-eyebrow" style="margin-top: 8px">AHA 병행 시 추가 주의</div>
+              <div
+                style="
+                  font-size: 12px;
+                  color: var(--text-secondary);
+                  line-height: 1.7;
+                  background: var(--yellow-soft);
+                  border-radius: var(--radius-sm);
+                  padding: 10px 12px;
+                "
+              >
+                AHA 사용 중에는 광감수성이 증가합니다. SPF50+ 이상, 매일 사용, 외출 2~3시간마다
+                재도포가 더욱 중요합니다.
+              </div>
+            </div>
+
+            <!-- Right: product matrix -->
+            <div style="padding: 24px">
+              <div class="product-meta-bar">
+                <div>
+                  <span style="font-size: 13px; font-weight: 700; color: var(--text-primary)"
+                    >4개 후보</span
+                  >
+                  <span class="product-count" style="margin-left: 8px">내 상황 기준 필터링됨</span>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center">
+                  <span style="font-size: 12px; color: var(--text-muted)">정렬:</span>
+                  <select
+                    style="
+                      font-size: 12px;
+                      border: 1px solid var(--border);
+                      border-radius: 6px;
+                      padding: 4px 8px;
+                      background: var(--surface);
+                      color: var(--text-primary);
+                      font-family: inherit;
+                      outline: none;
+                    "
+                  >
+                    <option>적합도순</option>
+                    <option>가격 낮은순</option>
+                    <option>유사피부 만족도순</option>
+                  </select>
+                </div>
+              </div>
+
+              <table class="product-table">
+                <thead>
+                  <tr>
+                    <th style="width: 44px"></th>
+                    <th>제품</th>
+                    <th>적합도</th>
+                    <th>특징</th>
+                    <th style="text-align: right">가격</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr onclick="showScreen('s07')" style="background: var(--accent-soft)">
+                    <td><div class="product-thumb-sm">☀️</div></td>
+                    <td>
+                      <div class="product-name">라운드랩 1025 도크 선크림</div>
+                      <div class="product-brand">라운드랩 · 50mL · SPF50+/PA++++</div>
+                    </td>
+                    <td><span class="tag tag-green">✓ 적합</span></td>
+                    <td>
+                      <span class="tag tag-gray">무향</span>
+                      <span class="tag tag-gray">혼합필터</span>
+                      <span class="tag tag-gray">눈시림낮음</span>
+                    </td>
+                    <td style="text-align: right; font-weight: 700">21,000원</td>
+                    <td style="color: var(--text-muted)">→</td>
+                  </tr>
+                  <tr onclick="showScreen('s07')">
+                    <td><div class="product-thumb-sm">🌤️</div></td>
+                    <td>
+                      <div class="product-name">아누아 어성초 77 선크림</div>
+                      <div class="product-brand">아누아 · 50mL · SPF50+/PA++++</div>
+                    </td>
+                    <td><span class="tag tag-green">✓ 적합</span></td>
+                    <td>
+                      <span class="tag tag-gray">어성초진정</span>
+                      <span class="tag tag-gray">세미매트</span>
+                    </td>
+                    <td style="text-align: right; font-weight: 700">23,000원</td>
+                    <td style="color: var(--text-muted)">→</td>
+                  </tr>
+                  <tr onclick="showScreen('s07')">
+                    <td><div class="product-thumb-sm">✨</div></td>
+                    <td>
+                      <div class="product-name">이니스프리 시카비다 선세럼</div>
+                      <div class="product-brand">이니스프리 · 50mL · SPF50+/PA+++</div>
+                    </td>
+                    <td><span class="tag tag-yellow">△ 주의</span></td>
+                    <td>
+                      <span class="tag tag-gray">세럼타입</span>
+                      <span class="tag tag-yellow">메이크업밀림</span>
+                    </td>
+                    <td style="text-align: right; font-weight: 700">38,000원</td>
+                    <td style="color: var(--text-muted)">→</td>
+                  </tr>
+                  <tr onclick="showScreen('s07')" style="opacity: 0.7">
+                    <td><div class="product-thumb-sm">🚫</div></td>
+                    <td>
+                      <div class="product-name">아벤느 미네랄 선크림 50+</div>
+                      <div class="product-brand">아벤느 · 40mL · SPF50+</div>
+                    </td>
+                    <td><span class="tag tag-red">✕ 비추</span></td>
+                    <td>
+                      <span class="tag tag-red">백탁심함</span>
+                      <span class="tag tag-gray">무기계only</span>
+                    </td>
+                    <td style="text-align: right; font-weight: 700">28,000원</td>
+                    <td style="color: var(--text-muted)">→</td>
+                  </tr>
+                </tbody>
+              </table>
 
               <div class="legal-banner">
-                <div class="legal-icon">🏥</div>
-                <div>심한 발진·두드러기·호흡 증상이 있다면 즉시 사용을 중단하고 피부과 또는 응급실을 방문하세요. 이 서비스는 의료 진단을 제공하지 않습니다.</div>
+                <div class="legal-icon">ℹ️</div>
+                <div>
+                  제품 추천은 입력하신 정보를 기반으로 한 보조 도구입니다. 구매 결정 전 제품
+                  성분표를 직접 확인하세요. 심한 피부 반응은 전문의와 상담하세요.
+                </div>
               </div>
-
-              <button class="btn-primary full" style="margin-top:16px">회피 규칙 저장하기</button>
-              <button class="btn-secondary full" onclick="showScreen('s06')">선크림 카테고리 다시 보기</button>
             </div>
           </div>
         </div>
 
-        <!-- Tracker view (hidden) -->
-        <div id="web-view-tracker" style="display:none">
-          <div class="traceback-layout">
-            <div>
-              <div class="section-eyebrow">추적 중인 제품</div>
-              <div class="card card-accent" style="margin-bottom:20px">
-                <div style="display:flex;align-items:center;gap:14px">
-                  <div style="font-size:28px">☀️</div>
-                  <div>
-                    <div style="font-size:15px;font-weight:800;color:var(--text-primary)">라운드랩 1025 도크 선크림</div>
-                    <div style="font-size:12px;color:var(--text-muted)">시작일: 2026-04-16 · 21일 추적 중</div>
+        <!-- ══════ S07: Product Fit Detail ══════ -->
+        <div class="screen" id="s07">
+          <div class="page-header">
+            <div class="ph-left">
+              <div class="ph-eyebrow">Product Fit Detail</div>
+              <h1 class="ph-title">라운드랩 1025 도크 선크림</h1>
+              <p class="ph-desc">
+                이 제품이 좋다는 말이 아닙니다. 누구에게 맞고, 왜 지금 당신 상황에 적합한지를
+                설명합니다.
+              </p>
+            </div>
+            <div class="ph-right">
+              <button class="btn-secondary" onclick="showScreen('s06')">← 목록으로</button>
+            </div>
+          </div>
+          <div class="page-body">
+            <div class="fit-detail-layout">
+              <!-- Left: main content -->
+              <div>
+                <!-- Hero -->
+                <div class="fit-hero">
+                  <div class="fit-hero-thumb">☀️</div>
+                  <div class="fit-hero-info">
+                    <h2>1025 도크 선크림</h2>
+                    <div class="fit-hero-meta">라운드랩 · SPF50+ PA++++ · 50mL</div>
+                    <div class="fit-hero-price">21,000원</div>
+                  </div>
+                  <div
+                    style="
+                      margin-left: auto;
+                      display: flex;
+                      flex-direction: column;
+                      gap: 6px;
+                      align-items: flex-end;
+                    "
+                  >
+                    <span class="tag tag-green" style="font-size: 13px; padding: 5px 12px"
+                      >✓ 적합</span
+                    >
+                    <span style="font-size: 12px; color: var(--text-muted)">내 상황 기준</span>
+                  </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="fit-stat-row">
+                  <div class="fit-stat positive">
+                    <div class="fit-stat-num">74%</div>
+                    <div class="fit-stat-label">유사 피부 만족도</div>
+                  </div>
+                  <div class="fit-stat warning">
+                    <div class="fit-stat-num">12%</div>
+                    <div class="fit-stat-label">화장 밀림 불편</div>
+                  </div>
+                  <div class="fit-stat neutral">
+                    <div class="fit-stat-num">4%</div>
+                    <div class="fit-stat-label">자극 보고율</div>
+                  </div>
+                </div>
+
+                <!-- Verdict -->
+                <div class="fit-verdict-row">
+                  <div class="verdict-col fit">
+                    <div class="verdict-label">✓ 적합</div>
+                    <div class="verdict-item">민감성·복합성 피부</div>
+                    <div class="verdict-item">AHA 병행 사용자</div>
+                    <div class="verdict-item">무향 선호</div>
+                    <div class="verdict-item">가벼운 제형 선호</div>
+                  </div>
+                  <div class="verdict-col caution">
+                    <div class="verdict-label">△ 주의</div>
+                    <div class="verdict-item">두꺼운 메이크업 위</div>
+                    <div class="verdict-item">지성 피부 번들거림</div>
+                    <div class="verdict-item">쿠션 파운데이션과 병행</div>
+                  </div>
+                  <div class="verdict-col avoid">
+                    <div class="verdict-label">✕ 비추</div>
+                    <div class="verdict-item">무기계 필터만 원하는 분</div>
+                    <div class="verdict-item">극건성 피부 (보습 부족)</div>
+                  </div>
+                </div>
+
+                <!-- Accordions -->
+                <div class="accordion">
+                  <div class="acc-header" onclick="toggleAcc(this)">
+                    <span class="acc-title">왜 이런 결론인가</span>
+                    <span class="acc-arrow">▾</span>
+                  </div>
+                  <div class="acc-body">
+                    <p>
+                      복합성 + 민감도 높음 + AHA 사용 중이라는 프로필에서, 무기계 필터 제품은 백탁과
+                      무거움이 문제가 될 수 있습니다. 이 제품은 유기계·혼합 필터를 사용해 텍스처가
+                      가볍고 자극 성분이 최소화됩니다. 향료 프리 포뮬러라 민감도 높은 피부에서의
+                      자극 보고가 낮습니다.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="accordion">
+                  <div class="acc-header" onclick="toggleAcc(this)">
+                    <span class="acc-title">핵심 성분</span>
+                    <span class="acc-arrow">▾</span>
+                  </div>
+                  <div class="acc-body">
+                    <table class="ingredient-table">
+                      <tr>
+                        <td>Homosalate</td>
+                        <td>유기 자외선 차단 (UVB)</td>
+                      </tr>
+                      <tr>
+                        <td>Octisalate</td>
+                        <td>UVB 차단 보조</td>
+                      </tr>
+                      <tr>
+                        <td>Zinc Oxide 5%</td>
+                        <td>UVA 차단 보조 (혼합형)</td>
+                      </tr>
+                      <tr>
+                        <td>Niacinamide</td>
+                        <td>톤업 · 진정 · 장벽</td>
+                      </tr>
+                      <tr>
+                        <td>Panthenol</td>
+                        <td>보습 · 진정</td>
+                      </tr>
+                    </table>
+                  </div>
+                </div>
+
+                <div class="accordion">
+                  <div class="acc-header" onclick="toggleAcc(this)">
+                    <span class="acc-title">사용 순서 · 빈도</span>
+                    <span class="acc-arrow">▾</span>
+                  </div>
+                  <div class="acc-body">
+                    <p>
+                      스킨케어 마지막 단계 → 보습제 후 2~3분 뒤 적용 → 매일 아침 필수 / 외출 시
+                      2~3시간마다 재도포 권장. AHA 사용 중에는 광감수성이 높아지므로 생략하지
+                      마세요.
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Similar skin evidence -->
+                <div class="card" style="margin-top: 12px">
+                  <div class="section-eyebrow">유사 피부의 실제 경험</div>
+                  <div class="evidence-list">
+                    <div class="evidence-item">
+                      <div class="ev-avatar">😊</div>
+                      <div>
+                        <div class="ev-text">
+                          민감성 + AHA 병행 중인데 자극 없이 잘 쓰고 있어요. 가볍고 백탁 없어서
+                          여름에도 좋네요.
+                        </div>
+                        <div class="ev-meta">복합·민감 · AHA 사용 중 · 3개월 · 재구매 ○</div>
+                      </div>
+                    </div>
+                    <div class="evidence-item">
+                      <div class="ev-avatar">😐</div>
+                      <div>
+                        <div class="ev-text">
+                          자극은 없는데 파운데이션 위에서 살짝 밀림. 쿠션 위에서는 괜찮았어요.
+                          재구매 고민 중.
+                        </div>
+                        <div class="ev-meta">복합성 · 메이크업 병행 · 1개월 · 재구매 미정</div>
+                      </div>
+                    </div>
+                    <div class="evidence-item">
+                      <div class="ev-avatar">😄</div>
+                      <div>
+                        <div class="ev-text">
+                          레티날 쓰는데 자극 없고 눈에 들어가도 시리지 않아서 계속 쓰고 있어요.
+                        </div>
+                        <div class="ev-meta">민감성 · 레티노이드 사용 중 · 5개월 · 재구매 ○</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Common failures -->
+                <div class="card card-red" style="margin-top: 12px">
+                  <div class="section-eyebrow" style="color: var(--red)">흔한 실패 이유</div>
+                  <div style="font-size: 13px; color: var(--text-primary); line-height: 1.7">
+                    밀착 메이크업 베이스 위에서 화장 밀림 · 지성 피부에서 번들거림 심함 · 극건성
+                    피부에서 보습 부족 느낌
                   </div>
                 </div>
               </div>
 
-              <div class="section-eyebrow">체크인 현황</div>
-              <div class="day-track">
-                <div class="day-card done">
-                  <div class="day-check">✓</div>
-                  <div class="day-num">Day 3</div>
-                  <div class="day-label">즉각 반응 · 완료</div>
+              <!-- Right: sidebar -->
+              <div>
+                <!-- Alternatives -->
+                <div class="card">
+                  <div class="section-eyebrow">대안 제품</div>
+                  <div class="problem-card" style="cursor: pointer" onclick="showScreen('s07')">
+                    <div class="pc-icon">🌤️</div>
+                    <div>
+                      <div class="pc-name">아누아 어성초 77 선크림</div>
+                      <div class="pc-meta">유사 피부 만족도 71% · 23,000원</div>
+                    </div>
+                    <div class="pc-tag"><span class="tag tag-green">✓ 적합</span></div>
+                  </div>
+                  <div class="problem-card" style="cursor: pointer" onclick="showScreen('s07')">
+                    <div class="pc-icon">🌿</div>
+                    <div>
+                      <div class="pc-name">닥터지 브라이트닝 선크림</div>
+                      <div class="pc-meta">유사 피부 만족도 66% · 32,000원</div>
+                    </div>
+                    <div class="pc-tag"><span class="tag tag-green">✓ 적합</span></div>
+                  </div>
                 </div>
-                <div class="day-card active">
-                  <div class="day-num">Day 7</div>
-                  <div class="day-label">지속 사용 · 지금</div>
-                </div>
-                <div class="day-card">
-                  <div class="day-num">Day 21</div>
-                  <div class="day-label">체감 변화 · 대기</div>
-                </div>
-              </div>
 
-              <div class="card">
-                <div class="section-title">Day 7 — 지금 어떠세요?</div>
-                <div class="check-item" onclick="toggleCheck(this,'s08')">
-                  <div class="check-box"></div>
-                  <div class="check-label">계속 쓸 수 있을 것 같다</div>
+                <!-- Usage guide -->
+                <div class="card">
+                  <div class="section-eyebrow">루틴에서의 위치</div>
+                  <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.8">
+                    토너 → 세럼 → 보습 →<br />
+                    <strong style="color: var(--accent)">[ 이 제품 ]</strong><br />
+                    → (선택) 메이크업
+                  </div>
+                  <div class="divider"></div>
+                  <div style="font-size: 12px; color: var(--text-muted)">
+                    AHA 사용 후에는 반드시 이 단계를 포함하세요. 생략 시 광감수성으로 인한 색소침착
+                    위험이 있습니다.
+                  </div>
                 </div>
-                <div class="check-item" onclick="toggleCheck(this,'s08')">
-                  <div class="check-box"></div>
-                  <div class="check-label">자극이나 불편함이 없다</div>
-                </div>
-                <div class="check-item" onclick="toggleCheck(this,'s08')">
-                  <div class="check-box"></div>
-                  <div class="check-label">매일 바르는 습관이 생겼다</div>
-                </div>
-                <div class="check-item" onclick="toggleCheck(this,'s08')">
-                  <div class="check-box"></div>
-                  <div class="check-label">화장 궁합이 괜찮다</div>
-                </div>
-              </div>
 
-              <div class="card" style="margin-top:12px">
-                <div class="section-title">불편한 점이 있다면?</div>
-                <div class="chip-group">
-                  <div class="chip" onclick="toggleMulti(this)">화장 밀림</div>
-                  <div class="chip" onclick="toggleMulti(this)">눈 시림</div>
-                  <div class="chip" onclick="toggleMulti(this)">끈적임</div>
-                  <div class="chip" onclick="toggleMulti(this)">번들거림</div>
-                  <div class="chip" onclick="toggleMulti(this)">자극·따가움</div>
-                  <div class="chip multi-selected" onclick="toggleMulti(this)">없음</div>
+                <!-- Adaptation CTA -->
+                <div class="card" style="background: var(--accent-soft); border-color: #e8d5c4">
+                  <div class="section-eyebrow" style="color: var(--accent)">사용 후 기록</div>
+                  <div
+                    style="
+                      font-size: 13px;
+                      color: var(--text-secondary);
+                      margin-bottom: 12px;
+                      line-height: 1.6;
+                    "
+                  >
+                    이 제품을 쓰기 시작했다면 D3, D7, D21 반응을 기록해 두세요.
+                  </div>
+                  <button class="btn-primary full" onclick="showScreen('s08')">
+                    사용 후 기록 시작하기
+                  </button>
                 </div>
-              </div>
 
-              <button class="btn-primary" style="margin-top:16px">Day 7 기록 저장하기</button>
-            </div>
-
-            <!-- Right: Day 3 summary -->
-            <div>
-              <div class="section-eyebrow">Day 3 기록 요약</div>
-              <div class="card">
-                <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">
-                  <span class="tag tag-green" style="font-size:13px;padding:5px 14px">자극 없음</span>
-                  <span class="tag tag-green" style="font-size:13px;padding:5px 14px">사용 지속</span>
+                <!-- Buy section -->
+                <div class="buy-section">
+                  <div class="buy-label">외부 구매 링크 (추천 판단과 무관합니다)</div>
+                  <button class="btn-secondary full" style="margin: 0">올리브영에서 보기 →</button>
                 </div>
-                <div style="font-size:13px;color:var(--text-secondary);line-height:1.7">
-                  즉각 자극 없음 · 화장 궁합 보통 · 첫 3일 사용 후 큰 불편 없이 지속 중
-                </div>
-              </div>
-
-              <div class="section-eyebrow" style="margin-top:16px">누적되는 데이터</div>
-              <div class="card" style="background:var(--bg)">
-                <div style="font-size:12.5px;color:var(--text-secondary);line-height:1.8">
-                  당신의 기록이 누적되면:<br>
-                  · 비슷한 피부 유형의 사용자에게 더 정확한 유사 피부 Evidence로 반영됩니다<br>
-                  · 다음에 같은 카테고리를 탐색할 때 이 제품의 적합도가 보정됩니다<br>
-                  · 회피 성분/제형 규칙이 자동으로 다음 추천에 반영됩니다
-                </div>
-              </div>
-
-              <div class="warn-strip" style="margin-top:12px">
-                <span>⚠️</span>
-                <div>Day 21 체크인을 완료하면 재구매 의사와 체감 변화를 기록할 수 있습니다. 2주 후 알림을 설정해 두세요.</div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+
+        <!-- ══════ S08: Traceback / Tracker ══════ -->
+        <div class="screen" id="s08">
+          <div class="page-header">
+            <div class="ph-left">
+              <div class="ph-eyebrow">실패 원인 추적 · 사용 후 기록</div>
+              <h1 class="ph-title">내 피부 학습 기록</h1>
+              <p class="ph-desc">
+                실패 경험을 등록하고, 사용 후 반응을 기록하면 추천이 점점 더 정확해집니다.
+              </p>
+            </div>
+          </div>
+
+          <div class="page-body">
+            <div class="tab-bar">
+              <button class="tab-btn active" id="web-tab-trace" onclick="switchWebTab('trace')">
+                🔍 실패 원인 추적
+              </button>
+              <button class="tab-btn" id="web-tab-tracker" onclick="switchWebTab('tracker')">
+                📅 사용 후 기록
+              </button>
+            </div>
+
+            <!-- Traceback view -->
+            <div id="web-view-trace">
+              <div class="traceback-layout">
+                <div>
+                  <div class="section-eyebrow">문제 제품 등록</div>
+                  <input class="search-input" placeholder="제품명 검색 또는 바코드 스캔..." />
+
+                  <div class="section-eyebrow">등록된 문제 제품</div>
+                  <div class="problem-card">
+                    <div class="pc-icon">🧴</div>
+                    <div>
+                      <div class="pc-name">오릭스 히노끼 바디로션</div>
+                      <div class="pc-meta">바디 · leave-on · 붉어짐 · 얼굴/목 · 수 시간 이내</div>
+                    </div>
+                    <div class="pc-tag"><span class="tag tag-red">붉어짐</span></div>
+                  </div>
+                  <div class="problem-card">
+                    <div class="pc-icon">💆</div>
+                    <div>
+                      <div class="pc-name">○○ 린스</div>
+                      <div class="pc-meta">헤어 · rinse-off · 등 트러블 · 수일 이내</div>
+                    </div>
+                    <div class="pc-tag"><span class="tag tag-red">트러블</span></div>
+                  </div>
+
+                  <div class="section-eyebrow" style="margin-top: 20px">
+                    증상 / 부위 / 발현 시점
+                  </div>
+                  <div class="card">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px">
+                      <div>
+                        <div class="section-title" style="font-size: 12px">증상</div>
+                        <div class="chip-group">
+                          <div class="chip multi-selected" onclick="toggleMulti(this)">붉어짐</div>
+                          <div class="chip" onclick="toggleMulti(this)">따가움</div>
+                          <div class="chip" onclick="toggleMulti(this)">두드러기</div>
+                          <div class="chip multi-selected" onclick="toggleMulti(this)">트러블</div>
+                        </div>
+                      </div>
+                      <div>
+                        <div class="section-title" style="font-size: 12px">발생 부위</div>
+                        <div class="chip-group">
+                          <div class="chip multi-selected" onclick="toggleMulti(this)">얼굴</div>
+                          <div class="chip multi-selected" onclick="toggleMulti(this)">등</div>
+                          <div class="chip" onclick="toggleMulti(this)">목</div>
+                          <div class="chip" onclick="toggleMulti(this)">두피</div>
+                        </div>
+                      </div>
+                      <div>
+                        <div class="section-title" style="font-size: 12px">발현 시점</div>
+                        <div class="chip-group" id="ctx-timing">
+                          <div class="chip" onclick="selectChip(this, 'ctx-timing')">즉시</div>
+                          <div class="chip selected" onclick="selectChip(this, 'ctx-timing')">
+                            수 시간
+                          </div>
+                          <div class="chip" onclick="selectChip(this, 'ctx-timing')">수일</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Right: result -->
+                <div>
+                  <div class="section-eyebrow">공통 의심군 분석 결과</div>
+                  <div class="suspect-card">
+                    <div class="suspect-label">원인 후보 (확정 아님)</div>
+                    <div class="suspect-item">🌿 향료군 / 에센셜오일 계열</div>
+                    <div class="suspect-item">🧴 leave-on 바디 제품 특정 보존제</div>
+                    <div class="suspect-item">💆 rinse-off 헤어 제품 계면활성제</div>
+                    <div class="suspect-note">
+                      ⚠️ 단일 성분 알레르기 확정은 패치 테스팅을 통해서만 가능합니다. 여기서는 두
+                      제품의 공통 특성으로 의심되는 군을 보여드립니다. 반응이 반복된다면 피부과
+                      상담을 권장합니다.
+                    </div>
+                  </div>
+
+                  <div class="avoid-card">
+                    <div class="avoid-label">🛡️ 생성된 회피 규칙</div>
+                    <div class="avoid-item">✕ 향료/에센셜오일 함유 제품 우선 회피</div>
+                    <div class="avoid-item">✕ leave-on 바디 제품 성분 주의</div>
+                    <div class="avoid-item">→ 이후 카테고리 탐색 시 자동 반영</div>
+                    <div class="avoid-item">→ 관련 제품에 '주의' 태그 표시</div>
+                  </div>
+
+                  <div class="legal-banner">
+                    <div class="legal-icon">🏥</div>
+                    <div>
+                      심한 발진·두드러기·호흡 증상이 있다면 즉시 사용을 중단하고 피부과 또는
+                      응급실을 방문하세요. 이 서비스는 의료 진단을 제공하지 않습니다.
+                    </div>
+                  </div>
+
+                  <button class="btn-primary full" style="margin-top: 16px">
+                    회피 규칙 저장하기
+                  </button>
+                  <button class="btn-secondary full" onclick="showScreen('s06')">
+                    선크림 카테고리 다시 보기
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tracker view (hidden) -->
+            <div id="web-view-tracker" style="display: none">
+              <div class="traceback-layout">
+                <div>
+                  <div class="section-eyebrow">추적 중인 제품</div>
+                  <div class="card card-accent" style="margin-bottom: 20px">
+                    <div style="display: flex; align-items: center; gap: 14px">
+                      <div style="font-size: 28px">☀️</div>
+                      <div>
+                        <div style="font-size: 15px; font-weight: 800; color: var(--text-primary)">
+                          라운드랩 1025 도크 선크림
+                        </div>
+                        <div style="font-size: 12px; color: var(--text-muted)">
+                          시작일: 2026-04-16 · 21일 추적 중
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="section-eyebrow">체크인 현황</div>
+                  <div class="day-track">
+                    <div class="day-card done">
+                      <div class="day-check">✓</div>
+                      <div class="day-num">Day 3</div>
+                      <div class="day-label">즉각 반응 · 완료</div>
+                    </div>
+                    <div class="day-card active">
+                      <div class="day-num">Day 7</div>
+                      <div class="day-label">지속 사용 · 지금</div>
+                    </div>
+                    <div class="day-card">
+                      <div class="day-num">Day 21</div>
+                      <div class="day-label">체감 변화 · 대기</div>
+                    </div>
+                  </div>
+
+                  <div class="card">
+                    <div class="section-title">Day 7 — 지금 어떠세요?</div>
+                    <div class="check-item" onclick="toggleCheck(this, 's08')">
+                      <div class="check-box"></div>
+                      <div class="check-label">계속 쓸 수 있을 것 같다</div>
+                    </div>
+                    <div class="check-item" onclick="toggleCheck(this, 's08')">
+                      <div class="check-box"></div>
+                      <div class="check-label">자극이나 불편함이 없다</div>
+                    </div>
+                    <div class="check-item" onclick="toggleCheck(this, 's08')">
+                      <div class="check-box"></div>
+                      <div class="check-label">매일 바르는 습관이 생겼다</div>
+                    </div>
+                    <div class="check-item" onclick="toggleCheck(this, 's08')">
+                      <div class="check-box"></div>
+                      <div class="check-label">화장 궁합이 괜찮다</div>
+                    </div>
+                  </div>
+
+                  <div class="card" style="margin-top: 12px">
+                    <div class="section-title">불편한 점이 있다면?</div>
+                    <div class="chip-group">
+                      <div class="chip" onclick="toggleMulti(this)">화장 밀림</div>
+                      <div class="chip" onclick="toggleMulti(this)">눈 시림</div>
+                      <div class="chip" onclick="toggleMulti(this)">끈적임</div>
+                      <div class="chip" onclick="toggleMulti(this)">번들거림</div>
+                      <div class="chip" onclick="toggleMulti(this)">자극·따가움</div>
+                      <div class="chip multi-selected" onclick="toggleMulti(this)">없음</div>
+                    </div>
+                  </div>
+
+                  <button class="btn-primary" style="margin-top: 16px">Day 7 기록 저장하기</button>
+                </div>
+
+                <!-- Right: Day 3 summary -->
+                <div>
+                  <div class="section-eyebrow">Day 3 기록 요약</div>
+                  <div class="card">
+                    <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px">
+                      <span class="tag tag-green" style="font-size: 13px; padding: 5px 14px"
+                        >자극 없음</span
+                      >
+                      <span class="tag tag-green" style="font-size: 13px; padding: 5px 14px"
+                        >사용 지속</span
+                      >
+                    </div>
+                    <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.7">
+                      즉각 자극 없음 · 화장 궁합 보통 · 첫 3일 사용 후 큰 불편 없이 지속 중
+                    </div>
+                  </div>
+
+                  <div class="section-eyebrow" style="margin-top: 16px">누적되는 데이터</div>
+                  <div class="card" style="background: var(--bg)">
+                    <div style="font-size: 12.5px; color: var(--text-secondary); line-height: 1.8">
+                      당신의 기록이 누적되면:<br />
+                      · 비슷한 피부 유형의 사용자에게 더 정확한 유사 피부 Evidence로 반영됩니다<br />
+                      · 다음에 같은 카테고리를 탐색할 때 이 제품의 적합도가 보정됩니다<br />
+                      · 회피 성분/제형 규칙이 자동으로 다음 추천에 반영됩니다
+                    </div>
+                  </div>
+
+                  <div class="warn-strip" style="margin-top: 12px">
+                    <span>⚠️</span>
+                    <div>
+                      Day 21 체크인을 완료하면 재구매 의사와 체감 변화를 기록할 수 있습니다. 2주 후
+                      알림을 설정해 두세요.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+      <!-- /main -->
     </div>
+    <!-- /layout -->
 
-  </main><!-- /main -->
-</div><!-- /layout -->
+    <script>
+      // s07 is grouped under s06 for sidebar/nav highlighting
+      const SCREEN_GROUP = { s07: 's06' };
 
-<script>
-  // s07 is grouped under s06 for sidebar/nav highlighting
-  const SCREEN_GROUP = { s07: 's06' };
+      // ── Screen navigation ──
+      function showScreen(id) {
+        document.querySelectorAll('.screen').forEach((s) => s.classList.remove('active'));
+        const el = document.getElementById(id);
+        if (el) {
+          el.classList.add('active');
+          window.scrollTo(0, 0);
+        }
 
-  // ── Screen navigation ──
-  function showScreen(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    const el = document.getElementById(id);
-    if (el) { el.classList.add('active'); window.scrollTo(0, 0); }
+        // Sidebar: remove all active, then highlight the first item whose onclick
+        // matches the target screen (or its group parent)
+        const lookupId = SCREEN_GROUP[id] || id;
+        document.querySelectorAll('.sidebar-item').forEach((i) => i.classList.remove('active'));
+        const firstMatch = [...document.querySelectorAll('.sidebar-item')].find((i) => {
+          const oc = i.getAttribute('onclick') || '';
+          return oc.includes(`'${lookupId}'`);
+        });
+        if (firstMatch) firstMatch.classList.add('active');
 
-    // Sidebar: remove all active, then highlight the first item whose onclick
-    // matches the target screen (or its group parent)
-    const lookupId = SCREEN_GROUP[id] || id;
-    document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
-    const firstMatch = [...document.querySelectorAll('.sidebar-item')].find(i => {
-      const oc = i.getAttribute('onclick') || '';
-      return oc.includes(`'${lookupId}'`);
-    });
-    if (firstMatch) firstMatch.classList.add('active');
-
-    // Top nav: remove all active, then highlight matching link
-    document.querySelectorAll('.top-nav-link').forEach(l => l.classList.remove('active'));
-    const navLinks = document.querySelectorAll('.top-nav-link');
-    const navMap = { s01: 0, s02: 0, s03: 0, s04: 0, s05: 0,
-                     s06: 1, s07: 1, s08: 3 };
-    const navIdx = navMap[id];
-    if (navIdx !== undefined && navLinks[navIdx]) {
-      navLinks[navIdx].classList.add('active');
-    }
-  }
-
-  // ── Checkbox (priority gate) ──
-  function toggleCheck(el) {
-    const box = el.querySelector('.check-box');
-    box.classList.toggle('checked');
-
-    // Update live score panel (only exists in s03)
-    const count    = document.querySelectorAll('#s03 .check-box.checked').length;
-    const scoreEl  = document.getElementById('gateScore');
-    const statusEl = document.getElementById('gateStatus');
-    if (!scoreEl) return;
-    scoreEl.textContent = count;
-    if (statusEl) {
-      if (count <= 1) {
-        statusEl.textContent = '✓ 제품 탐색을 진행해도 좋습니다';
-        statusEl.className   = 'gate-status ok';
-      } else if (count <= 3) {
-        statusEl.textContent = '△ 루틴 점검도 함께 확인하세요';
-        statusEl.className   = 'gate-status warn';
-      } else {
-        statusEl.textContent = '⚠ 새 제품보다 루틴 안정화가 먼저입니다';
-        statusEl.className   = 'gate-status stop';
+        // Top nav: remove all active, then highlight matching link
+        document.querySelectorAll('.top-nav-link').forEach((l) => l.classList.remove('active'));
+        const navLinks = document.querySelectorAll('.top-nav-link');
+        const navMap = { s01: 0, s02: 0, s03: 0, s04: 0, s05: 0, s06: 1, s07: 1, s08: 3 };
+        const navIdx = navMap[id];
+        if (navIdx !== undefined && navLinks[navIdx]) {
+          navLinks[navIdx].classList.add('active');
+        }
       }
-    }
-  }
 
-  // ── Chip selection ──
-  function selectChip(el, groupId) {
-    const group = document.getElementById(groupId);
-    if (!group) return;
-    group.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
-    el.classList.add('selected');
-  }
+      // ── Checkbox (priority gate) ──
+      function toggleCheck(el) {
+        const box = el.querySelector('.check-box');
+        box.classList.toggle('checked');
 
-  function toggleMulti(el) {
-    el.classList.toggle('multi-selected');
-  }
+        // Update live score panel (only exists in s03)
+        const count = document.querySelectorAll('#s03 .check-box.checked').length;
+        const scoreEl = document.getElementById('gateScore');
+        const statusEl = document.getElementById('gateStatus');
+        if (!scoreEl) return;
+        scoreEl.textContent = count;
+        if (statusEl) {
+          if (count <= 1) {
+            statusEl.textContent = '✓ 제품 탐색을 진행해도 좋습니다';
+            statusEl.className = 'gate-status ok';
+          } else if (count <= 3) {
+            statusEl.textContent = '△ 루틴 점검도 함께 확인하세요';
+            statusEl.className = 'gate-status warn';
+          } else {
+            statusEl.textContent = '⚠ 새 제품보다 루틴 안정화가 먼저입니다';
+            statusEl.className = 'gate-status stop';
+          }
+        }
+      }
 
-  // ── Price band ──
-  function switchPriceWeb(band, btn) {
-    document.querySelectorAll('#priceBandWeb .pb-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-  }
+      // ── Chip selection ──
+      function selectChip(el, groupId) {
+        const group = document.getElementById(groupId);
+        if (!group) return;
+        group.querySelectorAll('.chip').forEach((c) => c.classList.remove('selected'));
+        el.classList.add('selected');
+      }
 
-  // ── Accordion ──
-  function toggleAcc(header) {
-    const body  = header.nextElementSibling;
-    const arrow = header.querySelector('.acc-arrow');
-    if (!body) return;
-    body.classList.toggle('open');
-    if (arrow) arrow.classList.toggle('open');
-  }
+      function toggleMulti(el) {
+        el.classList.toggle('multi-selected');
+      }
 
-  // ── Tab switcher (S08) ──
-  function switchWebTab(tab) {
-    const traceView   = document.getElementById('web-view-trace');
-    const trackerView = document.getElementById('web-view-tracker');
-    const traceBtn    = document.getElementById('web-tab-trace');
-    const trackerBtn  = document.getElementById('web-tab-tracker');
-    if (!traceView || !trackerView) return;
+      // ── Price band ──
+      function switchPriceWeb(band, btn) {
+        document
+          .querySelectorAll('#priceBandWeb .pb-btn')
+          .forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+      }
 
-    if (tab === 'trace') {
-      traceView.style.display   = '';
-      trackerView.style.display = 'none';
-      traceBtn  && traceBtn.classList.add('active');
-      trackerBtn && trackerBtn.classList.remove('active');
-    } else {
-      traceView.style.display   = 'none';
-      trackerView.style.display = '';
-      trackerBtn && trackerBtn.classList.add('active');
-      traceBtn  && traceBtn.classList.remove('active');
-    }
-  }
+      // ── Accordion ──
+      function toggleAcc(header) {
+        const body = header.nextElementSibling;
+        const arrow = header.querySelector('.acc-arrow');
+        if (!body) return;
+        body.classList.toggle('open');
+        if (arrow) arrow.classList.toggle('open');
+      }
 
-  // Initialize: s06 is the default landing screen
-  showScreen('s06');
-</script>
-</body>
+      // ── Tab switcher (S08) ──
+      function switchWebTab(tab) {
+        const traceView = document.getElementById('web-view-trace');
+        const trackerView = document.getElementById('web-view-tracker');
+        const traceBtn = document.getElementById('web-tab-trace');
+        const trackerBtn = document.getElementById('web-tab-tracker');
+        if (!traceView || !trackerView) return;
+
+        if (tab === 'trace') {
+          traceView.style.display = '';
+          trackerView.style.display = 'none';
+          traceBtn && traceBtn.classList.add('active');
+          trackerBtn && trackerBtn.classList.remove('active');
+        } else {
+          traceView.style.display = 'none';
+          trackerView.style.display = '';
+          trackerBtn && trackerBtn.classList.add('active');
+          traceBtn && traceBtn.classList.remove('active');
+        }
+      }
+
+      // Initialize: s06 is the default landing screen
+      showScreen('s06');
+    </script>
+  </body>
 </html>

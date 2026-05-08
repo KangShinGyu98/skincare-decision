@@ -4,14 +4,14 @@
 
 ## 폴더 구조
 
-| 항목                                          | 역할                                                 |
-| --------------------------------------------- | ---------------------------------------------------- |
-| [README.md](README.md)                        | 색상·타이포·스페이싱·컴포넌트 가이드 (필수 읽기)     |
-| [SKILL.md](SKILL.md)                          | 디자인 시스템 사용 시 Skill 정의                     |
-| [colors_and_type.css](colors_and_type.css)    | CSS 변수 (color/type tokens) — Tailwind 매핑 기준    |
-| [Ant Design Open Source (Community).fig](.)   | Figma 원본 (참조용)                                  |
-| `preview/`                                    | 토큰 프리뷰 HTML (color, type, button, card 등)      |
-| `ui_kits/webapp/`                             | React/JSX 프로토타입 (LandingPage / PriorityGate / ProductMatrix) |
+| 항목                                        | 역할                                                              |
+| ------------------------------------------- | ----------------------------------------------------------------- |
+| [README.md](README.md)                      | 색상·타이포·스페이싱·컴포넌트 가이드 (필수 읽기)                  |
+| [SKILL.md](SKILL.md)                        | 디자인 시스템 사용 시 Skill 정의                                  |
+| [colors_and_type.css](colors_and_type.css)  | CSS 변수 (color/type tokens) — Tailwind 매핑 기준                 |
+| [Ant Design Open Source (Community).fig](.) | Figma 원본 (참조용)                                               |
+| `preview/`                                  | 토큰 프리뷰 HTML (color, type, button, card 등)                   |
+| `ui_kits/webapp/`                           | React/JSX 프로토타입 (LandingPage / PriorityGate / ProductMatrix) |
 
 ## 진입 규칙
 

@@ -1,71 +1,190 @@
-<!DOCTYPE html>
-<html><head><meta charset="UTF-8">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Roboto', sans-serif; background: #fff; padding: 20px; }
-  .row { display: flex; gap: 0; margin-bottom: 12px; }
-  .swatch { flex: 1; height: 52px; display: flex; flex-direction: column; justify-content: flex-end; padding: 4px 6px; }
-  .swatch span { font-size: 10px; font-weight: 500; opacity: 0.85; }
-  .label { font-size: 11px; font-weight: 700; color: #262626; margin-bottom: 6px; letter-spacing: 0.04em; text-transform: uppercase; }
-  .primary-badge { display: inline-block; background: #1890ff; color: #fff; font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 2px; margin-left: 6px; vertical-align: middle; }
-</style>
-</head>
-<body>
-  <div class="label">Daybreak Blue <span class="primary-badge">BRAND</span></div>
-  <div class="row">
-    <div class="swatch" style="background:#e6f7ff;"><span style="color:#096dd9">blue-1</span></div>
-    <div class="swatch" style="background:#bae7ff;"><span style="color:#096dd9">blue-2</span></div>
-    <div class="swatch" style="background:#91d5ff;"><span style="color:#096dd9">blue-3</span></div>
-    <div class="swatch" style="background:#69c0ff;"><span style="color:#0050b3">blue-4</span></div>
-    <div class="swatch" style="background:#40a9ff;"><span style="color:#fff">blue-5</span></div>
-    <div class="swatch" style="background:#1890ff; outline: 2px solid #096dd9; outline-offset: -2px;"><span style="color:#fff">blue-6 ★</span></div>
-    <div class="swatch" style="background:#096dd9;"><span style="color:#fff">blue-7</span></div>
-    <div class="swatch" style="background:#0050b3;"><span style="color:#fff">blue-8</span></div>
-    <div class="swatch" style="background:#003a8c;"><span style="color:#fff">blue-9</span></div>
-    <div class="swatch" style="background:#002766;"><span style="color:#fff">blue-10</span></div>
-  </div>
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: 'Roboto', sans-serif;
+        background: #fff;
+        padding: 20px;
+      }
+      .row {
+        display: flex;
+        gap: 0;
+        margin-bottom: 12px;
+      }
+      .swatch {
+        flex: 1;
+        height: 52px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 4px 6px;
+      }
+      .swatch span {
+        font-size: 10px;
+        font-weight: 500;
+        opacity: 0.85;
+      }
+      .label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #262626;
+        margin-bottom: 6px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .primary-badge {
+        display: inline-block;
+        background: #1890ff;
+        color: #fff;
+        font-size: 9px;
+        font-weight: 700;
+        padding: 1px 5px;
+        border-radius: 2px;
+        margin-left: 6px;
+        vertical-align: middle;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="label">Daybreak Blue <span class="primary-badge">BRAND</span></div>
+    <div class="row">
+      <div class="swatch" style="background: #e6f7ff">
+        <span style="color: #096dd9">blue-1</span>
+      </div>
+      <div class="swatch" style="background: #bae7ff">
+        <span style="color: #096dd9">blue-2</span>
+      </div>
+      <div class="swatch" style="background: #91d5ff">
+        <span style="color: #096dd9">blue-3</span>
+      </div>
+      <div class="swatch" style="background: #69c0ff">
+        <span style="color: #0050b3">blue-4</span>
+      </div>
+      <div class="swatch" style="background: #40a9ff"><span style="color: #fff">blue-5</span></div>
+      <div
+        class="swatch"
+        style="background: #1890ff; outline: 2px solid #096dd9; outline-offset: -2px"
+      >
+        <span style="color: #fff">blue-6 ★</span>
+      </div>
+      <div class="swatch" style="background: #096dd9"><span style="color: #fff">blue-7</span></div>
+      <div class="swatch" style="background: #0050b3"><span style="color: #fff">blue-8</span></div>
+      <div class="swatch" style="background: #003a8c"><span style="color: #fff">blue-9</span></div>
+      <div class="swatch" style="background: #002766"><span style="color: #fff">blue-10</span></div>
+    </div>
 
-  <div class="label" style="margin-top:16px;">Polar Green <span style="display:inline-block;background:#52c41a;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:2px;margin-left:6px;">SUCCESS</span></div>
-  <div class="row">
-    <div class="swatch" style="background:#f6ffed;"><span style="color:#135200">g-1</span></div>
-    <div class="swatch" style="background:#d9f7be;"><span style="color:#135200">g-2</span></div>
-    <div class="swatch" style="background:#b7eb8f;"><span style="color:#135200">g-3</span></div>
-    <div class="swatch" style="background:#95de64;"><span style="color:#092b00">g-4</span></div>
-    <div class="swatch" style="background:#73d13d;"><span style="color:#fff">g-5</span></div>
-    <div class="swatch" style="background:#52c41a; outline: 2px solid #389e0d; outline-offset: -2px;"><span style="color:#fff">g-6 ★</span></div>
-    <div class="swatch" style="background:#389e0d;"><span style="color:#fff">g-7</span></div>
-    <div class="swatch" style="background:#237804;"><span style="color:#fff">g-8</span></div>
-    <div class="swatch" style="background:#135200;"><span style="color:#fff">g-9</span></div>
-    <div class="swatch" style="background:#092b00;"><span style="color:#fff">g-10</span></div>
-  </div>
+    <div class="label" style="margin-top: 16px">
+      Polar Green
+      <span
+        style="
+          display: inline-block;
+          background: #52c41a;
+          color: #fff;
+          font-size: 9px;
+          font-weight: 700;
+          padding: 1px 5px;
+          border-radius: 2px;
+          margin-left: 6px;
+        "
+        >SUCCESS</span
+      >
+    </div>
+    <div class="row">
+      <div class="swatch" style="background: #f6ffed"><span style="color: #135200">g-1</span></div>
+      <div class="swatch" style="background: #d9f7be"><span style="color: #135200">g-2</span></div>
+      <div class="swatch" style="background: #b7eb8f"><span style="color: #135200">g-3</span></div>
+      <div class="swatch" style="background: #95de64"><span style="color: #092b00">g-4</span></div>
+      <div class="swatch" style="background: #73d13d"><span style="color: #fff">g-5</span></div>
+      <div
+        class="swatch"
+        style="background: #52c41a; outline: 2px solid #389e0d; outline-offset: -2px"
+      >
+        <span style="color: #fff">g-6 ★</span>
+      </div>
+      <div class="swatch" style="background: #389e0d"><span style="color: #fff">g-7</span></div>
+      <div class="swatch" style="background: #237804"><span style="color: #fff">g-8</span></div>
+      <div class="swatch" style="background: #135200"><span style="color: #fff">g-9</span></div>
+      <div class="swatch" style="background: #092b00"><span style="color: #fff">g-10</span></div>
+    </div>
 
-  <div class="label" style="margin-top:16px;">Dust Red <span style="display:inline-block;background:#ff4d4f;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:2px;margin-left:6px;">ERROR</span></div>
-  <div class="row">
-    <div class="swatch" style="background:#fff1f0;"><span style="color:#820014">r-1</span></div>
-    <div class="swatch" style="background:#ffccc7;"><span style="color:#820014">r-2</span></div>
-    <div class="swatch" style="background:#ffa39e;"><span style="color:#820014">r-3</span></div>
-    <div class="swatch" style="background:#ff7875;"><span style="color:#fff">r-4</span></div>
-    <div class="swatch" style="background:#ff4d4f; outline: 2px solid #cf1322; outline-offset: -2px;"><span style="color:#fff">r-5 ★</span></div>
-    <div class="swatch" style="background:#f5222d;"><span style="color:#fff">r-6</span></div>
-    <div class="swatch" style="background:#cf1322;"><span style="color:#fff">r-7</span></div>
-    <div class="swatch" style="background:#a8071a;"><span style="color:#fff">r-8</span></div>
-    <div class="swatch" style="background:#820014;"><span style="color:#fff">r-9</span></div>
-    <div class="swatch" style="background:#5c0011;"><span style="color:#fff">r-10</span></div>
-  </div>
+    <div class="label" style="margin-top: 16px">
+      Dust Red
+      <span
+        style="
+          display: inline-block;
+          background: #ff4d4f;
+          color: #fff;
+          font-size: 9px;
+          font-weight: 700;
+          padding: 1px 5px;
+          border-radius: 2px;
+          margin-left: 6px;
+        "
+        >ERROR</span
+      >
+    </div>
+    <div class="row">
+      <div class="swatch" style="background: #fff1f0"><span style="color: #820014">r-1</span></div>
+      <div class="swatch" style="background: #ffccc7"><span style="color: #820014">r-2</span></div>
+      <div class="swatch" style="background: #ffa39e"><span style="color: #820014">r-3</span></div>
+      <div class="swatch" style="background: #ff7875"><span style="color: #fff">r-4</span></div>
+      <div
+        class="swatch"
+        style="background: #ff4d4f; outline: 2px solid #cf1322; outline-offset: -2px"
+      >
+        <span style="color: #fff">r-5 ★</span>
+      </div>
+      <div class="swatch" style="background: #f5222d"><span style="color: #fff">r-6</span></div>
+      <div class="swatch" style="background: #cf1322"><span style="color: #fff">r-7</span></div>
+      <div class="swatch" style="background: #a8071a"><span style="color: #fff">r-8</span></div>
+      <div class="swatch" style="background: #820014"><span style="color: #fff">r-9</span></div>
+      <div class="swatch" style="background: #5c0011"><span style="color: #fff">r-10</span></div>
+    </div>
 
-  <div class="label" style="margin-top:16px;">Calendula Gold <span style="display:inline-block;background:#faad14;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:2px;margin-left:6px;">WARNING</span></div>
-  <div class="row">
-    <div class="swatch" style="background:#fffbe6;"><span style="color:#613400">go-1</span></div>
-    <div class="swatch" style="background:#fff1b8;"><span style="color:#613400">go-2</span></div>
-    <div class="swatch" style="background:#ffe58f;"><span style="color:#613400">go-3</span></div>
-    <div class="swatch" style="background:#ffd666;"><span style="color:#613400">go-4</span></div>
-    <div class="swatch" style="background:#ffc53d;"><span style="color:#613400">go-5</span></div>
-    <div class="swatch" style="background:#faad14; outline: 2px solid #d48806; outline-offset: -2px;"><span style="color:#fff">go-6 ★</span></div>
-    <div class="swatch" style="background:#d48806;"><span style="color:#fff">go-7</span></div>
-    <div class="swatch" style="background:#ad6800;"><span style="color:#fff">go-8</span></div>
-    <div class="swatch" style="background:#874d00;"><span style="color:#fff">go-9</span></div>
-    <div class="swatch" style="background:#613400;"><span style="color:#fff">go-10</span></div>
-  </div>
-</body></html>
+    <div class="label" style="margin-top: 16px">
+      Calendula Gold
+      <span
+        style="
+          display: inline-block;
+          background: #faad14;
+          color: #fff;
+          font-size: 9px;
+          font-weight: 700;
+          padding: 1px 5px;
+          border-radius: 2px;
+          margin-left: 6px;
+        "
+        >WARNING</span
+      >
+    </div>
+    <div class="row">
+      <div class="swatch" style="background: #fffbe6"><span style="color: #613400">go-1</span></div>
+      <div class="swatch" style="background: #fff1b8"><span style="color: #613400">go-2</span></div>
+      <div class="swatch" style="background: #ffe58f"><span style="color: #613400">go-3</span></div>
+      <div class="swatch" style="background: #ffd666"><span style="color: #613400">go-4</span></div>
+      <div class="swatch" style="background: #ffc53d"><span style="color: #613400">go-5</span></div>
+      <div
+        class="swatch"
+        style="background: #faad14; outline: 2px solid #d48806; outline-offset: -2px"
+      >
+        <span style="color: #fff">go-6 ★</span>
+      </div>
+      <div class="swatch" style="background: #d48806"><span style="color: #fff">go-7</span></div>
+      <div class="swatch" style="background: #ad6800"><span style="color: #fff">go-8</span></div>
+      <div class="swatch" style="background: #874d00"><span style="color: #fff">go-9</span></div>
+      <div class="swatch" style="background: #613400"><span style="color: #fff">go-10</span></div>
+    </div>
+  </body>
+</html>

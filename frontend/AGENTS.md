@@ -59,14 +59,14 @@ frontend/
 
 ## 화면 ↔ 라우트 ↔ API 매핑
 
-| 화면 | 경로                                | 핵심 API                                                            |
-| ---- | ----------------------------------- | ------------------------------------------------------------------- |
-| S01  | `/`                                 | `GET /facts/definitions`(prefetch)                                  |
-| S02  | `/priority-gate`                    | `POST /facts/answers` → `POST /priority-gate/evaluate`              |
-| S03~S05 | `/category-decision/[category]`  | `GET /facts/questions?screen=context` + `POST /facts/answers` + `POST /category-decision/seed` |
-| S06  | `/product-matrix?category=...`      | `GET /product-matrix?...` + `POST /product-matrix/filter-state`     |
-| S07  | `/products/[id]`                    | `GET /products/:id`                                                 |
-| S08  | `/reaction-traceback`               | `POST /reactions/reports` + `POST /reactions/avoidance-rules`       |
+| 화면    | 경로                            | 핵심 API                                                                                       |
+| ------- | ------------------------------- | ---------------------------------------------------------------------------------------------- |
+| S01     | `/`                             | `GET /facts/definitions`(prefetch)                                                             |
+| S02     | `/priority-gate`                | `POST /facts/answers` → `POST /priority-gate/evaluate`                                         |
+| S03~S05 | `/category-decision/[category]` | `GET /facts/questions?screen=context` + `POST /facts/answers` + `POST /category-decision/seed` |
+| S06     | `/product-matrix?category=...`  | `GET /product-matrix?...` + `POST /product-matrix/filter-state`                                |
+| S07     | `/products/[id]`                | `GET /products/:id`                                                                            |
+| S08     | `/reaction-traceback`           | `POST /reactions/reports` + `POST /reactions/avoidance-rules`                                  |
 
 ## 황금 원칙 (프론트엔드)
 

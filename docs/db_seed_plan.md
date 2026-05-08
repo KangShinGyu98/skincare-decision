@@ -18,11 +18,11 @@
 
 [docs/db_modeling.md](db_modeling.md)의 25개 테이블을 다음 3종으로 분류한다.
 
-| 분류 | 테이블 | 처리 |
-|---|---|---|
-| **시스템 데이터** (룰/스키마/카테고리) | `product_categories`, `category_attribute_definitions`, `fact_definitions`, `context_questions`, `question_visibility_conditions`, `priority_rules`, `priority_rule_conditions`, `product_filter_mappings`, `ingredient_groups`, `ingredient_group_members` | **seed 필수**. 명세 docs에서 변환 |
-| **카탈로그 데이터** (브랜드/제품/성분) | `brands`, `products`, `ingredients`, `product_ingredients` | **토너만 seed**, 그 외는 admin UI로 추가 |
-| **런타임 데이터** | `users`, `devices`, `user_sessions`, `session_events`, `user_facts`, `decision_runs`, `product_matrix_filter_states`, `reaction_reports`, `reaction_report_products`, `suspected_causes`, `avoidance_rules` | seed 안 함. 사용 중 자동 생성 |
+| 분류                                   | 테이블                                                                                                                                                                                                                                                      | 처리                                     |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| **시스템 데이터** (룰/스키마/카테고리) | `product_categories`, `category_attribute_definitions`, `fact_definitions`, `context_questions`, `question_visibility_conditions`, `priority_rules`, `priority_rule_conditions`, `product_filter_mappings`, `ingredient_groups`, `ingredient_group_members` | **seed 필수**. 명세 docs에서 변환        |
+| **카탈로그 데이터** (브랜드/제품/성분) | `brands`, `products`, `ingredients`, `product_ingredients`                                                                                                                                                                                                  | **토너만 seed**, 그 외는 admin UI로 추가 |
+| **런타임 데이터**                      | `users`, `devices`, `user_sessions`, `session_events`, `user_facts`, `decision_runs`, `product_matrix_filter_states`, `reaction_reports`, `reaction_report_products`, `suspected_causes`, `avoidance_rules`                                                 | seed 안 함. 사용 중 자동 생성            |
 
 ---
 
@@ -30,25 +30,25 @@
 
 ### 2.1 시스템 데이터
 
-| 테이블 | 소스 문서 | 추출 위치 |
-|---|---|---|
-| `product_categories` | [product_taxonomy.md](product_taxonomy.md) | 6개 카테고리 (toner/sunscreen/serum/lipcare/moisturizer/cleanser)와 한글 라벨 |
-| `category_attribute_definitions` | [product_attribute_schema.md](product_attribute_schema.md) | §2~§7 (카테고리별 Core/Optional 표). value_type, options, is_required, is_filterable 컬럼 채움 |
-| `fact_definitions` | [matching_rules_revised.md](matching_rules_revised.md) | §1 (Fact 정의 표) + §2 (Derived facts) |
-| `context_questions` | [matching_rules_revised.md](matching_rules_revised.md) | §4 (질문 정의) + [page_content_specification.md](page_content_specification.md) (실제 카피) |
-| `question_visibility_conditions` | [matching_rules_revised.md](matching_rules_revised.md) | §5 (REQUIRED/EXCLUDED 표) |
-| `priority_rules` + `priority_rule_conditions` | [matching_rules_revised.md](matching_rules_revised.md) | §3 (HOLD/CAUTION/PASS/ROUTE 룰 본문 + 조건) + §10 (advice block) |
-| `product_filter_mappings` | [matching_rules_revised.md](matching_rules_revised.md) | §7 (BASIC_CONDITION) + §8 (PERSONALIZED) + §9 (개별 필터 명세) |
-| `ingredient_groups` + `ingredient_group_members` | [matching_rules_revised.md](matching_rules_revised.md) (있는 경우) | active group, conflict group 등 |
+| 테이블                                           | 소스 문서                                                          | 추출 위치                                                                                      |
+| ------------------------------------------------ | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| `product_categories`                             | [product_taxonomy.md](product_taxonomy.md)                         | 6개 카테고리 (toner/sunscreen/serum/lipcare/moisturizer/cleanser)와 한글 라벨                  |
+| `category_attribute_definitions`                 | [product_attribute_schema.md](product_attribute_schema.md)         | §2~§7 (카테고리별 Core/Optional 표). value_type, options, is_required, is_filterable 컬럼 채움 |
+| `fact_definitions`                               | [matching_rules_revised.md](matching_rules_revised.md)             | §1 (Fact 정의 표) + §2 (Derived facts)                                                         |
+| `context_questions`                              | [matching_rules_revised.md](matching_rules_revised.md)             | §4 (질문 정의) + [page_content_specification.md](page_content_specification.md) (실제 카피)    |
+| `question_visibility_conditions`                 | [matching_rules_revised.md](matching_rules_revised.md)             | §5 (REQUIRED/EXCLUDED 표)                                                                      |
+| `priority_rules` + `priority_rule_conditions`    | [matching_rules_revised.md](matching_rules_revised.md)             | §3 (HOLD/CAUTION/PASS/ROUTE 룰 본문 + 조건) + §10 (advice block)                               |
+| `product_filter_mappings`                        | [matching_rules_revised.md](matching_rules_revised.md)             | §7 (BASIC_CONDITION) + §8 (PERSONALIZED) + §9 (개별 필터 명세)                                 |
+| `ingredient_groups` + `ingredient_group_members` | [matching_rules_revised.md](matching_rules_revised.md) (있는 경우) | active group, conflict group 등                                                                |
 
 ### 2.2 카탈로그 데이터 (토너만)
 
-| 테이블 | 소스 | 추출 방법 |
-|---|---|---|
-| `brands` | [화장품 성분비교.CSV](./화장품%20성분비교.CSV) 1열 (브랜드) | CSV의 unique 브랜드 ~15개. 영문/한글 명을 같이 매핑 |
-| `products` | [화장품 성분비교.CSV](./화장품%20성분비교.CSV) | 토너 25+종 전체. attribute는 [product_attribute_schema.md](product_attribute_schema.md) §2의 Core/Optional 키로 매핑 |
-| `ingredients` | CSV의 전성분 컬럼 (unique 토큰) | 자주 등장하는 50~100개를 INCI 영문명과 매핑해 1차 시드. 나머지는 admin UI에서 신규 등록 경로 사용 |
-| `product_ingredients` | CSV의 전성분 컬럼 (제품별 순서) | 각 제품의 전성분을 토큰화해 `(product_id, ingredient_id, order_index, raw_text)` 행으로 |
+| 테이블                | 소스                                                        | 추출 방법                                                                                                            |
+| --------------------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `brands`              | [화장품 성분비교.CSV](./화장품%20성분비교.CSV) 1열 (브랜드) | CSV의 unique 브랜드 ~15개. 영문/한글 명을 같이 매핑                                                                  |
+| `products`            | [화장품 성분비교.CSV](./화장품%20성분비교.CSV)              | 토너 25+종 전체. attribute는 [product_attribute_schema.md](product_attribute_schema.md) §2의 Core/Optional 키로 매핑 |
+| `ingredients`         | CSV의 전성분 컬럼 (unique 토큰)                             | 자주 등장하는 50~100개를 INCI 영문명과 매핑해 1차 시드. 나머지는 admin UI에서 신규 등록 경로 사용                    |
+| `product_ingredients` | CSV의 전성분 컬럼 (제품별 순서)                             | 각 제품의 전성분을 토큰화해 `(product_id, ingredient_id, order_index, raw_text)` 행으로                              |
 
 ### 2.3 시드 안 함 (Rejected/ 영역)
 
@@ -85,24 +85,26 @@ backend/
 ```
 
 ### 3.1 왜 TS + JSON인가
+
 - **TS orchestrator**: 의존성 순서 제어, Prisma 타입 사용, upsert 보장.
 - **JSON 데이터**: 큐레이터가 직접 편집 가능하고, CSV 변환 결과를 그대로 export 가능. 도메인별 분리로 PR diff가 깔끔함.
 - 카테고리 단위로 파일을 쪼개면 토너 작업 시 다른 카테고리 파일은 비워두거나 placeholder만 둘 수 있다.
 
 ### 3.2 멱등성 (idempotent)
+
 모든 시드는 자연키 기반 upsert.
 
-| 테이블 | 자연키 |
-|---|---|
-| `product_categories` | `key` |
-| `brands` | `slug` 또는 `name_ko` |
-| `category_attribute_definitions` | `(category_id, key)` |
-| `fact_definitions` | `key` |
-| `context_questions` | `fact_key` |
-| `priority_rules` | `key` |
-| `product_filter_mappings` | `(category_id, filter_key, source_fact_key, source_condition_hash)` |
-| `ingredients` | `inci_name` |
-| `products` | `(brand_id, name)` |
+| 테이블                           | 자연키                                                              |
+| -------------------------------- | ------------------------------------------------------------------- |
+| `product_categories`             | `key`                                                               |
+| `brands`                         | `slug` 또는 `name_ko`                                               |
+| `category_attribute_definitions` | `(category_id, key)`                                                |
+| `fact_definitions`               | `key`                                                               |
+| `context_questions`              | `fact_key`                                                          |
+| `priority_rules`                 | `key`                                                               |
+| `product_filter_mappings`        | `(category_id, filter_key, source_fact_key, source_condition_hash)` |
+| `ingredients`                    | `inci_name`                                                         |
+| `products`                       | `(brand_id, name)`                                                  |
 
 기존 행이 있으면 update, 없으면 insert. 시드 재실행이 데이터 손실을 일으키지 않는다.
 
@@ -136,6 +138,7 @@ backend/
 위치: `scripts/csv_to_seed.ts` (또는 `.py`).
 
 처리 순서:
+
 1. CSV를 UTF-8로 정규화 (현재 cp949/euc-kr 추정).
 2. 각 행을 `product_attribute_schema.md` §2 Core/Optional 키로 매핑.
 3. boolean 컬럼은 `TRUE/FALSE/x/공백`을 표준화 (공백 = `null`).
@@ -149,13 +152,16 @@ backend/
 ## 6. MVP 단계별 시드 범위
 
 ### Phase A (토너만, 어드민 미리보기 단계)
+
 - 시스템 데이터 전체 (6개 카테고리 룰/매핑)
 - 카탈로그 데이터: 토너만
 
 ### Phase B (사용자 흐름 검증 단계)
+
 - 동일. 변경 없음.
 
 ### Phase C (다른 카테고리 추가 시)
+
 - 카테고리별 `category_attribute_definitions.{cat}.json`을 채운다.
 - 카테고리별 `product_filter_mappings.{cat}.json`을 채운다.
 - 카탈로그는 admin UI로 추가 (시드 갱신 X).

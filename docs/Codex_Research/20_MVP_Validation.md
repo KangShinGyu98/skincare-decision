@@ -1,5 +1,6 @@
 # 20 MVP Validation: Codex안 vs ChatGPT안 비교
-*MVP validation document | Codex | 2026-04-22*
+
+_MVP validation document | Codex | 2026-04-22_
 
 ---
 
@@ -19,16 +20,16 @@
 
 ## 2. 빠른 비교 요약
 
-| 항목 | Codex안 | ChatGPT안 | 핵심 차이 |
-|---|---|---|---|
-| 제품 중심축 | Decision-first | Trend + Decision dual-core | Codex는 판단 흐름, ChatGPT는 트렌드 해석을 전면 배치 |
-| 사용자 분류 | 의사결정 단계 기반 3+1 세그먼트 | 유입 동기 + 문제 유형 + 라우팅 구조 혼합 | Codex가 UX 분기용으로 더 명확 |
-| MVP 화면 수 | 코어 9화면 | 명시상 5화면 | ChatGPT안은 실제로는 숨은 단계가 많아 실질 8~10단계 |
-| 추천 방식 | 설명 가능한 shortlist | 트렌드 기반 후보 비교 | Codex가 적합도/회피 이유에 더 무게 |
-| 핵심 데이터 | 구조화된 질문, 카드, 제품 시딩 | 네이버 트렌드/쇼핑 API + 태깅 + 점수화 | ChatGPT안이 데이터 파이프라인 의존도가 높음 |
-| 차별화 포인트 | Priority Engine, Product Fit, Traceback, post-use learning | Animated Top N, Trend Radar, Priority Matrix | Codex는 결정 정확도, ChatGPT는 인사이트 가시성 |
-| 후기/학습 루프 | 강함 | 상대적으로 약함 | Codex는 재방문/적응 추적을 구조에 포함 |
-| 포트폴리오 성격 | 실제 서비스 설계 | 데이터 제품/인텔리전스 데모에 강함 | 보여주는 강점이 다름 |
+| 항목            | Codex안                                                    | ChatGPT안                                    | 핵심 차이                                            |
+| --------------- | ---------------------------------------------------------- | -------------------------------------------- | ---------------------------------------------------- |
+| 제품 중심축     | Decision-first                                             | Trend + Decision dual-core                   | Codex는 판단 흐름, ChatGPT는 트렌드 해석을 전면 배치 |
+| 사용자 분류     | 의사결정 단계 기반 3+1 세그먼트                            | 유입 동기 + 문제 유형 + 라우팅 구조 혼합     | Codex가 UX 분기용으로 더 명확                        |
+| MVP 화면 수     | 코어 9화면                                                 | 명시상 5화면                                 | ChatGPT안은 실제로는 숨은 단계가 많아 실질 8~10단계  |
+| 추천 방식       | 설명 가능한 shortlist                                      | 트렌드 기반 후보 비교                        | Codex가 적합도/회피 이유에 더 무게                   |
+| 핵심 데이터     | 구조화된 질문, 카드, 제품 시딩                             | 네이버 트렌드/쇼핑 API + 태깅 + 점수화       | ChatGPT안이 데이터 파이프라인 의존도가 높음          |
+| 차별화 포인트   | Priority Engine, Product Fit, Traceback, post-use learning | Animated Top N, Trend Radar, Priority Matrix | Codex는 결정 정확도, ChatGPT는 인사이트 가시성       |
+| 후기/학습 루프  | 강함                                                       | 상대적으로 약함                              | Codex는 재방문/적응 추적을 구조에 포함               |
+| 포트폴리오 성격 | 실제 서비스 설계                                           | 데이터 제품/인텔리전스 데모에 강함           | 보여주는 강점이 다름                                 |
 
 ---
 

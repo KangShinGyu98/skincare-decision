@@ -1,84 +1,241 @@
-<!DOCTYPE html>
-<html><head><meta charset="UTF-8">
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Noto+Sans+KR:wght@400;500&display=swap" rel="stylesheet">
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Roboto','Noto Sans KR',sans-serif; background: #f0f2f5; padding: 0; }
-  .label { font-size: 11px; font-weight: 700; color: #262626; margin-bottom: 10px; letter-spacing: 0.04em; text-transform: uppercase; padding: 0 20px; }
-  .section { margin-bottom: 0; }
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Noto+Sans+KR:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: 'Roboto', 'Noto Sans KR', sans-serif;
+        background: #f0f2f5;
+        padding: 0;
+      }
+      .label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #262626;
+        margin-bottom: 10px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding: 0 20px;
+      }
+      .section {
+        margin-bottom: 0;
+      }
 
-  /* Top Nav */
-  .topnav { background: #001529; height: 48px; display: flex; align-items: center; padding: 0 24px; gap: 24px; }
-  .logo { color: #fff; font-size: 16px; font-weight: 500; letter-spacing: 0.01em; }
-  .nav-link { color: rgba(255,255,255,0.65); font-size: 14px; cursor: pointer; padding: 0 4px; transition: color 0.3s; }
-  .nav-link.active { color: #fff; }
-  .nav-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
-  .nav-cta { background: #1890ff; border: none; color: #fff; font-family: inherit; font-size: 13px; padding: 5px 14px; border-radius: 2px; cursor: pointer; }
+      /* Top Nav */
+      .topnav {
+        background: #001529;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        padding: 0 24px;
+        gap: 24px;
+      }
+      .logo {
+        color: #fff;
+        font-size: 16px;
+        font-weight: 500;
+        letter-spacing: 0.01em;
+      }
+      .nav-link {
+        color: rgba(255, 255, 255, 0.65);
+        font-size: 14px;
+        cursor: pointer;
+        padding: 0 4px;
+        transition: color 0.3s;
+      }
+      .nav-link.active {
+        color: #fff;
+      }
+      .nav-right {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .nav-cta {
+        background: #1890ff;
+        border: none;
+        color: #fff;
+        font-family: inherit;
+        font-size: 13px;
+        padding: 5px 14px;
+        border-radius: 2px;
+        cursor: pointer;
+      }
 
-  /* Steps */
-  .steps { background: #fff; border-bottom: 1px solid #f0f0f0; padding: 14px 24px; display: flex; align-items: center; gap: 0; }
-  .step { display: flex; align-items: center; gap: 8px; flex: 1; }
-  .step:not(:last-child)::after { content: ''; flex: 1; height: 1px; background: #d9d9d9; margin: 0 8px; }
-  .step-num { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; flex-shrink: 0; }
-  .step-done .step-num { background: #1890ff; color: #fff; }
-  .step-active .step-num { background: #fff; border: 2px solid #1890ff; color: #1890ff; }
-  .step-wait .step-num { background: #fff; border: 2px solid #d9d9d9; color: #8c8c8c; }
-  .step-title { font-size: 14px; }
-  .step-done .step-title { color: #1890ff; font-weight: 500; }
-  .step-active .step-title { color: #262626; font-weight: 500; }
-  .step-wait .step-title { color: #8c8c8c; }
+      /* Steps */
+      .steps {
+        background: #fff;
+        border-bottom: 1px solid #f0f0f0;
+        padding: 14px 24px;
+        display: flex;
+        align-items: center;
+        gap: 0;
+      }
+      .step {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+      }
+      .step:not(:last-child)::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: #d9d9d9;
+        margin: 0 8px;
+      }
+      .step-num {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 500;
+        flex-shrink: 0;
+      }
+      .step-done .step-num {
+        background: #1890ff;
+        color: #fff;
+      }
+      .step-active .step-num {
+        background: #fff;
+        border: 2px solid #1890ff;
+        color: #1890ff;
+      }
+      .step-wait .step-num {
+        background: #fff;
+        border: 2px solid #d9d9d9;
+        color: #8c8c8c;
+      }
+      .step-title {
+        font-size: 14px;
+      }
+      .step-done .step-title {
+        color: #1890ff;
+        font-weight: 500;
+      }
+      .step-active .step-title {
+        color: #262626;
+        font-weight: 500;
+      }
+      .step-wait .step-title {
+        color: #8c8c8c;
+      }
 
-  /* Tabs */
-  .tabs { background: #fff; border-bottom: 1px solid #f0f0f0; padding: 0 24px; display: flex; }
-  .tab { padding: 12px 16px; font-size: 14px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
-  .tab.active { color: #1890ff; border-bottom-color: #1890ff; font-weight: 500; }
-  .tab:not(.active) { color: #595959; }
+      /* Tabs */
+      .tabs {
+        background: #fff;
+        border-bottom: 1px solid #f0f0f0;
+        padding: 0 24px;
+        display: flex;
+      }
+      .tab {
+        padding: 12px 16px;
+        font-size: 14px;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -1px;
+      }
+      .tab.active {
+        color: #1890ff;
+        border-bottom-color: #1890ff;
+        font-weight: 500;
+      }
+      .tab:not(.active) {
+        color: #595959;
+      }
 
-  /* Breadcrumb */
-  .bc { background: #fff; padding: 10px 24px; display: flex; align-items: center; gap: 4px; font-size: 14px; border-bottom: 1px solid #f0f0f0; }
-  .bc a { color: #1890ff; }
-  .bc-sep { color: #bfbfbf; }
-  .bc-current { color: #262626; }
+      /* Breadcrumb */
+      .bc {
+        background: #fff;
+        padding: 10px 24px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 14px;
+        border-bottom: 1px solid #f0f0f0;
+      }
+      .bc a {
+        color: #1890ff;
+      }
+      .bc-sep {
+        color: #bfbfbf;
+      }
+      .bc-current {
+        color: #262626;
+      }
 
-  .section-label { font-size: 10px; font-weight: 700; color: #8c8c8c; letter-spacing: 0.06em; text-transform: uppercase; padding: 8px 24px 0; }
-</style>
-</head>
-<body>
-  <div class="section-label">Global Header (Dark)</div>
-  <div class="topnav">
-    <div class="logo">Skincare Decision</div>
-    <span class="nav-link active">홈</span>
-    <span class="nav-link">Priority Gate</span>
-    <span class="nav-link">Product Matrix</span>
-    <span class="nav-link">Traceback</span>
-    <div class="nav-right">
-      <button class="nav-cta">시작하기</button>
+      .section-label {
+        font-size: 10px;
+        font-weight: 700;
+        color: #8c8c8c;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        padding: 8px 24px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="section-label">Global Header (Dark)</div>
+    <div class="topnav">
+      <div class="logo">Skincare Decision</div>
+      <span class="nav-link active">홈</span>
+      <span class="nav-link">Priority Gate</span>
+      <span class="nav-link">Product Matrix</span>
+      <span class="nav-link">Traceback</span>
+      <div class="nav-right">
+        <button class="nav-cta">시작하기</button>
+      </div>
     </div>
-  </div>
 
-  <div class="section-label" style="margin-top:6px;">Breadcrumb</div>
-  <div class="bc">
-    <a href="#">홈</a>
-    <span class="bc-sep">/</span>
-    <a href="#">선크림</a>
-    <span class="bc-sep">/</span>
-    <span class="bc-current">Product Matrix</span>
-  </div>
+    <div class="section-label" style="margin-top: 6px">Breadcrumb</div>
+    <div class="bc">
+      <a href="#">홈</a>
+      <span class="bc-sep">/</span>
+      <a href="#">선크림</a>
+      <span class="bc-sep">/</span>
+      <span class="bc-current">Product Matrix</span>
+    </div>
 
-  <div class="section-label" style="margin-top:0;">Steps</div>
-  <div class="steps">
-    <div class="step step-done"><div class="step-num">✓</div><span class="step-title">Priority Gate</span></div>
-    <div class="step step-active"><div class="step-num">2</div><span class="step-title">기본 맥락</span></div>
-    <div class="step step-wait"><div class="step-num">3</div><span class="step-title">제품군 기준</span></div>
-    <div class="step step-wait"><div class="step-num">4</div><span class="step-title">결과 확인</span></div>
-  </div>
+    <div class="section-label" style="margin-top: 0">Steps</div>
+    <div class="steps">
+      <div class="step step-done">
+        <div class="step-num">✓</div>
+        <span class="step-title">Priority Gate</span>
+      </div>
+      <div class="step step-active">
+        <div class="step-num">2</div>
+        <span class="step-title">기본 맥락</span>
+      </div>
+      <div class="step step-wait">
+        <div class="step-num">3</div>
+        <span class="step-title">제품군 기준</span>
+      </div>
+      <div class="step step-wait">
+        <div class="step-num">4</div>
+        <span class="step-title">결과 확인</span>
+      </div>
+    </div>
 
-  <div class="section-label" style="margin-top:0;">Tabs</div>
-  <div class="tabs">
-    <div class="tab active">선크림</div>
-    <div class="tab">세럼</div>
-    <div class="tab">립케어</div>
-    <div class="tab">로션 / 크림</div>
-    <div class="tab">클렌저</div>
-  </div>
-</body></html>
+    <div class="section-label" style="margin-top: 0">Tabs</div>
+    <div class="tabs">
+      <div class="tab active">선크림</div>
+      <div class="tab">세럼</div>
+      <div class="tab">립케어</div>
+      <div class="tab">로션 / 크림</div>
+      <div class="tab">클렌저</div>
+    </div>
+  </body>
+</html>

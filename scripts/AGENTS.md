@@ -4,13 +4,13 @@
 
 ## 파일
 
-| 파일                  | 역할                                                            |
-| --------------------- | --------------------------------------------------------------- |
-| crawl_titles.py       | 크롤링 후보 제목 수집                                           |
-| crawl_articles.py     | 본문 크롤링 (`../crawl/articles/`로 출력)                        |
-| organize_articles.py  | 다운로드된 아티클 정리 / 중복 제거                              |
-| find_api.py           | 후보 사이트의 내부 API 탐색 v1                                  |
-| find_api2.py          | 후보 사이트의 내부 API 탐색 v2                                  |
+| 파일                 | 역할                                      |
+| -------------------- | ----------------------------------------- |
+| crawl_titles.py      | 크롤링 후보 제목 수집                     |
+| crawl_articles.py    | 본문 크롤링 (`../crawl/articles/`로 출력) |
+| organize_articles.py | 다운로드된 아티클 정리 / 중복 제거        |
+| find_api.py          | 후보 사이트의 내부 API 탐색 v1            |
+| find_api2.py         | 후보 사이트의 내부 API 탐색 v2            |
 
 ## 진입 규칙
 

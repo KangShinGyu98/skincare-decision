@@ -12,61 +12,61 @@
 
 ### 인증 / 신원
 
-| METHOD | PATH                       | 목적                                         |
-| ------ | -------------------------- | -------------------------------------------- |
-| POST   | `/auth/device`             | device_id 발급/조회 (없으면 생성)            |
-| POST   | `/auth/login`              | 이메일 로그인 + 자동 병합 트리거             |
-| POST   | `/auth/logout`             | 세션 종료 (device_id는 유지)                 |
+| METHOD | PATH           | 목적                              |
+| ------ | -------------- | --------------------------------- |
+| POST   | `/auth/device` | device_id 발급/조회 (없으면 생성) |
+| POST   | `/auth/login`  | 이메일 로그인 + 자동 병합 트리거  |
+| POST   | `/auth/logout` | 세션 종료 (device_id는 유지)      |
 
 ### Fact / 질문
 
-| METHOD | PATH                                         | 목적                                              |
-| ------ | -------------------------------------------- | ------------------------------------------------- |
-| GET    | `/facts/definitions`                         | fact_definitions 전체 (캐시 가능, ETag)           |
-| GET    | `/facts/questions?screen=priority_gate`      | screen 별 보여줄 context_questions + visibility   |
-| POST   | `/facts/answers`                             | user_facts append (배열 가능)                     |
-| GET    | `/facts/answers?session_id=...`              | 현재 device/user의 최신 fact 값                   |
+| METHOD | PATH                                    | 목적                                            |
+| ------ | --------------------------------------- | ----------------------------------------------- |
+| GET    | `/facts/definitions`                    | fact_definitions 전체 (캐시 가능, ETag)         |
+| GET    | `/facts/questions?screen=priority_gate` | screen 별 보여줄 context_questions + visibility |
+| POST   | `/facts/answers`                        | user_facts append (배열 가능)                   |
+| GET    | `/facts/answers?session_id=...`         | 현재 device/user의 최신 fact 값                 |
 
 ### Priority Gate
 
-| METHOD | PATH                       | 목적                                                     |
-| ------ | -------------------------- | -------------------------------------------------------- |
-| POST   | `/priority-gate/evaluate`  | 현재 user_facts → priority_rules 평가 → decision_runs 저장 |
-| GET    | `/priority-gate/result/:runId` | snapshot 조회                                          |
+| METHOD | PATH                           | 목적                                                       |
+| ------ | ------------------------------ | ---------------------------------------------------------- |
+| POST   | `/priority-gate/evaluate`      | 현재 user_facts → priority_rules 평가 → decision_runs 저장 |
+| GET    | `/priority-gate/result/:runId` | snapshot 조회                                              |
 
 ### Category Decision / Product Matrix
 
-| METHOD | PATH                                                 | 목적                                                                |
-| ------ | ---------------------------------------------------- | ------------------------------------------------------------------- |
-| GET    | `/categories`                                        | 6개 product_categories 목록                                         |
-| GET    | `/categories/:key/attributes`                        | category_attribute_definitions (관리자/필터 UI)                     |
-| POST   | `/category-decision/seed`                            | category 진입 시 BASIC + PERSONALIZED 필터 초기 상태 생성           |
-| GET    | `/product-matrix?category=sunscreen&filter_state=..` | filter_state 기반 products 조회 + tags + cautions                   |
-| POST   | `/product-matrix/filter-state`                       | filter 추가/삭제 → product_matrix_filter_states 업데이트            |
-| POST   | `/product-matrix/runs`                               | 조회 결과 snapshot 저장 (decision_runs)                             |
+| METHOD | PATH                                                 | 목적                                                      |
+| ------ | ---------------------------------------------------- | --------------------------------------------------------- |
+| GET    | `/categories`                                        | 6개 product_categories 목록                               |
+| GET    | `/categories/:key/attributes`                        | category_attribute_definitions (관리자/필터 UI)           |
+| POST   | `/category-decision/seed`                            | category 진입 시 BASIC + PERSONALIZED 필터 초기 상태 생성 |
+| GET    | `/product-matrix?category=sunscreen&filter_state=..` | filter_state 기반 products 조회 + tags + cautions         |
+| POST   | `/product-matrix/filter-state`                       | filter 추가/삭제 → product_matrix_filter_states 업데이트  |
+| POST   | `/product-matrix/runs`                               | 조회 결과 snapshot 저장 (decision_runs)                   |
 
 ### Product Detail
 
-| METHOD | PATH                  | 목적                                           |
-| ------ | --------------------- | ---------------------------------------------- |
-| GET    | `/products/:id`       | 제품 상세 + 적합도 사유 + ingredients          |
+| METHOD | PATH            | 목적                                  |
+| ------ | --------------- | ------------------------------------- |
+| GET    | `/products/:id` | 제품 상세 + 적합도 사유 + ingredients |
 
 ### Reaction Traceback
 
-| METHOD | PATH                              | 목적                                                                     |
-| ------ | --------------------------------- | ------------------------------------------------------------------------ |
-| POST   | `/reactions/reports`              | reaction_reports + reaction_report_products + suspected_causes 일괄 저장 |
-| GET    | `/reactions/reports/:id`          | 단일 리포트 상세                                                         |
-| POST   | `/reactions/avoidance-rules`      | 사용자가 확정한 회피 규칙 저장                                           |
-| GET    | `/reactions/avoidance-rules`      | 현재 device/user의 활성 규칙                                             |
+| METHOD | PATH                         | 목적                                                                     |
+| ------ | ---------------------------- | ------------------------------------------------------------------------ |
+| POST   | `/reactions/reports`         | reaction_reports + reaction_report_products + suspected_causes 일괄 저장 |
+| GET    | `/reactions/reports/:id`     | 단일 리포트 상세                                                         |
+| POST   | `/reactions/avoidance-rules` | 사용자가 확정한 회피 규칙 저장                                           |
+| GET    | `/reactions/avoidance-rules` | 현재 device/user의 활성 규칙                                             |
 
 ### 분석 / 이벤트
 
-| METHOD | PATH                  | 목적                                |
-| ------ | --------------------- | ----------------------------------- |
-| POST   | `/events`             | session_events 단건/배치 저장       |
-| POST   | `/sessions/start`     | 새 user_session 생성                |
-| POST   | `/sessions/heartbeat` | last_seen_at 갱신                   |
+| METHOD | PATH                  | 목적                          |
+| ------ | --------------------- | ----------------------------- |
+| POST   | `/events`             | session_events 단건/배치 저장 |
+| POST   | `/sessions/start`     | 새 user_session 생성          |
+| POST   | `/sessions/heartbeat` | last_seen_at 갱신             |
 
 ---
 

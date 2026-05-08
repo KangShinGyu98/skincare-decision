@@ -29,13 +29,13 @@ HTTP → Controller → Service → Repository → Prisma → PostgreSQL
 
 ## 캐시 전략
 
-| 키                                                          | TTL    | 무효화                                  |
-| ----------------------------------------------------------- | ------ | --------------------------------------- |
-| `facts:definitions:v1`                                      | 1h     | 시드 재실행 시 수동 flush               |
-| `facts:questions:{screen}:v1`                               | 1h     | 같음                                    |
-| `categories:list:v1`                                        | 24h    | 같음                                    |
-| `products:matrix:{categoryKey}:{filterStateHash}`           | 5m     | filter_state 변경 시 자동 미스          |
-| `priority:rules:active:v1`                                  | 1h     | 시드 재실행 시 수동 flush               |
+| 키                                                | TTL | 무효화                         |
+| ------------------------------------------------- | --- | ------------------------------ |
+| `facts:definitions:v1`                            | 1h  | 시드 재실행 시 수동 flush      |
+| `facts:questions:{screen}:v1`                     | 1h  | 같음                           |
+| `categories:list:v1`                              | 24h | 같음                           |
+| `products:matrix:{categoryKey}:{filterStateHash}` | 5m  | filter_state 변경 시 자동 미스 |
+| `priority:rules:active:v1`                        | 1h  | 시드 재실행 시 수동 flush      |
 
 ## 보안
 

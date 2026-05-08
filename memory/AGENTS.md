@@ -12,13 +12,13 @@
 
 ## 파일 목록
 
-| 파일                                          | 역할                                          |
-| --------------------------------------------- | --------------------------------------------- |
-| [MEMORY.md](MEMORY.md)                        | 인덱스 (모든 메모리 파일 1줄 설명)            |
-| [project_progress.md](project_progress.md)    | 세션별 진행 상태 + 다음 우선순위              |
-| [project_decisions.md](project_decisions.md)  | 설계 결정·가정사항·트레이드오프 (append-only) |
-| [api_contracts.md](api_contracts.md)          | REST 엔드포인트 + 외부 API 계약               |
-| [known_issues.md](known_issues.md)            | 알려진 버그 및 해결 패턴                      |
+| 파일                                         | 역할                                          |
+| -------------------------------------------- | --------------------------------------------- |
+| [MEMORY.md](MEMORY.md)                       | 인덱스 (모든 메모리 파일 1줄 설명)            |
+| [project_progress.md](project_progress.md)   | 세션별 진행 상태 + 다음 우선순위              |
+| [project_decisions.md](project_decisions.md) | 설계 결정·가정사항·트레이드오프 (append-only) |
+| [api_contracts.md](api_contracts.md)         | REST 엔드포인트 + 외부 API 계약               |
+| [known_issues.md](known_issues.md)           | 알려진 버그 및 해결 패턴                      |
 
 ## 작성 원칙
 

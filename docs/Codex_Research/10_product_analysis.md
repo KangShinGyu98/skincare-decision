@@ -1,5 +1,6 @@
 # 제품 분석 종합: Skincare Decision Market
-*Master analysis document | Synthesized from 01~09 | Codex | 2026-04-21*
+
+_Master analysis document | Synthesized from 01~09 | Codex | 2026-04-21_
 
 ---
 

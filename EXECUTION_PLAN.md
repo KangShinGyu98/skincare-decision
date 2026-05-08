@@ -9,27 +9,26 @@
 
 ### 0.1 필요한 도구
 
-| 도구           | 권장 버전     | 확인 명령                             |
-| -------------- | ------------- | ------------------------------------- |
-| Node.js        | 20.x LTS      | `node -v`                             |
-| pnpm           | 9.x           | `pnpm -v` (없으면 `npm i -g pnpm@9`)  |
-| Docker Desktop | 최신          | `docker -v` / `docker compose version`|
-| Git            | 2.40+         | `git --version`                       |
-| AWS CLI v2     | (Phase 7부터) | `aws --version`                       |
-
+| 도구           | 권장 버전     | 확인 명령                              |
+| -------------- | ------------- | -------------------------------------- |
+| Node.js        | 20.x LTS      | `node -v`                              |
+| pnpm           | 9.x           | `pnpm -v` (없으면 `npm i -g pnpm@9`)   |
+| Docker Desktop | 최신          | `docker -v` / `docker compose version` |
+| Git            | 2.40+         | `git --version`                        |
+| AWS CLI v2     | (Phase 7부터) | `aws --version`                        |
 
 ### 0.2 작업 흐름 요약
 
-| Phase | 목적                             | 산출물                                                     |
-| ----- | -------------------------------- | ---------------------------------------------------------- |
-| 0     | 도구 확인 / 사전 정렬            | 본 절                                                       |
-| 1     | 모노레포 셋업                    | 루트 `package.json`, `pnpm-workspace.yaml`, lint/format 통합 |
-| 2     | Backend (NestJS + Prisma) init   | `backend/` 동작                                             |
-| 3     | Frontend (Next.js) init          | `frontend/` 동작                                            |
-| 4     | 도메인 구현 (BE/FE 동시)         | S01~S08 화면 + REST API                                      |
-| 5     | 시드 데이터 / 테스트              | rule seed + toner catalog seed + e2e                        |
-| 6     | 인프라 (Docker, GH Actions)      | 로컬 compose + CI 파이프라인                                |
-| 7     | AWS 배포 (ECR/ECS/RDS/CloudFront)| 운영 환경                                                   |
+| Phase | 목적                              | 산출물                                                       |
+| ----- | --------------------------------- | ------------------------------------------------------------ |
+| 0     | 도구 확인 / 사전 정렬             | 본 절                                                        |
+| 1     | 모노레포 셋업                     | 루트 `package.json`, `pnpm-workspace.yaml`, lint/format 통합 |
+| 2     | Backend (NestJS + Prisma) init    | `backend/` 동작                                              |
+| 3     | Frontend (Next.js) init           | `frontend/` 동작                                             |
+| 4     | 도메인 구현 (BE/FE 동시)          | S01~S08 화면 + REST API                                      |
+| 5     | 시드 데이터 / 테스트              | rule seed + toner catalog seed + e2e                         |
+| 6     | 인프라 (Docker, GH Actions)       | 로컬 compose + CI 파이프라인                                 |
+| 7     | AWS 배포 (ECR/ECS/RDS/CloudFront) | 운영 환경                                                    |
 
 각 Phase는 **이전 Phase가 끝난 뒤에만** 시작한다. 검증 명령이 통과하지 않으면 다음 Phase로 진행하지 않는다.
 
@@ -73,8 +72,8 @@ pnpm init
 
 ```yaml
 packages:
-  - "backend"
-  - "frontend"
+  - 'backend'
+  - 'frontend'
 ```
 
 `packageManager` 필드는 `pnpm -v` 결과와 동일한 버전으로 맞춘다 (위 예시는 10.32.1 기준). workspace 전체를 같은 major로 고정한다.
@@ -239,11 +238,11 @@ services:
       POSTGRES_USER: skincare_decision
       POSTGRES_PASSWORD: skincare_decision
       POSTGRES_DB: skincare_decision
-    ports: ["5432:5432"]
-    volumes: ["pg_data:/var/lib/postgresql/data"]
+    ports: ['5432:5432']
+    volumes: ['pg_data:/var/lib/postgresql/data']
   redis:
     image: redis:7
-    ports: ["6379:6379"]
+    ports: ['6379:6379']
 volumes:
   pg_data:
 ```
@@ -287,6 +286,7 @@ src/
 도메인 모듈 7개 (`Identity`, `Facts`, `Priority`, `Catalog`, `Matrix`, `Traceback`, `Events`)를 각각 `src/modules/<name>/<name>.module.ts`로 생성하고 `app.module.ts`에 등록.
 
 각 모듈은 다음 파일을 갖는다:
+
 - `*.controller.ts` (HTTP 라우팅, Zod로 입력 파싱)
 - `*.service.ts` (도메인 로직)
 - `*.repository.ts` (Prisma 호출)
@@ -457,15 +457,15 @@ pnpm run build  # 타입 에러 0인지 확인
 
 ### 4.1 구현 순서 (P0 → P3)
 
-| 우선순위 | 화면              | 핵심 BE                                                  | 핵심 FE                                                  |
-| -------- | ----------------- | -------------------------------------------------------- | -------------------------------------------------------- |
-| P0       | 관리자 — 제품 등록 | `POST /admin/products`, `POST /admin/upload-image` | `/admin/products/new` 동적 폼 ([admin_product_input_spec.md](docs/admin_product_input_spec.md) 기준, 토너 우선) |
-| P0       | S06 Product Matrix | `GET /product-matrix`, `POST /product-matrix/filter-state` | `/product-matrix` 페이지 + filter chip + product card    |
-| P1       | S01 Landing       | (없음, 정적 + 캐러셀)                                    | `/` 4-segment + concern carousel + fast lane             |
-| P1       | S02 Priority Gate | `POST /priority-gate/evaluate`                           | `/priority-gate` 폼 + 결과 카드                          |
-| P1       | S03~S05 Category Decision | `POST /category-decision/seed`, `GET /facts/questions` | `/category-decision/[category]` 3-step wizard           |
-| P2       | S07 Product Detail | `GET /products/:id`                                      | `/products/[id]` 상세                                    |
-| P3       | S08 Traceback     | `POST /reactions/reports`, `POST /reactions/avoidance-rules` | `/reaction-traceback` 폼 + 결과                       |
+| 우선순위 | 화면                      | 핵심 BE                                                      | 핵심 FE                                                                                                         |
+| -------- | ------------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| P0       | 관리자 — 제품 등록        | `POST /admin/products`, `POST /admin/upload-image`           | `/admin/products/new` 동적 폼 ([admin_product_input_spec.md](docs/admin_product_input_spec.md) 기준, 토너 우선) |
+| P0       | S06 Product Matrix        | `GET /product-matrix`, `POST /product-matrix/filter-state`   | `/product-matrix` 페이지 + filter chip + product card                                                           |
+| P1       | S01 Landing               | (없음, 정적 + 캐러셀)                                        | `/` 4-segment + concern carousel + fast lane                                                                    |
+| P1       | S02 Priority Gate         | `POST /priority-gate/evaluate`                               | `/priority-gate` 폼 + 결과 카드                                                                                 |
+| P1       | S03~S05 Category Decision | `POST /category-decision/seed`, `GET /facts/questions`       | `/category-decision/[category]` 3-step wizard                                                                   |
+| P2       | S07 Product Detail        | `GET /products/:id`                                          | `/products/[id]` 상세                                                                                           |
+| P3       | S08 Traceback             | `POST /reactions/reports`, `POST /reactions/avoidance-rules` | `/reaction-traceback` 폼 + 결과                                                                                 |
 
 > **관리자 제품 등록(P0)**은 Product Matrix가 표시할 데이터를 채우기 위한 선행 작업이다. 현재 활성 범위는 `docs/db_seed_plan.md`와 `docs/AGENTS.md` 기준의 **토너 우선 + 수동 입력(X)** 이다. 외부 데이터 연동(Y/Z)과 serum의 `effective_dose_met` 자동 판정은 `docs/Rejected/` 명세를 다시 활성화한 뒤 추가한다.
 
@@ -504,16 +504,16 @@ pnpm run build  # 타입 에러 0인지 확인
 
 ### 4.3 공통 결정 로직 위치 가이드
 
-| 로직                                        | 위치                                          |
-| ------------------------------------------- | --------------------------------------------- |
-| Concern 태그 → preset_facts                 | FE `src/config/concerns.ts`                   |
-| Priority Rule 평가                          | BE `services/priority/priority.service.ts`    |
-| Question visibility 조건 평가               | BE `services/facts/visibility.service.ts`     |
-| product_filter_mappings → 동적 where        | BE `services/matrix/filter-builder.service.ts`|
-| application-layer computed operator         | BE `services/matrix/computed-operators.ts`    |
-| avoidance_rules 적용 (제외/주의 분기)       | BE `services/matrix/avoidance.service.ts`     |
-| filter chip 렌더링 / 추가·삭제 UI            | FE `components/product/FilterChips.tsx`       |
-| 가격대 띠 (price_band)                      | FE `components/product/PriceBandRow.tsx`      |
+| 로직                                  | 위치                                           |
+| ------------------------------------- | ---------------------------------------------- |
+| Concern 태그 → preset_facts           | FE `src/config/concerns.ts`                    |
+| Priority Rule 평가                    | BE `services/priority/priority.service.ts`     |
+| Question visibility 조건 평가         | BE `services/facts/visibility.service.ts`      |
+| product_filter_mappings → 동적 where  | BE `services/matrix/filter-builder.service.ts` |
+| application-layer computed operator   | BE `services/matrix/computed-operators.ts`     |
+| avoidance_rules 적용 (제외/주의 분기) | BE `services/matrix/avoidance.service.ts`      |
+| filter chip 렌더링 / 추가·삭제 UI     | FE `components/product/FilterChips.tsx`        |
+| 가격대 띠 (price_band)                | FE `components/product/PriceBandRow.tsx`       |
 
 ---
 
@@ -523,16 +523,16 @@ pnpm run build  # 타입 에러 0인지 확인
 
 `backend/prisma/seed.ts` 작성. 데이터 출처:
 
-| seed 항목                            | 출처                                                        |
-| ------------------------------------ | ----------------------------------------------------------- |
-| product_categories (6개)             | `docs/product_taxonomy.md`                                  |
-| category_attribute_definitions       | `docs/product_attribute_schema.md`                          |
-| fact_definitions                     | `docs/db_modeling.md` 8장 + `matching_rules_revised.md`     |
-| context_questions + visibility       | `docs/page_content_specification.md` + `matching_rules_revised.md` 4장 |
-| priority_rules + conditions          | `docs/matching_rules_revised.md` 3.2 / 3.3                  |
-| product_filter_mappings              | `docs/matching_rules_revised.md` 5장 (있다면)               |
-| brands + products (toner 25+종)      | `docs/db_seed_plan.md` + `docs/화장품 성분비교.CSV`         |
-| ingredients + product_ingredients    | `docs/db_seed_plan.md` + `docs/화장품 성분비교.CSV`         |
+| seed 항목                         | 출처                                                                   |
+| --------------------------------- | ---------------------------------------------------------------------- |
+| product_categories (6개)          | `docs/product_taxonomy.md`                                             |
+| category_attribute_definitions    | `docs/product_attribute_schema.md`                                     |
+| fact_definitions                  | `docs/db_modeling.md` 8장 + `matching_rules_revised.md`                |
+| context_questions + visibility    | `docs/page_content_specification.md` + `matching_rules_revised.md` 4장 |
+| priority_rules + conditions       | `docs/matching_rules_revised.md` 3.2 / 3.3                             |
+| product_filter_mappings           | `docs/matching_rules_revised.md` 5장 (있다면)                          |
+| brands + products (toner 25+종)   | `docs/db_seed_plan.md` + `docs/화장품 성분비교.CSV`                    |
+| ingredients + product_ingredients | `docs/db_seed_plan.md` + `docs/화장품 성분비교.CSV`                    |
 
 시드 구조와 의존성 순서는 [docs/db_seed_plan.md](docs/db_seed_plan.md)를 단일 진실로 사용한다. 토너 MVP 기준으로 카탈로그 seed는 toner만 넣고, 나머지 카테고리 제품은 admin UI로 점진 추가한다.
 
@@ -618,8 +618,19 @@ jobs:
   test:
     runs-on: ubuntu-latest
     services:
-      postgres: {image: postgres:16, env: {POSTGRES_PASSWORD: skincare_decision, POSTGRES_USER: skincare_decision, POSTGRES_DB: skincare_decision}, ports: ['5432:5432'], options: '--health-cmd="pg_isready" --health-interval=10s'}
-      redis: {image: redis:7, ports: ['6379:6379']}
+      postgres:
+        {
+          image: postgres:16,
+          env:
+            {
+              POSTGRES_PASSWORD: skincare_decision,
+              POSTGRES_USER: skincare_decision,
+              POSTGRES_DB: skincare_decision,
+            },
+          ports: ['5432:5432'],
+          options: '--health-cmd="pg_isready" --health-interval=10s',
+        }
+      redis: { image: redis:7, ports: ['6379:6379'] }
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v3
@@ -784,14 +795,14 @@ docker compose -f infra/docker/docker-compose.yml up --build
 
 ## 부록 B — 자주 부딪히는 함정
 
-| 증상                                                                  | 원인                                          | 해결                                                                                                       |
-| --------------------------------------------------------------------- | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| Prisma `Json` 컬럼에 임의 값이 들어감                                 | Service에서 Zod 검증 누락                     | `backend/src/types/product-attributes.ts` discriminated union으로 검증 후 Repository 호출                   |
-| `user_facts` 최신 값이 source 우선순위와 다름                         | 단순 `created_at` 정렬                         | Repository에서 `traceback > context > priority_gate > concern` 우선순위 정렬                                |
-| Next.js Hydration mismatch                                            | Server에서 device_id 읽고 client에서 다른 값  | device_id를 cookie에서만 읽고, client mount 후 부재 시 새로 발급                                           |
-| Tailwind 색이 design_system과 어긋남                                  | Tailwind config에 직접 hex 입력               | `colors_and_type.css` CSS 변수 → `tailwind.config.ts`에서 `var(--...)`로 참조                              |
-| GH Actions에서 `prisma migrate deploy` 실패                           | DATABASE_URL secret 누락 또는 RDS 보안그룹 차단 | OIDC role + Secrets Manager 사용, RDS SG에 GH runner egress IP 없으면 임시 EC2 bastion 또는 SSM session    |
-| ECS task가 즉시 stop                                                  | ENV 누락 / Secrets Manager 권한 부족          | task role IAM에 `secretsmanager:GetSecretValue` (`skincare-decision/*` resource) 추가                     |
+| 증상                                          | 원인                                            | 해결                                                                                                    |
+| --------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Prisma `Json` 컬럼에 임의 값이 들어감         | Service에서 Zod 검증 누락                       | `backend/src/types/product-attributes.ts` discriminated union으로 검증 후 Repository 호출               |
+| `user_facts` 최신 값이 source 우선순위와 다름 | 단순 `created_at` 정렬                          | Repository에서 `traceback > context > priority_gate > concern` 우선순위 정렬                            |
+| Next.js Hydration mismatch                    | Server에서 device_id 읽고 client에서 다른 값    | device_id를 cookie에서만 읽고, client mount 후 부재 시 새로 발급                                        |
+| Tailwind 색이 design_system과 어긋남          | Tailwind config에 직접 hex 입력                 | `colors_and_type.css` CSS 변수 → `tailwind.config.ts`에서 `var(--...)`로 참조                           |
+| GH Actions에서 `prisma migrate deploy` 실패   | DATABASE_URL secret 누락 또는 RDS 보안그룹 차단 | OIDC role + Secrets Manager 사용, RDS SG에 GH runner egress IP 없으면 임시 EC2 bastion 또는 SSM session |
+| ECS task가 즉시 stop                          | ENV 누락 / Secrets Manager 권한 부족            | task role IAM에 `secretsmanager:GetSecretValue` (`skincare-decision/*` resource) 추가                   |
 
 ---
 

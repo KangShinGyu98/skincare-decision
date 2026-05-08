@@ -5,11 +5,11 @@
 
 ## 파일
 
-| 파일                  | 역할                                                                |
-| --------------------- | ------------------------------------------------------------------- |
-| schema.prisma         | 모델 정의 (`@@map`으로 snake_case 테이블명 강제)                    |
-| migrations/           | `prisma migrate dev` 산출물                                         |
-| seed.ts               | priority_rules / fact_definitions / context_questions / product_filter_mappings / brands / categories / sample products |
+| 파일          | 역할                                                                                                                    |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| schema.prisma | 모델 정의 (`@@map`으로 snake_case 테이블명 강제)                                                                        |
+| migrations/   | `prisma migrate dev` 산출물                                                                                             |
+| seed.ts       | priority_rules / fact_definitions / context_questions / product_filter_mappings / brands / categories / sample products |
 
 ## 테이블 매핑 가이드
 

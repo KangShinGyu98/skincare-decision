@@ -1,5 +1,6 @@
 # 최근 뜨는 AI 활용 뷰티 스타트업 분석
-*Supplemental AI startup analysis | Codex | 2026-04-21*
+
+_Supplemental AI startup analysis | Codex | 2026-04-21_
 
 ---
 
@@ -207,14 +208,14 @@ Revieve는 2024년 `Next Gen AI Advisor Series`를 출시했고, 2025년에는 G
 
 ## 비교 표
 
-| 회사 | 포지션 | 주 고객 | 강점 | 우리와의 관계 |
-|---|---|---|---|---|
-| SmartSKN | 맞춤 포뮬레이션 + AI 진단 | 소비자/전문가 | 진단→조제 일체화 | 하류 personalization 파트너 후보 |
-| ChoiceDx | 전문가용 진단 SaaS | 매장/클리닉/브랜드 | 현장 적용성, CRM | 오프라인 제휴 파트너 후보 |
-| Lululab | 피부 데이터 인프라 | B2B + B2C | 피부 데이터 축적, SDK/키오스크 | complementary |
-| Haut.AI | 브랜드용 gen AI SaaS | 브랜드/이커머스 | 빠른 배포, no-code personalization | B2B 확장 참고 |
-| Revieve | enterprise beauty advisor SaaS | 브랜드/리테일러 | 진단+AR+대화형 AI | 다른 시작점의 인접 플레이어 |
-| SKINSEOUS | agentic commerce | 글로벌 K-Beauty 커머스 | 자동화, AI commerce narrative | AI search/agent 시대 참고 사례 |
+| 회사      | 포지션                         | 주 고객                | 강점                               | 우리와의 관계                    |
+| --------- | ------------------------------ | ---------------------- | ---------------------------------- | -------------------------------- |
+| SmartSKN  | 맞춤 포뮬레이션 + AI 진단      | 소비자/전문가          | 진단→조제 일체화                   | 하류 personalization 파트너 후보 |
+| ChoiceDx  | 전문가용 진단 SaaS             | 매장/클리닉/브랜드     | 현장 적용성, CRM                   | 오프라인 제휴 파트너 후보        |
+| Lululab   | 피부 데이터 인프라             | B2B + B2C              | 피부 데이터 축적, SDK/키오스크     | complementary                    |
+| Haut.AI   | 브랜드용 gen AI SaaS           | 브랜드/이커머스        | 빠른 배포, no-code personalization | B2B 확장 참고                    |
+| Revieve   | enterprise beauty advisor SaaS | 브랜드/리테일러        | 진단+AR+대화형 AI                  | 다른 시작점의 인접 플레이어      |
+| SKINSEOUS | agentic commerce               | 글로벌 K-Beauty 커머스 | 자동화, AI commerce narrative      | AI search/agent 시대 참고 사례   |
 
 ---
 

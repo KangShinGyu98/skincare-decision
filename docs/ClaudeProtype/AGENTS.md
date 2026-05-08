@@ -5,10 +5,10 @@
 
 ## 파일
 
-| 파일             | 설명                              |
-| ---------------- | --------------------------------- |
-| mockup.html      | 모바일 우선 mockup                |
-| mockup-web.html  | 웹 mockup                         |
+| 파일                               | 설명                                                                                                                  |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| mockup.html                        | 모바일 우선 mockup                                                                                                    |
+| mockup-web.html                    | 웹 mockup                                                                                                             |
 | admin-product-matrix-uploader.html | Product Matrix 관리자 입력용 단일 HTML 도구. category select, dynamic attributes, image-folder save, JSON export 지원 |
 
 ## 진입 규칙

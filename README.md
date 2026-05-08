@@ -9,11 +9,11 @@
 
 본 저장소는 **Claude와 Codex를 번갈아 사용**합니다. 두 Agent가 동일한 컨텍스트를 공유하도록, 어느 Agent든 작업 시작 전 다음 순서로 읽습니다.
 
-| 순서 | 파일                                       | 역할                                                                       |
-| ---- | ------------------------------------------ | -------------------------------------------------------------------------- |
-| 1    | [AGENTS.md](AGENTS.md)                     | **시작점 + AI Agent 지시사항** — 어디서 시작하고 무엇을 하면 안 되는지     |
-| 2    | [CLAUDE.md](CLAUDE.md)                     | **프로젝트 개요 + 폴더 구조 + 황금 원칙 + 기술 스택 + 범위**               |
-| 3    | [memory/MEMORY.md](memory/MEMORY.md)       | 누적된 결정·진행·계약·이슈 인덱스 (필요한 메모리 파일을 따라 들어감)        |
+| 순서 | 파일                                 | 역할                                                                   |
+| ---- | ------------------------------------ | ---------------------------------------------------------------------- |
+| 1    | [AGENTS.md](AGENTS.md)               | **시작점 + AI Agent 지시사항** — 어디서 시작하고 무엇을 하면 안 되는지 |
+| 2    | [CLAUDE.md](CLAUDE.md)               | **프로젝트 개요 + 폴더 구조 + 황금 원칙 + 기술 스택 + 범위**           |
+| 3    | [memory/MEMORY.md](memory/MEMORY.md) | 누적된 결정·진행·계약·이슈 인덱스 (필요한 메모리 파일을 따라 들어감)   |
 
 세션 종료 전에는 [memory/project_progress.md](memory/project_progress.md)에 변경 요약을 남겨, 다음 세션의 Agent가 이어받을 수 있도록 합니다.
 새 결정/리스크는 [memory/project_decisions.md](memory/project_decisions.md)에 append-only로 추가합니다.
@@ -25,14 +25,14 @@
 
 ## 1. 프로젝트 설명
 
-| 기능                | 설명                                                                                       |
-| ------------------- | ------------------------------------------------------------------------------------------ |
-| Priority Gate       | 최근 자극·루틴·보유 제품을 점검해 "지금 새 제품을 사도 될 상태"인지 HOLD/CAUTION/PASS 판정 |
-| Concern Mapper      | 고민 키워드(예: 여드름·각질·갈라짐) → 우선순위 게이트 또는 추천 카테고리로 라우팅          |
-| Category Decision   | 카테고리별 핵심 질문만 보여주고 답변을 자동 필터로 변환                                    |
-| Product Matrix      | BASIC + PERSONALIZED + TRACEBACK 필터를 결합해 제품 비교, 가격대 띠 노출                   |
-| Reaction Traceback  | 문제 제품 / 괜찮은 제품 비교로 원인 후보 성분군 추적, `avoidance_rules` 자동 생성          |
-| Anonymous Identity  | `device_id` 기반 비로그인 → 로그인 시 자동 병합                                            |
+| 기능               | 설명                                                                                       |
+| ------------------ | ------------------------------------------------------------------------------------------ |
+| Priority Gate      | 최근 자극·루틴·보유 제품을 점검해 "지금 새 제품을 사도 될 상태"인지 HOLD/CAUTION/PASS 판정 |
+| Concern Mapper     | 고민 키워드(예: 여드름·각질·갈라짐) → 우선순위 게이트 또는 추천 카테고리로 라우팅          |
+| Category Decision  | 카테고리별 핵심 질문만 보여주고 답변을 자동 필터로 변환                                    |
+| Product Matrix     | BASIC + PERSONALIZED + TRACEBACK 필터를 결합해 제품 비교, 가격대 띠 노출                   |
+| Reaction Traceback | 문제 제품 / 괜찮은 제품 비교로 원인 후보 성분군 추적, `avoidance_rules` 자동 생성          |
+| Anonymous Identity | `device_id` 기반 비로그인 → 로그인 시 자동 병합                                            |
 
 대상 카테고리: `toner`, `sunscreen`, `serum`, `lipcare`, `moisturizer`, `cleanser` (6개).
 
@@ -40,21 +40,21 @@
 
 ## 2. 기술 스택
 
-| 영역            | 스택                                                                          |
-| --------------- | ----------------------------------------------------------------------------- |
-| Backend API     | TypeScript · NestJS · Prisma                                                  |
-| Database        | AWS RDS PostgreSQL 16 (products.attributes는 JSONB)                           |
-| Cache           | AWS ElastiCache Redis 7                                                       |
-| Frontend Web    | Next.js App Router · React · TypeScript                                       |
-| Rendering       | SSR · SSG · ISR                                                               |
-| Validation      | Zod (FE 입력, BE DTO ↔ Prisma 모델 contract)                                  |
-| 상태 관리       | TanStack Query · Zustand                                                      |
-| UI              | Tailwind CSS · shadcn/ui                                                      |
-| Storage         | AWS S3                                                                        |
-| CDN / Edge      | CloudFront                                                                    |
-| Infra           | Docker · AWS ECS Fargate · ECR · ALB · RDS · ElastiCache · S3 · CloudFront    |
-| Domain / HTTPS  | Route 53 · ACM                                                                |
-| CI/CD           | GitHub Actions → ECR → ECS Fargate 배포                                        |
+| 영역           | 스택                                                                       |
+| -------------- | -------------------------------------------------------------------------- |
+| Backend API    | TypeScript · NestJS · Prisma                                               |
+| Database       | AWS RDS PostgreSQL 16 (products.attributes는 JSONB)                        |
+| Cache          | AWS ElastiCache Redis 7                                                    |
+| Frontend Web   | Next.js App Router · React · TypeScript                                    |
+| Rendering      | SSR · SSG · ISR                                                            |
+| Validation     | Zod (FE 입력, BE DTO ↔ Prisma 모델 contract)                               |
+| 상태 관리      | TanStack Query · Zustand                                                   |
+| UI             | Tailwind CSS · shadcn/ui                                                   |
+| Storage        | AWS S3                                                                     |
+| CDN / Edge     | CloudFront                                                                 |
+| Infra          | Docker · AWS ECS Fargate · ECR · ALB · RDS · ElastiCache · S3 · CloudFront |
+| Domain / HTTPS | Route 53 · ACM                                                             |
+| CI/CD          | GitHub Actions → ECR → ECS Fargate 배포                                    |
 
 상세 디렉터리 매핑 / 레이어 규칙은 [CLAUDE.md](CLAUDE.md) 참조.
 
@@ -106,15 +106,15 @@ infra/               # Docker/IaC/GH Actions (Phase 6)
 
 위 0번 섹션이 진입 규칙이고, 본 절은 작업 단계별 상세 약속입니다.
 
-| 시점          | 행동                                                                                                                  |
-| ------------- | --------------------------------------------------------------------------------------------------------------------- |
-| 세션 시작     | [AGENTS.md](AGENTS.md) → [CLAUDE.md](CLAUDE.md) → [memory/MEMORY.md](memory/MEMORY.md) 순독                            |
-| 폴더 진입     | 해당 폴더의 `AGENTS.md`를 먼저 연다 (없으면 만들고 작업)                                                                |
-| 새 결정/리스크 | [memory/project_decisions.md](memory/project_decisions.md)에 append-only로 기록                                       |
-| API 변경      | [memory/api_contracts.md](memory/api_contracts.md)를 먼저 갱신, 그 다음 코드                                            |
-| 버그 해결     | [memory/known_issues.md](memory/known_issues.md)에 증상 → 원인 → 해결책 기록                                            |
-| 명세 ↔ 코드 충돌 | `docs/`를 먼저 갱신한 뒤 코드를 수정                                                                                  |
-| 세션 종료     | [memory/project_progress.md](memory/project_progress.md)에 변경 요약 + 다음 우선순위 기록                              |
+| 시점             | 행동                                                                                        |
+| ---------------- | ------------------------------------------------------------------------------------------- |
+| 세션 시작        | [AGENTS.md](AGENTS.md) → [CLAUDE.md](CLAUDE.md) → [memory/MEMORY.md](memory/MEMORY.md) 순독 |
+| 폴더 진입        | 해당 폴더의 `AGENTS.md`를 먼저 연다 (없으면 만들고 작업)                                    |
+| 새 결정/리스크   | [memory/project_decisions.md](memory/project_decisions.md)에 append-only로 기록             |
+| API 변경         | [memory/api_contracts.md](memory/api_contracts.md)를 먼저 갱신, 그 다음 코드                |
+| 버그 해결        | [memory/known_issues.md](memory/known_issues.md)에 증상 → 원인 → 해결책 기록                |
+| 명세 ↔ 코드 충돌 | `docs/`를 먼저 갱신한 뒤 코드를 수정                                                        |
+| 세션 종료        | [memory/project_progress.md](memory/project_progress.md)에 변경 요약 + 다음 우선순위 기록   |
 
 ### Claude ↔ Codex 컨텍스트 공유 원칙
 

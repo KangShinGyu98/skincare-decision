@@ -34,6 +34,7 @@ cp .env.example .env
 ```
 
 필수 키:
+
 - `DATABASE_URL`
 - `REDIS_URL`
 - `COOKIE_SECRET`

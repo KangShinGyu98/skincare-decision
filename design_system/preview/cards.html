@@ -1,97 +1,278 @@
-<!DOCTYPE html>
-<html><head><meta charset="UTF-8">
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Roboto','Noto Sans KR',sans-serif; background: #f0f2f5; padding: 20px; }
-  .label { font-size: 11px; font-weight: 700; color: #262626; margin-bottom: 12px; letter-spacing: 0.04em; text-transform: uppercase; }
-  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: 'Roboto', 'Noto Sans KR', sans-serif;
+        background: #f0f2f5;
+        padding: 20px;
+      }
+      .label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #262626;
+        margin-bottom: 12px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+      }
 
-  .card { background: #fff; border: 1px solid #d9d9d9; border-radius: 2px; }
-  .card-head { padding: 12px 16px; border-bottom: 1px solid #f0f0f0; font-size: 16px; font-weight: 500; color: #262626; display: flex; justify-content: space-between; align-items: center; }
-  .card-body { padding: 14px 16px; font-size: 14px; color: #595959; line-height: 1.57; word-break: keep-all; }
-  .card-extra { font-size: 14px; color: #1890ff; font-weight: 400; cursor: pointer; }
+      .card {
+        background: #fff;
+        border: 1px solid #d9d9d9;
+        border-radius: 2px;
+      }
+      .card-head {
+        padding: 12px 16px;
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 16px;
+        font-weight: 500;
+        color: #262626;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .card-body {
+        padding: 14px 16px;
+        font-size: 14px;
+        color: #595959;
+        line-height: 1.57;
+        word-break: keep-all;
+      }
+      .card-extra {
+        font-size: 14px;
+        color: #1890ff;
+        font-weight: 400;
+        cursor: pointer;
+      }
 
-  .product-card { background: #fff; border: 1px solid #d9d9d9; border-radius: 2px; padding: 14px; }
-  .product-name { font-size: 14px; font-weight: 500; color: #262626; margin-bottom: 4px; }
-  .product-brand { font-size: 12px; color: #8c8c8c; margin-bottom: 8px; }
-  .product-price { font-size: 16px; font-weight: 700; color: #262626; margin-bottom: 8px; }
-  .tags-row { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
-  .tag { font-size: 11px; padding: 1px 6px; border-radius: 2px; border: 1px solid; }
-  .tag-blue  { background: #e6f7ff; border-color: #91d5ff; color: #096dd9; }
-  .tag-green { background: #f6ffed; border-color: #b7eb8f; color: #389e0d; }
-  .badge { display: inline-flex; align-items: center; font-size: 12px; padding: 2px 8px; border-radius: 2px; font-weight: 500; }
-  .badge-pass { background: #f6ffed; color: #52c41a; }
-  .card-actions { display: flex; gap: 8px; margin-top: 10px; }
-  .btn { border-radius: 2px; border: 1px solid; font-family: inherit; font-size: 13px; padding: 4px 12px; cursor: pointer; }
-  .btn-primary { background: #1890ff; border-color: #1890ff; color: #fff; }
-  .btn-default { background: #fff; border-color: #d9d9d9; color: #262626; }
+      .product-card {
+        background: #fff;
+        border: 1px solid #d9d9d9;
+        border-radius: 2px;
+        padding: 14px;
+      }
+      .product-name {
+        font-size: 14px;
+        font-weight: 500;
+        color: #262626;
+        margin-bottom: 4px;
+      }
+      .product-brand {
+        font-size: 12px;
+        color: #8c8c8c;
+        margin-bottom: 8px;
+      }
+      .product-price {
+        font-size: 16px;
+        font-weight: 700;
+        color: #262626;
+        margin-bottom: 8px;
+      }
+      .tags-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-bottom: 8px;
+      }
+      .tag {
+        font-size: 11px;
+        padding: 1px 6px;
+        border-radius: 2px;
+        border: 1px solid;
+      }
+      .tag-blue {
+        background: #e6f7ff;
+        border-color: #91d5ff;
+        color: #096dd9;
+      }
+      .tag-green {
+        background: #f6ffed;
+        border-color: #b7eb8f;
+        color: #389e0d;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        font-size: 12px;
+        padding: 2px 8px;
+        border-radius: 2px;
+        font-weight: 500;
+      }
+      .badge-pass {
+        background: #f6ffed;
+        color: #52c41a;
+      }
+      .card-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      .btn {
+        border-radius: 2px;
+        border: 1px solid;
+        font-family: inherit;
+        font-size: 13px;
+        padding: 4px 12px;
+        cursor: pointer;
+      }
+      .btn-primary {
+        background: #1890ff;
+        border-color: #1890ff;
+        color: #fff;
+      }
+      .btn-default {
+        background: #fff;
+        border-color: #d9d9d9;
+        color: #262626;
+      }
 
-  .result-card { background: #fff; border: 1px solid #52c41a; border-radius: 2px; padding: 14px; }
-  .result-icon { font-size: 20px; color: #52c41a; margin-bottom: 6px; }
-  .result-title { font-size: 14px; font-weight: 500; color: #262626; margin-bottom: 4px; word-break: keep-all; }
-  .result-desc { font-size: 12px; color: #595959; word-break: keep-all; line-height: 1.6; }
+      .result-card {
+        background: #fff;
+        border: 1px solid #52c41a;
+        border-radius: 2px;
+        padding: 14px;
+      }
+      .result-icon {
+        font-size: 20px;
+        color: #52c41a;
+        margin-bottom: 6px;
+      }
+      .result-title {
+        font-size: 14px;
+        font-weight: 500;
+        color: #262626;
+        margin-bottom: 4px;
+        word-break: keep-all;
+      }
+      .result-desc {
+        font-size: 12px;
+        color: #595959;
+        word-break: keep-all;
+        line-height: 1.6;
+      }
 
-  .hold-card { background: #fff; border: 1px solid #faad14; border-radius: 2px; padding: 14px; }
-  .hold-title { font-size: 14px; font-weight: 500; color: #262626; margin-bottom: 4px; word-break: keep-all; }
-  .hold-desc { font-size: 12px; color: #595959; word-break: keep-all; line-height: 1.6; }
-</style>
-</head>
-<body>
-  <div class="label">Cards</div>
-  <div class="grid">
-    <div class="card">
-      <div class="card-head">선크림 찾기 <span class="card-extra">더보기</span></div>
-      <div class="card-body">좋은 제품의 조건과 개인화 필터를 기준으로 가격대별 추천 후보를 비교합니다.</div>
-    </div>
-
-    <div class="product-card">
-      <div class="product-name">라운드랩 자작나무 수분 선크림</div>
-      <div class="product-brand">라운드랩 · 선크림</div>
-      <div class="product-price">18,000원</div>
-      <div class="tags-row">
-        <span class="tag tag-blue">SPF50+</span>
-        <span class="tag tag-blue">PA++++</span>
-        <span class="tag tag-green">눈시림 낮음</span>
+      .hold-card {
+        background: #fff;
+        border: 1px solid #faad14;
+        border-radius: 2px;
+        padding: 14px;
+      }
+      .hold-title {
+        font-size: 14px;
+        font-weight: 500;
+        color: #262626;
+        margin-bottom: 4px;
+        word-break: keep-all;
+      }
+      .hold-desc {
+        font-size: 12px;
+        color: #595959;
+        word-break: keep-all;
+        line-height: 1.6;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="label">Cards</div>
+    <div class="grid">
+      <div class="card">
+        <div class="card-head">선크림 찾기 <span class="card-extra">더보기</span></div>
+        <div class="card-body">
+          좋은 제품의 조건과 개인화 필터를 기준으로 가격대별 추천 후보를 비교합니다.
+        </div>
       </div>
-      <div><span class="badge badge-pass">✓ 적합</span></div>
-      <div class="card-actions">
-        <button class="btn btn-primary">구매하기</button>
-        <button class="btn btn-default">상세보기</button>
+
+      <div class="product-card">
+        <div class="product-name">라운드랩 자작나무 수분 선크림</div>
+        <div class="product-brand">라운드랩 · 선크림</div>
+        <div class="product-price">18,000원</div>
+        <div class="tags-row">
+          <span class="tag tag-blue">SPF50+</span>
+          <span class="tag tag-blue">PA++++</span>
+          <span class="tag tag-green">눈시림 낮음</span>
+        </div>
+        <div><span class="badge badge-pass">✓ 적합</span></div>
+        <div class="card-actions">
+          <button class="btn btn-primary">구매하기</button>
+          <button class="btn btn-default">상세보기</button>
+        </div>
       </div>
-    </div>
 
-    <div class="result-card">
-      <div class="result-icon">✓</div>
-      <div class="result-title">지금은 기능성 제품군을 봐도 괜찮아요.</div>
-      <div class="result-desc">기본 루틴이 안정되어 있고 최근 자극이 없어 새 제품을 탐색해도 됩니다.</div>
-    </div>
+      <div class="result-card">
+        <div class="result-icon">✓</div>
+        <div class="result-title">지금은 기능성 제품군을 봐도 괜찮아요.</div>
+        <div class="result-desc">
+          기본 루틴이 안정되어 있고 최근 자극이 없어 새 제품을 탐색해도 됩니다.
+        </div>
+      </div>
 
-    <div class="hold-card">
-      <div style="font-size:20px;color:#faad14;margin-bottom:6px;">△</div>
-      <div class="hold-title">지금은 새 제품보다 피부 반응 안정화가 먼저예요.</div>
-      <div class="hold-desc">최근 자극 반응이 있어 새 제품 구매보다 루틴 안정화를 권장합니다.</div>
-    </div>
+      <div class="hold-card">
+        <div style="font-size: 20px; color: #faad14; margin-bottom: 6px">△</div>
+        <div class="hold-title">지금은 새 제품보다 피부 반응 안정화가 먼저예요.</div>
+        <div class="hold-desc">
+          최근 자극 반응이 있어 새 제품 구매보다 루틴 안정화를 권장합니다.
+        </div>
+      </div>
 
-    <div class="card" style="border-color:#f0f0f0;">
-      <div class="card-head" style="font-size:14px;font-weight:500;">Priority Gate</div>
-      <div class="card-body" style="padding:10px 16px;">
-        <div style="display:flex;flex-direction:column;gap:6px;">
-          <label style="display:flex;gap:8px;align-items:center;font-size:13px;color:#262626;"><input type="checkbox" checked> 선크림을 거의 매일 바르나요?</label>
-          <label style="display:flex;gap:8px;align-items:center;font-size:13px;color:#262626;"><input type="checkbox"> 최근 7일 내 자극 반응이 있었나요?</label>
-          <label style="display:flex;gap:8px;align-items:center;font-size:13px;color:#262626;"><input type="checkbox" checked> 보습제를 매일 꾸준히 사용하나요?</label>
+      <div class="card" style="border-color: #f0f0f0">
+        <div class="card-head" style="font-size: 14px; font-weight: 500">Priority Gate</div>
+        <div class="card-body" style="padding: 10px 16px">
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <label
+              style="display: flex; gap: 8px; align-items: center; font-size: 13px; color: #262626"
+              ><input type="checkbox" checked /> 선크림을 거의 매일 바르나요?</label
+            >
+            <label
+              style="display: flex; gap: 8px; align-items: center; font-size: 13px; color: #262626"
+              ><input type="checkbox" /> 최근 7일 내 자극 반응이 있었나요?</label
+            >
+            <label
+              style="display: flex; gap: 8px; align-items: center; font-size: 13px; color: #262626"
+              ><input type="checkbox" checked /> 보습제를 매일 꾸준히 사용하나요?</label
+            >
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head" style="font-size: 14px; padding: 10px 14px">Statistic</div>
+        <div
+          class="card-body"
+          style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 12px 14px"
+        >
+          <div>
+            <div style="font-size: 12px; color: #8c8c8c">분석 제품</div>
+            <div style="font-size: 24px; font-weight: 700; color: #262626">24</div>
+          </div>
+          <div>
+            <div style="font-size: 12px; color: #8c8c8c">적합 후보</div>
+            <div style="font-size: 24px; font-weight: 700; color: #52c41a">8</div>
+          </div>
+          <div>
+            <div style="font-size: 12px; color: #8c8c8c">주의 성분</div>
+            <div style="font-size: 24px; font-weight: 700; color: #faad14">3</div>
+          </div>
+          <div>
+            <div style="font-size: 12px; color: #8c8c8c">제외 제품</div>
+            <div style="font-size: 24px; font-weight: 700; color: #ff4d4f">13</div>
+          </div>
         </div>
       </div>
     </div>
-
-    <div class="card">
-      <div class="card-head" style="font-size:14px;padding:10px 14px;">Statistic</div>
-      <div class="card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 14px;">
-        <div><div style="font-size:12px;color:#8c8c8c;">분석 제품</div><div style="font-size:24px;font-weight:700;color:#262626;">24</div></div>
-        <div><div style="font-size:12px;color:#8c8c8c;">적합 후보</div><div style="font-size:24px;font-weight:700;color:#52c41a;">8</div></div>
-        <div><div style="font-size:12px;color:#8c8c8c;">주의 성분</div><div style="font-size:24px;font-weight:700;color:#faad14;">3</div></div>
-        <div><div style="font-size:12px;color:#8c8c8c;">제외 제품</div><div style="font-size:24px;font-weight:700;color:#ff4d4f;">13</div></div>
-      </div>
-    </div>
-  </div>
-</body></html>
+  </body>
+</html>

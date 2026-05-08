@@ -5,20 +5,20 @@
 
 ## 파일
 
-| 파일                       | 보여주는 것                                    |
-| -------------------------- | ---------------------------------------------- |
-| colors-brand.html          | Primary blue 1~10                              |
-| colors-neutral.html        | gray-1 ~ gray-10                               |
-| feedback.html              | success/warning/error/info 상태 색             |
-| inputs.html                | input, select, textarea 패턴                   |
-| buttons.html               | primary/secondary/text/danger 버튼             |
-| cards.html                 | 카드 / 섹션 / 분할선 패턴                      |
-| navigation.html            | nav bar / tab / breadcrumb                     |
-| shadows-borders.html       | 그림자/보더 스타일                             |
-| spacing-tokens.html        | 4/8/12/16/20/24/32/48 간격 시각화               |
-| tags-badges.html           | tag, badge, pill                               |
-| type-scale.html            | 12 → 38px 타입 스케일                          |
-| type-specimens.html        | Roboto + Noto Sans KR 표본                      |
+| 파일                 | 보여주는 것                        |
+| -------------------- | ---------------------------------- |
+| colors-brand.html    | Primary blue 1~10                  |
+| colors-neutral.html  | gray-1 ~ gray-10                   |
+| feedback.html        | success/warning/error/info 상태 색 |
+| inputs.html          | input, select, textarea 패턴       |
+| buttons.html         | primary/secondary/text/danger 버튼 |
+| cards.html           | 카드 / 섹션 / 분할선 패턴          |
+| navigation.html      | nav bar / tab / breadcrumb         |
+| shadows-borders.html | 그림자/보더 스타일                 |
+| spacing-tokens.html  | 4/8/12/16/20/24/32/48 간격 시각화  |
+| tags-badges.html     | tag, badge, pill                   |
+| type-scale.html      | 12 → 38px 타입 스케일              |
+| type-specimens.html  | Roboto + Noto Sans KR 표본         |
 
 ## 진입 규칙
 

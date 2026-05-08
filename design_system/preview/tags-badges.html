@@ -1,76 +1,190 @@
-<!DOCTYPE html>
-<html><head><meta charset="UTF-8">
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Noto+Sans+KR:wght@400;500&display=swap" rel="stylesheet">
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Roboto','Noto Sans KR',sans-serif; background: #fff; padding: 20px; }
-  .label { font-size: 11px; font-weight: 700; color: #262626; margin-bottom: 8px; letter-spacing: 0.04em; text-transform: uppercase; }
-  .sublabel { font-size: 10px; color: #8c8c8c; margin-bottom: 6px; }
-  .row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; align-items: center; }
-  .section { margin-bottom: 14px; }
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Noto+Sans+KR:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: 'Roboto', 'Noto Sans KR', sans-serif;
+        background: #fff;
+        padding: 20px;
+      }
+      .label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #262626;
+        margin-bottom: 8px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .sublabel {
+        font-size: 10px;
+        color: #8c8c8c;
+        margin-bottom: 6px;
+      }
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 14px;
+        align-items: center;
+      }
+      .section {
+        margin-bottom: 14px;
+      }
 
-  .tag { display: inline-flex; align-items: center; gap: 4px; border-radius: 2px; font-size: 12px; padding: 2px 8px; line-height: 20px; border: 1px solid; }
-  .tag-default  { background: #fafafa; border-color: #d9d9d9; color: #262626; }
-  .tag-blue     { background: #e6f7ff; border-color: #91d5ff; color: #096dd9; }
-  .tag-green    { background: #f6ffed; border-color: #b7eb8f; color: #389e0d; }
-  .tag-red      { background: #fff1f0; border-color: #ffa39e; color: #cf1322; }
-  .tag-gold     { background: #fffbe6; border-color: #ffe58f; color: #d48806; }
-  .tag-purple   { background: #f9f0ff; border-color: #d3adf7; color: #531dab; }
-  .tag-cyan     { background: #e6fffb; border-color: #87e8de; color: #08979c; }
-  .tag-magenta  { background: #fff0f6; border-color: #ffadd2; color: #c41d7f; }
-  .tag-selected { background: #1890ff; border-color: #1890ff; color: #fff; font-weight: 500; }
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        border-radius: 2px;
+        font-size: 12px;
+        padding: 2px 8px;
+        line-height: 20px;
+        border: 1px solid;
+      }
+      .tag-default {
+        background: #fafafa;
+        border-color: #d9d9d9;
+        color: #262626;
+      }
+      .tag-blue {
+        background: #e6f7ff;
+        border-color: #91d5ff;
+        color: #096dd9;
+      }
+      .tag-green {
+        background: #f6ffed;
+        border-color: #b7eb8f;
+        color: #389e0d;
+      }
+      .tag-red {
+        background: #fff1f0;
+        border-color: #ffa39e;
+        color: #cf1322;
+      }
+      .tag-gold {
+        background: #fffbe6;
+        border-color: #ffe58f;
+        color: #d48806;
+      }
+      .tag-purple {
+        background: #f9f0ff;
+        border-color: #d3adf7;
+        color: #531dab;
+      }
+      .tag-cyan {
+        background: #e6fffb;
+        border-color: #87e8de;
+        color: #08979c;
+      }
+      .tag-magenta {
+        background: #fff0f6;
+        border-color: #ffadd2;
+        color: #c41d7f;
+      }
+      .tag-selected {
+        background: #1890ff;
+        border-color: #1890ff;
+        color: #fff;
+        font-weight: 500;
+      }
 
-  .filter-tag { display: inline-flex; align-items: center; gap: 4px; border-radius: 100px; font-size: 13px; padding: 4px 12px; border: 1px solid; cursor: pointer; }
-  .filter-off { background: #fff; border-color: #d9d9d9; color: #595959; }
-  .filter-on  { background: #e6f7ff; border-color: #1890ff; color: #1890ff; font-weight: 500; }
+      .filter-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        border-radius: 100px;
+        font-size: 13px;
+        padding: 4px 12px;
+        border: 1px solid;
+        cursor: pointer;
+      }
+      .filter-off {
+        background: #fff;
+        border-color: #d9d9d9;
+        color: #595959;
+      }
+      .filter-on {
+        background: #e6f7ff;
+        border-color: #1890ff;
+        color: #1890ff;
+        font-weight: 500;
+      }
 
-  .badge { display: inline-flex; align-items: center; gap: 4px; border-radius: 2px; font-size: 12px; padding: 3px 8px; font-weight: 500; }
-  .badge-pass    { background: #f6ffed; color: #52c41a; }
-  .badge-caution { background: #fffbe6; color: #d48806; }
-  .badge-fail    { background: #fff1f0; color: #ff4d4f; }
-</style>
-</head>
-<body>
-  <div class="label">Tags & Filters</div>
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        border-radius: 2px;
+        font-size: 12px;
+        padding: 3px 8px;
+        font-weight: 500;
+      }
+      .badge-pass {
+        background: #f6ffed;
+        color: #52c41a;
+      }
+      .badge-caution {
+        background: #fffbe6;
+        color: #d48806;
+      }
+      .badge-fail {
+        background: #fff1f0;
+        color: #ff4d4f;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="label">Tags & Filters</div>
 
-  <div class="section">
-    <div class="sublabel">Ant Design Tags</div>
-    <div class="row">
-      <span class="tag tag-default">Default</span>
-      <span class="tag tag-blue">Blue</span>
-      <span class="tag tag-green">Green</span>
-      <span class="tag tag-red">Red</span>
-      <span class="tag tag-gold">Gold</span>
-      <span class="tag tag-purple">Purple</span>
-      <span class="tag tag-cyan">Cyan</span>
-      <span class="tag tag-magenta">Magenta</span>
-      <span class="tag tag-selected">Selected</span>
+    <div class="section">
+      <div class="sublabel">Ant Design Tags</div>
+      <div class="row">
+        <span class="tag tag-default">Default</span>
+        <span class="tag tag-blue">Blue</span>
+        <span class="tag tag-green">Green</span>
+        <span class="tag tag-red">Red</span>
+        <span class="tag tag-gold">Gold</span>
+        <span class="tag tag-purple">Purple</span>
+        <span class="tag tag-cyan">Cyan</span>
+        <span class="tag tag-magenta">Magenta</span>
+        <span class="tag tag-selected">Selected</span>
+      </div>
     </div>
-  </div>
 
-  <div class="section">
-    <div class="sublabel">Product Filter Tags (Skincare Decision)</div>
-    <div class="row">
-      <span class="filter-tag filter-on">SPF 50 이상</span>
-      <span class="filter-tag filter-on">눈시림 낮음</span>
-      <span class="filter-tag filter-off">백탁 적음</span>
-      <span class="filter-tag filter-on">메이크업 궁합</span>
-      <span class="filter-tag filter-off">휴대성</span>
-      <span class="filter-tag filter-on">향료 없음</span>
-      <span class="filter-tag filter-off">+ 필터 추가</span>
+    <div class="section">
+      <div class="sublabel">Product Filter Tags (Skincare Decision)</div>
+      <div class="row">
+        <span class="filter-tag filter-on">SPF 50 이상</span>
+        <span class="filter-tag filter-on">눈시림 낮음</span>
+        <span class="filter-tag filter-off">백탁 적음</span>
+        <span class="filter-tag filter-on">메이크업 궁합</span>
+        <span class="filter-tag filter-off">휴대성</span>
+        <span class="filter-tag filter-on">향료 없음</span>
+        <span class="filter-tag filter-off">+ 필터 추가</span>
+      </div>
     </div>
-  </div>
 
-  <div class="section">
-    <div class="sublabel">Product Fit Badges</div>
-    <div class="row">
-      <span class="badge badge-pass">✓ 적합</span>
-      <span class="badge badge-caution">△ 주의</span>
-      <span class="badge badge-fail">✕ 비추</span>
-      <span class="tag tag-blue">SPF 50+</span>
-      <span class="tag tag-green">눈시림 낮음</span>
-      <span class="tag tag-gold">백탁 주의</span>
-      <span class="tag tag-red">향료 포함</span>
+    <div class="section">
+      <div class="sublabel">Product Fit Badges</div>
+      <div class="row">
+        <span class="badge badge-pass">✓ 적합</span>
+        <span class="badge badge-caution">△ 주의</span>
+        <span class="badge badge-fail">✕ 비추</span>
+        <span class="tag tag-blue">SPF 50+</span>
+        <span class="tag tag-green">눈시림 낮음</span>
+        <span class="tag tag-gold">백탁 주의</span>
+        <span class="tag tag-red">향료 포함</span>
+      </div>
     </div>
-  </div>
-</body></html>
+  </body>
+</html>

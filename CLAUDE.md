@@ -15,10 +15,10 @@
 
 ### 두 파일의 역할 분담
 
-| 파일      | 담는 것                                                                                  |
-| --------- | ---------------------------------------------------------------------------------------- |
-| AGENTS.md | **시작점 + AI Agent 지시사항** (어디서 시작하고, 무엇을 하면 안 되는지)                  |
-| CLAUDE.md | **프로젝트 개요·폴더 구조·기술 스택·황금 원칙·범위** (본 파일)                            |
+| 파일      | 담는 것                                                                 |
+| --------- | ----------------------------------------------------------------------- |
+| AGENTS.md | **시작점 + AI Agent 지시사항** (어디서 시작하고, 무엇을 하면 안 되는지) |
+| CLAUDE.md | **프로젝트 개요·폴더 구조·기술 스택·황금 원칙·범위** (본 파일)          |
 
 충돌 시: AGENTS.md 행동 규칙 우선, 프로젝트 정의는 본 파일을 신뢰.
 
@@ -33,34 +33,34 @@
 
 ## 핵심 화면 (MVP)
 
-| ID  | 화면              | 역할                                                           |
-| --- | ----------------- | -------------------------------------------------------------- |
-| S01 | Landing           | 4개 세그먼트 진입 + Concern Mapper 캐러셀 + Fast Lane          |
-| S02 | Priority Gate     | 새 제품을 사도 되는 상태인지 판정 (HOLD/CAUTION/PASS/ROUTE)    |
-| S03 | Category Decision | 카테고리별 핵심 질문 → 자동 필터 생성                          |
-| S06 | Product Matrix    | 필터 기반 제품 비교 (BASIC + PERSONALIZED + TRACEBACK 필터)    |
-| S07 | Product Detail    | 적합도 사유, attribute, 성분 노출                              |
-| S08 | Reaction Traceback | 문제/괜찮은 제품 비교 → avoidance_rules 생성                   |
+| ID  | 화면               | 역할                                                        |
+| --- | ------------------ | ----------------------------------------------------------- |
+| S01 | Landing            | 4개 세그먼트 진입 + Concern Mapper 캐러셀 + Fast Lane       |
+| S02 | Priority Gate      | 새 제품을 사도 되는 상태인지 판정 (HOLD/CAUTION/PASS/ROUTE) |
+| S03 | Category Decision  | 카테고리별 핵심 질문 → 자동 필터 생성                       |
+| S06 | Product Matrix     | 필터 기반 제품 비교 (BASIC + PERSONALIZED + TRACEBACK 필터) |
+| S07 | Product Detail     | 적합도 사유, attribute, 성분 노출                           |
+| S08 | Reaction Traceback | 문제/괜찮은 제품 비교 → avoidance_rules 생성                |
 
 상세 명세는 [docs/page_content_specification_revised.md](docs/page_content_specification_revised.md)와 [docs/wireframe_summary.md](docs/wireframe_summary.md)를 참조한다.
 
 ## 기술 스택
 
-| 영역            | 스택                                                                          |
-| --------------- | ----------------------------------------------------------------------------- |
-| Backend API     | TypeScript · NestJS · Prisma                                                  |
-| Database        | AWS RDS PostgreSQL 16 (가변 제품 속성은 `products.attributes` JSONB)          |
-| Cache           | AWS ElastiCache Redis 7 (priority rule, filter mapping, matrix snapshot)      |
-| Frontend Web    | Next.js App Router · React · TypeScript                                       |
-| Rendering       | SSR · SSG · ISR (SEO 및 LCP 최적화 목적)                                      |
-| Validation      | Zod (FE 입력 검증, BE DTO ↔ Prisma 모델 contract)                             |
-| 상태 관리       | TanStack Query (server state) · Zustand (client state)                        |
-| UI              | Tailwind CSS · shadcn/ui                                                      |
-| Storage         | AWS S3 (제품 이미지, 정적 자산)                                               |
-| CDN / Edge      | CloudFront (정적 자산 + Next.js 캐시 가속)                                    |
-| Infra           | Docker · AWS ECS Fargate · ECR · ALB · RDS · ElastiCache · S3 · CloudFront    |
-| Domain / HTTPS  | Route 53 · ACM                                                                |
-| CI/CD           | GitHub Actions → ECR → ECS Fargate 배포                                       |
+| 영역           | 스택                                                                       |
+| -------------- | -------------------------------------------------------------------------- |
+| Backend API    | TypeScript · NestJS · Prisma                                               |
+| Database       | AWS RDS PostgreSQL 16 (가변 제품 속성은 `products.attributes` JSONB)       |
+| Cache          | AWS ElastiCache Redis 7 (priority rule, filter mapping, matrix snapshot)   |
+| Frontend Web   | Next.js App Router · React · TypeScript                                    |
+| Rendering      | SSR · SSG · ISR (SEO 및 LCP 최적화 목적)                                   |
+| Validation     | Zod (FE 입력 검증, BE DTO ↔ Prisma 모델 contract)                          |
+| 상태 관리      | TanStack Query (server state) · Zustand (client state)                     |
+| UI             | Tailwind CSS · shadcn/ui                                                   |
+| Storage        | AWS S3 (제품 이미지, 정적 자산)                                            |
+| CDN / Edge     | CloudFront (정적 자산 + Next.js 캐시 가속)                                 |
+| Infra          | Docker · AWS ECS Fargate · ECR · ALB · RDS · ElastiCache · S3 · CloudFront |
+| Domain / HTTPS | Route 53 · ACM                                                             |
+| CI/CD          | GitHub Actions → ECR → ECS Fargate 배포                                    |
 
 ## 황금 원칙 (Golden Rules)
 

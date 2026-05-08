@@ -45,15 +45,15 @@ backend/
 
 ## 도메인 모듈 (Nest module 단위)
 
-| 모듈        | 책임                                                      | 주요 테이블                                                     |
-| ----------- | --------------------------------------------------------- | --------------------------------------------------------------- |
-| Identity    | device/user/session 발급·병합                              | users, devices, user_sessions, session_events                   |
-| Facts       | fact_definitions, context_questions, user_facts            | fact_definitions, context_questions, question_visibility_conditions, user_facts |
-| Priority    | priority_rules 평가, decision_runs(PRIORITY_GATE) 저장     | priority_rules, priority_rule_conditions, decision_runs         |
-| Catalog     | brands, product_categories, products, ingredients          | brands, product_categories, category_attribute_definitions, products, ingredients, product_ingredients, ingredient_groups, ingredient_group_members |
-| Matrix      | product_filter_mappings + filter_state + Matrix 조회       | product_filter_mappings, product_matrix_filter_states, decision_runs |
-| Traceback   | reaction_reports, suspected_causes, avoidance_rules        | reaction_reports, reaction_report_products, suspected_causes, avoidance_rules |
-| Events      | session_events 수집                                        | session_events                                                  |
+| 모듈      | 책임                                                   | 주요 테이블                                                                                                                                         |
+| --------- | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Identity  | device/user/session 발급·병합                          | users, devices, user_sessions, session_events                                                                                                       |
+| Facts     | fact_definitions, context_questions, user_facts        | fact_definitions, context_questions, question_visibility_conditions, user_facts                                                                     |
+| Priority  | priority_rules 평가, decision_runs(PRIORITY_GATE) 저장 | priority_rules, priority_rule_conditions, decision_runs                                                                                             |
+| Catalog   | brands, product_categories, products, ingredients      | brands, product_categories, category_attribute_definitions, products, ingredients, product_ingredients, ingredient_groups, ingredient_group_members |
+| Matrix    | product_filter_mappings + filter_state + Matrix 조회   | product_filter_mappings, product_matrix_filter_states, decision_runs                                                                                |
+| Traceback | reaction_reports, suspected_causes, avoidance_rules    | reaction_reports, reaction_report_products, suspected_causes, avoidance_rules                                                                       |
+| Events    | session_events 수집                                    | session_events                                                                                                                                      |
 
 ## 황금 원칙 (백엔드)
 

@@ -1,5 +1,6 @@
 # 시장 기회 분석: Skincare Decision Opportunities
-*Opportunity identification document | Codex | 2026-04-21*
+
+_Opportunity identification document | Codex | 2026-04-21_
 
 ---
 
@@ -30,6 +31,7 @@
 `Routine Priority Engine`
 
 입력:
+
 - 피부 타입/민감도
 - 현재 루틴
 - 주요 고민
@@ -37,6 +39,7 @@
 - 예산과 사용 의도
 
 출력:
+
 - 지금 가장 우선인 카테고리 1개
 - 보류해야 할 카테고리
 - 왜 그런지 설명
@@ -52,6 +55,7 @@
 ### 예시
 
 **선크림 카드**
+
 - SPF/PA
 - 유기자차/무기자차/혼합
 - 백탁/눈 시림
@@ -59,6 +63,7 @@
 - 메이크업 궁합
 
 **세럼 카드**
+
 - 주요 액티브
 - 권장 빈도
 - 자극 가능성
@@ -66,6 +71,7 @@
 - 기대 효과까지 걸리는 시간
 
 **립밤 카드**
+
 - 향료/멘톨/캄퍼 유무
 - petrolatum/lanolin/ceramide 등 보호 성분
 - SPF 유무
