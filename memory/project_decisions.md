@@ -359,4 +359,28 @@
 - vitest 마이그레이션 비용 > 이번 MVP에서 얻는 이득.
 - frontend는 jsdom·React Testing Library 호환 측면에서 vitest가 유리해 향후 도입 여지를 남긴다.
 
+## [2026-05-08] Prisma 버전을 `^6.19.3`으로 고정 (Prisma 7 미도입)
+
+**배경:** Phase 2.2에서 `pnpm --filter backend add prisma`로 의존성을 추가했더니 자동으로 Prisma 7.8.0이 설치됐다. Phase 2.3에서 `prisma init` + 수동 schema 작성을 시도했더니 `error P1012: The datasource property 'url' is no longer supported in schema files. Move connection URLs ... to 'prisma.config.ts'`로 검증 실패. Prisma 7은 schema의 `datasource.url` 자리를 제거하고 `prisma.config.ts` + `PrismaClient(adapter)` 패턴으로 옮기는 breaking change 도입.
+
+**결정:**
+
+- backend의 `prisma`, `@prisma/client`을 `^6.19.3`(2026-05 시점 6.x 최신)으로 고정.
+- schema에서 `url = env("DATABASE_URL")`을 그대로 사용. `prisma.config.ts`는 만들지 않음 (6.x에선 optional).
+- 6.19가 기본 generator를 신규 `prisma-client`(`output = "../generated/prisma"`)로 바꿨으나, 본 프로젝트는 클래식 `prisma-client-js`로 되돌려 `@prisma/client` import 경로를 유지.
+- Prisma 7로의 업그레이드는 별도 결정 사안: `prisma.config.ts` 도입 + adapter 패키지(`@prisma/adapter-pg` 등) 추가 + PrismaClient 인스턴스화 코드 변경 + dotenv devDep 추가가 함께 와야 함.
+
+**이유:**
+
+- EXECUTION_PLAN과 본 프로젝트의 모든 코드 위치 가이드(예: `services/.../`에서 `@prisma/client` import)가 클래식 패턴을 전제.
+- Prisma 7은 출시 직후라 NestJS 11 / nestjs-pino / cache-manager 등 본 스택과의 운영 검증 자료가 부족.
+- 6.19는 LTS급 안정 라인이고, 본 MVP가 필요로 하는 PostgreSQL 16 + JSONB + GIN 인덱스 기능을 모두 지원.
+- 7 마이그레이션 비용은 코드/스키마/CI 전부에 걸쳐 있어, 그만한 이익(adapter 다양성, edge runtime 등)이 본 MVP에는 없음.
+
+**부산물 정리 규약(향후 동일 init 재실행 시):**
+
+- `prisma init`이 만든 `backend/prisma.config.ts` 삭제.
+- `backend/.gitignore` 삭제 (루트 `.gitignore`로 이미 커버).
+- `backend/prisma/schema.prisma`의 generator를 `prisma-client-js`로 되돌리고 `output` 라인 제거.
+
 <!-- 새 결정은 여기에 추가 -->

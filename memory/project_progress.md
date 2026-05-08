@@ -209,4 +209,32 @@
 3. Phase 2.5 — `backend/docker-compose.yml` (postgres 16 + redis 7).
 4. Phase 2.6 — `prisma migrate dev --name init` + GIN 인덱스 raw 마이그레이션.
 
+## [2026-05-08] Phase 2.3 완료 — Prisma 6 init + .env 구성
+
+### 변경 내용
+
+- backend Prisma 의존성을 7.8.0 → `^6.19.3`로 다운그레이드 (`prisma`, `@prisma/client`).
+- `backend/prisma/AGENTS.md`를 임시 백업 → `prisma init --datasource-provider postgresql` 실행 → AGENTS.md 복원 → 백업 폴더 삭제 흐름으로 init 정상 수행.
+- 부산물 정리: `backend/prisma.config.ts` 삭제, `backend/.gitignore`(prisma init 자동 생성분) 삭제, schema의 generator를 신규 `prisma-client` → 클래식 `prisma-client-js`로 되돌리고 `output` 라인 제거.
+- [backend/.env](../backend/.env) 작성 — DATABASE_URL / REDIS_URL / COOKIE_SECRET / CORS_ORIGIN / PORT / NODE_ENV (로컬 개발 값).
+- [backend/.env.example](../backend/.env.example) 작성 — 키 목록만, 값 없음.
+- [EXECUTION_PLAN.md 2.3](../EXECUTION_PLAN.md) 정정: Prisma 6 핀, init 폴더 충돌 우회 절차, 부산물 정리 규약, validate/generate 검증 명령 추가.
+- [memory/project_decisions.md](project_decisions.md)에 "Prisma 6 고정 결정" append.
+
+### 검증 결과
+
+- `pnpm --filter backend exec prisma validate` → `The schema at prisma\schema.prisma is valid 🚀`.
+- `pnpm --filter backend exec prisma generate` → `Generated Prisma Client (v6.19.3)` 정상 출력.
+
+### 아직 남은 작업 / 리스크
+
+- pnpm이 `@prisma/client@6.19.3`, `@prisma/engines@6.19.3`, `prisma@6.19.3` 빌드 스크립트를 차단 중. 자동 postinstall(`prisma generate`)은 막혔지만, 수동 `prisma generate`는 정상 작동 — Phase 2.6 migrate 단계에서 `pnpm.onlyBuiltDependencies` 화이트리스트로 명시 허용 검토.
+- Prisma 7 breaking change가 7.x로 가는 길을 막진 않지만, 본 프로젝트가 `@prisma/client` import 경로 / `prisma.config.ts` 미사용을 전제하고 있어 7 도입 시 코드·플랜·infra 변경이 동시에 필요.
+
+### 다음 작업 우선순위
+
+1. **Phase 2.4 — Prisma schema 작성** ([docs/db_modeling.md](../docs/db_modeling.md) 25개 테이블 / enum 우선 / `@@map` 명시).
+2. Phase 2.5 — `backend/docker-compose.yml` (postgres 16 + redis 7).
+3. Phase 2.6 — `prisma migrate dev --name init` + GIN 인덱스 raw 마이그레이션.
+
 <!-- 새 세션 요약은 여기에 추가 -->

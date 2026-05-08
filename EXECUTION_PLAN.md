@@ -190,11 +190,40 @@ pnpm --filter backend add -D @types/cookie-parser
 
 ### 2.3 Prisma 초기화
 
+**Prisma 버전 선택:** `prisma`, `@prisma/client`은 `^6.19.3`(6.x 라인 최신)로 고정한다. Prisma 7은 `url`을 schema에서 분리해 `prisma.config.ts`로 옮기는 breaking change가 있어 본 플랜과 어긋난다. 7로 올리려면 별도 마이그레이션 결정 필요.
+
 ```bash
-pnpm prisma init --datasource-provider postgresql
+pnpm --filter backend add prisma@^6.19.3 @prisma/client@^6.19.3
 ```
 
-`backend/.env` 작성:
+`backend/prisma/`는 이미 `AGENTS.md`가 들어 있어 `prisma init`이 거부한다. 임시로 폴더명을 바꿔서 init을 정상 실행한 뒤 AGENTS.md를 복원한다.
+
+```bash
+# 루트에서
+mv backend/prisma backend/_prisma_bak
+pnpm --filter backend exec prisma init --datasource-provider postgresql
+mv backend/_prisma_bak/AGENTS.md backend/prisma/AGENTS.md
+rmdir backend/_prisma_bak
+```
+
+`prisma init`(6.19+)가 만들어내는 부산물 정리:
+
+- `backend/prisma.config.ts` — **삭제**. 6.x에서 optional이고, 본 플랜은 schema의 `url = env("DATABASE_URL")` 만으로 충분.
+- `backend/.gitignore` — **삭제**. 루트 `.gitignore`로 이미 모두 커버.
+- `backend/prisma/schema.prisma`의 generator를 다음과 같이 정정 (신규 `prisma-client` → 클래식 `prisma-client-js`, 커스텀 output 제거).
+
+```prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+```
+
+`backend/.env` 작성 (init이 placeholder DATABASE_URL을 추가했다면 우리 값으로 덮어쓴다):
 
 ```bash
 DATABASE_URL="postgresql://skincare_decision:skincare_decision@localhost:5432/skincare_decision?schema=public"
@@ -214,6 +243,13 @@ COOKIE_SECRET=
 CORS_ORIGIN=
 PORT=
 NODE_ENV=
+```
+
+검증:
+
+```bash
+pnpm --filter backend exec prisma validate   # The schema ... is valid 🚀
+pnpm --filter backend exec prisma generate   # Generated Prisma Client (v6.19.x)
 ```
 
 ### 2.4 Prisma schema 작성
