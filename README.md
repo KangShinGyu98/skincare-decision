@@ -131,7 +131,7 @@ infra/               # Docker/IaC/GH Actions (Phase 6)
 
 ## Git Commit Message Rules
 
-형식: `<type>(<scope>): <subject>` — Conventional Commits 기반.
+형식: `<type>(<scope>): <subject>` — Conventional Commits 기반. **subject 와 body 는 한국어로 작성한다** (type / scope 는 영문 키워드 그대로).
 
 ### Type
 
@@ -169,14 +169,14 @@ infra/               # Docker/IaC/GH Actions (Phase 6)
 ### 예시
 
 ```
-feat(backend): add POST /priority-gate/evaluate
-feat(frontend): wire S02 priority gate result card
-fix(backend): correct user_facts source priority ordering
-chore(repo): align typescript to ^5.9.3 across workspace
-chore(deps): bump @nestjs/* to 11
-docs(db): document toner attribute schema
-test(backend): cover priority rule HOLD/CAUTION branches
-ci(infra): add ECR push workflow
+feat(backend): POST /priority-gate/evaluate 추가
+feat(frontend): S02 우선순위 게이트 결과 카드 연결
+fix(backend): user_facts 소스 우선순위 정렬 오류 수정
+chore(repo): 워크스페이스 typescript ^5.9.3로 정렬
+chore(deps): @nestjs/* 11 버전으로 bump
+docs(db): 토너 attribute 스키마 문서화
+test(backend): priority rule HOLD/CAUTION 분기 테스트 추가
+ci(infra): ECR push 워크플로 추가
 ```
 
 ### 브랜치 명 규약 (참고)
