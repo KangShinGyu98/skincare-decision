@@ -19,7 +19,8 @@
       "WebFetch(domain:easylaw.go.kr)",
       "WebFetch(domain:developers.naver.com)",
       "WebFetch(domain:www.data.go.kr)",
-      "WebFetch(domain:blog.bluedawn.kr)"
+      "WebFetch(domain:blog.bluedawn.kr)",
+      "Bash(pnpm exec *)"
     ]
   }
 }

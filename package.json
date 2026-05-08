@@ -1,13 +1,22 @@
 {
-  "name": "K-Beauty Decision Project",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "name": "skincare-decision",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.32.1",
+  "engines": {
+    "node": ">=20"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "packageManager": "pnpm@10.32.1"
+  "scripts": {
+    "dev:backend": "pnpm --filter backend run start:dev",
+    "dev:frontend": "pnpm --filter frontend run dev",
+    "build": "pnpm -r run build",
+    "lint": "pnpm -r run lint",
+    "typecheck": "pnpm -r run typecheck",
+    "test": "pnpm -r run test",
+    "format": "prettier . --write"
+  },
+  "devDependencies": {
+    "prettier": "^3.8.3",
+    "typescript": "^6.0.3"
+  }
 }

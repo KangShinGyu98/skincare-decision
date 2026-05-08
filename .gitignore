@@ -22,3 +22,20 @@ lerna-debug.log*
 # temp directory
 .temp
 .tmp
+
+# Next.js
+.next/
+
+# pnpm store
+.pnpm-store/
+
+# test coverage
+coverage/
+
+# local env overrides
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db

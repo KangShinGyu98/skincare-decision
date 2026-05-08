@@ -288,4 +288,19 @@
 
 ---
 
+## [2026-05-08] EXECUTION_PLAN 실행 문법 정리 + 비어 있지 않은 앱 폴더 scaffold 규칙
+
+**배경:** `EXECUTION_PLAN.md`가 bash 전용 heredoc/`mkdir -p` 예시, 존재하지 않는 명세 경로, 그리고 이미 `AGENTS.md`/`CLAUDE.md`/`README.md`가 들어 있는 `backend/`·`frontend/` 폴더에 CLI scaffold를 바로 생성하는 절차를 함께 포함하고 있었다. 이 상태로 따르면 PowerShell 환경과 현재 저장소 구조에서 복붙 실행이 깨질 가능성이 높았다.
+
+**결정:**
+- `EXECUTION_PLAN.md`의 파일 생성 예시는 shell-neutral 코드 블록으로 적고, PowerShell 기본 환경에서 그대로 읽을 수 있게 유지한다.
+- `backend/`와 `frontend/` 초기화는 대상 폴더에 직접 scaffold하지 않고, `backend-scaffold` / `frontend-scaffold` 같은 임시 폴더를 만든 뒤 런타임 파일만 병합한다.
+- Phase 4/5의 활성 범위는 `docs/AGENTS.md`와 `docs/db_seed_plan.md` 기준으로 **토너 우선 + 수동 입력(X) + toner catalog seed only** 로 맞춘다. 외부 데이터 연동과 `effective_dose_met` 자동 판정은 `docs/Rejected/` 재활성화 이후 단계로 남긴다.
+- Docker / GitHub Actions / ECS 배포 예시는 현재 워크스페이스 명령 체계에 맞게 `pnpm --filter ... exec prisma ...`, sha 태그 기반 task definition 갱신 방식으로 적는다.
+
+**이유:**
+- 현재 저장소의 기본 셸은 PowerShell이며, bash 문법을 전제로 한 문서는 그대로 실행하다가 가장 먼저 깨진다.
+- `backend/`·`frontend/`는 이미 협업 문서가 들어 있는 비어 있지 않은 폴더라서, 공식 CLI가 기대하는 "새 빈 디렉터리" 흐름과 맞지 않는다.
+- 활성/보류 명세 경계를 EXECUTION_PLAN에도 반영해야 다른 Agent가 현재 MVP 범위를 잘못 확장하지 않는다.
+
 <!-- 새 결정은 여기에 추가 -->

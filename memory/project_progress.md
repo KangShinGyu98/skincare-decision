@@ -108,4 +108,27 @@
 
 ---
 
+## [2026-05-08] EXECUTION_PLAN 오류 소지 정리
+
+### 변경 내용
+- [EXECUTION_PLAN.md](../EXECUTION_PLAN.md)를 현재 저장소 구조와 문서 상태에 맞게 정리.
+- bash 전용 heredoc / `mkdir -p` 예시를 shell-neutral 설명으로 바꾸고, PowerShell 기본 환경 기준으로 읽히도록 수정.
+- `backend/` / `frontend/`가 이미 비어 있지 않은 폴더라는 점을 반영해 `backend-scaffold` / `frontend-scaffold` 임시 생성 후 병합 절차로 수정.
+- Phase 4/5를 `docs/AGENTS.md`, `docs/db_seed_plan.md`와 맞춰 토너 우선 / 수동 입력 / toner catalog seed 기준으로 정렬.
+- `page_content_specification.md` 등 실제 활성 명세 경로로 참조를 교정하고, `docs/Rejected/`에 있는 범위는 조건부 후속 작업으로 표기.
+- Dockerfile / GitHub Actions / ECS 배포 예시에서 실행되지 않는 `pnpm --filter ... prisma ...` 형태와 sha 태그 배포 누락 문제를 수정.
+
+### 검증 결과
+- `rg` 재검색으로 `page_content_specification_revised`, `docs/data_source_catalog.md`, `pnpm --filter backend prisma`, `pnpm --filter frontend dlx`, `tag` 컴포넌트 등 잘못된 패턴이 본문에서 제거된 것을 확인.
+- 실행 테스트: N/A (문서 수정만 수행).
+
+### 아직 남은 작업 / 리스크
+- `backend/AGENTS.md`, `frontend/AGENTS.md`, `infra/AGENTS.md`에도 일부 구형 경로/초기화 표현이 남아 있을 수 있어, 실제 Phase 2/3/6 착수 전에 한 번 더 동기화하는 편이 안전함.
+- 인프라 예시는 여전히 샘플 수준이므로 실제 ECS task definition / Next standalone / Secrets wiring 구현 시 세부 보정 필요.
+
+### 다음 작업 우선순위
+1. 필요하면 `backend/AGENTS.md`, `frontend/AGENTS.md`, `infra/AGENTS.md`도 EXECUTION_PLAN과 같은 기준으로 동기화.
+2. 업데이트된 EXECUTION_PLAN 기준으로 Phase 1 실제 실행.
+3. Phase 2 scaffold 병합 방식으로 NestJS init 착수.
+
 <!-- 새 세션 요약은 여기에 추가 -->
