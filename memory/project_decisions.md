@@ -238,4 +238,54 @@
 
 ---
 
+## [2026-05-07] DB Seed 설계 — TS orchestrator + 도메인별 JSON, 토너만 카탈로그 시드
+
+**배경:** 토너 1차 MVP 빌드 시작 전, DB 초기 상태를 어떤 명세에서 어떤 형식으로 채울지 결정 필요. 큐레이터가 직접 데이터 편집 가능해야 하고, 향후 카테고리 추가 시 점진 확장 가능해야 함.
+
+**결정:**
+
+- 형식: `prisma/seed.ts` orchestrator + `prisma/seed/*.json` 도메인별 데이터 파일.
+- 멱등성: 모든 시드는 자연키(`key`, `filter_key`, `fact_key` 등) 기반 upsert. 재실행 안전.
+- 분류:
+  - **시스템 데이터** (categories/attribute_definitions/priority_rules/filter_mappings/fact_definitions/context_questions 등) — 6개 카테고리 모두 시드.
+  - **카탈로그 데이터** (brands/products/ingredients/product_ingredients) — **토너만** 시드. 다른 카테고리는 admin UI로 점진 추가.
+  - **런타임 데이터** (users/devices/sessions/decision_runs/reaction_reports 등) — 시드 안 함.
+- 소스 매핑: [docs/db_seed_plan.md](../docs/db_seed_plan.md) §2 표 참조.
+- CSV → JSON: `scripts/csv_to_seed.ts`로 토너 CSV(25+종)를 `products.toner.json` + `product_ingredients.toner.json`으로 변환. 큐레이터 갱신 시 재실행.
+- 의존성 순서: categories → brands/ingredients → attribute_definitions → fact_definitions → priority_rules → context_questions → filter_mappings → products → product_ingredients.
+
+**이유:**
+
+- TS orchestrator는 Prisma 타입 활용·의존성 제어·upsert 보장에 유리.
+- JSON 데이터는 큐레이터가 코드 변경 없이 직접 편집 가능. CSV 변환 결과를 그대로 export 가능.
+- 카테고리별 파일 분리로 토너 작업 시 다른 카테고리 파일은 placeholder만 두면 됨. 카테고리 추가 시 해당 파일만 채우면 점진 확장.
+- 자연키 기반 upsert로 시드 재실행이 데이터 손실 일으키지 않음.
+
+**범위 밖 (Rejected/와 동일):**
+
+- `ingredient_efficacy_thresholds` 시드는 serum 작업 시점에 활성화.
+- 외부 데이터 자동 수집(Naver/식약처)은 향후 도입 시점에 활성화.
+
+**상세 설계:** [docs/db_seed_plan.md](../docs/db_seed_plan.md)
+
+---
+
+## [2026-05-07] docs/AGENTS.md 재작성 — 실제 파일 구조 반영 + Rejected/ 명시
+
+**배경:** 기존 `docs/AGENTS.md`가 존재하지 않는 파일(`page_content_specification_revised.md`, `data_source_catalog.md`, `ingredient_efficacy_thresholds.md`, `product_scope_and_limits.md`)을 참조 중. 일부는 `docs/Rejected/`로 이동돼 보류 상태였음.
+
+**결정:**
+
+- `docs/AGENTS.md`를 실제 파일 구조 기준으로 재작성.
+- 활성 명세 / Rejected 보류 명세 / 참고 폴더(Codex_Research/ClaudeProtype/crawl)를 명시적으로 분리.
+- Rejected/는 "삭제 아님, 토너 1차 MVP 범위 밖" 의미로 정의. 활성 명세가 Rejected 키를 참조하면 그 영역은 토너 MVP에서 비활성화된 부분으로 이해한다.
+- 작성일·키 명명 규칙·Rejected 이동 정책을 §4 기여 규칙에 정리.
+
+**이유:**
+
+- 새 AI Agent가 진입할 때 실제 파일과 명세가 일치해야 컨텍스트 충돌이 안 일어남.
+- "삭제하지 말고 Rejected/로 이동" 정책으로 보류 명세의 추적 가능성을 유지.
+
+---
+
 <!-- 새 결정은 여기에 추가 -->
