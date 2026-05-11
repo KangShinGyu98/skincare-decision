@@ -2,9 +2,6 @@
 CREATE TYPE "UserRole" AS ENUM ('USER', 'ADMIN');
 
 -- CreateEnum
-CREATE TYPE "UserSessionSegment" AS ENUM ('A', 'B', 'C', 'D');
-
--- CreateEnum
 CREATE TYPE "SessionStatus" AS ENUM ('ACTIVE', 'COMPLETED', 'EXPIRED');
 
 -- CreateEnum
@@ -85,7 +82,6 @@ CREATE TABLE "user_sessions" (
     "id" UUID NOT NULL,
     "device_id" UUID NOT NULL,
     "user_id" UUID,
-    "segment" "UserSessionSegment",
     "ab_variant" VARCHAR(100),
     "status" "SessionStatus" NOT NULL,
     "entry_path" VARCHAR(255) NOT NULL,

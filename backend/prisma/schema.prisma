@@ -13,13 +13,6 @@ enum UserRole {
   ADMIN
 }
 
-enum UserSessionSegment {
-  A
-  B
-  C
-  D
-}
-
 enum SessionStatus {
   ACTIVE
   COMPLETED
@@ -182,7 +175,6 @@ model UserSession {
   id                        String                     @id @default(uuid()) @db.Uuid
   deviceId                  String                     @map("device_id") @db.Uuid
   userId                    String?                    @map("user_id") @db.Uuid
-  segment                   UserSessionSegment?
   abVariant                 String?                    @map("ab_variant") @db.VarChar(100)
   status                    SessionStatus
   entryPath                 String                     @map("entry_path") @db.VarChar(255)
