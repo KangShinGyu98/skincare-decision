@@ -106,21 +106,22 @@ infra/               # Docker/IaC/GH Actions (Phase 6)
 
 위 0번 섹션이 진입 규칙이고, 본 절은 작업 단계별 상세 약속입니다.
 
-| 시점             | 행동                                                                                        |
-| ---------------- | ------------------------------------------------------------------------------------------- |
-| 세션 시작        | [AGENTS.md](AGENTS.md) → [CLAUDE.md](CLAUDE.md) → [memory/MEMORY.md](memory/MEMORY.md) 순독 |
-| 폴더 진입        | 해당 폴더의 `AGENTS.md`를 먼저 연다 (없으면 만들고 작업)                                    |
-| 새 결정/리스크   | [memory/project_decisions.md](memory/project_decisions.md)에 append-only로 기록             |
-| API 변경         | [memory/api_contracts.md](memory/api_contracts.md)를 먼저 갱신, 그 다음 코드                |
-| 버그 해결        | [memory/known_issues.md](memory/known_issues.md)에 증상 → 원인 → 해결책 기록                |
-| 명세 ↔ 코드 충돌 | `docs/`를 먼저 갱신한 뒤 코드를 수정                                                        |
-| 세션 종료        | [memory/project_progress.md](memory/project_progress.md)에 변경 요약 + 다음 우선순위 기록   |
+| 시점                       | 행동                                                                                                                                          |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| 세션 시작                  | [AGENTS.md](AGENTS.md) → [CLAUDE.md](CLAUDE.md) → [memory/MEMORY.md](memory/MEMORY.md) 순독                                                   |
+| 폴더 진입                  | 해당 폴더의 `AGENTS.md`를 먼저 연다 (없으면 만들고 작업)                                                                                      |
+| 새 결정/리스크             | [memory/project_decisions.md](memory/project_decisions.md)에 append-only로 기록                                                               |
+| API 변경                   | [memory/api_contracts.md](memory/api_contracts.md)를 먼저 갱신, 그 다음 코드                                                                  |
+| 버그 해결                  | [memory/known_issues.md](memory/known_issues.md)에 증상 → 원인 → 해결책 기록                                                                  |
+| 명세 ↔ 코드 충돌           | `docs/`를 먼저 갱신한 뒤 코드를 수정                                                                                                          |
+| **폴더 구조 / 문서 이동**  | **`/sync-structure` skill 호출.** 구조-진실 문서(README §4 · `AGENTS.md` · `CLAUDE.md` · 각 `AGENTS.md`)만 갱신하고 깨진 경로를 일괄 치환한다. |
+| 세션 종료                  | [memory/project_progress.md](memory/project_progress.md)에 변경 요약 + 다음 우선순위 기록                                                     |
 
 ### Claude ↔ Codex 컨텍스트 공유 원칙
 
 - 두 Agent는 동일한 `AGENTS.md` / `CLAUDE.md` / `memory/`를 진실로 삼는다.
 - 어느 Agent도 다른 Agent의 결정 기록을 **수정·삭제하지 않는다** — 새 결정으로 덮어쓴다(append-only).
-- 폴더 구조 변경은 [AGENTS.md](AGENTS.md)와 [CLAUDE.md](CLAUDE.md)의 디렉터리 맵을 함께 갱신해야 한다.
+- 폴더 구조 변경은 [`/sync-structure` skill](.claude/skills/sync-structure/SKILL.md)을 호출해 처리한다. 이 skill은 **구조-진실 문서(README · AGENTS.md · CLAUDE.md · 각 폴더 AGENTS.md)만 정밀 갱신**하고, 콘텐츠 파일은 절대 읽지 않아 토큰을 최소화한다. 직접 수동 수정은 권장하지 않는다 — 누락 / 깨진 경로 위험.
 - 모든 폴더에는 `AGENTS.md`, 모든 코드 파일 최상단에는 한 줄 헤더 주석을 유지한다.
 
 ---

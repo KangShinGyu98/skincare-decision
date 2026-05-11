@@ -20,7 +20,18 @@
       "WebFetch(domain:developers.naver.com)",
       "WebFetch(domain:www.data.go.kr)",
       "WebFetch(domain:blog.bluedawn.kr)",
-      "Bash(pnpm exec *)"
+      "Bash(pnpm exec *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(dir /s /b /ad \"c:\\\\Users\\\\rkdtl\\\\Desktop\\\\skincare-decision\")",
+      "Bash(findstr /i \"rejected\")",
+      "Bash(dir \"c:\\\\Users\\\\rkdtl\\\\Desktop\\\\skincare-decision\\\\docs\" /b /ad)",
+      "Bash(mkdir -p \"c:\\\\Users\\\\rkdtl\\\\Desktop\\\\skincare-decision\\\\.claude\\\\skills\\\\sync-structure\")",
+      "Edit(/.claude/skills/sync-structure/**)",
+      "Bash(git rm *)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\rkdtl\\Desktop\\skincare-decision\\.claude\\skills"
     ]
   }
 }
