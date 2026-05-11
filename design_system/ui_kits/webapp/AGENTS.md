@@ -16,5 +16,5 @@
 ## 진입 규칙
 
 1. 코드를 그대로 frontend로 복사하지 않는다. shadcn/ui로 재작성하면서 명세와 토큰을 다시 맞춘다.
-2. 새 화면 프로토타입을 추가할 때는 명세(`docs/page_content_specification_revised.md`)의 화면 ID(S03/S04/...)를 파일명에 반영.
+2. 새 화면 프로토타입을 추가할 때는 명세(`docs/ContentSpec/page_content_specification.md`)의 화면 ID(S03/S04/...)를 파일명에 반영.
 3. 실 데이터 fetch 로직은 넣지 않는다(목 데이터만).

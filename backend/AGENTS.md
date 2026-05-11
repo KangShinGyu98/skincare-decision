@@ -21,7 +21,7 @@ backend/
 ├─ README.md              ← 실행/테스트 명령
 ├─ prisma/
 │  ├─ AGENTS.md
-│  ├─ schema.prisma       ← docs/db_modeling.md 25개 테이블 1:1
+│  ├─ schema.prisma       ← docs/Data/db_modeling.md 25개 테이블 1:1
 │  ├─ migrations/
 │  └─ seed.ts             ← priority_rules / fact_definitions / product_filter_mappings 시드
 ├─ src/
@@ -80,7 +80,7 @@ backend/
 ## 진입 규칙
 
 1. 새 모듈을 만들 때 본 파일의 "도메인 모듈" 표를 갱신.
-2. Prisma schema 변경 시 [prisma/AGENTS.md](prisma/AGENTS.md)와 `docs/db_modeling.md`를 함께 갱신.
+2. Prisma schema 변경 시 [prisma/AGENTS.md](prisma/AGENTS.md)와 `docs/Data/db_modeling.md`를 함께 갱신.
 3. 새 endpoint는 `memory/api_contracts.md`에 등록.
 4. 환경변수는 `.env.example`만 커밋, 실제 값은 `.env`에 저장(gitignore).
 5. 의존성 추가 시 사유를 `memory/project_decisions.md`에 기록.

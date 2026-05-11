@@ -1,7 +1,7 @@
 # backend/prisma/ — Prisma schema, migrations, seed
 
-> `docs/db_modeling.md`의 25개 테이블을 1:1로 옮겨 담는다.
-> schema 변경 → migration 생성 → seed 갱신 → `docs/db_modeling.md` 동기화.
+> `docs/Data/db_modeling.md`의 25개 테이블을 1:1로 옮겨 담는다.
+> schema 변경 → migration 생성 → seed 갱신 → `docs/Data/db_modeling.md` 동기화.
 
 ## 파일
 
@@ -13,7 +13,7 @@
 
 ## 테이블 매핑 가이드
 
-- 25개 테이블은 `docs/db_modeling.md` 기준. **추가/삭제 전에 명세 갱신 필수**.
+- 25개 테이블은 `docs/Data/db_modeling.md` 기준. **추가/삭제 전에 명세 갱신 필수**.
 - `products.attributes`, `session_events.payload`, `user_facts.value`, `decision_runs.input_snapshot|applied_filters_snapshot|result_snapshot`, `priority_rules.hold_categories` 등은 `Json` 타입 사용.
 - enum은 Prisma enum으로 정의(`ENUM('STOP','HOLD','CAUTION','PASS','ROUTE_CATEGORY')` → `enum PriorityResultType {...}`).
 - Composite unique: `product_ingredients (product_id, ingredient_id)` UNIQUE 등 명세대로 반영.
@@ -34,10 +34,10 @@
 - seed는 idempotent해야 한다(같은 키는 upsert).
 - priority_rule_conditions / question_visibility_conditions는 fact_definitions 시드 이후 실행.
 - 샘플 products는 6개 카테고리에 각 5개 이상 (Matrix 화면 시각 확인용).
-- seed 데이터의 출처는 `docs/matching_rules_revised.md` 표를 그대로 따른다.
+- seed 데이터의 출처는 `docs/ContentSpec/matching_rules_revised.md` 표를 그대로 따른다.
 
 ## 진입 규칙
 
-1. schema 변경 시 `docs/db_modeling.md`도 같은 PR에서 갱신.
+1. schema 변경 시 `docs/Data/db_modeling.md`도 같은 PR에서 갱신.
 2. 새 enum/JSON 구조는 `backend/src/types/` Zod schema와 동기화.
 3. 마이그레이션 생성 후 `pnpm run prisma:format`으로 schema 정렬.

@@ -21,4 +21,4 @@
 
 1. 새 이미지는 화면 ID(S01~S08) 또는 컴포넌트명을 파일명에 포함시킨다.
 2. 본 폴더 이미지는 git LFS 대상이 아니다 — 큰 PSD/Sketch 원본은 별도 저장소.
-3. 이미지에 의해 결정된 사항은 `docs/page_content_specification_revised.md` 또는 `memory/project_decisions.md`에 명문화한다.
+3. 이미지에 의해 결정된 사항은 `docs/ContentSpec/page_content_specification.md` 또는 `memory/project_decisions.md`에 명문화한다.

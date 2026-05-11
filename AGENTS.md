@@ -70,17 +70,16 @@
 | 파일                                                                                     | 설명                                                                                    |
 | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
 | [docs/AGENTS.md](docs/AGENTS.md)                                                         | docs 폴더 진입점                                                                        |
-| [docs/db_modeling.md](docs/db_modeling.md)                                               | 25개 테이블 모델 (Prisma schema 1:1 대응 기준)                                          |
-| [docs/product_attribute_schema.md](docs/product_attribute_schema.md)                     | `products.attributes` JSONB 키 사전 (카테고리별)                                        |
-| [docs/matching_rules_revised.md](docs/matching_rules_revised.md)                         | Priority Gate / Question visibility / Filter mapping rule 시드                          |
-| [docs/page_content_specification_revised.md](docs/page_content_specification_revised.md) | 화면별 카피·질문·CTA·동적 슬롯                                                          |
-| [docs/wireframe_summary.md](docs/wireframe_summary.md)                                   | 와이어프레임 흐름 요약                                                                  |
-| [docs/product_taxonomy.md](docs/product_taxonomy.md)                                     | MVP 6개 카테고리 정의                                                                   |
-| [docs/skincare_product_selection_rule.md](docs/skincare_product_selection_rule.md)       | 카테고리별 선택 기준 원자료                                                             |
-| [docs/content_plan.md](docs/content_plan.md)                                             | Rule 추출/검증 파이프라인 메모                                                          |
-| [docs/admin_product_input_spec.md](docs/admin_product_input_spec.md)                     | 관리자 제품 등록 폼 명세 (카테고리별 필드 + S3 업로드 + `effective_dose_met` 자동 판정) |
-| [docs/data_source_catalog.md](docs/data_source_catalog.md)                               | 외부 데이터 출처 카탈로그 (Naver / 식약처 3종 / AIHub OCR / 브랜드 공식) — 결정 1 보조  |
-| [docs/ingredient_efficacy_thresholds.md](docs/ingredient_efficacy_thresholds.md)         | 성분 유효 농도 기준 단일 진실 (식약처 별표4 기반 시드)                                  |
+| [docs/Data/db_modeling.md](docs/Data/db_modeling.md)                                               | 25개 테이블 모델 (Prisma schema 1:1 대응 기준)                                          |
+| [docs/ContentSpec/product_attribute_schema.md](docs/ContentSpec/product_attribute_schema.md)                     | `products.attributes` JSONB 키 사전 (카테고리별)                                        |
+| [docs/ContentSpec/matching_rules_revised.md](docs/ContentSpec/matching_rules_revised.md)                         | Priority Gate / Question visibility / Filter mapping rule 시드                          |
+| [docs/ContentSpec/page_content_specification.md](docs/ContentSpec/page_content_specification.md) | 화면별 카피·질문·CTA·동적 슬롯                                                          |
+| [docs/ContentSpec/wireframe_summary.md](docs/ContentSpec/wireframe_summary.md)                                   | 와이어프레임 흐름 요약                                                                  |
+| [docs/ContentSpec/product_taxonomy.md](docs/ContentSpec/product_taxonomy.md)                                     | MVP 6개 카테고리 정의                                                                   |
+| [docs/ContentSpec/skincare_product_selection_rule.md](docs/ContentSpec/skincare_product_selection_rule.md)       | 카테고리별 선택 기준 원자료                                                             |
+| [docs/ContentSpec/admin_product_input_spec.md](docs/ContentSpec/admin_product_input_spec.md)                     | 관리자 제품 등록 폼 명세 (카테고리별 필드 + S3 업로드 + `effective_dose_met` 자동 판정) |
+| [docs/Rejected/data_source_catalog.md](docs/Rejected/data_source_catalog.md)                               | 외부 데이터 출처 카탈로그 (Naver / 식약처 3종 / AIHub OCR / 브랜드 공식) — 결정 1 보조  |
+| [docs/Rejected/ingredient_efficacy_thresholds.md](docs/Rejected/ingredient_efficacy_thresholds.md)         | 성분 유효 농도 기준 단일 진실 (식약처 별표4 기반 시드)                                  |
 
 ---
 

@@ -19,7 +19,7 @@
 2. Tailwind config에 색을 추가할 때는 `colors_and_type.css`의 변수와 동일한 이름·값을 사용한다.
 3. shadcn/ui 컴포넌트 커스터마이즈는 Ant Design 기본값(border-radius 2px, 14px body, etc.)을 유지.
 4. PingFang SC → Noto Sans KR 대체. README 마지막 섹션 참고.
-5. UI 결정이 명세(`docs/page_content_specification_revised.md`)와 충돌하면 명세를 우선 갱신한다.
+5. UI 결정이 명세(`docs/ContentSpec/page_content_specification.md`)와 충돌하면 명세를 우선 갱신한다.
 
 ## 핵심 토큰 요약
 

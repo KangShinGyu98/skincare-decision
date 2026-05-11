@@ -76,12 +76,12 @@ frontend/
 4. **device_id**는 client에서 cookie로 관리, fetcher가 항상 `x-device-id` 헤더 동봉.
 5. **shadcn/ui 컴포넌트는 design_system 토큰 매핑 후 사용**. 하드코딩 색상 금지(Tailwind 변수만).
 6. **App Router server component 우선** — 인터랙션이 있을 때만 `"use client"`.
-7. **i18n 미적용**(MVP는 한국어만). 모든 사용자 노출 텍스트는 `docs/page_content_specification_revised.md` 카피와 일치.
+7. **i18n 미적용**(MVP는 한국어만). 모든 사용자 노출 텍스트는 `docs/ContentSpec/page_content_specification.md` 카피와 일치.
 8. **에러 표시는 RFC 7807 Problem Details 파싱 후 표시**.
 
 ## 진입 규칙
 
-1. 새 화면 작업 전 `docs/page_content_specification_revised.md`의 해당 화면 섹션을 읽는다.
+1. 새 화면 작업 전 `docs/ContentSpec/page_content_specification.md`의 해당 화면 섹션을 읽는다.
 2. 새 컴포넌트는 `src/components/<도메인>/`에 두고, 재사용성이 명확하면 `ui/`로 승격.
 3. Tailwind config에 새 색을 추가하면 `design_system/colors_and_type.css`와 일치시킨다.
 4. 새 hook/store는 본 파일의 매핑 표 갱신.

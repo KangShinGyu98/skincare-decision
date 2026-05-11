@@ -13,4 +13,4 @@
 
 1. 새 프로토타입은 단일 폴더로 추가하고 자체 README + AGENTS.md를 둔다.
 2. 키트 안의 컴포넌트는 자유롭게 작성하되, `frontend/` 본 코드에 그대로 복사하지 말고 shadcn/ui 컨벤션으로 재작성한다.
-3. 키트 코드는 명세(`docs/page_content_specification_revised.md`)와 시각적 차이가 있으면 명세를 우선시한다.
+3. 키트 코드는 명세(`docs/ContentSpec/page_content_specification.md`)와 시각적 차이가 있으면 명세를 우선시한다.

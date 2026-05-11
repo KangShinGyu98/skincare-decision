@@ -15,4 +15,4 @@
 
 1. mockup은 명세 검증용으로만 본다. 실제 컴포넌트는 `frontend/`에서 shadcn/ui로 구현.
 2. 새 mockup이 추가되면 본 인덱스에 한 줄 등록.
-3. mockup의 인터랙션이 명세보다 새로우면 `docs/page_content_specification_revised.md`에 반영 후 mockup을 갱신.
+3. mockup의 인터랙션이 명세보다 새로우면 `docs/ContentSpec/page_content_specification.md`에 반영 후 mockup을 갱신.

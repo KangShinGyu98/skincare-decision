@@ -42,7 +42,7 @@
 | S07 | Product Detail     | 적합도 사유, attribute, 성분 노출                           |
 | S08 | Reaction Traceback | 문제/괜찮은 제품 비교 → avoidance_rules 생성                |
 
-상세 명세는 [docs/page_content_specification_revised.md](docs/page_content_specification_revised.md)와 [docs/wireframe_summary.md](docs/wireframe_summary.md)를 참조한다.
+상세 명세는 [docs/ContentSpec/page_content_specification.md](docs/ContentSpec/page_content_specification.md)와 [docs/ContentSpec/wireframe_summary.md](docs/ContentSpec/wireframe_summary.md)를 참조한다.
 
 ## 기술 스택
 
@@ -72,7 +72,7 @@
 6. **폴더에는 AGENTS.md, 파일에는 헤더 주석**:
    - 모든 폴더 최상단에 `AGENTS.md` (해당 폴더의 역할, 하위 항목, 진입 규칙)
    - 모든 코드 파일 최상단에 한 줄 주석으로 AI Agent에게 파일 의도 설명
-7. **Concern/Filter 상수는 프론트 코드 상수**: DB로 관리하지 않는다. (`docs/db_modeling.md` MVP 제거 테이블 참고)
+7. **Concern/Filter 상수는 프론트 코드 상수**: DB로 관리하지 않는다. (`docs/Data/db_modeling.md` MVP 제거 테이블 참고)
 8. **product.attributes JSONB**가 진짜 데이터다: `product_filter_mappings`는 사용자 답변 → attribute 조건의 번역기일 뿐.
 
 ## RPI 워크플로우 (모든 구현 작업의 기본 순서)
@@ -118,7 +118,7 @@ lib(공유 유틸) → types(Zod/DTO) → config → api(server actions / fetche
 
 ## 범위 밖 (구현 금지)
 
-- 색조 화장품 (립스틱, 틴트, 쿠션, 파운데이션) — `docs/product_taxonomy.md` 제외 항목
+- 색조 화장품 (립스틱, 틴트, 쿠션, 파운데이션) — `docs/ContentSpec/product_taxonomy.md` 제외 항목
 - 슬리핑팩, 아이크림, 마스크 시트 (MVP 외 카테고리)
 - 자체 결제/주문 기능 — 외부 구매 링크만 노출
 - AI/LLM 기반 추천 — 모든 추천은 Rule + filter 조회로 결정 (재현성/감사 가능성 우선)
