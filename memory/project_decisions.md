@@ -384,6 +384,25 @@
 - `backend/prisma/schema.prisma`의 generator를 `prisma-client-js`로 되돌리고 `output` 라인 제거.
 
 <!-- 새 결정은 여기에 추가 -->
+
+## [2026-05-14] 질문 모델을 `dim_questions` + `questions` 2테이블 구조로 단순화
+
+**배경:** 기존 `fact_definitions` / `context_questions` 구조는 내부 판단값과 화면별 질문 표현이 분리되어 있었지만, 선택지/입력 타입이 양쪽에 걸쳐 있어 같은 질문 기준을 화면마다 다르게 묻는 경우 답변 개수와 내부 값 정합성을 강하게 보장하기 어려웠다. 사용자는 화면별 문구는 달라도 내부 로직은 동일한 `value` 기준으로 평가되기를 원했다.
+
+**결정:**
+
+- `fact_definitions`는 `dim_questions`로, `context_questions`는 `questions`로 개념/테이블명을 변경한다.
+- `dim_questions.answer_values INTEGER[]`를 내부 판단값의 단일 출처로 둔다. `score` 용어는 쓰지 않고 `value`로 통일한다.
+- `questions.answers TEXT[]`는 화면별 사용자/관리자 노출 라벨만 가진다.
+- 사용자가 답하면 `user_facts`에는 `question_id`, `dim_question_key`, `answer_index`, `value`를 저장한다. `answer_value` 문자열은 저장하지 않는다.
+- `questions.answers[n]`과 `dim_questions.answer_values[n]`의 길이 일치는 `answer_count` 생성 컬럼 + `(dim_question_id, answer_count)` 복합 FK로 DB에서 강제한다.
+
+**이유:**
+
+- 질문 정의 depth를 늘리지 않고 2테이블로 유지하면서, 같은 기준 질문의 화면별 표현 차이를 허용할 수 있다.
+- 내부 평가는 표시 라벨이나 문자열 enum이 아니라 숫자 `value`만 보면 되므로 Priority Rule / Product Filter Mapping이 단순해진다.
+- PostgreSQL `CHECK`는 부모 테이블 값을 직접 참조할 수 없으므로, 생성 컬럼과 복합 FK가 가장 단순한 DB 레벨 제약이다.
+
 ## [2026-05-09] Backend Jest 실행은 로컬 `jest-cli` 직접 호출로 고정
 
 **배경:** 이 워크스페이스는 상위 경로 `C:\Users\rkdtl\node_modules`에 오래된 Jest 27 계열 패키지가 존재해, 일반 `jest` / `pnpm exec jest` 실행 시 backend의 Jest 29 설정과 섞이는 문제가 발생했다. 증상은 `testEnvironmentOptions` 관련 예외, `0 of 1 total` 같은 비정상 실행, 잘못된 runner path 해석이었다.
@@ -398,3 +417,95 @@
 
 - 현재 머신의 상위 `node_modules` 상태를 바꾸지 않고도 저장소 내부에서 재현 가능한 테스트 실행 경로를 확보할 수 있다.
 - Jest 29 단일 라인으로 unit / e2e 설정을 고정하면 이후 다른 Agent도 같은 명령으로 같은 결과를 얻을 수 있다.
+
+## [2026-05-15] 질문 관계 기준을 `dim_question_id`로 정리
+
+**배경:** `dim_questions` + `questions` 2테이블 구조로 단순화한 뒤에도 일부 관계 테이블과 인덱스가 `dim_question_key` / `source_dim_question_key` 기준으로 남아 있었다. 내부 판단 기준이 `id`로 바뀐 상황에서 FK를 slug에 걸면 key rename, seed 재정렬, 운영 수정 시 관계 안정성이 떨어진다.
+
+**결정:**
+
+- `dim_questions.key`는 삭제하지 않고 seed/admin/debug용 고유 slug로 유지한다.
+- DB 관계, FK, 조회 인덱스는 `dim_questions.id` 기준으로 통일한다.
+- `question_visibility_conditions.condition_dim_question_id`, `priority_rule_conditions.dim_question_id`, `product_filter_mappings.source_dim_question_id`, `user_facts.dim_question_id`를 사용한다.
+- `user_facts`는 `question_id`, `dim_question_id`, `answer_index`, `value`를 저장한다.
+- `question_id`가 있는 답변은 `(question_id, dim_question_id)` 복합 FK로 실제 노출 질문과 기준 질문 불일치를 막는다.
+- seed JSON은 사람이 읽기 쉽게 key를 받아도 되지만, import 단계에서 id로 resolve해 DB에 저장한다.
+
+**이유:**
+
+- 관계 안정성은 UUID PK가 맡고, 사람이 읽는 식별자는 slug가 맡도록 책임을 분리한다.
+- `key` rename이 발생해도 사용자 답변, 조건, 필터 매핑 FK가 흔들리지 않는다.
+- 화면별 질문 라벨이 달라도 동일 기준 질문을 id로 묶으면 내부 로직은 `value`만 비교하면 된다.
+
+## [2026-05-15] 질문 테이블명을 `question` + `question_variants`로 정리하고 답변 제약 단순화
+
+**배경:** `dim_questions` / `questions` 명칭은 기준 질문과 화면별 질문의 관계를 표현하지만, 실제 의도는 "질문 정의 1개 + 화면별 변형 N개"에 가깝다. 또한 `answer_type`별 선택지 개수를 DB CHECK로 모두 나열하면 타입 추가/정책 변경 때마다 migration이 필요하다.
+
+**결정:**
+
+- `dim_questions`는 `question`으로, `questions`는 `question_variants`로 rename한다.
+- `question_variants.question_id`가 기준 질문 `question.id`를 참조한다.
+- `user_facts.question_id`는 nullable FK로 `question_variants.id`를 참조한다.
+- `user_facts`는 더 이상 기준 질문 ID를 직접 저장하지 않는다. 기준 질문 단위 집계가 필요하면 `user_facts.question_id → question_variants.id → question_variants.question_id`로 JOIN한다.
+- `question_variants`의 `(id, question_id)` UNIQUE와 `user_facts(question_id, question_id)` 형태의 복합 FK 구상은 제거한다.
+- DB는 `question.answer_values` 개수와 `question_variants.answers` 라벨 개수가 같은지만 `answer_count` 생성 컬럼 + 복합 FK로 강제한다.
+- `answer_type`별 개수 정책은 DB CHECK가 아니라 admin/service validation에서 처리한다.
+
+**이유:**
+
+- `question_variants`를 사용자 답변의 직접 참조 대상으로 두면 실제 사용자가 본 문구와 답변 라벨을 추적하기 쉽다.
+- 기준 질문은 variant를 통해 추론 가능하므로 `user_facts`에 중복 저장하지 않는다.
+- 선택지 타입별 개수 제한을 DB에 하드코딩하지 않으면 운영 정책 변경과 신규 타입 추가가 가벼워진다.
+
+## [2026-05-15] `question`에서 `label` / `group` 메타데이터 제거
+
+**배경:** `question`은 내부 판단 기준과 `value` 배열만 보관하는 테이블로 단순화하기로 했다. 관리자용 표시명은 `key`와 `question_variants.title`로 충분하고, 그룹 분류는 현재 DB 관계나 평가 로직에 직접 쓰이지 않는다.
+
+**결정:**
+
+- `question.label`과 `question.group` 컬럼을 제거한다.
+- `question_group_enum`도 함께 제거한다.
+- MVP 질문 사전은 `key`, `answer_type`, `answer_values`, 설명만 유지한다.
+
+**이유:** 기준 질문 테이블의 책임을 "동일 결론을 내리기 위한 내부 value 정의"로 제한하면 화면 문구/관리자 문구/분류가 섞이지 않는다. 필요 시 그룹핑은 seed 파일, 관리자 UI 필터, 또는 별도 운영 메타데이터로 다시 둘 수 있다.
+
+## [2026-05-15] 사용자 답변 테이블을 `user_responses`로 정리하고 canonical question 기준으로 복원
+
+**배경:** 이전 결정에서는 사용자 답변이 `question_variants.id`를 직접 참조하도록 뒀지만, 그러면 같은 canonical question을 화면마다 다르게 물었을 때 복원 기준이 variant에 묶인다. 사용자가 다시 들어왔을 때는 "현재 화면 variant"가 무엇이든 같은 canonical question의 최신 답변을 복원해야 한다.
+
+**결정:**
+
+- `user_facts`를 `user_responses`로 rename한다.
+- `user_responses.question_id`는 NOT NULL FK로 canonical `question.id`를 참조한다.
+- `user_responses.question_variant_id`는 NULLABLE FK로 사용자가 실제로 본 `question_variants.id`를 참조한다.
+- `answer_index`는 저장하지 않는다. 복원 시 `question.answer_values`에서 저장된 `value`의 위치를 찾고, 현재 화면의 `question_variants.answers` 같은 index를 선택 상태로 표시한다.
+- `question_variant_id`가 있을 때 canonical question과 불일치하지 않도록 `question_variants(id, question_id)` UNIQUE와 `user_responses(question_variant_id, question_id)` 복합 FK를 둔다.
+
+**이유:** 평가/복원/필터 매핑의 기준은 항상 canonical question이어야 한다. variant는 "사용자가 실제로 본 문구"를 추적하는 감사/분석 정보로 남기되, 응답의 의미와 최신값 조회는 `question_id` 하나로 안정화한다.
+
+## [2026-05-15] `question_variants(id, question_id)` UNIQUE와 응답 복합 FK 제거
+
+**배경:** `user_responses.question_id`가 canonical `question.id`를 직접 참조하도록 정리했기 때문에, `question_variants`에 `(id, question_id)` UNIQUE를 추가하고 `user_responses(question_variant_id, question_id)` 복합 FK를 거는 것은 제약 depth를 다시 높인다.
+
+**결정:**
+
+- `uq_question_variants_id_question_id`를 두지 않는다.
+- `user_responses.question_variant_id`는 `question_variants.id`에 대한 nullable 단순 FK로 둔다.
+- variant와 canonical question의 쌍 일치는 DB 복합 FK가 아니라 Service insert 로직에서 보장한다. 응답 INSERT 시 `question_variant_id`가 있으면 해당 `question_variants.question_id`를 읽어 `user_responses.question_id`에 저장한다.
+
+**이유:** 복원/평가 기준은 `user_responses.question_id` 하나로 충분하다. `question_variant_id`는 사용자가 실제로 본 문구 추적용이므로, DB 제약은 존재 여부만 확인하고 의미 정합성은 쓰기 경로에서 관리하는 편이 테이블/제약 복잡도를 낮춘다.
+
+## [2026-05-15] `user_responses`를 append-only가 아닌 question별 current-state로 변경
+
+**배경:** 사용자 답변은 화면 복원과 rule 평가를 위한 현재 상태가 핵심이다. 사용자가 답할 수 있는 질문이 30개라면, 입력한 질문마다 1 row만 있으면 충분하며 답하지 않은 질문 row는 만들지 않는다. 변경 이력은 이미 이벤트 로그(`session_events`)로 남길 수 있고, 결과 산출 이력은 `decision_runs` snapshot으로 보존한다.
+
+**결정:**
+
+- `user_responses`는 append-only 이력 테이블이 아니라 UPDATE/UPSERT 기반 current-state 테이블이다.
+- 같은 identity + `question_id` 조합은 1 row만 유지한다.
+- 비로그인 상태는 `UNIQUE(device_id, question_id) WHERE user_id IS NULL`, 로그인 상태는 `UNIQUE(user_id, question_id) WHERE user_id IS NOT NULL` partial unique index로 보장한다.
+- 답변 변경 시 같은 row의 `value`, `source`, `session_id`, `question_variant_id`, `updated_at`을 갱신한다.
+- `user_responses`는 `updated_at`을 두지만 `deleted_at`은 두지 않는다. 답변 해제는 row 삭제로 처리한다.
+- 질문 클릭/답변 변경 이력은 `session_events` payload에 남기고, 결과 산출 당시 입력 묶음은 `decision_runs.input_snapshot`에 남긴다.
+
+**이유:** 현재 상태 테이블에 `created_at` 기반 최신 row 조회 인덱스를 둘 필요가 없다. question별 단일 row 보장 인덱스가 화면 복원/평가 쿼리에 더 직접적이며, 이력 책임을 `session_events`와 `decision_runs`로 분리하면 응답 테이블의 row 수와 조회 복잡도가 낮아진다.

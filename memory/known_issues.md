@@ -23,21 +23,22 @@
 
 ---
 
-## [2026-05-02] (예방) Concern preset과 user_facts.source = concern 우선순위
+## [2026-05-02] (예방) Concern preset과 user_responses.source = concern 우선순위
 
-**증상:** 동일 fact_key에 대해 concern preset과 사용자 직접 답변이 충돌할 수 있음.
+**증상:** 동일 question_id에 대해 concern preset과 사용자 직접 답변이 충돌할 수 있음.
 
-**원인:** `user_facts.source = concern`은 초기 선택 상태일 뿐, priority_gate / context 답변이 우선해야 한다.
+**원인:** `user_responses.source = concern`은 초기 선택 상태일 뿐, priority_gate / context 답변이 우선해야 한다.
 
 **해결책:**
 
-- 최신 fact 조회 시 우선순위: `traceback > context > priority_gate > concern`.
-- Repository에 `findLatestByFactKey(deviceId, factKey)`를 두고 source 우선순위 정렬을 강제.
-- 단순 `ORDER BY created_at DESC`만 쓰지 말 것.
+- `user_responses`는 question별 current-state이므로 직접 답변이 들어오면 같은 row를 UPDATE한다.
+- concern preset이 이미 있는 row에 priority_gate/context 답변이 들어오면 `source`, `value`, `updated_at`을 직접 답변 기준으로 갱신한다.
+- 변경 전/후 값은 `session_events` payload에 남기고, rule 평가 시점의 입력 묶음은 `decision_runs.input_snapshot`에 남긴다.
 
 ---
 
 <!-- 새 이슈는 여기에 추가 -->
+
 ## [2026-05-09] 상위 사용자 폴더 `node_modules`가 backend Jest 실행을 오염
 
 **증상:** `pnpm --filter backend run test` 또는 `pnpm exec jest`가 `TypeError: Cannot read properties of undefined (reading 'testEnvironmentOptions')`, `0 of 1 total`, 잘못된 runner path(`C:\Users\rkdtl\node_modules\...`)를 출력하며 비정상 동작했다.

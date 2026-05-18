@@ -13,7 +13,7 @@
 | 1    | Segment / Concern 클릭 | 프론트 상수 매핑                                              | `flow.concern`, `route_target`, `preset_facts`, `suggested_category` |
 | 2    | Concern preset 적용    | `source = concern` 초기 선택 상태 저장 또는 프론트 상태 유지  | Priority Gate 질문 우선순위 또는 Category Decision seed              |
 | 3    | Priority Gate 답변     | `priority_rules` 평가                                         | HOLD / CAUTION / PASS / ROUTE_CATEGORY                               |
-| 4    | Category Decision 답변 | user_facts 저장                                               | category별 Context 완성                                              |
+| 4    | Category Decision 답변 | user_responses 저장                                           | category별 Context 완성                                              |
 | 5    | Matching Rule 적용     | `product_filter_mappings` + application layer computed filter | filter_state 생성                                                    |
 | 6    | Product Matrix 조회    | `products.attributes` 조건 조회                               | 제품 후보 + 태그 + 주의 사유                                         |
 | 7    | Product Detail         | 동일 filter_state 기준 사유 계산                              | 적합도 상세 설명                                                     |

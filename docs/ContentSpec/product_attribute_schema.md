@@ -82,7 +82,7 @@ MVP 제품군은 아래 6개로 제한한다.
 ### 1.5 피부 타입은 product attribute가 아니다
 
 피부 타입은 제품 속성이 아니라 사용자 입력값이다.  
-`user_facts` 또는 Context 답변에서 받은 뒤, product attribute 조건으로 변환한다.
+`user_responses` 또는 Context 답변에서 받은 뒤, product attribute 조건으로 변환한다.
 
 예시:
 
@@ -549,7 +549,7 @@ MVP 제품군은 아래 6개로 제한한다.
 5. 모이스처라이저는 `ingredient_role` 단일값 대신 `humectant_level`, `emollient_level`, `occlusive_level`로 분리했다.
 6. 클렌저는 `ph`를 숫자형으로 바꾸고 `cleanser_type`을 사용한다.
 7. 세럼은 `effective_dose_met`을 추가해 유효 함량 필터를 실제로 적용할 수 있게 했다.
-8. 피부 타입은 product attribute가 아니라 user_facts 기반 매칭 로직으로 유지한다.
+8. 피부 타입은 product attribute가 아니라 user_responses 기반 매칭 로직으로 유지한다.
 9. 토너는 사용자가 가장 많이 언급하는 "유분기/쫀쫀함/마무리감"을 표현하기 위해 `emollient_level`, `film_level`, `finish`를 Core에 추가했다. `oil_control`(피지 분비 조절 효과)와 `emollient_level`(도포 시 유분감)의 의미를 분리해 Core에 명시했다.
 10. 토너의 `application_method`(닦토/흡토)는 거의 모든 제품이 겸용이라 Core 필터 가치가 없어 `application_methods`(MULTI_ENUM) Optional로 내렸고, 닦토 안전성은 `wipe_caution` BOOLEAN으로 분리했다.
 11. 토너의 `purposes`는 사용감 필터(`role_tags`)와 식약처 기능성 주장(`functional_claims`)으로 분리했다. 출처/근거 메타데이터(claim_status, ph_source 등)는 큐레이터가 직접 판단해 입력하는 운영 정책으로 갈음하고 별도 키로 도입하지 않는다.

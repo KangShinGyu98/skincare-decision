@@ -36,21 +36,21 @@
 | POST   | `/auth/login`  | 이메일 로그인 + 자동 병합 트리거  |
 | POST   | `/auth/logout` | 세션 종료 (device_id는 유지)      |
 
-### Fact / 질문
+### 질문 / 응답
 
 | METHOD | PATH                                    | 목적                                            |
 | ------ | --------------------------------------- | ----------------------------------------------- |
-| GET    | `/facts/definitions`                    | fact_definitions 전체 (캐시 가능, ETag)         |
-| GET    | `/facts/questions?screen=priority_gate` | screen 별 보여줄 context_questions + visibility |
-| POST   | `/facts/answers`                        | user_facts append (배열 가능)                   |
-| GET    | `/facts/answers?session_id=...`         | 현재 device/user의 최신 fact 값                 |
+| GET    | `/facts/definitions`                    | canonical question 전체 (캐시 가능, ETag)       |
+| GET    | `/facts/questions?screen=priority_gate` | screen 별 보여줄 question_variants + visibility |
+| POST   | `/facts/answers`                        | user_responses current-state UPSERT (배열 가능) |
+| GET    | `/facts/answers?session_id=...`         | 현재 device/user의 최신 response 값             |
 
 ### Priority Gate
 
-| METHOD | PATH                           | 목적                                                       |
-| ------ | ------------------------------ | ---------------------------------------------------------- |
-| POST   | `/priority-gate/evaluate`      | 현재 user_facts → priority_rules 평가 → decision_runs 저장 |
-| GET    | `/priority-gate/result/:runId` | snapshot 조회                                              |
+| METHOD | PATH                           | 목적                                                           |
+| ------ | ------------------------------ | -------------------------------------------------------------- |
+| POST   | `/priority-gate/evaluate`      | 현재 user_responses → priority_rules 평가 → decision_runs 저장 |
+| GET    | `/priority-gate/result/:runId` | snapshot 조회                                                  |
 
 ### Category Decision / Product Matrix
 
@@ -105,7 +105,7 @@
   "type": "https://api/errors/validation",
   "title": "Validation failed",
   "status": 400,
-  "detail": "fact_key 'category.selected'은 sunscreen|toner|...만 허용",
+  "detail": "question_key 'category.selected'은 sunscreen|toner|...만 허용",
   "instance": "/facts/answers"
 }
 ```

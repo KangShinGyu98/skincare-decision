@@ -238,6 +238,28 @@
 3. Phase 2.6 — `prisma migrate dev --name init` + GIN 인덱스 raw 마이그레이션.
 
 <!-- 새 세션 요약은 여기에 추가 -->
+
+## [2026-05-14] Data 문서 질문 모델 단순화 반영
+
+### 변경 내용
+
+- [docs/Data/db_modeling.md](../docs/Data/db_modeling.md)에서 `fact_definitions` / `context_questions` 모델을 `dim_questions` / `questions`로 재정의.
+- 내부 평가는 `score`가 아니라 `value` 기준으로 통일하고, `dim_questions.answer_values`와 `questions.answers`의 index 매칭 규칙을 명시.
+- PostgreSQL 제약 계획 추가: `answer_count` generated column + `uq_dim_questions_id_answer_count` + `fk_questions_dim_question_answer_count`.
+- [docs/Data/db_schema_validation.md](../docs/Data/db_schema_validation.md)에 enum, 컬럼, FK, 인덱스, Prisma/raw migration 주의사항 동기화.
+- [docs/Data/screen_data_specification.md](../docs/Data/screen_data_specification.md)의 S02/S03 Read/Write 흐름을 `questions` + `dim_questions` + `user_facts.answer_index/value` 기준으로 수정.
+- [docs/Data/AGENTS.md](../docs/Data/AGENTS.md)의 구성요소 설명을 `dim_question_key` 기준으로 갱신.
+
+### 검증
+
+- `rg "fact_definitions|context_questions|fact_key|source_fact_key|Fact Key|input_type|fact 정의|신규 fact_key" docs\Data`로 기존 용어 잔여 참조 확인.
+- 잔여 참조는 `db_schema_validation.md`의 "현재 schema.prisma / migration과의 불일치" 설명 1건만 의도적으로 유지.
+
+### 남은 작업
+
+- Backend Prisma schema/migration은 아직 미반영. 구현 시 raw migration으로 generated column과 복합 FK를 추가해야 한다.
+- `priority_rule_conditions`, `product_filter_mappings`, `user_facts` 실제 Prisma 모델과 seed JSON도 `dim_question_key` / numeric `value` 기준으로 후속 변경 필요.
+
 ## [2026-05-09] Phase 2 백엔드 구축 완료
 
 ### 변경 내용
@@ -271,3 +293,102 @@
 1. `memory/api_contracts.md` 계획 endpoint를 실제 controller signature로 단계별 구체화.
 2. Phase 4 P0/P1 우선순위대로 Identity / Priority / Matrix route 구현.
 3. Seed orchestrator(`backend/prisma/seed.ts`)와 토너 seed JSON 생성.
+
+## [2026-05-15] Data 문서 질문 관계 id 기준 정리
+
+### 변경 내용
+
+- [docs/Data/db_modeling.md](../docs/Data/db_modeling.md)에서 질문 관계 FK를 `dim_questions.id` 기준으로 정리하고, `dim_questions.key`는 seed/admin/debug용 slug로만 설명.
+- `question_visibility_conditions.condition_dim_question_id`, `priority_rule_conditions.dim_question_id`, `product_filter_mappings.source_dim_question_id`, `user_facts.dim_question_id` 명칭으로 관계 컬럼을 통일.
+- `questions`에 `uq_questions_id_dim_question_id`, `user_facts`에 `(question_id, dim_question_id)` 복합 FK 제약을 추가해 실제 노출 질문과 기준 질문 불일치를 막는 방식을 문서화.
+- [docs/Data/db_schema_validation.md](../docs/Data/db_schema_validation.md)의 컬럼 표, 인덱스, FK 정책을 key 기반에서 id 기반으로 동기화.
+- [docs/Data/screen_data_specification.md](../docs/Data/screen_data_specification.md)의 화면별 Read/Write/Computed 흐름을 `dim_question_id` 기준으로 수정.
+- [docs/Data/AGENTS.md](../docs/Data/AGENTS.md)의 Data 폴더 구성 설명에서 `dim_question_key` 표현을 제거.
+
+### 검증
+
+- `rg "dim_question_key|source_dim_question_key|FK → dim_questions\\.key|idx_.*dim_question_key" docs/Data`로 관계/인덱스의 key 기반 잔여 참조가 없는지 확인.
+- `dim_questions.key`는 컬럼 자체 설명과 seed/import resolve 설명에만 남겼고, 관계 FK나 인덱스 대상으로는 남기지 않았다.
+
+### 남은 작업
+
+- Backend Prisma schema/migration과 seed import 로직은 아직 문서 변경을 반영하지 않았다.
+- 구현 시 key 기반 컬럼을 id 기반 컬럼으로 마이그레이션하고, seed loader에서 key → id resolve 단계를 추가해야 한다.
+
+## [2026-05-15] Data 문서 질문 테이블명/제약 재정리
+
+### 변경 내용
+
+- [docs/Data/db_modeling.md](../docs/Data/db_modeling.md), [docs/Data/db_schema_validation.md](../docs/Data/db_schema_validation.md), [docs/Data/screen_data_specification.md](../docs/Data/screen_data_specification.md)의 질문 기준 테이블명을 `question` + `question_variants`로 변경.
+- `question_variants.question_id`가 `question.id`를 참조하고, `user_facts.question_id`는 nullable FK로 `question_variants.id`를 참조하도록 문서화.
+- `question_variants`의 `(id, question_id)` UNIQUE 제약과 `user_facts` 복합 FK 설명을 제거.
+- `answer_type`별 선택지 개수 CHECK를 제거하고, DB 제약은 `question.answer_values` 개수와 `question_variants.answers` 라벨 개수 일치만 강제하도록 단순화.
+- [docs/Data/AGENTS.md](../docs/Data/AGENTS.md)의 구성 설명도 `question` 기준으로 유지.
+
+### 검증
+
+- `rg "dim_questions|dim_question|uq_question_variants_id_question_id|chk_question_answer_type_count|answer_type_count|fk_user_facts_question_question" docs/Data`로 제거 대상 용어 확인.
+- `pnpm exec prettier --check ...`로 Data 문서 포맷 검증 통과.
+
+### 남은 작업
+
+- Backend Prisma schema/migration은 아직 구형 `fact_definitions` / `context_questions` 구조라 후속 구현에서 rename과 FK 변경이 필요하다.
+- `user_facts.question_id`가 nullable이므로, question variant가 없는 concern preset을 평가 로직에 쓰려면 별도 system variant를 만들지 또는 source별 payload로 둘지 후속 결정이 필요하다.
+
+## [2026-05-15] Data 문서 `question.label/group` 제거
+
+### 변경 내용
+
+- [docs/Data/db_modeling.md](../docs/Data/db_modeling.md)의 `question` 컬럼 정의와 예시 JSON에서 `label`, `group` 제거.
+- MVP Question 사전에서 `group` 컬럼을 제거하고 `key`, `answer_type`, `answer_values`, 설명만 남김.
+- [docs/Data/db_schema_validation.md](../docs/Data/db_schema_validation.md)에서 `question_group_enum`, `question.label`, `question.group` 정의 제거.
+- [docs/Data/AGENTS.md](../docs/Data/AGENTS.md)의 enum 수량 표현을 고정 숫자 대신 "enum 목록"으로 정리.
+
+### 검증
+
+- `rg "question_group_enum|question\\.group|question\\.label" docs/Data`로 제거 대상 직접 참조 없음 확인.
+- `pnpm exec prettier --check ...`로 Data 문서 포맷 검증 통과.
+
+## [2026-05-15] `user_facts` → `user_responses` 및 canonical question 참조로 재정리
+
+### 변경 내용
+
+- [docs/Data/db_modeling.md](../docs/Data/db_modeling.md)에서 테이블 #8을 `user_responses`로 rename하고 컬럼을 `id`, `device_id`, `user_id`, `session_id`, `question_id`, `question_variant_id`, `value`, `source`, `created_at`으로 정리.
+- `user_responses.question_id`는 canonical `question.id`를 NOT NULL로 참조하고, `question_variant_id`는 사용자가 실제로 본 문구 추적용 nullable 참조로 문서화.
+- `answer_index` 저장을 제거하고, 복원은 `question.answer_values`에서 `value` 위치를 찾아 현재 variant의 `answers` index에 매핑하는 방식으로 정리.
+- `question_variants(id, question_id)` UNIQUE와 `user_responses(question_variant_id, question_id)` 복합 FK로 variant/canonical question 불일치를 막는 제약을 추가.
+- [docs/Data/db_schema_validation.md](../docs/Data/db_schema_validation.md), [docs/Data/screen_data_specification.md](../docs/Data/screen_data_specification.md), ContentSpec 일부 문구, [memory/api_contracts.md](api_contracts.md), [memory/known_issues.md](known_issues.md)를 `user_responses` 기준으로 동기화.
+
+### 검증
+
+- `rg "user_facts|answer_index|user_facts_source_enum" docs memory/api_contracts.md memory/known_issues.md`로 현재 명세/계약의 잔여 용어 없음 확인.
+- `pnpm exec prettier --check ...`로 수정 문서 포맷 검증 통과.
+
+## [2026-05-15] `question_variants` 복합 UNIQUE / `user_responses` 복합 FK 제거
+
+### 변경 내용
+
+- [docs/Data/db_modeling.md](../docs/Data/db_modeling.md)에서 `uq_question_variants_id_question_id` SQL/설명을 제거.
+- `user_responses.question_variant_id` 제약을 `(question_variant_id, question_id)` 복합 FK에서 `question_variants.id` 단순 FK로 변경.
+- [docs/Data/db_schema_validation.md](../docs/Data/db_schema_validation.md)의 인덱스/제약 목록, SQL 예시, FK ON DELETE 정책을 단순 FK 기준으로 정리.
+- variant와 canonical question의 쌍 일치는 DB 제약이 아니라 Service insert 로직에서 보장한다고 문서화.
+
+### 검증
+
+- `rg "uq_question_variants_id_question_id|fk_user_responses_question_variant_question|question_variant_id, question_id" docs/Data`로 제거 대상 잔여 참조 없음 확인.
+- `pnpm exec prettier --check ...`로 Data 문서 포맷 검증 통과.
+
+## [2026-05-15] `user_responses` current-state 저장 방식 반영
+
+### 변경 내용
+
+- [docs/Data/db_modeling.md](../docs/Data/db_modeling.md)의 `user_responses`를 append-only 이력 테이블에서 question별 current-state 테이블로 변경.
+- `user_responses.updated_at`을 추가하고, `deleted_at`은 두지 않는 current-state 예외로 문서화.
+- `idx_user_responses_*_created_at` 인덱스를 제거하고 `uq_user_responses_anonymous_device_question`, `uq_user_responses_user_question` partial unique index로 변경.
+- 화면 복원/Rule 평가는 현재 `user_responses` row를 사용하고, 질문 클릭/답변 변경 이력은 `session_events`, 결과 이력은 `decision_runs.input_snapshot`으로 남기도록 [docs/Data/screen_data_specification.md](../docs/Data/screen_data_specification.md)를 수정.
+- [memory/api_contracts.md](api_contracts.md)와 [memory/known_issues.md](known_issues.md)의 `user_responses` 설명도 current-state UPSERT 기준으로 정리.
+
+### 검증
+
+- `rg "idx_user_responses_device_id_question_id_created_at|idx_user_responses_user_id_question_id_created_at|ORDER BY created_at DESC|append-only 응답" docs/Data memory/api_contracts.md memory/known_issues.md`로 오래된 저장 방식 참조 없음 확인.
+- `pnpm exec prettier --check ...`로 수정 문서 포맷 검증 통과.

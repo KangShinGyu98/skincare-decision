@@ -182,8 +182,8 @@
 | 단계 | 처리                                                                                                                              |
 | ---- | --------------------------------------------------------------------------------------------------------------------------------- |
 | 1    | `session_events.event_name = concern_clicked` 저장                                                                                |
-| 2    | `user_facts.flow.concern` 저장                                                                                                    |
-| 3    | `preset_facts`를 `source = concern`인 초기 선택 상태로 저장하거나 프론트 상태에 유지                                              |
+| 2    | `user_responses.flow.concern` 저장 (`question_id=<flow.concern>`, `question_variant_id=null`)                                     |
+| 3    | preset responses를 `source = concern`인 초기 선택 상태로 저장하거나 프론트 상태에 유지                                            |
 | 4    | `route_target = priority_gate`면 `/priority-gate`로 이동하고 관련 질문을 우선 노출                                                |
 | 5    | `route_target = category_decision`면 `category.selected = suggested_category`를 seed한 뒤 `/category-decision`으로 이동           |
 | 6    | `suggested_filters`는 즉시 `product_matrix_filter_states`를 만들지 않고, 최종 category가 일치할 때만 `CONCERN_PRESET` 힌트로 반영 |

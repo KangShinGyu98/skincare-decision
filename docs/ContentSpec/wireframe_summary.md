@@ -204,8 +204,8 @@ Concern Mapper는 제품군 라우터가 아니라 **Priority Gate preset**으�
 태그 클릭 시 흐름:
 
 1. `session_events`에 `concern_clicked` 이벤트 저장
-2. `user_facts`에 `flow.concern` 저장 (`source: "concern"`)
-3. 관련 `preset_facts`를 초기 선택 상태로 저장하거나 프론트 상태에 유지
+2. `user_responses`에 `flow.concern` 저장 (`question_id=<flow.concern>`, `question_variant_id=null`, `source: "concern"`)
+3. 관련 preset responses를 초기 선택 상태로 저장하거나 프론트 상태에 유지
 4. `route_target = "priority_gate"`면 S02로 이동하고 관련 Life / 루틴 질문을 우선 노출
 5. `route_target = "category_decision"`면 `category.selected = suggested_category`를 seed한 뒤 S03로 이동
 6. `suggested_filters`는 Product Matrix 직행용이 아니라, 이후 Category Decision CTA에서만 `CONCERN_PRESET` 힌트로 반영
@@ -213,13 +213,13 @@ Concern Mapper는 제품군 라우터가 아니라 **Priority Gate preset**으�
 ```
 [여드름] 클릭
   → session_events: concern_clicked { concern: "acne" }
-  → user_facts: flow.concern = "acne"
-  → preset_facts: life / reaction / routine 질문 우선 노출
+  → user_responses: flow.concern = "acne"
+  → preset responses: life / reaction / routine 질문 우선 노출
   → Priority Gate
   → 게이트 결과에 따라 루틴 점검 / 클렌저 추천 / Category Decision / Product Matrix
 ```
 
-`preset_facts`는 확정 답변이 아니라 초기 선택 상태다. 이후 사용자가 직접 답한 Priority Gate / Context 답변이 최종값으로 취급된다.
+preset responses는 확정 답변이 아니라 초기 선택 상태다. 이후 사용자가 직접 답한 Priority Gate / Context 답변이 최종값으로 취급된다.
 
 추후 태그 목록 변경이 잦아지면 DB로 이관 가능. MVP에서는 코드 변경으로 충분하다.
 
@@ -530,7 +530,7 @@ Product Matrix는 사용자가 선택한 제품군에서 **좋은 제품의 기�
 #### 3. 개인화 필터 (PERSONALIZED)
 
 사용자의 피부 상태와 사용 상황에 따라 제품 후보를 좁히는 필터.  
-사용자 답변(user_facts)을 `product_filter_mappings`로 변환해 자동 생성된다.  
+사용자 답변(user_responses)을 `product_filter_mappings`로 변환해 자동 생성된다.  
 `product_filter_mappings.filter_type = 'PERSONALIZED'`으로 구분한다.
 
 `[민감성 피부] [건성] [지성] [휴대성] [메이크업 전 사용] [야외 활동] [향료 회피] [눈시림 경험]`
@@ -760,7 +760,7 @@ Box 2와 Box 3의 각 항목은 3가지 상태로 관리한다.
 
 ### Product Filter Mapping 관리 페이지
 
-여기서는 사용자의 구어체 선택값(user_facts)이 제품 attribute 조건으로 어떻게 변환되는지 매핑을 설정한다.  
+여기서는 사용자의 구어체 선택값(user_responses)이 제품 attribute 조건으로 어떻게 변환되는지 매핑을 설정한다.  
 "룰 엔진"이 아니라 "번역 테이블"이다. 실제 필터링은 product attributes를 기준으로 동적 SQL로 수행한다.
 
 | 사용자 답변 (fact)                       | 변환 조건 (attribute)         | 처리 방식   | 필터 표시 이름 |
