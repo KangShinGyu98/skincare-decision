@@ -28,7 +28,11 @@
       "Bash(dir \"c:\\\\Users\\\\rkdtl\\\\Desktop\\\\skincare-decision\\\\docs\" /b /ad)",
       "Bash(mkdir -p \"c:\\\\Users\\\\rkdtl\\\\Desktop\\\\skincare-decision\\\\.claude\\\\skills\\\\sync-structure\")",
       "Edit(/.claude/skills/sync-structure/**)",
-      "Bash(git rm *)"
+      "Bash(git rm *)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\rkdtl\\\\Desktop\\\\skincare-decision\" -Recurse -Directory)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Sort-Object)",
+      "Bash(xargs grep -l \"fact_key\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\rkdtl\\Desktop\\skincare-decision\\.claude\\skills"
