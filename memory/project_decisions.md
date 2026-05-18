@@ -538,3 +538,56 @@
 - `uq_questions_id_answer_count` 복합 UNIQUE 제약은 그대로 유지한다. `question_variants.answers` 라벨 수와 `questions.answer_values` 값 수가 일치한다는 invariant 는 여전히 DB 수준에서 강제할 가치가 있다 (index → value 매핑이 깨지면 평가 결과 자체가 무너진다).
 
 **이유:** 단수/복수 혼용을 없애서 이후 read 표/seed loader/Prisma `@@map` 작성이 일관된다. 제약은 같은 이유로 이름만 정렬한다.
+
+## [2026-05-18] 질문/응답/필터 도메인 2차 스키마 정리
+
+**배경:** 1차 정리(테이블 rename, current-state 응답 등) 이후 운영/UI 입장에서 불필요한 컬럼/인덱스가 여전히 남아 있었고, fact 측 비교값 자료형이 JSONB 라 application validation 부담이 컸다. 사용자가 정리한 9개 테이블 변경 스펙을 한 번에 반영해 schema 와 service 의 책임 경계를 다시 그었다.
+
+**결정:**
+
+- `question_variants`
+  - `question_id` FK ON DELETE `RESTRICT` → `CASCADE` (canonical 삭제 시 variant 도 같이 정리).
+  - `title` `VARCHAR(200)` → `TEXT` (관리자 문구 길이 제약 제거).
+  - `ui_section` `VARCHAR(100)` → `question_variants_ui_section_enum` (`life_routine` / `owned_products` / `basic` / `category`).
+- `question_visibility_conditions`
+  - `condition_question_id` 제거. canonical question 이 아니라 화면 노출되는 `question_variants` 자체가 기준이다.
+  - `question_id` (FK to `question_variants.id`) 컬럼명을 `question_variant_id` 로 정리.
+  - `value` `JSONB` → `INTEGER`. 다중 값이 필요하면 row 를 여러 개 둔다.
+  - `updated_at` 추가, `idx_question_visibility_conditions_condition_question_id` 제거.
+  - 어떤 user_response 와 매칭할지는 service 평가기가 결정한다. DB 는 대상 variant + operator + value + state 만 보관한다.
+- `user_responses`
+  - `value` `JSONB` → `INTEGER[]` (단일 선택도 길이 1 배열).
+  - `session_id` 컬럼 제거. 어느 세션에서 답했는지는 `session_events` 의 `value_change` 이벤트 payload 로 추적한다.
+  - 보조 인덱스 3종(`idx_..._session_id`, `idx_..._question_id`, `idx_..._question_variant_id`) 모두 제거. partial unique index 가 직접 조회 경로를 만족한다.
+- `priority_rules`
+  - `hold_categories` JSONB 구조를 객체 배열 `[{category_id, reason}]` 로 명시.
+  - `idx_priority_rules_priority_is_active`, `idx_priority_rules_recommend_category_id` 제거. Rule 집합 자체가 작아 전수 스캔으로 충분.
+- `priority_rule_conditions`
+  - `value` `JSONB` → `INTEGER[]`.
+  - `updated_at` 추가.
+- `decision_runs`
+  - `decision_type` DB enum 제거 → `VARCHAR(50)` + application enum 검증. application 단에서 enum 진화가 잦으므로 DB 에 못 박지 않는다.
+- `products`
+  - `name` `VARCHAR(300)` → `VARCHAR(500)`.
+  - `barcode` 컬럼 + `uq_products_barcode` 제거 (바코드는 외부 lookup 경로).
+  - `price_band` 컬럼 + enum 제거. 가격대 임계치는 카테고리마다 다르고 service/UI 계산값이 더 자연스럽다.
+  - `price` → `price_krw` rename.
+  - `volume VARCHAR(50)` → `volume_amount NUMERIC(10,2)` + `volume_unit ENUM(ML/G/L/MG)` + `count_amount INTEGER` + `count_unit ENUM(SHEET/PIECE/PACK)` + `volume_label VARCHAR(100)`. 액체/그램과 개수/장수를 분리하고 화면 표시 원문은 별도 컬럼.
+- `product_filter_mappings`
+  - `source_*` prefix → `trigger_*`. "어떤 user response 가 mapping 을 trigger 하는가".
+  - `category_id`, `attribute_key` 제거. `attribute_definition_id` (FK to `category_attribute_definitions.id`) 하나로 카테고리+attribute 일체화.
+  - `filter_mode`, `filter_key`, `tag_label`, `caution_message` 제거. MVP 는 HARD_FILTER 단일 처리. UI 표시 문구는 `filter_label` + service 조립.
+  - `filter_type` enum 제거 → `curated` boolean (true = 구 BASIC_CONDITION, false = 구 PERSONALIZED).
+  - 인덱스도 attribute 기반으로 재구성.
+- `product_matrix_filter_states` → `question_filter_mappings` 로 rename.
+  - `is_active` 컬럼 제거. 가장 최근 `updated_at` row 가 현재 상태.
+  - `filters` JSON shape 을 `[{filter_definition_id, operator, value}]` 로 단순화. BASIC vs PERSONALIZED 구분은 `product_filter_mappings.curated` 로 결정.
+  - 보조 인덱스 4종 → `(device_id, category_id)` / `(user_id, category_id)` 2종.
+
+**이유:**
+
+- fact 측 비교값을 `INTEGER` / `INTEGER[]` 로 통일하면 service validation 이 짧아지고, JSONB shape 불일치 사고가 줄어든다.
+- 카테고리/attribute 를 별도 컬럼으로 들고 다니지 않고 `attribute_definition_id` 하나로 묶으면 매핑 row 가 attribute 정의의 단일 진실에 매달려 정합성이 올라간다.
+- `is_active` / `filter_mode` / `filter_key` / `tag_label` 같은 운영 메타데이터를 DB 컬럼에서 빼고 application/UI 가 담당하게 하면, 운영 정책 변경 시 마이그레이션이 필요 없다.
+- 보조 인덱스는 실제 쿼리 경로가 없는 한 미리 만들지 않는다 (특히 INSERT 가 잦은 fact/응답 테이블).
+- `decision_runs.decision_type` 처럼 application 단에서 자주 진화하는 enum 은 DB 에 못 박지 않는다.

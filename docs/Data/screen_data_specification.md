@@ -60,7 +60,7 @@ S02 Priority Gate
         ↓ (PASS / ROUTE_CATEGORY)
 S03~S05 Category Decision (Box1 → Box2 → Box3)
    ├ context user_responses 갱신
-   ├ Box3 CTA → product_matrix_filter_states (CATEGORY_DECISION_CTA)
+   ├ Box3 CTA → question_filter_mappings (CATEGORY_DECISION_CTA)
    └ decision_runs (CATEGORY_DECISION)
         ↓
 S06 Product Matrix
@@ -155,7 +155,7 @@ S08 Reaction Traceback
 
 | 데이터                                                    | 대상 테이블      | 트리거                                                                                                                                     |
 | --------------------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| 사용자 답변 (`question_id`+`question_variant_id`+`value`) | `user_responses` | 각 질문 응답 시 question별 current row UPSERT. 기존 row가 있으면 `value`, `source`, `session_id`, `question_variant_id`, `updated_at` 갱신 |
+| 사용자 답변 (`question_id`+`question_variant_id`+`value`) | `user_responses` | 각 질문 응답 시 question별 current row UPSERT. 기존 row가 있으면 `value`, `source`, `question_variant_id`, `updated_at` 갱신. 어느 세션에서 답했는지는 `session_events` 의 `value_change` 이벤트 payload 로 추적 |
 | `priority_question_answered` 이벤트                       | `session_events` | 질문 답변마다 변경 이력 저장 (`previous_value`, `value`, `question_id`, `question_variant_id`)                                             |
 | `priority_gate_submitted` 이벤트                          | `session_events` | "다음" CTA 클릭                                                                                                                            |
 | 결과 snapshot                                             | `decision_runs`  | 평가 완료 시 (`decision_type='PRIORITY_GATE'`, `result_*` snapshot)                                                                        |
@@ -216,7 +216,7 @@ S08 Reaction Traceback
 | context 답변                 | `user_responses`               | Box 1/Box 2 응답 시 question별 current row UPSERT (`source='context'`)                |
 | `category.selected` 답변 row | `user_responses`               | 카테고리 진입 시 current row UPSERT (Fast Lane / ROUTE_CATEGORY로 들어온 경우 포함)   |
 | 질문/카테고리 이벤트         | `session_events`               | `context_question_answered`, `category_box_advanced`, `category_decision_cta_clicked` |
-| 신규 filter_state            | `product_matrix_filter_states` | Box 3 "제품 보러가기" CTA 클릭 시 (`source='CATEGORY_DECISION_CTA'`, filters JSONB)   |
+| 신규 filter_state            | `question_filter_mappings` | Box 3 "제품 보러가기" CTA 클릭 시 (`source='CATEGORY_DECISION_CTA'`, filters JSONB)   |
 | 결과 snapshot                | `decision_runs`                | Box 3 진입 시 (`decision_type='CATEGORY_DECISION'`, `filter_state_id` 연결)           |
 
 ### 3.3 계산 데이터 (Computed)
@@ -224,9 +224,9 @@ S08 Reaction Traceback
 | 계산 항목                | 입력                                                                                                | 로직                                                                                                         |
 | ------------------------ | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | 질문 노출 결정           | 현재 `user_responses` + `question_visibility_conditions`                                            | 동일 (REQUIRED AND / EXCLUDED OR-NOT). `category.selected EQ 1` 같은 내부 value 기반 조건이 많음             |
-| 필터 후보 산출           | `user_responses` + `product_filter_mappings`                                                        | `source_question_id`와 `user_responses.question_id`가 매칭되고 `value`가 맞는 row → attribute 조건으로 변환  |
-| 기본 필터 시드           | `product_filter_mappings WHERE filter_type='BASIC_CONDITION' AND category_id=?`                     | 카테고리 진입 시 자동 선택 (사용자 답변과 무관)                                                              |
-| 개인화 필터 시드         | `product_filter_mappings WHERE filter_type='PERSONALIZED'`                                          | 사용자 답변에서 source 조건이 매칭되는 row만 자동 선택                                                       |
+| 필터 후보 산출           | `user_responses` + `product_filter_mappings`                                                        | `trigger_question_id`와 `user_responses.question_id`가 매칭되고 `value`가 맞는 row → `attribute_definition_id` 기준 attribute 조건으로 변환 |
+| 기본 필터 시드           | `product_filter_mappings WHERE curated=true AND attribute_definition_id IN (해당 카테고리 attribute)` | 카테고리 진입 시 자동 선택 (사용자 답변과 무관)                                                              |
+| 개인화 필터 시드         | `product_filter_mappings WHERE curated=false`                                                       | 사용자 답변에서 trigger 조건이 매칭되는 row만 자동 선택                                                      |
 | Concern preset 필터 합성 | `user_responses.source='concern'` + 프론트 상수 `suggested_filters` + `category.selected` 일치 여부 | 일치하면 `source_type='CONCERN_PRESET'`으로 filters에 추가                                                   |
 | Box 3 미리보기 제품      | category_id + attribute 조건들                                                                      | 동적 SQL: `WHERE category_id=? AND is_active=true AND (attributes->>'k')::T <op> ?`. avoidance_rules 후처리. |
 
@@ -249,10 +249,10 @@ S08 Reaction Traceback
 
 | 데이터            | 소스 테이블                                                                                                                           | 용도                                                          |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| 활성 filter_state | `product_matrix_filter_states WHERE (user_id=? OR device_id=?) AND category_id=? AND is_active=true ORDER BY updated_at DESC LIMIT 1` | 직접 진입 시 복원, CTA 진입 시 방금 만든 row                  |
+| 활성 filter_state | `question_filter_mappings WHERE (user_id=? OR device_id=?) AND category_id=? ORDER BY updated_at DESC LIMIT 1` | 직접 진입 시 복원, CTA 진입 시 방금 만든 row. `is_active` 컬럼 없음 — 가장 최근 row 가 곧 현재 상태 |
 | 카테고리 메타     | `product_categories`                                                                                                                  | 페이지 헤더 + Select                                          |
 | 필터 추가 후보    | `category_attribute_definitions WHERE category_id=? AND is_filterable=true ORDER BY sort_order`                                       | "필터 추가" 버튼 드롭다운                                     |
-| 필터 라벨 변환    | `product_filter_mappings`                                                                                                             | 수동 추가 필터의 표시 이름 / tag_label / caution_message 해석 |
+| 필터 라벨 변환    | `product_filter_mappings`                                                                                                             | 수동 추가 필터의 `filter_label` 해석. △ 주의/태그 카피는 service 가 attribute 매칭 결과로 조립 |
 | 제품 후보         | `products WHERE category_id=? AND is_active=true AND <dynamic attribute WHERE>`                                                       | filter_state.filters 기반 동적 조회                           |
 | 브랜드 정보       | `brands`                                                                                                                              | 제품 카드 브랜드명                                            |
 | 회피 규칙         | `avoidance_rules WHERE (user_id=? OR device_id=?) AND is_active=true`                                                                 | AVOID/CAUTION 적용                                            |
@@ -262,7 +262,7 @@ S08 Reaction Traceback
 
 | 데이터                            | 대상 테이블                    | 트리거                                                                   |
 | --------------------------------- | ------------------------------ | ------------------------------------------------------------------------ |
-| filter_state.filters 갱신         | `product_matrix_filter_states` | 사용자가 필터 추가/제거 시 UPDATE (`source='MANUAL'`, `updated_at` 갱신) |
+| filter_state.filters 갱신         | `question_filter_mappings` | 사용자가 필터 추가/제거 시 UPDATE (`source='MANUAL'`, `updated_at` 갱신) |
 | `filter_added` / `filter_removed` | `session_events`               | 필터 편집                                                                |
 | `product_card_clicked`            | `session_events`               | 제품 카드 클릭                                                           |
 | 결과 snapshot                     | `decision_runs`                | 페이지 로드/필터 변경 시 (`decision_type='PRODUCT_MATRIX'`)              |
@@ -271,13 +271,12 @@ S08 Reaction Traceback
 
 | 계산 항목                | 입력                                             | 로직                                                                                        |
 | ------------------------ | ------------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| WHERE 절 생성            | `filter_state.filters[]` JSONB                   | 각 항목의 `attribute_key`/`operator`/`value`를 `attributes->>'k'` 캐스팅 + 비교로 변환      |
-| HARD_FILTER 적용         | filter_mode='HARD_FILTER'                        | WHERE에 직접 추가 → 후보에서 제외                                                           |
-| EXCLUDE/CAUTION/SORT/TAG | 동일 mapping의 filter_mode                       | 후보는 유지하고 ① EXCLUDE: 별도 노출 ② CAUTION: △ 태그 ③ SORT: 상위 정렬 ④ TAG: 정보성 태그 |
+| WHERE 절 생성            | `filter_state.filters[]` JSONB                   | 각 항목의 `filter_definition_id` → `product_filter_mappings` 정의 + `operator`/`value` 오버라이드 → `attributes->>'k'` 캐스팅 + 비교 |
+| HARD_FILTER 적용         | MVP 단일 처리                                    | 모든 mapping 은 HARD_FILTER 로 WHERE 절에 추가. EXCLUDE/CAUTION/SORT/TAG 분기는 후속 도입 시 service 분기 |
 | avoidance 적용           | `avoidance_rules` + ingredient_groups → products | AVOID: 결과 set에서 제거 / CAUTION: △ 태그 부여                                             |
-| 가격대 Tier 그루핑       | `products.price_band`                            | `UNDER_20000` / `BETWEEN_20000_50000` / `OVER_50000` 3그룹                                  |
-| 적합도 태그              | user_responses vs product.attributes             | "눈시림 낮음" 등 시각 태그 산출 (`product_filter_mappings.tag_label` 활용)                  |
-| 정렬                     | `products.sort_order`                            | 큐레이션 순서 우선, SORT 모드 필터 매칭 시 상위로                                           |
+| 가격대 Tier 그루핑       | `products.price_krw`                             | service/UI 가 카테고리별 임계치로 그루핑 (`UNDER_20000` / `BETWEEN_20000_50000` / `OVER_50000` 또는 카테고리별 커스텀) |
+| 적합도 태그              | user_responses vs product.attributes             | "눈시림 낮음" 등 시각 태그 산출 (`product_filter_mappings.filter_label` 활용)               |
+| 정렬                     | `products.sort_order`                            | 큐레이션 순서 우선                                                                          |
 
 ### 4.4 다음 화면으로 전달 (Pass to Next)
 
@@ -296,7 +295,7 @@ S08 Reaction Traceback
 
 | 데이터              | 소스 테이블                                                                    | 용도                                             |
 | ------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------ |
-| 제품 본체           | `products WHERE id=?`                                                          | 제품 정보 (name, price, image_url, attributes …) |
+| 제품 본체           | `products WHERE id=?`                                                          | 제품 정보 (name, price_krw, volume_*, image_url, attributes …) |
 | 브랜드              | `brands`                                                                       | 브랜드명 표시                                    |
 | 카테고리            | `product_categories`                                                           | 카테고리 라벨                                    |
 | attribute 라벨/정렬 | `category_attribute_definitions WHERE category_id=? ORDER BY sort_order`       | JSONB attributes → 한글 라벨 매핑 + 노출 순서    |
@@ -319,10 +318,10 @@ S08 Reaction Traceback
 
 | 계산 항목            | 입력                                                                                           | 로직                                                                                                                    |
 | -------------------- | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| 적합 사유 텍스트     | `user_responses` ∩ `product_filter_mappings` ∩ `product.attributes`                            | 매칭되는 filter_mapping에서 `tag_label`/`caution_message` 추출 후 자연어 문장 조립 ("눈시림 낮음 — 사용자 답변과 일치") |
+| 적합 사유 텍스트     | `user_responses` ∩ `product_filter_mappings` ∩ `product.attributes`                            | 매칭되는 filter_mapping의 `filter_label` 기반으로 자연어 문장 조립 ("눈시림 낮음 — 사용자 답변과 일치"). △ 주의 카피는 attribute 매칭 결과로 service 가 조립 |
 | 회피 성분 하이라이트 | `avoidance_rules.ingredient_group_id` → `ingredient_group_members.ingredient_id` ∩ 제품 전성분 | 해당 ingredient_id에 AVOID 적색 / CAUTION 황색 마크 부여                                                                |
 | attribute 렌더링     | `product.attributes` JSONB + `category_attribute_definitions`                                  | `sort_order` 순으로 정렬, `label` 한글 표시, `value_type`에 맞는 포맷                                                   |
-| 가격대 배지          | `product.price_band`                                                                           | "~2만원" / "2~5만원" / "5만원+" 라벨                                                                                    |
+| 가격대 배지          | `product.price_krw` + 카테고리별 임계치                                                        | "~2만원" / "2~5만원" / "5만원+" 라벨 (service 가 카테고리 기준으로 계산)                                                |
 
 ### 5.4 다음 화면으로 전달 (Pass to Next)
 
@@ -373,7 +372,7 @@ S08 Reaction Traceback
 | 데이터                                | 전달 방식                                             | 다음 화면 / 효과                                                          |
 | ------------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------- |
 | 신규 `avoidance_rules` row            | DB 영속 → 모든 후속 S06/S07 조회에 자동 반영          | S06 Product Matrix (TRACEBACK 필터 자동 적용 + AVOID 제외 / CAUTION 태그) |
-| filter_state.filters의 TRACEBACK 항목 | `product_matrix_filter_states` 업데이트 (CTA 클릭 시) | S06 진입 시 자동 선택 상태                                                |
+| filter_state.filters의 TRACEBACK 항목 | `question_filter_mappings` 업데이트 (CTA 클릭 시) | S06 진입 시 자동 선택 상태                                                |
 | `report.id`                           | URL / 사용자 이력 화면                                | 리포트 재조회                                                             |
 
 ---
@@ -390,7 +389,7 @@ UPDATE user_sessions                 SET user_id = :user_id, logged_in_at = now(
 UPDATE decision_runs                 SET user_id = :user_id WHERE device_id = :device_id AND user_id IS NULL;
 UPDATE reaction_reports              SET user_id = :user_id WHERE device_id = :device_id AND user_id IS NULL;
 UPDATE avoidance_rules               SET user_id = :user_id WHERE device_id = :device_id AND user_id IS NULL;
-UPDATE product_matrix_filter_states  SET user_id = :user_id WHERE device_id = :device_id AND user_id IS NULL;
+UPDATE question_filter_mappings  SET user_id = :user_id WHERE device_id = :device_id AND user_id IS NULL;
 ```
 
 > 사용자에게 병합 UI를 보이지 않는다. 다음 요청부터 `WHERE user_id = ?` 기반 조회로 자연스럽게 이어진다.
@@ -417,7 +416,7 @@ UPDATE product_matrix_filter_states  SET user_id = :user_id WHERE device_id = :d
 | `category_attribute_definitions` | —   | —   | R       | R   | R   | —   |
 | `products`                       | —   | —   | R       | R   | R   | R   |
 | `product_filter_mappings`        | —   | —   | R       | R   | R   | —   |
-| `product_matrix_filter_states`   | —   | —   | W       | R/W | R   | (W) |
+| `question_filter_mappings`   | —   | —   | W       | R/W | R   | (W) |
 | `ingredients`                    | —   | —   | —       | —   | R   | R   |
 | `product_ingredients`            | —   | —   | (R)     | (R) | R   | R   |
 | `ingredient_groups`              | —   | —   | —       | (R) | (R) | R   |

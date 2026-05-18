@@ -257,7 +257,7 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 | 3    | concern preset이 있고 최종 category가 `suggested_category`와 일치하면 `suggested_filters`를 `CONCERN_PRESET`으로 추가 |
 | 4    | Category Decision 답변을 `product_filter_mappings`로 변환                                                             |
 | 5    | Reaction Traceback 회피 규칙이 있으면 TRACEBACK 필터 추가                                                             |
-| 6    | `product_matrix_filter_states.filters`에 저장                                                                         |
+| 6    | `question_filter_mappings.filters`에 저장                                                                         |
 | 7    | products 조회                                                                                                         |
 | 8    | `decision_runs`에 snapshot 저장                                                                                       |
 
@@ -771,7 +771,7 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 2. 립케어 SPF 없음은 `spf = 0`으로 저장한다.
 3. `fragrance = false`, `alcohol = false`는 확인된 무향/무알코올일 때만 저장한다.
 4. `unknown` 제품은 HARD_FILTER에서 통과시키지 않는다.
-5. Product Matrix snapshot은 `decision_runs`에 저장하되, 재조회는 `product_matrix_filter_states` 기준으로 현재 제품 DB를 다시 조회한다.
+5. Product Matrix snapshot은 `decision_runs`에 저장하되, 재조회는 `question_filter_mappings` 기준으로 현재 제품 DB를 다시 조회한다.
 6. Concern 태그는 DB가 아니라 프론트 상수로 관리한다.
 7. `CONTAINS_ANY`, `COMPOSITE_AND`, `COMPOSITE_OR`는 application layer에서 계산한다.
 8. BASIC_CONDITION이 모두 HARD_FILTER가 되면 후보가 과도하게 줄어들 수 있으므로, 사용감 조건은 기본적으로 SORT/TAG로 시작하고 개인화 답변이 있을 때 HARD_FILTER로 승격한다.

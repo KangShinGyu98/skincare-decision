@@ -799,12 +799,12 @@ Product Matrix에는 이런 필터가 자동으로 선택된다.
 
 ```txt
 Context 답변 → product_filter_mappings → attribute 조건 변환
-→ product_matrix_filter_states에 저장 (source: CATEGORY_DECISION_CTA)
+→ question_filter_mappings에 저장 (source: CATEGORY_DECISION_CTA)
 → products 동적 SQL 조회
 → 결과 decision_runs에 snapshot 저장
 ```
 
-사용자가 필터를 추가/삭제하면 `product_matrix_filter_states.filters`가 업데이트되고, `session_events`에 이벤트로 기록된다.
+사용자가 필터를 추가/삭제하면 `question_filter_mappings.filters`가 업데이트되고, `session_events`에 이벤트로 기록된다.
 
 ---
 

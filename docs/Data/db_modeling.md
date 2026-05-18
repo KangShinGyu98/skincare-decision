@@ -43,7 +43,7 @@
 | PK 제약             | `pk_<table>`                               | `pk_users`, `pk_products`                                 |
 | CHECK 제약          | `chk_<table>_<meaning>`                    | `chk_products_price_positive`, `chk_users_age_range`      |
 | 조인(브리지) 테이블 | 두 테이블 조합 (단수-복수)                 | `product_categories`, `user_roles`, `product_ingredients` |
-| Enum 타입           | `<table>_<column>_enum`                    | `users_role_enum`, `products_price_band_enum`             |
+| Enum 타입           | `<table>_<column>_enum`                    | `users_role_enum`, `questions_answer_type_enum`           |
 
 > **공용 enum 예외**: 동일 의미의 enum이 여러 테이블·컬럼에서 재사용되는 경우(예: 비교 연산자, REQUIRED/EXCLUDED 조건 상태)는 테이블별 분리 대신 의미 단위 단일 enum을 둔다. 본 문서에서는 `comparison_operator_enum`, `condition_state_enum` 두 가지만 예외로 인정한다. 자세한 매핑은 [db_schema_validation.md §0.2](db_schema_validation.md#02-enum-정의) 참조.
 
@@ -68,7 +68,7 @@
 | 13  | product_categories             | 제품 DB          |
 | 14  | category_attribute_definitions | 제품 DB          |
 | 15  | products                       | 제품 DB          |
-| 16  | product_matrix_filter_states   | Product Matrix   |
+| 16  | question_filter_mappings   | Product Matrix   |
 | 17  | product_filter_mappings        | Product Filter   |
 | 18  | ingredients                    | 성분 / Traceback |
 | 19  | product_ingredients            | 성분 / Traceback |
@@ -99,7 +99,7 @@
 > [여드름] 클릭
 >   → session_events: { event_name: "concern_clicked", payload: { concern: "acne" } }
 >   → 프론트 상수에서 route_target = "priority_gate", suggested_category = "cleanser" 결정
->   → user_responses: { question_id: "<flow.concern question id>", question_variant_id: null, value: 1, source: "concern" }
+>   → user_responses: { question_id: "<flow.concern question id>", question_variant_id: null, value: [1], source: "concern" }
 >   → 필요 시 preset_facts 저장 또는 프론트 초기 선택 상태로 유지
 >   → Priority Gate 진입
 > ```
@@ -146,7 +146,7 @@ UPDATE user_sessions
 UPDATE decision_runs                SET user_id = :user_id WHERE device_id = :device_id AND user_id IS NULL;
 UPDATE reaction_reports             SET user_id = :user_id WHERE device_id = :device_id AND user_id IS NULL;
 UPDATE avoidance_rules              SET user_id = :user_id WHERE device_id = :device_id AND user_id IS NULL;
-UPDATE product_matrix_filter_states SET user_id = :user_id WHERE device_id = :device_id AND user_id IS NULL;
+UPDATE question_filter_mappings SET user_id = :user_id WHERE device_id = :device_id AND user_id IS NULL;
 ```
 
 > 사용자는 "내 답변이 이어진다"고 자연스럽게 기대한다 — 병합 UI 없이 로그인 시 자동 처리.
@@ -164,7 +164,7 @@ users
 devices + users
  ├─ user_responses                (device_id + user_id nullable)
  ├─ decision_runs                 (device_id + user_id nullable)
- ├─ product_matrix_filter_states  (device_id + user_id nullable)
+ ├─ question_filter_mappings  (device_id + user_id nullable)
  ├─ reaction_reports              (device_id + user_id nullable)
  │    ├─ reaction_report_products
  │    └─ suspected_causes
@@ -185,7 +185,7 @@ priority_rules
 product_categories
  ├─ category_attribute_definitions
  ├─ products
- ├─ product_matrix_filter_states
+ ├─ question_filter_mappings
  └─ product_filter_mappings
 
 brands
@@ -357,19 +357,19 @@ UNIQUE (id, answer_count);
 
 사용자에게 실제로 보여줄 화면별 질문.
 
-| 컬럼         | 타입                            | 설명                                  |
-| ------------ | ------------------------------- | ------------------------------------- |
-| id           | UUID PK                         | 질문 variant ID                       |
-| question_id  | UUID FK → questions.id           | 연결 기준 질문                        |
-| title        | VARCHAR(200)                    | 관리자용 질문명 또는 사용자 노출 제목 |
-| answers      | TEXT[]                          | 화면별 노출 답변 라벨 배열            |
-| answer_count | INTEGER GENERATED               | `cardinality(answers)` 저장 생성 컬럼 |
-| screen       | ENUM('priority_gate','context') | 노출 화면                             |
-| ui_section   | VARCHAR(100)                    | 화면 내 박스                          |
-| sort_order   | INTEGER DEFAULT 0               | 노출 순서                             |
-| is_active    | BOOLEAN DEFAULT true            | 활성 여부                             |
-| created_at   | TIMESTAMPTZ                     | 생성일                                |
-| updated_at   | TIMESTAMPTZ                     | 수정일                                |
+| 컬럼         | 타입                                                                    | 설명                                          |
+| ------------ | ----------------------------------------------------------------------- | --------------------------------------------- |
+| id           | UUID PK                                                                 | 질문 variant ID                               |
+| question_id  | UUID FK → questions.id ON DELETE CASCADE                                | 연결 기준 질문 (canonical 삭제 시 함께 정리)  |
+| title        | TEXT                                                                    | 관리자용 질문명 또는 사용자 노출 제목         |
+| answers      | TEXT[]                                                                  | 화면별 노출 답변 라벨 배열                    |
+| answer_count | INTEGER GENERATED                                                       | `cardinality(answers)` 저장 생성 컬럼         |
+| screen       | ENUM('priority_gate','context')                                         | 노출 화면                                     |
+| ui_section   | ENUM('life_routine','owned_products','basic','category')                | 화면 내 박스 (priority_gate / context 박스별) |
+| sort_order   | INTEGER DEFAULT 0                                                       | 노출 순서                                     |
+| is_active    | BOOLEAN DEFAULT true                                                    | 활성 여부                                     |
+| created_at   | TIMESTAMPTZ                                                             | 생성일                                        |
+| updated_at   | TIMESTAMPTZ                                                             | 수정일                                        |
 
 예시:
 
@@ -388,7 +388,7 @@ UNIQUE (id, answer_count);
 }
 ```
 
-위 두 질문은 답변 라벨은 다르지만 같은 `questions`을 참조한다. 사용자가 첫 번째 답변을 고르면 `user_responses.question_id = <uuid of life.outdoor_activity>`, `question_variant_id = <노출된 variant id>`, `value = 3`으로 저장된다.
+위 두 질문은 답변 라벨은 다르지만 같은 `questions`을 참조한다. 사용자가 첫 번째 답변을 고르면 `user_responses.question_id = <uuid of life.outdoor_activity>`, `question_variant_id = <노출된 variant id>`, `value = [3]`으로 저장된다. 복수 선택이면 같은 배열에 여러 정수가 들어간다.
 
 > seed JSON에서는 사람이 읽기 쉬운 `questions.key` 값을 입력해도 된다. 단 seed/import 단계에서 이를 `questions.id`로 resolve해 `question_variants.question_id`에 저장한다.
 
@@ -413,54 +413,40 @@ REFERENCES questions (id, answer_count);
 
 질문 노출 조건.
 
-`questions`에 등록된 기준 질문이라면 무엇이든 조건으로 사용할 수 있다. DB에는 `condition_question_id`를 저장한다.  
-`category.selected`만 보는 테이블이 아니라, 사용자 상태 전반에 걸쳐 조건을 설정할 수 있다.
+화면에 보여지는지 여부는 canonical `questions`가 아니라 실제 노출되는 `question_variants`를 기준으로 평가한다. 따라서 조건 row 는 대상 variant 만 FK 로 잡고, 어떤 user_response 와 매칭할지는 service 가 같은 variant 의 canonical question 답변을 기준으로 평가한다.
 
-| 컬럼                  | 타입                                         | 설명              |
-| --------------------- | -------------------------------------------- | ----------------- |
-| id                    | UUID PK                                      | 조건 ID           |
-| question_id           | UUID FK → question_variants.id               | 대상 질문 variant |
-| condition_question_id | UUID FK → questions.id                        | 조건 기준 질문 ID |
-| operator              | ENUM('EQ','IN','CONTAINS','GTE','LTE','NEQ') | 연산자            |
-| value                 | JSONB                                        | 비교값            |
-| state                 | ENUM('REQUIRED','EXCLUDED')                  | 조건 상태         |
-| created_at            | TIMESTAMPTZ                                  | 생성일            |
+| 컬럼                | 타입                                         | 설명              |
+| ------------------- | -------------------------------------------- | ----------------- |
+| id                  | UUID PK                                      | 조건 ID           |
+| question_variant_id | UUID FK → question_variants.id               | 대상 질문 variant |
+| operator            | ENUM('EQ','IN','CONTAINS','GTE','LTE','NEQ') | 연산자            |
+| value               | INTEGER                                      | 비교값            |
+| state               | ENUM('REQUIRED','EXCLUDED')                  | 조건 상태         |
+| created_at          | TIMESTAMPTZ                                  | 생성일            |
+| updated_at          | TIMESTAMPTZ NULLABLE                         | 마지막 변경일     |
 
 **노출 조건 판단 기준:**
 
-- `REQUIRED` 조건이 있으면 모두 충족해야 질문이 노출된다.
-- `EXCLUDED` 조건이 하나라도 맞으면 질문이 노출되지 않는다.
-- 조건이 없는 질문은 항상 노출된다.
+- `REQUIRED` 조건이 있으면 모두 충족해야 질문 variant 가 노출된다.
+- `EXCLUDED` 조건이 하나라도 맞으면 노출되지 않는다.
+- 조건이 없는 variant 는 항상 노출된다.
 
-**조건 기준 질문 예시:**
+**평가 흐름:**
 
-| seed/admin 표시 key              | 조건 예시     | 설명                                  |
-| -------------------------------- | ------------- | ------------------------------------- |
-| `category.selected`              | `EQ 1`        | 선크림 카테고리 선택 시만 노출        |
-| `life.outdoor_activity`          | `IN [3,2]`    | 야외 활동 시간이 긴 경우만 노출       |
-| `routine.sunscreen_frequency`    | `IN [2,1]`    | 선크림을 잘 안 쓰는 경우 노출         |
-| `product.owned_categories`       | `CONTAINS 13` | 레티놀 사용 중인 경우 노출            |
-| `context.usage_time`             | `EQ 1`        | 아침 사용 제품 고를 때만 노출         |
-| `context.usage_place`            | `EQ 2`        | 야외 사용 제품 고를 때만 노출         |
-| `preference.fragrance_sensitive` | `EQ 1`        | 향료 민감인 경우 노출                 |
-| `flow.concern`                   | `EQ 8`        | 입술 갈라짐 고민에서 진입한 경우 노출 |
+각 조건 row 는 대상 variant 만 FK 로 잡는다. 어떤 user_response 와 비교할지는 service 가 결정한다 — MVP 에서는 사용자의 현재 `user_responses` 묶음을 입력으로 받아, `(operator, value)` 페어를 카테고리/맥락 변수와 매칭하는 평가기를 service 가 책임진다. seed/admin UI 는 variant 별로 노출 조건을 등록한다.
 
-> **MVP 우선 사용 기준 질문 seed key:** `category.selected`, `life.outdoor_activity`, `routine.sunscreen_frequency`, `product.owned_categories`, `context.usage_time`, `context.usage_place`
-
-예시:
+예시 (의도):
 
 ```
-질문: 선크림을 바르면 눈이 시린 편인가요?
-REQUIRED: category.selected EQ 1
+질문 variant: "선크림을 바르면 눈이 시린 편인가요?" (sunscreen Box2)
+REQUIRED: EQ 1   ← 선크림 카테고리 진입 시만 노출 (service 가 category 컨텍스트로 평가)
 
-질문: 레티놀과 병행할 예정인가요?
-REQUIRED: product.owned_categories CONTAINS 13
-EXCLUDED: life.recent_irritation EQ 1
-
-질문: 야외에서 덧바를 수 있는 형태가 필요한가요?
-REQUIRED: category.selected EQ 1
-REQUIRED: context.usage_place EQ 2
+질문 variant: "레티놀과 병행할 예정인가요?" (serum Box2)
+REQUIRED: CONTAINS 13   ← 레티놀 사용 중인 경우 (owned_categories 평가)
+EXCLUDED: EQ 1          ← 최근 자극이 있으면 숨김
 ```
+
+> 위 예시는 의도만 표기한 것이며, 어떤 canonical question 의 답변을 가져와 비교할지는 service 의 평가기 책임이다. DB 는 대상 variant + operator + value + state 만 보관한다.
 
 ---
 
@@ -468,27 +454,23 @@ REQUIRED: context.usage_place EQ 2
 
 사용자가 실제로 답한 현재 값. 화면 라벨과 선택 index는 저장하지 않고, canonical `question_id`와 내부 `value`를 저장한다. 사용자가 실제로 본 화면 문구가 있으면 `question_variant_id`로 함께 남긴다.
 
-| 컬럼                | 타입                                                  | 설명                                                        |
-| ------------------- | ----------------------------------------------------- | ----------------------------------------------------------- |
-| id                  | UUID PK                                               | 응답 ID                                                     |
-| device_id           | UUID FK → devices.id                                  | 기기 ID                                                     |
-| user_id             | UUID FK → users.id NULLABLE                           | 로그인 시 병합, 비로그인 null                               |
-| session_id          | UUID FK → user_sessions.id                            | 어느 세션에서 답했는지                                      |
-| question_id         | UUID FK → questions.id                                 | canonical question ID. 복원/평가/필터 매핑의 기준           |
-| question_variant_id | UUID FK → question_variants.id NULLABLE               | 사용자가 실제로 본 질문 문구. concern preset 등은 null 가능 |
-| value               | JSONB                                                 | 내부 로직용 값. 단일 선택은 number, 복수 선택은 number[]    |
-| source              | ENUM('priority_gate','context','concern','traceback') | 입력 출처                                                   |
-| created_at          | TIMESTAMPTZ                                           | 최초 입력일                                                 |
-| updated_at          | TIMESTAMPTZ NULLABLE                                  | 마지막 변경일. 최초 INSERT 후 변경 전까지 null              |
+| 컬럼                | 타입                                                  | 설명                                                          |
+| ------------------- | ----------------------------------------------------- | ------------------------------------------------------------- |
+| id                  | UUID PK                                               | 응답 ID                                                       |
+| device_id           | UUID FK → devices.id                                  | 기기 ID                                                       |
+| user_id             | UUID FK → users.id NULLABLE                           | 로그인 시 병합, 비로그인 null                                 |
+| question_id         | UUID FK → questions.id                                | canonical question ID. 복원/평가/필터 매핑의 기준             |
+| question_variant_id | UUID FK → question_variants.id NULLABLE               | 사용자가 실제로 본 질문 문구. concern preset 등은 null 가능   |
+| value               | INTEGER[]                                             | 내부 로직용 값. 단일 선택도 길이 1 배열로 저장 (e.g. `[3]`)   |
+| source              | ENUM('priority_gate','context','concern','traceback') | 입력 출처                                                     |
+| created_at          | TIMESTAMPTZ                                           | 최초 입력일                                                   |
+| updated_at          | TIMESTAMPTZ NULLABLE                                  | 마지막 변경일. 최초 INSERT 후 변경 전까지 null                |
 
 **인덱스 / 제약**
 
 - `pk_user_responses` (PK)
 - `uq_user_responses_anonymous_device_question` (UNIQUE on `device_id, question_id WHERE user_id IS NULL`) — 비로그인 device별 질문 1 row
 - `uq_user_responses_user_question` (UNIQUE on `user_id, question_id WHERE user_id IS NOT NULL`) — 로그인 사용자별 질문 1 row
-- `idx_user_responses_session_id`
-- `idx_user_responses_question_id`
-- `idx_user_responses_question_variant_id`
 - `fk_user_responses_question_id` (FK on `question_id` → `questions.id`)
 - `fk_user_responses_question_variant_id` (FK on `question_variant_id` → `question_variants.id`)
 
@@ -514,7 +496,7 @@ ON user_responses (user_id, question_id)
 WHERE user_id IS NOT NULL;
 ```
 
-응답 저장은 위 unique index 중 현재 신원 상태에 맞는 제약을 기준으로 UPSERT한다. UPDATE 시 `value`, `source`, `session_id`, `question_variant_id`, `updated_at`을 갱신한다. 로그인 병합 중 같은 `user_id + question_id` row가 이미 있으면 `updated_at`이 더 최신인 값을 유지한다.
+응답 저장은 위 unique index 중 현재 신원 상태에 맞는 제약을 기준으로 UPSERT한다. UPDATE 시 `value`, `source`, `question_variant_id`, `updated_at`을 갱신한다. 로그인 병합 중 같은 `user_id + question_id` row가 이미 있으면 `updated_at`이 더 최신인 값을 유지한다. 어떤 세션에서 답했는지는 별도 컬럼이 아니라 `session_events`의 `value_change` 이벤트 payload 로 추적한다.
 
 복원 규칙:
 
@@ -559,7 +541,7 @@ Priority Gate 결과를 만드는 Rule.
 | result_type           | ENUM('STOP','HOLD','CAUTION','PASS','ROUTE_CATEGORY') | 결과 타입     |
 | result_title          | TEXT                                                  | 결과 제목     |
 | result_description    | TEXT                                                  | 결과 설명     |
-| hold_categories       | JSONB NULLABLE                                        | 보류 제품군   |
+| hold_categories       | JSONB NULLABLE                                        | 보류 제품군 (배열 객체: `[{category_id, reason}]`) |
 | recommend_category_id | UUID FK → product_categories.id NULLABLE              | 추천 제품군   |
 | cta_label             | VARCHAR(100) NULLABLE                                 | CTA 문구      |
 | cta_target            | VARCHAR(255) NULLABLE                                 | CTA 이동 경로 |
@@ -573,7 +555,11 @@ Priority Gate 결과를 만드는 Rule.
   "name": "최근 자극 반복 → 새 제품 보류",
   "priority": 1,
   "result_type": "HOLD",
-  "result_title": "지금은 새 제품보다 피부 반응 안정화가 먼저예요."
+  "result_title": "지금은 새 제품보다 피부 반응 안정화가 먼저예요.",
+  "hold_categories": [
+    { "category_id": "<uuid of serum>", "reason": "기능성 제품은 자극 안정화 이후" },
+    { "category_id": "<uuid of toner>", "reason": "새 제품 추가 전 루틴 단순화 필요" }
+  ]
 }
 ```
 
@@ -583,15 +569,16 @@ Priority Gate 결과를 만드는 Rule.
 
 Priority Rule 발동 조건.
 
-| 컬럼        | 타입                                         | 설명         |
-| ----------- | -------------------------------------------- | ------------ |
-| id          | UUID PK                                      | 조건 ID      |
-| rule_id     | UUID FK → priority_rules.id                  | Rule ID      |
-| question_id | UUID FK → questions.id                        | 기준 질문 ID |
-| operator    | ENUM('EQ','IN','CONTAINS','GTE','LTE','NEQ') | 연산자       |
-| value       | JSONB                                        | 비교값       |
-| state       | ENUM('REQUIRED','EXCLUDED')                  | 조건 상태    |
-| created_at  | TIMESTAMPTZ                                  | 생성일       |
+| 컬럼        | 타입                                         | 설명          |
+| ----------- | -------------------------------------------- | ------------- |
+| id          | UUID PK                                      | 조건 ID       |
+| rule_id     | UUID FK → priority_rules.id                  | Rule ID       |
+| question_id | UUID FK → questions.id                       | 기준 질문 ID  |
+| operator    | ENUM('EQ','IN','CONTAINS','GTE','LTE','NEQ') | 연산자        |
+| value       | INTEGER[]                                    | 비교값        |
+| state       | ENUM('REQUIRED','EXCLUDED')                  | 조건 상태     |
+| created_at  | TIMESTAMPTZ                                  | 생성일        |
+| updated_at  | TIMESTAMPTZ NULLABLE                         | 마지막 변경일 |
 
 예시:
 
@@ -620,10 +607,10 @@ Priority Gate뿐 아니라 Category Decision, Product Matrix 결과까지 저장
 | device_id                | UUID FK → devices.id                                                            | 기기 ID                             |
 | user_id                  | UUID FK → users.id NULLABLE                                                     | 로그인 시 병합, 비로그인 null       |
 | session_id               | UUID FK → user_sessions.id                                                      | 세션 ID                             |
-| decision_type            | ENUM('PRIORITY_GATE','CATEGORY_DECISION','PRODUCT_MATRIX','REACTION_TRACEBACK') | 결과 종류                           |
+| decision_type            | VARCHAR(50)                                                                     | 결과 종류 (`PRIORITY_GATE` / `CATEGORY_DECISION` / `PRODUCT_MATRIX` / `REACTION_TRACEBACK` — application enum 으로 검증) |
 | source_screen            | VARCHAR(100)                                                                    | 발생 화면                           |
 | category_id              | UUID FK → product_categories.id NULLABLE                                        | 대상 제품군                         |
-| filter_state_id          | UUID FK → product_matrix_filter_states.id NULLABLE                              | 적용된 필터 상태 참조               |
+| filter_state_id          | UUID FK → question_filter_mappings.id NULLABLE                              | 적용된 필터 상태 참조               |
 | result_type              | VARCHAR(50) NULLABLE                                                            | 결과 타입 snapshot                  |
 | result_title             | TEXT NULLABLE                                                                   | 결과 제목 snapshot                  |
 | result_description       | TEXT NULLABLE                                                                   | 결과 설명 snapshot                  |
@@ -654,7 +641,7 @@ Priority Gate뿐 아니라 Category Decision, Product Matrix 결과까지 저장
         "id": "prod_001",
         "name": "라운드랩 자작나무 선크림",
         "tags": ["눈시림 낮음", "SPF50+"],
-        "price_band": "UNDER_20000"
+        "price_krw": 18000
       }
     ]
   }
@@ -720,23 +707,31 @@ Priority Gate뿐 아니라 Category Decision, Product Matrix 결과까지 저장
 
 ### products
 
-| 컬럼         | 타입                                                   | 설명                 |
-| ------------ | ------------------------------------------------------ | -------------------- |
-| id           | UUID PK                                                | 제품 ID              |
-| brand_id     | UUID FK → brands.id                                    | 브랜드 ID            |
-| category_id  | UUID FK → product_categories.id                        | 제품군 ID            |
-| name         | VARCHAR(300)                                           | 제품명               |
-| barcode      | VARCHAR(100) NULLABLE UNIQUE                           | 바코드               |
-| price        | INTEGER                                                | 가격                 |
-| price_band   | ENUM('UNDER_20000','BETWEEN_20000_50000','OVER_50000') | 가격대               |
-| volume       | VARCHAR(50) NULLABLE                                   | 용량                 |
-| image_url    | TEXT NULLABLE                                          | 이미지               |
-| purchase_url | TEXT NULLABLE                                          | 구매 링크            |
-| attributes   | JSONB                                                  | 제품군별 속성        |
-| sort_order   | INTEGER DEFAULT 0                                      | 관리자 큐레이션 순서 |
-| is_active    | BOOLEAN DEFAULT true                                   | 노출 여부            |
-| created_at   | TIMESTAMPTZ                                            | 생성일               |
-| updated_at   | TIMESTAMPTZ                                            | 수정일               |
+| 컬럼          | 타입                                       | 설명                                              |
+| ------------- | ------------------------------------------ | ------------------------------------------------- |
+| id            | UUID PK                                    | 제품 ID                                           |
+| brand_id      | UUID FK → brands.id                        | 브랜드 ID                                         |
+| category_id   | UUID FK → product_categories.id            | 제품군 ID                                         |
+| name          | VARCHAR(500)                               | 제품명 (브랜드 + 제품명 + 옵션 함께 들어갈 여유)  |
+| price_krw     | INTEGER                                    | 가격 (KRW)                                        |
+| volume_amount | NUMERIC(10,2) NULLABLE                     | 액체/내용량 수치                                  |
+| volume_unit   | ENUM('ML','G','L','MG') NULLABLE           | 내용량 단위                                       |
+| count_amount  | INTEGER NULLABLE                           | 개수/장수 (시트 마스크 등)                        |
+| count_unit    | ENUM('SHEET','PIECE','PACK') NULLABLE      | 개수 단위 (장 / 매 / 개 / 팩)                     |
+| volume_label  | VARCHAR(100) NULLABLE                      | 화면 표시용 원문 (예: `70매 / 160ml`)             |
+| image_url     | TEXT NULLABLE                              | 이미지                                            |
+| purchase_url  | TEXT NULLABLE                              | 구매 링크                                         |
+| attributes    | JSONB                                      | 제품군별 속성                                     |
+| sort_order    | INTEGER DEFAULT 0                          | 관리자 큐레이션 순서                              |
+| is_active     | BOOLEAN DEFAULT true                       | 노출 여부                                         |
+| created_at    | TIMESTAMPTZ                                | 생성일                                            |
+| updated_at    | TIMESTAMPTZ                                | 수정일                                            |
+
+> 바코드는 실제로는 "스캔 시 제품 정보를 외부 lookup 한 뒤 검색"하는 경로로 사용되므로 본 테이블에는 보관하지 않는다. 필요해지면 별도 컬럼 또는 매핑 테이블로 후속 도입.
+>
+> 가격대(`price_band`)는 카테고리마다 기준이 달라질 수 있어 DB 컬럼이 아니라 service/UI 레이어 계산값으로 둔다. 제품별로는 `price_krw` 만 보관.
+>
+> 용량은 액체/그램(`volume_*`)과 개수/장수(`count_*`)를 분리해서 보관하고, 화면 표시 원문은 `volume_label` 로 따로 보관한다. 둘 다 nullable 이라 한쪽만 채워진 제품(예: 시트 마스크 70매)도 자연스럽게 표현된다.
 
 예시 (선크림 attributes):
 
@@ -765,46 +760,39 @@ Priority Gate뿐 아니라 Category Decision, Product Matrix 결과까지 저장
 실제 제품 필터링은 이 매핑을 바탕으로 동적 SQL 또는 ORM where 조건을 생성해 `products` 테이블을 직접 조회하는 방식으로 수행한다.  
 핵심은 `product.attributes`를 얼마나 잘 입력하느냐이고, 이 테이블은 그 연결고리다.
 
-| 컬럼               | 타입                                                 | 설명                                 |
-| ------------------ | ---------------------------------------------------- | ------------------------------------ |
-| id                 | UUID PK                                              | ID                                   |
-| category_id        | UUID FK → product_categories.id NULLABLE             | 적용 제품군 (null이면 전체 공통)     |
-| source_question_id | UUID FK → questions.id                                | 사용자 답변 기준 질문 ID             |
-| source_operator    | ENUM('EQ','IN','CONTAINS','GTE','LTE','NEQ')         | 사용자 답변 조건 연산자              |
-| source_value       | JSONB                                                | 사용자 답변 비교값                   |
-| attribute_key      | VARCHAR(100)                                         | 대상 product attribute 키            |
-| attribute_operator | ENUM('EQ','IN','GTE','LTE','NEQ','CONTAINS')         | attribute 조건 연산자                |
-| attribute_value    | JSONB                                                | attribute 비교값                     |
-| filter_mode        | ENUM('HARD_FILTER','EXCLUDE','CAUTION','SORT','TAG') | 처리 방식                            |
-| filter_type        | ENUM('BASIC_CONDITION','PERSONALIZED')               | 필터 종류 (좋은 제품 기준 vs 개인화) |
-| filter_key         | VARCHAR(100)                                         | 필터 식별 키 (UI 표시용)             |
-| filter_label       | VARCHAR(100)                                         | 필터 표시 이름                       |
-| tag_label          | VARCHAR(100) NULLABLE                                | 제품 카드 태그 문구                  |
-| caution_message    | TEXT NULLABLE                                        | △ 주의 표시 문구                     |
-| sort_order         | INTEGER DEFAULT 0                                    | 필터 정렬 순서                       |
-| is_active          | BOOLEAN DEFAULT true                                 | 활성 여부                            |
-| created_at         | TIMESTAMPTZ                                          | 생성일                               |
-| updated_at         | TIMESTAMPTZ                                          | 수정일                               |
+| 컬럼                    | 타입                                              | 설명                                             |
+| ----------------------- | ------------------------------------------------- | ------------------------------------------------ |
+| id                      | UUID PK                                           | ID                                               |
+| trigger_question_id     | UUID FK → questions.id                            | 사용자 답변 기준 질문 (trigger 측)               |
+| trigger_operator        | ENUM('EQ','IN','CONTAINS','GTE','LTE','NEQ')      | 사용자 답변 조건 연산자                          |
+| trigger_value           | JSONB                                             | 사용자 답변 비교값                               |
+| attribute_definition_id | UUID FK → category_attribute_definitions.id      | 대상 product attribute (카테고리 + key 일체화)   |
+| attribute_operator      | ENUM('EQ','IN','GTE','LTE','NEQ','CONTAINS')      | attribute 조건 연산자                            |
+| attribute_value         | JSONB                                             | attribute 비교값                                 |
+| curated                 | BOOLEAN DEFAULT false                             | 큐레이트된 기본 필터 여부 (구 BASIC_CONDITION)   |
+| filter_label            | VARCHAR(100)                                      | 필터 표시 이름                                   |
+| sort_order              | INTEGER DEFAULT 0                                 | 필터 정렬 순서                                   |
+| is_active               | BOOLEAN DEFAULT true                              | 활성 여부                                        |
+| created_at              | TIMESTAMPTZ                                       | 생성일                                           |
+| updated_at              | TIMESTAMPTZ                                       | 수정일                                           |
 
-**filter_mode 정의:**
-
-| mode          | 의미                                                      |
-| ------------- | --------------------------------------------------------- |
-| `HARD_FILTER` | attribute 조건을 WHERE에 추가해 제품 자체를 제외          |
-| `EXCLUDE`     | 제품은 남기되 "제외 권장" 처리 (사용자 확인 후 선택 가능) |
-| `CAUTION`     | 제품은 남기되 △ 주의 태그 표시                            |
-| `SORT`        | 조건 만족 제품을 상위 노출                                |
-| `TAG`         | 조건 만족 제품에 태그 부여                                |
+> `category_id` / `attribute_key` 별도 컬럼은 두지 않는다. `attribute_definition_id` 하나로 어느 카테고리의 어떤 attribute 인지 결정된다.
+>
+> `filter_mode` / `filter_key` / `tag_label` / `caution_message` 는 제거. MVP 는 HARD_FILTER 단일 처리로 단순화하고, UI 표시 문구는 application/service 가 `filter_label` 과 attribute 매칭 결과로 조립한다.
+>
+> `filter_type` enum 대신 `curated` boolean. `curated = true` 가 구 `BASIC_CONDITION` (관리자가 정의한 "좋은 제품의 조건"), `curated = false` 가 구 `PERSONALIZED` (사용자 답변 기반 trigger).
+>
+> Source 측 컬럼 prefix 는 `source_*` → `trigger_*` 로 정렬 — "어떤 user response 가 이 mapping 을 trigger 하는가" 를 의미한다.
 
 **매핑 예시:**
 
-| source 기준 질문 seed key        | source 조건 | attribute_key | attribute 조건      | filter_mode   | filter_label   |
-| -------------------------------- | ----------- | ------------- | ------------------- | ------------- | -------------- |
-| `context.eye_sting`              | `EQ 1`      | `eye_sting`   | `IN ["none","low"]` | `HARD_FILTER` | 눈시림 낮음    |
-| `life.outdoor_activity`          | `IN [3,2]`  | `spf`         | `GTE 50`            | `HARD_FILTER` | 야외 사용 적합 |
-| `context.white_cast_sensitive`   | `EQ 1`      | `white_cast`  | `IN ["none","low"]` | `HARD_FILTER` | 백탁 없음      |
-| `preference.fragrance_sensitive` | `EQ 1`      | `fragrance`   | `EQ false`          | `HARD_FILTER` | 향료 없음      |
-| `context.usage_place`            | `EQ 2`      | `spf`         | `GTE 50`            | `TAG`         | 야외 사용 적합 |
+| trigger 기준 질문 seed key       | trigger 조건 | attribute 정의              | attribute 조건      | curated | filter_label   |
+| -------------------------------- | ------------ | --------------------------- | ------------------- | ------- | -------------- |
+| `context.eye_sting`              | `EQ 1`       | sunscreen.`eye_sting`       | `IN ["none","low"]` | false   | 눈시림 낮음    |
+| `life.outdoor_activity`          | `IN [3,2]`   | sunscreen.`spf`             | `GTE 50`            | false   | 야외 사용 적합 |
+| `context.white_cast_sensitive`   | `EQ 1`       | sunscreen.`white_cast`      | `IN ["none","low"]` | false   | 백탁 없음      |
+| `preference.fragrance_sensitive` | `EQ 1`       | (공통) `fragrance`          | `EQ false`          | false   | 향료 없음      |
+| `category.selected`              | `EQ <sunscreen>` | sunscreen.`spf`        | `GTE 50`            | true    | SPF 50+        |
 
 ### Product Matrix 조회 방식
 
@@ -812,7 +800,7 @@ Priority Gate뿐 아니라 Category Decision, Product Matrix 결과까지 저장
 `product_filter_mappings`는 사용자 답변과 attribute 조건 사이의 번역기 역할만 한다.
 
 ```
-1. 사용자 답변(user_responses) 또는 product_matrix_filter_states 조회
+1. 사용자 답변(user_responses) 또는 question_filter_mappings 조회
 2. product_filter_mappings 또는 코드 상수로 attribute 조건 변환
 3. 동적 SQL / ORM where 조건 생성
 4. products 테이블 조회 (filter_type=BASIC_CONDITION + PERSONALIZED 조건 모두 적용)
@@ -840,80 +828,59 @@ WHERE category_id = :category_id
 
 ---
 
-## 6. Product Matrix Filter States
+## 6. Question Filter Mappings (사용자 필터 상태)
 
-### product_matrix_filter_states
+### question_filter_mappings
 
-사용자가 Product Matrix에서 선택한 필터 상태를 저장하는 테이블.
+사용자가 Product Matrix 에서 현재 활성화한 필터 묶음. 구 `question_filter_mappings` 의 rename — 필터 정의 자체는 `product_filter_mappings` 가 들고 있고, 이 테이블은 그 정의 중 사용자가 어떤 것을 선택했는지를 보관한다.
 
-| 컬럼        | 타입                                                       | 설명                          |
-| ----------- | ---------------------------------------------------------- | ----------------------------- |
-| id          | UUID PK                                                    | ID                            |
-| device_id   | UUID FK → devices.id                                       | 기기 ID                       |
-| user_id     | UUID FK → users.id NULLABLE                                | 로그인 시 병합, 비로그인 null |
-| session_id  | UUID FK → user_sessions.id                                 | 세션 ID                       |
-| category_id | UUID FK → product_categories.id                            | 제품군                        |
-| source      | ENUM('DIRECT','CATEGORY_DECISION_CTA','MANUAL','RESTORED') | 필터 상태 생성 경로           |
-| filters     | JSONB                                                      | 현재 적용된 필터 목록         |
-| is_active   | BOOLEAN DEFAULT true                                       | 활성 여부                     |
-| created_at  | TIMESTAMPTZ                                                | 생성일                        |
-| updated_at  | TIMESTAMPTZ                                                | 수정일                        |
+| 컬럼        | 타입                                                       | 설명                                                                 |
+| ----------- | ---------------------------------------------------------- | -------------------------------------------------------------------- |
+| id          | UUID PK                                                    | ID                                                                   |
+| device_id   | UUID FK → devices.id                                       | 기기 ID                                                              |
+| user_id     | UUID FK → users.id NULLABLE                                | 로그인 시 병합, 비로그인 null                                        |
+| session_id  | UUID FK → user_sessions.id                                 | 세션 ID                                                              |
+| category_id | UUID FK → product_categories.id                            | 제품군                                                               |
+| source      | ENUM('DIRECT','CATEGORY_DECISION_CTA','MANUAL','RESTORED') | 필터 상태 생성 경로                                                  |
+| filters     | JSONB                                                      | `[{filter_definition_id, operator, value}]` 형태의 적용된 필터 배열 |
+| created_at  | TIMESTAMPTZ                                                | 생성일                                                               |
+| updated_at  | TIMESTAMPTZ                                                | 수정일                                                               |
+
+> `is_active` 컬럼은 두지 않는다. 활성 상태는 row 의 `updated_at` 으로 정렬해 가장 최근 row 를 현재 상태로 본다. 과거 row 가 필요하면 `created_at` 기준 history 로 조회한다.
 
 **source 정의:**
 
 | source                  | 설명                                                                    |
 | ----------------------- | ----------------------------------------------------------------------- |
-| `DIRECT`                | 직접 Product Matrix 접근 (기존 filter_state 복원)                       |
+| `DIRECT`                | 직접 Product Matrix 접근 (기존 상태 복원)                               |
 | `CATEGORY_DECISION_CTA` | Category Decision 결과에서 CTA로 진입, context 답변 기반 필터 자동 생성 |
 | `MANUAL`                | 사용자가 필터를 직접 추가/삭제                                          |
 | `RESTORED`              | 이전 session에서 복원                                                   |
 
-**동작 방식:**
+**filters JSON 구조:**
 
-- Product Matrix 단순 접근 시: 해당 category의 최신 active filter_state 조회해서 복원
-- Category Decision CTA 진입 시: context 답변을 `product_filter_mappings`로 변환해 새 filter_state 생성
-- Concern preset이 있고 최종 `category.selected`가 `suggested_category`와 일치하면 `suggested_filters`를 `CONCERN_PRESET` source_type으로 합성
-- 사용자가 필터 추가/삭제: `filters` JSONB 업데이트 + `session_events`에 이벤트 저장
-- 실제 조회 결과는 `decision_runs`에 snapshot으로 저장
-
-> 화면 재조회는 `decision_runs` snapshot을 재사용하지 말고, `product_matrix_filter_states`를 기준으로 현재 `products`를 다시 조회한다. snapshot은 이력/고객지원용이다.
-
-**filters 항목별 source_type:**
-
-| source_type       | 의미                                                                                            |
-| ----------------- | ----------------------------------------------------------------------------------------------- |
-| `BASIC_CONDITION` | 해당 제품군의 "좋은 제품의 조건" — 관리자가 코드 상수로 정의, 기본 선택 상태                    |
-| `PERSONALIZED`    | 사용자 답변(user_responses)에서 변환된 개인화 필터 — `product_filter_mappings` 경유             |
-| `MANUAL`          | 사용자가 직접 추가/삭제한 필터                                                                  |
-| `TRACEBACK`       | Reaction Traceback avoidance_rules에서 자동 생성된 필터                                         |
-| `CONCERN_PRESET`  | Concern preset의 `suggested_filters`가 최종 category와 일치해 Product Matrix에 반영된 힌트 필터 |
-
-예시:
+각 항목은 `product_filter_mappings.id` 하나를 가리키고, 그 정의를 그대로 쓰거나 사용자가 손댄 비교 조건을 덮어쓴다.
 
 ```json
 {
-  "category_id": "cat_sunscreen",
+  "category_id": "<uuid of sunscreen>",
   "source": "CATEGORY_DECISION_CTA",
   "filters": [
-    {
-      "filter_key": "spf_50_plus",
-      "label": "SPF 50+",
-      "source_type": "BASIC_CONDITION",
-      "attribute_key": "spf",
-      "operator": "GTE",
-      "value": 50
-    },
-    {
-      "filter_key": "eye_sting_low",
-      "label": "눈시림 낮음",
-      "source_type": "PERSONALIZED",
-      "attribute_key": "eye_sting",
-      "operator": "IN",
-      "value": ["none", "low"]
-    }
+    { "filter_definition_id": "<uuid>", "operator": "GTE", "value": 50 },
+    { "filter_definition_id": "<uuid>", "operator": "IN", "value": ["none", "low"] }
   ]
 }
 ```
+
+**동작 방식:**
+
+- Product Matrix 단순 접근 시: 해당 category 의 최근 row 를 복원 (가장 최신 `updated_at`).
+- Category Decision CTA 진입 시: context 답변을 `product_filter_mappings` 로 변환해 새 row INSERT.
+- 사용자가 필터 추가/삭제: 같은 row UPDATE + `session_events` 이벤트.
+- 실제 조회 결과는 `decision_runs` snapshot 으로 보존.
+- BASIC vs PERSONALIZED 구분은 더 이상 `filters` 안의 `source_type` 이 아니라 `product_filter_mappings.curated` boolean 으로 결정된다. 합성은 service 가 한다.
+
+> 화면 재조회는 `decision_runs` snapshot 을 재사용하지 말고, `question_filter_mappings` 기준으로 현재 `products` 를 다시 조회한다. snapshot 은 이력/고객지원용이다.
 
 ---
 
@@ -1123,44 +1090,44 @@ WHERE category_id = :category_id
 
 ---
 
-### Filter Key 사전
+### 필터 라벨 사전 (seed slug 참고용)
 
-`product_filter_mappings.filter_key` 및 `product_matrix_filter_states.filters[].filter_key`에서 사용하는 전체 키 목록.
+`product_filter_mappings.filter_label` 에 들어가는 표준 슬러그 카탈로그. DB 컬럼은 아니며, seed/admin 작업 시 일관된 라벨/식별자를 쓰기 위한 참고 목록이다. `curated = true` 가 구 BASIC_CONDITION, `false` 가 구 PERSONALIZED.
 
 #### 선크림 (sunscreen)
 
-| filter_key           | filter_type     | 설명                         |
-| -------------------- | --------------- | ---------------------------- |
-| `spf_50_plus`        | BASIC_CONDITION | SPF 50 이상                  |
-| `pa_4_plus`          | BASIC_CONDITION | PA++++                       |
-| `eye_sting_low`      | BASIC_CONDITION | 눈시림 낮음                  |
-| `white_cast_low`     | BASIC_CONDITION | 백탁 적음                    |
-| `makeup_compat_good` | BASIC_CONDITION | 메이크업 궁합                |
-| `outdoor_use`        | PERSONALIZED    | 야외 활동 적합 (spf≥50)      |
-| `no_eye_sting`       | PERSONALIZED    | 눈시림 경험 있는 사용자 맞춤 |
-| `no_white_cast`      | PERSONALIZED    | 백탁 민감 사용자 맞춤        |
-| `no_fragrance`       | PERSONALIZED    | 향료 민감 맞춤               |
-| `portable`           | PERSONALIZED    | 휴대형                       |
+| slug                 | curated | filter_label                 |
+| -------------------- | ------- | ---------------------------- |
+| `spf_50_plus`        | true    | SPF 50 이상                  |
+| `pa_4_plus`          | true    | PA++++                       |
+| `eye_sting_low`      | true    | 눈시림 낮음                  |
+| `white_cast_low`     | true    | 백탁 적음                    |
+| `makeup_compat_good` | true    | 메이크업 궁합                |
+| `outdoor_use`        | false   | 야외 활동 적합 (spf≥50)      |
+| `no_eye_sting`       | false   | 눈시림 경험 있는 사용자 맞춤 |
+| `no_white_cast`      | false   | 백탁 민감 사용자 맞춤        |
+| `no_fragrance`       | false   | 향료 민감 맞춤               |
+| `portable`           | false   | 휴대형                       |
 
 #### 세럼 (serum)
 
-| filter_key              | filter_type     | 설명              |
-| ----------------------- | --------------- | ----------------- |
-| `low_irritation`        | BASIC_CONDITION | 자극 가능성 낮음  |
-| `no_fragrance`          | PERSONALIZED    | 향료 민감 맞춤    |
-| `morning_use`           | PERSONALIZED    | 아침 사용 적합    |
-| `night_use`             | PERSONALIZED    | 밤 사용 적합      |
-| `no_conflict_retinol`   | PERSONALIZED    | 레티놀 병행 주의  |
-| `no_conflict_vitamin_c` | PERSONALIZED    | 비타민C 병행 주의 |
+| slug                    | curated | filter_label      |
+| ----------------------- | ------- | ----------------- |
+| `low_irritation`        | true    | 자극 가능성 낮음  |
+| `no_fragrance`          | false   | 향료 민감 맞춤    |
+| `morning_use`           | false   | 아침 사용 적합    |
+| `night_use`             | false   | 밤 사용 적합      |
+| `no_conflict_retinol`   | false   | 레티놀 병행 주의  |
+| `no_conflict_vitamin_c` | false   | 비타민C 병행 주의 |
 
 #### 립케어 (lipcare)
 
-| filter_key             | filter_type     | 설명                  |
-| ---------------------- | --------------- | --------------------- |
-| `high_moisture`        | BASIC_CONDITION | 보습 지속력 높음      |
-| `no_menthol`           | BASIC_CONDITION | 멘톨 없음             |
-| `low_fragrance`        | BASIC_CONDITION | 향료 적음             |
-| `no_menthol_sensitive` | PERSONALIZED    | 멘톨 민감 사용자 맞춤 |
-| `no_fragrance`         | PERSONALIZED    | 향료 민감 맞춤        |
-| `spf_included`         | PERSONALIZED    | 야외 사용 SPF 포함    |
-| `portable`             | PERSONALIZED    | 휴대형                |
+| slug                   | curated | filter_label          |
+| ---------------------- | ------- | --------------------- |
+| `high_moisture`        | true    | 보습 지속력 높음      |
+| `no_menthol`           | true    | 멘톨 없음             |
+| `low_fragrance`        | true    | 향료 적음             |
+| `no_menthol_sensitive` | false   | 멘톨 민감 사용자 맞춤 |
+| `no_fragrance`         | false   | 향료 민감 맞춤        |
+| `spf_included`         | false   | 야외 사용 SPF 포함    |
+| `portable`             | false   | 휴대형                |
