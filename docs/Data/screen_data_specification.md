@@ -25,7 +25,7 @@
 
 | 항목         | 출처                                             | 사용                                                 |
 | ------------ | ------------------------------------------------ | ---------------------------------------------------- |
-| `device_id`  | 브라우저 cookie / localStorage (영구, UUIDv7)    | 비로그인 사용자 식별, 모든 자식 테이블의 NOT NULL FK |
+| `device_id`  | 브라우저 cookie / localStorage (영구, UUIDv7)    | 비로그인 사용자 식별, 활동 자식 테이블의 NOT NULL FK (`session_events` 제외 — `session_id → user_sessions` JOIN 으로 device 추적) |
 | `user_id`    | 로그인 세션 (NULLABLE, UUIDv7)                   | 로그인 시 신원 병합, 이력 통합                       |
 | `session_id` | `user_sessions` (탭/유입 단위 dimension, UUIDv7) | 모든 이벤트·답변·결정 row에 매달리는 활동창 식별자   |
 
@@ -144,7 +144,7 @@ S08 Reaction Traceback
 | ------------------- | --------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
 | 노출 후보 질문 목록 | `question_variants WHERE screen='priority_gate' AND is_active=true ORDER BY ui_section, sort_order` | 화면 박스에 그릴 질문 카드                          |
 | 질문 노출 조건      | `question_visibility_conditions WHERE question_id IN (...)`                                         | REQUIRED/EXCLUDED로 조건부 숨김 평가                |
-| 기준 질문 정의      | `question` (위 variant의 `question_id`)                                                             | `answer_type`, `answer_values`, `answer_count` 조회 |
+| 기준 질문 정의      | `questions` (위 variant의 `question_id`)                                                             | `answer_type`, `answer_values`, `answer_count` 조회 |
 | 화면 답변 라벨      | `question_variants.answers`                                                                         | 사용자에게 보여줄 라벨. 내부값은 index로 매칭       |
 | 기존 답변 복원      | `user_responses WHERE question_id IN (...)` 현재 row                                                | canonical question 기준으로 재진입 선택값 복원      |
 | Priority Rule 목록  | `priority_rules WHERE is_active=true ORDER BY priority ASC`                                         | 평가 후보                                           |
@@ -200,7 +200,7 @@ S08 Reaction Traceback
 | 선택 카테고리 메타       | `product_categories WHERE id=?`                                                                    | 카테고리명, key 노출                                        |
 | context 질문 목록        | `question_variants WHERE screen='context' AND is_active=true ORDER BY ui_section, sort_order`      | Box 1 (공통) + Box 2 (카테고리별) 질문                      |
 | 질문 노출 조건           | `question_visibility_conditions WHERE question_id IN (...)`                                        | 카테고리 의존 / 다른 기준 질문 의존 노출 평가               |
-| 기준 질문 정의           | `question`                                                                                         | `answer_type`, `answer_values`, `answer_count` 조회         |
+| 기준 질문 정의           | `questions`                                                                                         | `answer_type`, `answer_values`, `answer_count` 조회         |
 | 화면 답변 라벨           | `question_variants.answers`                                                                        | 같은 기준 질문이라도 화면별 문구를 다르게 노출              |
 | 현재 답변 복원           | `user_responses WHERE question_id IN (...)` 현재 row                                               | Priority Gate에서 답한 기준 질문 재사용 + 재진입 복원       |
 | 카테고리 attribute 정의  | `category_attribute_definitions WHERE category_id=? AND is_filterable=true`                        | Box 3 필터 후보, Box 3 결과 카드 라벨                       |
@@ -405,7 +405,7 @@ UPDATE product_matrix_filter_states  SET user_id = :user_id WHERE device_id = :d
 | `devices`                        | W   | W   | W       | W   | W   | W   |
 | `user_sessions`                  | W   | W   | W       | W   | W   | W   |
 | `session_events`                 | W   | W   | W       | W   | W   | W   |
-| `question`                       | —   | R   | R       | —   | —   | —   |
+| `questions`                       | —   | R   | R       | —   | —   | —   |
 | `question_variants`              | —   | R   | R       | —   | —   | —   |
 | `question_visibility_conditions` | —   | R   | R       | —   | —   | —   |
 | `user_responses`                 | W   | R/W | R/W     | R   | R   | —   |
@@ -435,7 +435,7 @@ UPDATE product_matrix_filter_states  SET user_id = :user_id WHERE device_id = :d
 
 | 변화                    | 동기화 대상                                                                                                                                                |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 신규 기준 질문 도입     | `question` 시드(key 포함) + 화면별 `question_variants.answers` + 본 문서 §2/§3 Read 표 + 관련 visibility 조건                                              |
+| 신규 기준 질문 도입     | `questions` 시드(key 포함) + 화면별 `question_variants.answers` + 본 문서 §2/§3 Read 표 + 관련 visibility 조건                                              |
 | 신규 카테고리 추가      | `product_categories`, `category_attribute_definitions`, `product_filter_mappings`, `product_attribute_schema.md`                                           |
 | 신규 Priority Rule 추가 | `priority_rules`/`priority_rule_conditions` 시드 + 본 문서 §2.4 결과 분기                                                                                  |
 | 신규 화면 추가          | 본 문서에 새 §, [wireframe_summary.md](../ContentSpec/wireframe_summary.md), [page_content_specification.md](../ContentSpec/page_content_specification.md) |

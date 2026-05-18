@@ -711,8 +711,8 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 | ---: | ---------------------------------------------- |
 |    1 | `product_categories` 6개 등록                  |
 |    2 | `category_attribute_definitions` P0 key 등록   |
-|    3 | `fact_definitions` 기본 + 추가 key 등록        |
-|    4 | `context_questions` S02~S04 질문 등록          |
+|    3 | `questions` 기본 + 추가 key 등록               |
+|    4 | `question_variants` S02~S04 질문 등록          |
 |    5 | `question_visibility_conditions` 등록          |
 |    6 | `priority_rules` 13개 등록                     |
 |    7 | `priority_rule_conditions` 등록                |

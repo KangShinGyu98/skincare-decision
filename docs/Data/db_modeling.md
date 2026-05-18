@@ -57,7 +57,7 @@
 | 2   | devices                        | 사용자           |
 | 3   | user_sessions                  | 사용자           |
 | 4   | session_events                 | 사용자           |
-| 5   | question                       | 질문 기준        |
+| 5   | questions                      | 질문 기준        |
 | 6   | question_variants              | 질문 기준        |
 | 7   | question_visibility_conditions | 질문 조건        |
 | 8   | user_responses                 | 질문 응답        |
@@ -170,7 +170,7 @@ devices + users
  │    └─ suspected_causes
  └─ avoidance_rules               (device_id + user_id nullable)
 
-question
+questions
  ├─ question_variants
  │    └─ question_visibility_conditions
  ├─ user_responses                  (canonical question_id)
@@ -278,14 +278,13 @@ ingredient_groups
 | ---------- | ----------------------- | ----------------- |
 | id         | UUID PK                 | 이벤트 ID         |
 | session_id | UUID FK → user_sessions | 세션 ID           |
-| device_id  | UUID FK → devices.id    | 기기 ID           |
 | event_name | VARCHAR(100)            | 이벤트 이름       |
 | screen     | VARCHAR(100)            | 화면명            |
 | element_id | VARCHAR(100) NULLABLE   | 버튼/카드/태그 ID |
 | payload    | JSONB                   | 추가 데이터       |
 | created_at | TIMESTAMPTZ             | 이벤트 발생 시간  |
 
-> `user_id` 없음 — 분석 시에는 `session_id → device_id → user_id` 로 JOIN해서 사용.
+> `user_id` / `device_id` 없음 — 분석 시에는 `session_id → user_sessions.device_id / .user_id` 로 JOIN해서 사용.
 
 예시:
 
@@ -304,15 +303,15 @@ ingredient_groups
 
 ## 2. 질문 기준 / 화면 질문 구조
 
-질문 정의는 depth를 낮추기 위해 `question`과 `question_variants` 2개 테이블로 고정한다.
+질문 정의는 depth를 낮추기 위해 `questions`과 `question_variants` 2개 테이블로 고정한다.
 
-- `question`: 내부 판단 기준. DB 관계는 `id`로 연결하고, `key`는 seed/admin/debug용 slug로만 사용한다. 같은 결론으로 평가되어야 하는 질문의 내부 `value` 배열을 가진다.
+- `questions`: 내부 판단 기준. DB 관계는 `id`로 연결하고, `key`는 seed/admin/debug용 slug로만 사용한다. 같은 결론으로 평가되어야 하는 질문의 내부 `value` 배열을 가진다.
 - `question_variants`: 화면별 실제 질문 문구와 사용자/관리자에게 보여줄 답변 라벨 배열을 가진다.
 - 사용자가 선택한 답은 label이나 index가 아니라 canonical `question_id`와 `value`로 저장한다.
-- `question_variants.answers[n]`은 `question.answer_values[n]`과 같은 의미다.
+- `question_variants.answers[n]`은 `questions.answer_values[n]`과 같은 의미다.
 - 평가/룰/필터 매핑은 표시 라벨이 아니라 `value`만 비교한다.
 
-### question
+### questions
 
 내부적으로 같은 결론을 내리기 위한 기준 질문.
 
@@ -339,16 +338,16 @@ ingredient_groups
 **DB 제약 원칙:**
 
 - `answer_type`별 선택지 개수는 DB에서 일일이 `CHECK`하지 않는다.
-- DB는 `question.answer_values` 개수와 `question_variants.answers` 라벨 개수가 같은지만 강제한다.
+- DB는 `questions.answer_values` 개수와 `question_variants.answers` 라벨 개수가 같은지만 강제한다.
 - `answer_type`별 유효 개수 정책이 필요하면 admin/service validation에서 처리한다.
 
 ```sql
-ALTER TABLE question
+ALTER TABLE questions
 ADD COLUMN answer_count integer
 GENERATED ALWAYS AS (cardinality(answer_values)) STORED;
 
-ALTER TABLE question
-ADD CONSTRAINT uq_question_id_answer_count
+ALTER TABLE questions
+ADD CONSTRAINT uq_questions_id_answer_count
 UNIQUE (id, answer_count);
 ```
 
@@ -361,7 +360,7 @@ UNIQUE (id, answer_count);
 | 컬럼         | 타입                            | 설명                                  |
 | ------------ | ------------------------------- | ------------------------------------- |
 | id           | UUID PK                         | 질문 variant ID                       |
-| question_id  | UUID FK → question.id           | 연결 기준 질문                        |
+| question_id  | UUID FK → questions.id           | 연결 기준 질문                        |
 | title        | VARCHAR(200)                    | 관리자용 질문명 또는 사용자 노출 제목 |
 | answers      | TEXT[]                          | 화면별 노출 답변 라벨 배열            |
 | answer_count | INTEGER GENERATED               | `cardinality(answers)` 저장 생성 컬럼 |
@@ -389,9 +388,9 @@ UNIQUE (id, answer_count);
 }
 ```
 
-위 두 질문은 답변 라벨은 다르지만 같은 `question`을 참조한다. 사용자가 첫 번째 답변을 고르면 `user_responses.question_id = <uuid of life.outdoor_activity>`, `question_variant_id = <노출된 variant id>`, `value = 3`으로 저장된다.
+위 두 질문은 답변 라벨은 다르지만 같은 `questions`을 참조한다. 사용자가 첫 번째 답변을 고르면 `user_responses.question_id = <uuid of life.outdoor_activity>`, `question_variant_id = <노출된 variant id>`, `value = 3`으로 저장된다.
 
-> seed JSON에서는 사람이 읽기 쉬운 `question.key` 값을 입력해도 된다. 단 seed/import 단계에서 이를 `question.id`로 resolve해 `question_variants.question_id`에 저장한다.
+> seed JSON에서는 사람이 읽기 쉬운 `questions.key` 값을 입력해도 된다. 단 seed/import 단계에서 이를 `questions.id`로 resolve해 `question_variants.question_id`에 저장한다.
 
 **답변 개수 FK 제약:**
 
@@ -405,7 +404,7 @@ GENERATED ALWAYS AS (cardinality(answers)) STORED;
 ALTER TABLE question_variants
 ADD CONSTRAINT fk_question_variants_question_answer_count
 FOREIGN KEY (question_id, answer_count)
-REFERENCES question (id, answer_count);
+REFERENCES questions (id, answer_count);
 ```
 
 ---
@@ -414,14 +413,14 @@ REFERENCES question (id, answer_count);
 
 질문 노출 조건.
 
-`question`에 등록된 기준 질문이라면 무엇이든 조건으로 사용할 수 있다. DB에는 `condition_question_id`를 저장한다.  
+`questions`에 등록된 기준 질문이라면 무엇이든 조건으로 사용할 수 있다. DB에는 `condition_question_id`를 저장한다.  
 `category.selected`만 보는 테이블이 아니라, 사용자 상태 전반에 걸쳐 조건을 설정할 수 있다.
 
 | 컬럼                  | 타입                                         | 설명              |
 | --------------------- | -------------------------------------------- | ----------------- |
 | id                    | UUID PK                                      | 조건 ID           |
 | question_id           | UUID FK → question_variants.id               | 대상 질문 variant |
-| condition_question_id | UUID FK → question.id                        | 조건 기준 질문 ID |
+| condition_question_id | UUID FK → questions.id                        | 조건 기준 질문 ID |
 | operator              | ENUM('EQ','IN','CONTAINS','GTE','LTE','NEQ') | 연산자            |
 | value                 | JSONB                                        | 비교값            |
 | state                 | ENUM('REQUIRED','EXCLUDED')                  | 조건 상태         |
@@ -475,7 +474,7 @@ REQUIRED: context.usage_place EQ 2
 | device_id           | UUID FK → devices.id                                  | 기기 ID                                                     |
 | user_id             | UUID FK → users.id NULLABLE                           | 로그인 시 병합, 비로그인 null                               |
 | session_id          | UUID FK → user_sessions.id                            | 어느 세션에서 답했는지                                      |
-| question_id         | UUID FK → question.id                                 | canonical question ID. 복원/평가/필터 매핑의 기준           |
+| question_id         | UUID FK → questions.id                                 | canonical question ID. 복원/평가/필터 매핑의 기준           |
 | question_variant_id | UUID FK → question_variants.id NULLABLE               | 사용자가 실제로 본 질문 문구. concern preset 등은 null 가능 |
 | value               | JSONB                                                 | 내부 로직용 값. 단일 선택은 number, 복수 선택은 number[]    |
 | source              | ENUM('priority_gate','context','concern','traceback') | 입력 출처                                                   |
@@ -490,14 +489,14 @@ REQUIRED: context.usage_place EQ 2
 - `idx_user_responses_session_id`
 - `idx_user_responses_question_id`
 - `idx_user_responses_question_variant_id`
-- `fk_user_responses_question_id` (FK on `question_id` → `question.id`)
+- `fk_user_responses_question_id` (FK on `question_id` → `questions.id`)
 - `fk_user_responses_question_variant_id` (FK on `question_variant_id` → `question_variants.id`)
 
 > current-state 테이블. 답변 수정 시 새 row를 INSERT하지 않고 같은 질문 row를 UPDATE한다.  
 > 비로그인 조회: `WHERE device_id = ? AND user_id IS NULL` / 로그인 조회: `WHERE user_id = ?`  
 > 사용자 1명이 답할 수 있는 canonical question이 30개라면 active row도 최대 30개다. 아직 답하지 않은 질문 row는 만들지 않는다.
 >
-> `source = concern` row는 확정 답변이 아니라 concern preset에서 온 초기 선택 상태다. 이 경우에도 `question_id`는 반드시 canonical `question.id`를 참조하고, 실제 화면 질문이 없으면 `question_variant_id`만 null로 둔다.
+> `source = concern` row는 확정 답변이 아니라 concern preset에서 온 초기 선택 상태다. 이 경우에도 `question_id`는 반드시 canonical `questions.id`를 참조하고, 실제 화면 질문이 없으면 `question_variant_id`만 null로 둔다.
 >
 > `question_variant_id`는 감사/분석용 단순 참조다. DB는 variant와 canonical question의 쌍 일치까지 복합 FK로 강제하지 않는다. 서비스는 응답 INSERT 시 `question_variant_id`가 있으면 해당 `question_variants.question_id`를 읽어 `user_responses.question_id`에 저장한다.
 >
@@ -521,8 +520,8 @@ WHERE user_id IS NOT NULL;
 
 - 응답 복원은 `user_responses.question_id` 기준으로 현재 row를 찾는다.
 - 현재 화면의 `question_variants.question_id`와 매칭되는 응답이 있으면 `value`를 선택 상태로 복원한다.
-- UI index가 필요하면 `question.answer_values`에서 `value`의 위치를 찾고 같은 index의 `question_variants.answers` 라벨을 선택 상태로 표시한다.
-- 복원을 안정적으로 하려면 한 `question.answer_values` 안에서 같은 value를 중복 사용하지 않는다. 이 중복 금지는 admin/service validation에서 처리한다.
+- UI index가 필요하면 `questions.answer_values`에서 `value`의 위치를 찾고 같은 index의 `question_variants.answers` 라벨을 선택 상태로 표시한다.
+- 복원을 안정적으로 하려면 한 `questions.answer_values` 안에서 같은 value를 중복 사용하지 않는다. 이 중복 금지는 admin/service validation에서 처리한다.
 
 예시:
 
@@ -588,7 +587,7 @@ Priority Rule 발동 조건.
 | ----------- | -------------------------------------------- | ------------ |
 | id          | UUID PK                                      | 조건 ID      |
 | rule_id     | UUID FK → priority_rules.id                  | Rule ID      |
-| question_id | UUID FK → question.id                        | 기준 질문 ID |
+| question_id | UUID FK → questions.id                        | 기준 질문 ID |
 | operator    | ENUM('EQ','IN','CONTAINS','GTE','LTE','NEQ') | 연산자       |
 | value       | JSONB                                        | 비교값       |
 | state       | ENUM('REQUIRED','EXCLUDED')                  | 조건 상태    |
@@ -770,7 +769,7 @@ Priority Gate뿐 아니라 Category Decision, Product Matrix 결과까지 저장
 | ------------------ | ---------------------------------------------------- | ------------------------------------ |
 | id                 | UUID PK                                              | ID                                   |
 | category_id        | UUID FK → product_categories.id NULLABLE             | 적용 제품군 (null이면 전체 공통)     |
-| source_question_id | UUID FK → question.id                                | 사용자 답변 기준 질문 ID             |
+| source_question_id | UUID FK → questions.id                                | 사용자 답변 기준 질문 ID             |
 | source_operator    | ENUM('EQ','IN','CONTAINS','GTE','LTE','NEQ')         | 사용자 답변 조건 연산자              |
 | source_value       | JSONB                                                | 사용자 답변 비교값                   |
 | attribute_key      | VARCHAR(100)                                         | 대상 product attribute 키            |
@@ -1045,7 +1044,7 @@ WHERE category_id = :category_id
 
 ### Question 사전
 
-사용자 응답(`user_responses`)으로 저장 가능한 전체 기준 질문 목록. 실제 화면 라벨은 `question_variants.answers`가 가진다. `key`는 seed/admin/debug용 slug이며 DB 관계는 `question.id`를 사용한다.
+사용자 응답(`user_responses`)으로 저장 가능한 전체 기준 질문 목록. 실제 화면 라벨은 `question_variants.answers`가 가진다. `key`는 seed/admin/debug용 slug이며 DB 관계는 `questions.id`를 사용한다.
 
 | key                               | answer_type   | answer_values | 설명                                                         |
 | --------------------------------- | ------------- | ------------- | ------------------------------------------------------------ |

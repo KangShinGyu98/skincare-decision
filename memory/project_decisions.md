@@ -509,3 +509,32 @@
 - 질문 클릭/답변 변경 이력은 `session_events` payload에 남기고, 결과 산출 당시 입력 묶음은 `decision_runs.input_snapshot`에 남긴다.
 
 **이유:** 현재 상태 테이블에 `created_at` 기반 최신 row 조회 인덱스를 둘 필요가 없다. question별 단일 row 보장 인덱스가 화면 복원/평가 쿼리에 더 직접적이며, 이력 책임을 `session_events`와 `decision_runs`로 분리하면 응답 테이블의 row 수와 조회 복잡도가 낮아진다.
+
+## [2026-05-18] 세션/이벤트 테이블의 보조 인덱스와 비정규화 컬럼 제거
+
+**배경:** `user_sessions`는 dimension/transaction 테이블로 단순화하면서 런타임 상태 컬럼을 모두 뺐고, `session_events`는 fact 측에 `device_id`를 비정규화로 들고 있었다. 이벤트 fact 가 자체 dimension 컬럼을 또 들고 있으면 별표(star) join 의도와 어긋난다. 또 한 번의 로그인-병합과 활성 세션 판정 외에는 `devices`/`user_sessions` 보조 인덱스가 실제 조회에 쓰이지 않는다.
+
+**결정:**
+
+- `session_events.device_id` 컬럼을 제거한다. device/user 추적은 `session_id → user_sessions.device_id / .user_id` JOIN 으로 일원화한다.
+- `session_events`는 `pk_session_events` 외 보조 인덱스(`idx_session_events_device_id`, `idx_session_events_session_id`)를 두지 않는다.
+- `user_sessions`는 `pk_user_sessions` 외 보조 인덱스(`idx_user_sessions_device_id`, `idx_user_sessions_user_id`, `idx_user_sessions_created_at`)를 두지 않는다. 활성 세션 판정은 `session_events.session_id` → `user_sessions.id` PK 로 join 하고, 로그인-병합은 `device_id` 조건 UPDATE 단발성 트랜잭션이다.
+- `devices`는 `pk_devices` 외 보조 인덱스(`idx_devices_user_id`)를 두지 않는다. 로그인-병합은 `devices.id` PK 로 row 를 잡고 `user_id` 역검색은 발생하지 않는다.
+- `user_sessions`에서 제거할 컬럼은 `status / started_at / last_seen_at / completed_at / expires_at / updated_at`. 로그인 연결 시각은 `logged_in_at TIMESTAMPTZ NULL` 컬럼으로 명시.
+
+**이유:** 사용자 활동 fact 는 한 곳(`session_events`)에 모으고, dimension 은 `user_sessions` 하나로 모으는 별표 구조를 유지한다. 보조 인덱스가 실제 쿼리 경로에 필요 없으면 미리 만들지 않고, 필요해지면 그때 추가한다. 인덱스 적게 둔 만큼 대량 이벤트 INSERT 비용이 낮아진다.
+
+## [2026-05-18] 기준 질문 테이블 이름을 `questions`로 정정
+
+**배경:** 명명 규칙은 모든 테이블이 `snake_case + 복수형`이지만, 기준 질문 테이블만 단수형 `question`으로 남아 있었다. seed 시점에서 사람이 읽기 쉬운 slug 가 `questions.key` 로 들어가야 자연스럽다.
+
+**결정:**
+
+- 기준 질문 테이블명을 `question` → `questions`로 변경.
+- 관련 제약 이름도 같이 변경: `pk_question` → `pk_questions`, `uq_question_key` → `uq_questions_key`, `uq_question_id_answer_count` → `uq_questions_id_answer_count`.
+- enum 이름은 `question_answer_type_enum` → `questions_answer_type_enum`.
+- FK 컬럼 이름은 `question_id` (단수)로 그대로 둔다 — convention `<참조 테이블 단수>_id`.
+- `question_variants`, `question_visibility_conditions` 등 다른 테이블 이름은 이미 plural 또는 plural-tail 형태라 변경하지 않는다.
+- `uq_questions_id_answer_count` 복합 UNIQUE 제약은 그대로 유지한다. `question_variants.answers` 라벨 수와 `questions.answer_values` 값 수가 일치한다는 invariant 는 여전히 DB 수준에서 강제할 가치가 있다 (index → value 매핑이 깨지면 평가 결과 자체가 무너진다).
+
+**이유:** 단수/복수 혼용을 없애서 이후 read 표/seed loader/Prisma `@@map` 작성이 일관된다. 제약은 같은 이유로 이름만 정렬한다.

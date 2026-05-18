@@ -35,8 +35,8 @@
   | Boolean       | `is_` / `has_` / `can_` prefix | `is_active`, `has_children`                   |
   | PK 제약       | `pk_<table>`                   | `pk_users`                                    |
   | UNIQUE 인덱스 | `uq_<table>_<columns>`         | `uq_users_email`                              |
-  | 일반 인덱스   | `idx_<table>_<columns>`        | `idx_devices_user_id`                         |
-  | FK 제약       | `fk_<table>_<column>`          | `fk_devices_user_id`                          |
+  | 일반 인덱스   | `idx_<table>_<columns>`        | `idx_user_responses_session_id`               |
+  | FK 제약       | `fk_<table>_<column>`          | `fk_user_responses_question_id`               |
   | CHECK 제약    | `chk_<table>_<meaning>`        | `chk_products_price_positive`                 |
   | Enum 타입     | `<table>_<column>_enum`        | `users_role_enum`, `products_price_band_enum` |
 
@@ -69,7 +69,7 @@
 | ------------------------------------------------ | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `users_role_enum`                                | `USER`, `ADMIN`                                                                          | `users.role`                                                                                                                                      |
 | ~~`user_sessions_status_enum`~~ ※폐기 예정       | `ACTIVE`, `COMPLETED`, `EXPIRED`                                                         | (없음 — user_sessions 가 dimension 테이블로 재구조되며 `status` 컬럼 제거. [§1.3](#13-user_sessions) 참조)                                        |
-| `question_answer_type_enum`                      | `BOOLEAN`, `THREE_CHOICE`, `FOUR_CHOICE`, `FIVE_CHOICE`, `SINGLE_CHOICE`, `MULTI_CHOICE` | `question.answer_type`                                                                                                                            |
+| `questions_answer_type_enum`                      | `BOOLEAN`, `THREE_CHOICE`, `FOUR_CHOICE`, `FIVE_CHOICE`, `SINGLE_CHOICE`, `MULTI_CHOICE` | `questions.answer_type`                                                                                                                            |
 | `category_attribute_definitions_value_type_enum` | `BOOLEAN`, `ENUM`, `NUMBER`, `MULTI_ENUM`, `STRING`                                      | `category_attribute_definitions.value_type`                                                                                                       |
 | `question_variants_screen_enum`                  | `priority_gate`, `context`                                                               | `question_variants.screen`                                                                                                                        |
 | `comparison_operator_enum` ※공용                 | `EQ`, `IN`, `CONTAINS`, `GTE`, `LTE`, `NEQ`                                              | `question_visibility_conditions.operator`, `priority_rule_conditions.operator`, `product_filter_mappings.source_operator` / `.attribute_operator` |
@@ -96,12 +96,12 @@
 | 3   | `deleted_at` 컬럼                     | lifecycle 테이블 전부에 추가 (NULLABLE TIMESTAMPTZ)                                                                                 | 없음                                                               | 마이그레이션 + 모든 조회에 `WHERE deleted_at IS NULL` 적용                                                                                                                |
 | 4   | UUID 발급                             | UUIDv7 (application 측에서 발급)                                                                                                    | `@default(uuid())` = v4                                            | UUIDv7 생성 헬퍼 도입 + `@default(uuid())` 제거                                                                                                                           |
 | 5   | enum 타입 이름                        | `<table>_<column>_enum` (공용 2건 제외)                                                                                             | PascalCase (`UserRole`, `SessionStatus` …)                         | enum 이름 일괄 리네임 (Prisma `enum ... @@map(...)` 미지원 → 마이그레이션 SQL 로 `ALTER TYPE ... RENAME TO`)                                                              |
-| 6   | PK/FK/UQ/idx 이름                     | `pk_<t>`, `fk_<t>_<c>`, `uq_<t>_<cs>`, `idx_<t>_<cs>`                                                                               | 자동 생성(`users_pkey`, `users_email_key`, `devices_user_id_idx`)  | `@@id(map:)`, `@relation(map:)`, `@@unique(..., map:)`, `@@index(..., map:)` 로 명시 + 마이그레이션 SQL `ALTER ... RENAME`                                                |
+| 6   | PK/FK/UQ/idx 이름                     | `pk_<t>`, `fk_<t>_<c>`, `uq_<t>_<cs>`, `idx_<t>_<cs>`                                                                               | 자동 생성(`users_pkey`, `users_email_key`, `user_responses_session_id_idx`) | `@@id(map:)`, `@relation(map:)`, `@@unique(..., map:)`, `@@index(..., map:)` 로 명시 + 마이그레이션 SQL `ALTER ... RENAME`                                                |
 | 7   | `user_sessions.segment`               | `ENUM('A','B','C','D') NULL`                                                                                                        | **컬럼 없음**                                                      | 세그먼트 측정 도입 시점에 추가 결정                                                                                                                                       |
 | 8   | `products.attributes` JSONB 조회      | "동적 SQL로 `attributes->>` 조회"                                                                                                   | GIN 인덱스 없음                                                    | catalog 규모 도달 시 GIN/Expression 인덱스 추가                                                                                                                           |
 | 9   | `priority_rules.hold_categories` 구조 | "보류 제품군 (JSONB)" 만 명시                                                                                                       | JSONB는 맞으나 스키마 미정의                                       | Service Zod 스키마 정의                                                                                                                                                   |
 | 10  | `user_sessions` 컬럼 구조             | dimension/transaction 테이블 (logged_in_at 추가, status/started_at/last_seen_at/completed_at/expires_at/updated_at/ab_variant 제거) | session 관리용 컬럼 그대로 보유                                    | 컬럼 DROP + `logged_in_at TIMESTAMPTZ NULL` 추가 + `user_sessions_status_enum` DROP TYPE. 로그인 병합 트랜잭션에 `logged_in_at = now()` 추가. ([§1.3](#13-user_sessions)) |
-| 11  | 질문 기준 테이블                      | `question` + `question_variants`, `answer_values`/`answers` 배열 길이 FK 검증                                                       | `fact_definitions` + `context_questions`, 양쪽에 options 중복 보유 | 테이블 rename/재구성 + 생성 컬럼 `answer_count` + 복합 FK 추가                                                                                                            |
+| 11  | 질문 기준 테이블                      | `questions` + `question_variants`, `answer_values`/`answers` 배열 길이 FK 검증                                                       | `fact_definitions` + `context_questions`, 양쪽에 options 중복 보유 | 테이블 rename/재구성 + 생성 컬럼 `answer_count` + 복합 FK 추가                                                                                                            |
 
 각 표 본문에서 동일 항목은 ⚠ 표시로 다시 짚는다.
 
@@ -114,7 +114,7 @@
 > - **`id` 의 "PK, NOT NULL, 클라이언트 v4 발급"** → 타겟은 **UUIDv7** (application 발급). v4 표기는 현재 schema.prisma 잔류.
 > - **`updated_at` 의 "NOT NULL, Prisma가 UPDATE마다 갱신"** → 타겟은 **NULLABLE** (INSERT 시 NULL, 첫 UPDATE 부터 채워짐). Prisma 표기는 `DateTime? @updatedAt @db.Timestamptz()`.
 > - **`deleted_at`** → lifecycle 테이블(아래 ✓ 표 참조) 전부에 `TIMESTAMPTZ NULLABLE` 로 추가된다. 본문 컬럼표에 행이 누락되어 있어도 정책상 존재한다고 본다.
-> - **인덱스/제약 이름** → `users_pkey` / `users_email_key` / `devices_user_id_idx` 같은 자동 생성 이름은 타겟에서 `pk_users` / `uq_users_email` / `idx_devices_user_id` 로 리네임 예정 (§0.3 #6).
+> - **인덱스/제약 이름** → `users_pkey` / `users_email_key` / `user_responses_session_id_idx` 같은 자동 생성 이름은 타겟에서 `pk_users` / `uq_users_email` / `idx_user_responses_session_id` 로 리네임 예정 (§0.3 #6).
 >
 > **`deleted_at` 도입 대상 (lifecycle 테이블 ✓ / append-only · bridge · current-state 예외 ✗)**
 >
@@ -124,7 +124,7 @@
 > | `devices`                        | ✗ (passive identity)                        |
 > | `user_sessions`                  | ✓                                           |
 > | `session_events`                 | ✗ (append-only event)                       |
-> | `question`                       | ✓                                           |
+> | `questions`                       | ✓                                           |
 > | `question_variants`              | ✓                                           |
 > | `question_visibility_conditions` | ✗ (sub-config)                              |
 > | `user_responses`                 | ✗ (current-state, row absence = unanswered) |
@@ -178,7 +178,8 @@
 **인덱스**
 
 - `pk_devices` (PK on `id`)
-- `idx_devices_user_id` (on `user_id`) — 로그인 사용자별 device 조회용
+
+> `user_id` 컬럼에 별도 보조 인덱스를 두지 않는다. 로그인-병합 트랜잭션은 `devices.id` PK 로 row 를 잡고, 그 외에는 `user_id` 로 devices 를 검색할 일이 없다.
 
 **설명**: 브라우저/기기 단위 영구 신원. 시크릿 모드/쿠키 초기화 시 새 `device_id` 발급 → 이전 데이터와 단절(의도된 동작).
 
@@ -202,9 +203,8 @@
 **인덱스**
 
 - `pk_user_sessions` (PK on `id`)
-- `idx_user_sessions_device_id` (on `device_id`) — 기기별 세션 조회
-- `idx_user_sessions_user_id` (on `user_id`) — 로그인 사용자별 세션 조회
-- `idx_user_sessions_created_at` (on `created_at`) — 시간대별 분석용
+
+> `device_id` / `user_id` / `created_at` 보조 인덱스를 두지 않는다. 활성 세션 판정은 `session_events.session_id` 측에서 시작해 `user_sessions.id` PK 로 join 하고, 로그인-병합 트랜잭션은 `WHERE device_id = ? AND user_id IS NULL` UPDATE 한 번만 일어난다. 시간대별 분석은 후행 OLAP 단에서 처리한다.
 
 **설명**: dimension/transaction 테이블. session 의 "활동창" 런타임 상태를 컬럼으로 추적하지 않는다 (`status` / `started_at` / `last_seen_at` / `completed_at` / `expires_at` / `updated_at` 모두 없음). 세션의 종료/타임아웃 같은 시간 분포는 `session_events.created_at` 분포로 사후 분석한다. 유입 경로(entry_path / referrer) 와 사용자 신원 연결 시각(logged_in_at) 만 dimension 컨텍스트로 보존한다.
 
@@ -216,38 +216,37 @@
 
 ### 1.4 `session_events`
 
-| 필드         | Prisma 타입                                  | SQL 타입       | 제약                                                 | 설명                 | 예시                              |
-| ------------ | -------------------------------------------- | -------------- | ---------------------------------------------------- | -------------------- | --------------------------------- |
-| `id`         | `String @id @db.Uuid`                        | `UUID`         | PK, NOT NULL                                         | 이벤트 ID            | `evt-...`                         |
-| `session_id` | `String @db.Uuid`                            | `UUID`         | NOT NULL, FK → `user_sessions.id` ON DELETE RESTRICT | 소속 세션            | UUID                              |
-| `device_id`  | `String @db.Uuid`                            | `UUID`         | NOT NULL, FK → `devices.id` ON DELETE RESTRICT       | 분석용 비정규화 컬럼 | UUID                              |
-| `event_name` | `String @db.VarChar(100)`                    | `VARCHAR(100)` | NOT NULL                                             | 이벤트 키            | `concern_clicked`                 |
-| `screen`     | `String @db.VarChar(100)`                    | `VARCHAR(100)` | NOT NULL                                             | 발생 화면            | `landing`                         |
-| `element_id` | `String? @db.VarChar(100)`                   | `VARCHAR(100)` | NULLABLE                                             | 버튼/카드 식별자     | `segment_A`                       |
-| `payload`    | `Json`                                       | `JSONB`        | NOT NULL                                             | 부가 정보            | `{"concern":"acne","position":3}` |
-| `created_at` | `DateTime @default(now()) @db.Timestamptz()` | `TIMESTAMPTZ`  | NOT NULL, DEFAULT `CURRENT_TIMESTAMP`                | 발생 시각            | `2026-05-08T10:00:01.234`         |
+| 필드         | Prisma 타입                                  | SQL 타입       | 제약                                                 | 설명             | 예시                              |
+| ------------ | -------------------------------------------- | -------------- | ---------------------------------------------------- | ---------------- | --------------------------------- |
+| `id`         | `String @id @db.Uuid`                        | `UUID`         | PK, NOT NULL                                         | 이벤트 ID        | `evt-...`                         |
+| `session_id` | `String @db.Uuid`                            | `UUID`         | NOT NULL, FK → `user_sessions.id` ON DELETE RESTRICT | 소속 세션        | UUID                              |
+| `event_name` | `String @db.VarChar(100)`                    | `VARCHAR(100)` | NOT NULL                                             | 이벤트 키        | `concern_clicked`                 |
+| `screen`     | `String @db.VarChar(100)`                    | `VARCHAR(100)` | NOT NULL                                             | 발생 화면        | `landing`                         |
+| `element_id` | `String? @db.VarChar(100)`                   | `VARCHAR(100)` | NULLABLE                                             | 버튼/카드 식별자 | `segment_A`                       |
+| `payload`    | `Json`                                       | `JSONB`        | NOT NULL                                             | 부가 정보        | `{"concern":"acne","position":3}` |
+| `created_at` | `DateTime @default(now()) @db.Timestamptz()` | `TIMESTAMPTZ`  | NOT NULL, DEFAULT `CURRENT_TIMESTAMP`                | 발생 시각        | `2026-05-08T10:00:01.234`         |
 
 **인덱스**
 
 - `pk_session_events` (PK)
-- `idx_session_events_device_id`
-- `idx_session_events_session_id`
 
-**설명**: 클릭/노출/CTA 이벤트 로그. user_id 컬럼이 없는 것이 의도된 설계 — 로그인 사용자 추적은 `session_id → user_sessions.user_id` JOIN으로 수행한다.
+> `session_id` / `device_id` 보조 인덱스를 두지 않는다. `device_id` 컬럼 자체를 보관하지 않고, 분석은 `session_id → user_sessions` join 으로 device/user 를 풀어내는 별표 구조로 일원화한다.
 
-**설계 이유**: 이벤트가 대량으로 들어오기 때문에 컬럼 수를 최소화한다. `device_id`는 분석 시 JOIN 줄이려고 비정규화로 직접 보관한다.
+**설명**: 클릭/노출/CTA 이벤트 로그. `user_id` / `device_id` 컬럼이 없는 것이 의도된 설계 — 로그인 사용자/기기 추적은 `session_id → user_sessions.user_id / .device_id` JOIN으로 수행한다.
+
+**설계 이유**: 이벤트가 대량으로 들어오기 때문에 컬럼 수와 인덱스 수를 최소화한다. dimension 정보는 `user_sessions` 한 곳으로 모으고, fact 측은 PK 만 유지한다.
 
 ---
 
 ## 2. 질문 기준 / 화면 질문 구조
 
-### 2.1 `question`
+### 2.1 `questions`
 
 | 필드            | Prisma 타입                                  | SQL 타입                                                          | 제약                                  | 설명                                    | 예시                      |
 | --------------- | -------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------- | --------------------------------------- | ------------------------- |
 | `id`            | `String @id @db.Uuid`                        | `UUID`                                                            | PK, NOT NULL                          | 내부 PK                                 | UUID                      |
 | `key`           | `String @db.VarChar(100)`                    | `VARCHAR(100)`                                                    | NOT NULL, UNIQUE                      | seed/admin/debug용 slug. FK 대상 아님   | `life.outdoor_activity`   |
-| `answer_type`   | `question_answer_type_enum`                  | `question_answer_type_enum`                                       | NOT NULL                              | 답변 형식. UI/admin/service 검증에 사용 | `THREE_CHOICE`            |
+| `answer_type`   | `questions_answer_type_enum`                  | `questions_answer_type_enum`                                       | NOT NULL                              | 답변 형식. UI/admin/service 검증에 사용 | `THREE_CHOICE`            |
 | `answer_values` | `Int[]`                                      | `INTEGER[]`                                                       | NOT NULL                              | 내부 로직 비교값 배열                   | `[3,2,1]`                 |
 | `answer_count`  | `Int`                                        | `INTEGER GENERATED ALWAYS AS (cardinality(answer_values)) STORED` | NOT NULL                              | 답변 개수. 복합 FK용 생성 컬럼          | `3`                       |
 | `is_active`     | `Boolean @default(true)`                     | `BOOLEAN`                                                         | NOT NULL, DEFAULT `true`              | 비활성화 시 신규 질문/조건에서 제외     | `true`                    |
@@ -256,21 +255,21 @@
 
 **인덱스 / 제약**
 
-- `pk_question` (PK)
-- `uq_question_key` (UNIQUE on `key`) — slug 중복 방지용, 관계 FK 대상 아님
-- `uq_question_id_answer_count` (UNIQUE on `id, answer_count`) — `question_variants`의 답변 라벨 개수 검증용
+- `pk_questions` (PK)
+- `uq_questions_key` (UNIQUE on `key`) — slug 중복 방지용, 관계 FK 대상 아님
+- `uq_questions_id_answer_count` (UNIQUE on `id, answer_count`) — `question_variants`의 답변 라벨 개수 검증용
 
-**설명**: 시스템 전체에서 사용 가능한 기준 질문 마스터. 관계 FK는 `id`를 기준으로 두고, `key`는 seed/admin/debug에서 사람이 읽기 쉬운 slug로만 사용한다. DB는 `question.answer_values` 개수와 `question_variants.answers` 라벨 개수가 같은지만 강제한다.
+**설명**: 시스템 전체에서 사용 가능한 기준 질문 마스터. 관계 FK는 `id`를 기준으로 두고, `key`는 seed/admin/debug에서 사람이 읽기 쉬운 slug로만 사용한다. DB는 `questions.answer_values` 개수와 `question_variants.answers` 라벨 개수가 같은지만 강제한다.
 
 **Prisma 주의**: PostgreSQL 생성 컬럼(`answer_count`)과 복합 FK는 Prisma schema만으로 완전 표현하기 어렵다. Prisma 모델에는 `answerValues Int[]`를 두고, `answer_count` 생성 컬럼과 복합 FK는 raw migration SQL로 추가한다.
 
 ```sql
-ALTER TABLE question
+ALTER TABLE questions
 ADD COLUMN answer_count integer
 GENERATED ALWAYS AS (cardinality(answer_values)) STORED;
 
-ALTER TABLE question
-ADD CONSTRAINT uq_question_id_answer_count
+ALTER TABLE questions
+ADD CONSTRAINT uq_questions_id_answer_count
 UNIQUE (id, answer_count);
 ```
 
@@ -281,7 +280,7 @@ UNIQUE (id, answer_count);
 | 필드           | Prisma 타입                                  | SQL 타입                                                    | 제약                                            | 설명                                | 예시                                    |
 | -------------- | -------------------------------------------- | ----------------------------------------------------------- | ----------------------------------------------- | ----------------------------------- | --------------------------------------- |
 | `id`           | `String @id @db.Uuid`                        | `UUID`                                                      | PK, NOT NULL                                    | 질문 variant ID                     | UUID                                    |
-| `question_id`  | `String @db.Uuid`                            | `UUID`                                                      | NOT NULL, FK → `question.id` ON DELETE RESTRICT | 연결 기준 질문                      | UUID                                    |
+| `question_id`  | `String @db.Uuid`                            | `UUID`                                                      | NOT NULL, FK → `questions.id` ON DELETE RESTRICT | 연결 기준 질문                      | UUID                                    |
 | `title`        | `String @db.VarChar(200)`                    | `VARCHAR(200)`                                              | NOT NULL                                        | 관리자/사용자 표시 질문 제목        | `야외 활동 시간`                        |
 | `answers`      | `String[]`                                   | `TEXT[]`                                                    | NOT NULL                                        | 화면에 노출할 답변 라벨 배열        | `["2시간 이상","1~2시간","1시간 이하"]` |
 | `answer_count` | `Int`                                        | `INTEGER GENERATED ALWAYS AS (cardinality(answers)) STORED` | NOT NULL                                        | 답변 라벨 개수. 복합 FK용 생성 컬럼 | `3`                                     |
@@ -297,9 +296,9 @@ UNIQUE (id, answer_count);
 - `pk_question_variants` (PK)
 - `idx_question_variants_question_id`
 - `idx_question_variants_screen_ui_section_sort_order`
-- `fk_question_variants_question_answer_count` (FK on `question_id, answer_count` → `question.id, answer_count`)
+- `fk_question_variants_question_answer_count` (FK on `question_id, answer_count` → `questions.id, answer_count`)
 
-**설명**: 사용자에게 실제로 노출되는 질문 정의. 같은 `question_id`를 여러 화면 질문이 공유할 수 있고, 화면별 `answers` 라벨은 달라도 index별 내부 `value`는 `question.answer_values`가 결정한다.
+**설명**: 사용자에게 실제로 노출되는 질문 정의. 같은 `question_id`를 여러 화면 질문이 공유할 수 있고, 화면별 `answers` 라벨은 달라도 index별 내부 `value`는 `questions.answer_values`가 결정한다.
 
 ```sql
 ALTER TABLE question_variants
@@ -309,7 +308,7 @@ GENERATED ALWAYS AS (cardinality(answers)) STORED;
 ALTER TABLE question_variants
 ADD CONSTRAINT fk_question_variants_question_answer_count
 FOREIGN KEY (question_id, answer_count)
-REFERENCES question (id, answer_count);
+REFERENCES questions (id, answer_count);
 ```
 
 ---
@@ -320,7 +319,7 @@ REFERENCES question (id, answer_count);
 | ----------------------- | -------------------------------------------- | -------------------------- | -------------------------------------------------------- | ------------------------------------------------------------ | ---------- |
 | `id`                    | `String @id @db.Uuid`                        | `UUID`                     | PK, NOT NULL                                             | 조건 ID                                                      | UUID       |
 | `question_id`           | `String @db.Uuid`                            | `UUID`                     | NOT NULL, FK → `question_variants.id` ON DELETE RESTRICT | 대상 질문 variant                                            | UUID       |
-| `condition_question_id` | `String @db.Uuid`                            | `UUID`                     | NOT NULL, FK → `question.id` ON DELETE RESTRICT          | 비교 대상 기준 질문                                          | UUID       |
+| `condition_question_id` | `String @db.Uuid`                            | `UUID`                     | NOT NULL, FK → `questions.id` ON DELETE RESTRICT          | 비교 대상 기준 질문                                          | UUID       |
 | `operator`              | `comparison_operator_enum`                   | `comparison_operator_enum` | NOT NULL                                                 | 연산자                                                       | `EQ`       |
 | `value`                 | `Json`                                       | `JSONB`                    | NOT NULL                                                 | 비교값                                                       | `1`        |
 | `state`                 | `condition_state_enum`                       | `condition_state_enum`     | NOT NULL                                                 | REQUIRED(모두 충족 시 노출) / EXCLUDED(하나라도 맞으면 숨김) | `REQUIRED` |
@@ -344,7 +343,7 @@ REFERENCES question (id, answer_count);
 | `device_id`           | `String @db.Uuid`                            | `UUID`                       | NOT NULL, FK → `devices.id` ON DELETE RESTRICT           | 기기                                               | UUID            |
 | `user_id`             | `String? @db.Uuid`                           | `UUID`                       | NULLABLE, FK → `users.id` ON DELETE SET NULL             | 로그인 시 자동 병합                                | UUID / null     |
 | `session_id`          | `String @db.Uuid`                            | `UUID`                       | NOT NULL, FK → `user_sessions.id` ON DELETE RESTRICT     | 답한 세션                                          | UUID            |
-| `question_id`         | `String @db.Uuid`                            | `UUID`                       | NOT NULL, FK → `question.id` ON DELETE RESTRICT          | canonical question ID. 복원/평가/필터 매핑 기준    | UUID            |
+| `question_id`         | `String @db.Uuid`                            | `UUID`                       | NOT NULL, FK → `questions.id` ON DELETE RESTRICT          | canonical question ID. 복원/평가/필터 매핑 기준    | UUID            |
 | `question_variant_id` | `String? @db.Uuid`                           | `UUID`                       | NULLABLE, FK → `question_variants.id` ON DELETE SET NULL | 실제로 본 질문 variant. concern preset은 null 가능 | UUID / null     |
 | `value`               | `Json`                                       | `JSONB`                      | NOT NULL                                                 | 내부 로직용 값                                     | `3`             |
 | `source`              | `user_responses_source_enum`                 | `user_responses_source_enum` | NOT NULL                                                 | 어디서 입력했는지                                  | `priority_gate` |
@@ -359,10 +358,10 @@ REFERENCES question (id, answer_count);
 - `idx_user_responses_session_id`
 - `idx_user_responses_question_id`
 - `idx_user_responses_question_variant_id`
-- `fk_user_responses_question_id` (FK on `question_id` → `question.id`)
+- `fk_user_responses_question_id` (FK on `question_id` → `questions.id`)
 - `fk_user_responses_question_variant_id` (FK on `question_variant_id` → `question_variants.id`)
 
-**설명**: 질문별 현재 답변 상태 테이블. `question_id`는 canonical `question.id`를 항상 참조하고, 사용자가 실제로 본 질문 문구가 있으면 `question_variant_id`를 함께 저장한다. 같은 질문을 다른 화면에서 다르게 물어도 복원과 평가 기준은 `question_id`다. `question_variant_id`는 감사/분석용 단순 FK이며, variant/canonical question 쌍 일치는 DB 복합 FK가 아니라 Service insert 로직에서 보장한다.
+**설명**: 질문별 현재 답변 상태 테이블. `question_id`는 canonical `questions.id`를 항상 참조하고, 사용자가 실제로 본 질문 문구가 있으면 `question_variant_id`를 함께 저장한다. 같은 질문을 다른 화면에서 다르게 물어도 복원과 평가 기준은 `question_id`다. `question_variant_id`는 감사/분석용 단순 FK이며, variant/canonical question 쌍 일치는 DB 복합 FK가 아니라 Service insert 로직에서 보장한다.
 
 **설계 이유**: 화면 복원과 rule 평가는 "현재 답변"만 필요하다. 사용자가 답을 바꾼 이력은 `session_events`에 이벤트로 남기고, 결과 산출 당시 입력 묶음은 `decision_runs.input_snapshot`에 보존한다. 따라서 `user_responses`는 question별 1 row current-state로 두고 UPDATE/UPSERT한다.
 
@@ -424,7 +423,7 @@ ON DELETE SET NULL;
 | ------------- | -------------------------------------------- | -------------------------- | ----------------------------------------------------- | ------------------- | ---------- |
 | `id`          | `String @id @db.Uuid`                        | `UUID`                     | PK, NOT NULL                                          | 조건 ID             | UUID       |
 | `rule_id`     | `String @db.Uuid`                            | `UUID`                     | NOT NULL, FK → `priority_rules.id` ON DELETE RESTRICT | 소속 Rule           | UUID       |
-| `question_id` | `String @db.Uuid`                            | `UUID`                     | NOT NULL, FK → `question.id` ON DELETE RESTRICT       | 평가할 기준 질문    | UUID       |
+| `question_id` | `String @db.Uuid`                            | `UUID`                     | NOT NULL, FK → `questions.id` ON DELETE RESTRICT       | 평가할 기준 질문    | UUID       |
 | `operator`    | `comparison_operator_enum`                   | `comparison_operator_enum` | NOT NULL                                              | 연산자              | `IN`       |
 | `value`       | `Json`                                       | `JSONB`                    | NOT NULL                                              | 비교값              | `[3,2]`    |
 | `state`       | `condition_state_enum`                       | `condition_state_enum`     | NOT NULL                                              | REQUIRED / EXCLUDED | `REQUIRED` |
@@ -593,7 +592,7 @@ CREATE INDEX products_attr_eye_sting_idx ON products ((attributes->>'eye_sting')
 | -------------------- | -------------------------------------------- | ------------------------------------------ | --------------------------------------------------------- | -------------------------------------------- | ---------------- |
 | `id`                 | `String @id @db.Uuid`                        | `UUID`                                     | PK, NOT NULL                                              | 매핑 ID                                      | UUID             |
 | `category_id`        | `String? @db.Uuid`                           | `UUID`                                     | NULLABLE, FK → `product_categories.id` ON DELETE SET NULL | 대상 제품군 (NULL이면 전체 공통)             | UUID / null      |
-| `source_question_id` | `String @db.Uuid`                            | `UUID`                                     | NOT NULL, FK → `question.id` ON DELETE RESTRICT           | 사용자 답변 기준 질문                        | UUID             |
+| `source_question_id` | `String @db.Uuid`                            | `UUID`                                     | NOT NULL, FK → `questions.id` ON DELETE RESTRICT           | 사용자 답변 기준 질문                        | UUID             |
 | `source_operator`    | `comparison_operator_enum`                   | `comparison_operator_enum`                 | NOT NULL                                                  | 사용자 답변 조건 연산자                      | `EQ`             |
 | `source_value`       | `Json`                                       | `JSONB`                                    | NOT NULL                                                  | 사용자 답변 비교값                           | `1`              |
 | `attribute_key`      | `String @db.VarChar(100)`                    | `VARCHAR(100)`                             | NOT NULL                                                  | 변환 대상 attribute key                      | `eye_sting`      |
@@ -856,7 +855,7 @@ CREATE INDEX products_attr_eye_sting_idx ON products ((attributes->>'eye_sting')
 | ----------------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 영속 마스터 → 사용자 활동           | `RESTRICT` | `devices.id` ← user_sessions, user_responses, decision_runs, reaction_reports, product_matrix_filter_states, avoidance_rules                                   |
 | 영속 마스터 → 사용자 활동 (user 측) | `SET NULL` | `users.id` ← devices, user_sessions, user_responses, decision_runs, reaction_reports, product_matrix_filter_states, avoidance_rules                            |
-| 카탈로그 → 카탈로그                 | `RESTRICT` | `question.id` ← question_variants / user_responses / conditions / mappings / priority_rule_conditions, `question_variants.id` ← question_visibility_conditions |
+| 카탈로그 → 카탈로그                 | `RESTRICT` | `questions.id` ← question_variants / user_responses / conditions / mappings / priority_rule_conditions, `question_variants.id` ← question_visibility_conditions |
 | 선택적 추적 참조                    | `SET NULL` | `question_variants.id` ← user_responses.question_variant_id                                                                                                    |
 | 옵션 참조                           | `SET NULL` | `priority_rules.recommend_category_id` → product_categories, `decision_runs.category_id` / `.filter_state_id`, `product_filter_mappings.category_id`           |
 | 모든 UPDATE                         | `CASCADE`  | 전 테이블 (Prisma 기본값)                                                                                                                                      |
