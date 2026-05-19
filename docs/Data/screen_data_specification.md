@@ -102,8 +102,8 @@ S08 Reaction Traceback
 | `segment_clicked` 이벤트        | `session_events`        | 4개 세그먼트 카드 중 하나 클릭                                                                                    |
 | `concern_clicked` 이벤트        | `session_events`        | Concern 캐러셀 태그 클릭 (payload: `{concern:"acne"}`)                                                            |
 | `fast_lane_chip_clicked` 이벤트 | `session_events`        | Fast Lane 카테고리 칩 클릭                                                                                        |
-| `flow.concern` user_response    | `user_responses`        | Concern 클릭 시 current row UPSERT (`question_id=<flow.concern>`, `question_variant_id=null`, `source='concern'`) |
-| preset responses (concern 종속) | `user_responses` (다수) | 프론트 상수의 preset을 `source='concern'`으로 UPSERT. 화면 질문 variant가 없으면 `question_variant_id`는 null     |
+| `flow.concern` user_response    | `user_responses`        | Concern 클릭 시 current row UPSERT (`question_id=<flow.concern>`, `source='concern'`) |
+| preset responses (concern 종속) | `user_responses` (다수) | 프론트 상수의 preset을 `source='concern'`으로 UPSERT                                  |
 
 ### 1.3 계산 데이터 (Computed)
 
@@ -155,7 +155,7 @@ S08 Reaction Traceback
 
 | 데이터                                                    | 대상 테이블      | 트리거                                                                                                                                     |
 | --------------------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| 사용자 답변 (`question_id`+`question_variant_id`+`value`) | `user_responses` | 각 질문 응답 시 question별 current row UPSERT. 기존 row가 있으면 `value`, `source`, `question_variant_id`, `updated_at` 갱신. 어느 세션에서 답했는지는 `session_events` 의 `value_change` 이벤트 payload 로 추적 |
+| 사용자 답변 (`question_id`+`value`)                       | `user_responses` | 각 질문 응답 시 question별 current row UPSERT. 기존 row가 있으면 `value`, `source`, `updated_at` 갱신. 어느 세션/variant 에서 답했는지는 `session_events` 의 `value_change` 이벤트 payload 로 추적 |
 | `priority_question_answered` 이벤트                       | `session_events` | 질문 답변마다 변경 이력 저장 (`previous_value`, `value`, `question_id`, `question_variant_id`)                                             |
 | `priority_gate_submitted` 이벤트                          | `session_events` | "다음" CTA 클릭                                                                                                                            |
 | 결과 snapshot                                             | `decision_runs`  | 평가 완료 시 (`decision_type='PRIORITY_GATE'`, `result_*` snapshot)                                                                        |

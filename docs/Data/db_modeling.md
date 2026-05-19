@@ -99,7 +99,7 @@
 > [여드름] 클릭
 >   → session_events: { event_name: "concern_clicked", payload: { concern: "acne" } }
 >   → 프론트 상수에서 route_target = "priority_gate", suggested_category = "cleanser" 결정
->   → user_responses: { question_id: "<flow.concern question id>", question_variant_id: null, value: [1], source: "concern" }
+>   → user_responses: { question_id: "<flow.concern question id>", value: [1], source: "concern" }
 >   → 필요 시 preset_facts 저장 또는 프론트 초기 선택 상태로 유지
 >   → Priority Gate 진입
 > ```
@@ -388,7 +388,7 @@ UNIQUE (id, answer_count);
 }
 ```
 
-위 두 질문은 답변 라벨은 다르지만 같은 `questions`을 참조한다. 사용자가 첫 번째 답변을 고르면 `user_responses.question_id = <uuid of life.outdoor_activity>`, `question_variant_id = <노출된 variant id>`, `value = [3]`으로 저장된다. 복수 선택이면 같은 배열에 여러 정수가 들어간다.
+위 두 질문은 답변 라벨은 다르지만 같은 `questions`을 참조한다. 사용자가 첫 번째 답변을 고르면 `user_responses.question_id = <uuid of life.outdoor_activity>`, `value = [3]`으로 저장된다. 복수 선택이면 같은 배열에 여러 정수가 들어간다. 사용자가 본 화면 variant 추적은 `session_events.value_change` payload 에서 처리한다.
 
 > seed JSON에서는 사람이 읽기 쉬운 `questions.key` 값을 입력해도 된다. 단 seed/import 단계에서 이를 `questions.id`로 resolve해 `question_variants.question_id`에 저장한다.
 
@@ -452,19 +452,18 @@ EXCLUDED: EQ 1          ← 최근 자극이 있으면 숨김
 
 ### user_responses
 
-사용자가 실제로 답한 현재 값. 화면 라벨과 선택 index는 저장하지 않고, canonical `question_id`와 내부 `value`를 저장한다. 사용자가 실제로 본 화면 문구가 있으면 `question_variant_id`로 함께 남긴다.
+사용자가 실제로 답한 현재 값. 화면 라벨과 선택 index는 저장하지 않고, canonical `question_id`와 내부 `value`만 저장한다.
 
-| 컬럼                | 타입                                                  | 설명                                                          |
-| ------------------- | ----------------------------------------------------- | ------------------------------------------------------------- |
-| id                  | UUID PK                                               | 응답 ID                                                       |
-| device_id           | UUID FK → devices.id                                  | 기기 ID                                                       |
-| user_id             | UUID FK → users.id NULLABLE                           | 로그인 시 병합, 비로그인 null                                 |
-| question_id         | UUID FK → questions.id                                | canonical question ID. 복원/평가/필터 매핑의 기준             |
-| question_variant_id | UUID FK → question_variants.id NULLABLE               | 사용자가 실제로 본 질문 문구. concern preset 등은 null 가능   |
-| value               | INTEGER[]                                             | 내부 로직용 값. 단일 선택도 길이 1 배열로 저장 (e.g. `[3]`)   |
-| source              | ENUM('priority_gate','context','concern','traceback') | 입력 출처                                                     |
-| created_at          | TIMESTAMPTZ                                           | 최초 입력일                                                   |
-| updated_at          | TIMESTAMPTZ NULLABLE                                  | 마지막 변경일. 최초 INSERT 후 변경 전까지 null                |
+| 컬럼        | 타입                                                  | 설명                                                          |
+| ----------- | ----------------------------------------------------- | ------------------------------------------------------------- |
+| id          | UUID PK                                               | 응답 ID                                                       |
+| device_id   | UUID FK → devices.id                                  | 기기 ID                                                       |
+| user_id     | UUID FK → users.id NULLABLE                           | 로그인 시 병합, 비로그인 null                                 |
+| question_id | UUID FK → questions.id                                | canonical question ID. 복원/평가/필터 매핑의 기준             |
+| value       | INTEGER[]                                             | 내부 로직용 값. 단일 선택도 길이 1 배열로 저장 (e.g. `[3]`)   |
+| source      | ENUM('priority_gate','context','concern','traceback') | 입력 출처                                                     |
+| created_at  | TIMESTAMPTZ                                           | 최초 입력일                                                   |
+| updated_at  | TIMESTAMPTZ NULLABLE                                  | 마지막 변경일. 최초 INSERT 후 변경 전까지 null                |
 
 **인덱스 / 제약**
 
@@ -472,15 +471,14 @@ EXCLUDED: EQ 1          ← 최근 자극이 있으면 숨김
 - `uq_user_responses_anonymous_device_question` (UNIQUE on `device_id, question_id WHERE user_id IS NULL`) — 비로그인 device별 질문 1 row
 - `uq_user_responses_user_question` (UNIQUE on `user_id, question_id WHERE user_id IS NOT NULL`) — 로그인 사용자별 질문 1 row
 - `fk_user_responses_question_id` (FK on `question_id` → `questions.id`)
-- `fk_user_responses_question_variant_id` (FK on `question_variant_id` → `question_variants.id`)
 
 > current-state 테이블. 답변 수정 시 새 row를 INSERT하지 않고 같은 질문 row를 UPDATE한다.  
 > 비로그인 조회: `WHERE device_id = ? AND user_id IS NULL` / 로그인 조회: `WHERE user_id = ?`  
 > 사용자 1명이 답할 수 있는 canonical question이 30개라면 active row도 최대 30개다. 아직 답하지 않은 질문 row는 만들지 않는다.
 >
-> `source = concern` row는 확정 답변이 아니라 concern preset에서 온 초기 선택 상태다. 이 경우에도 `question_id`는 반드시 canonical `questions.id`를 참조하고, 실제 화면 질문이 없으면 `question_variant_id`만 null로 둔다.
+> `source = concern` row는 확정 답변이 아니라 concern preset에서 온 초기 선택 상태다. 이 경우에도 `question_id`는 반드시 canonical `questions.id`를 참조한다.
 >
-> `question_variant_id`는 감사/분석용 단순 참조다. DB는 variant와 canonical question의 쌍 일치까지 복합 FK로 강제하지 않는다. 서비스는 응답 INSERT 시 `question_variant_id`가 있으면 해당 `question_variants.question_id`를 읽어 `user_responses.question_id`에 저장한다.
+> 같은 canonical question 을 여러 화면 variant 로 묻더라도 응답 row 는 question_id 단위로 하나뿐이다. "사용자가 마지막에 어떤 variant 를 답했는지" 는 `session_events` 의 `value_change` 이벤트 payload (`question_variant_id` 포함) 로 추적한다.
 >
 > 질문 클릭/답변 변경 이력은 `session_events`에 남긴다. `user_responses`는 현재 상태만 보관하고, 결과 산출 당시의 입력 묶음은 `decision_runs.input_snapshot`에 저장한다.
 
@@ -496,7 +494,7 @@ ON user_responses (user_id, question_id)
 WHERE user_id IS NOT NULL;
 ```
 
-응답 저장은 위 unique index 중 현재 신원 상태에 맞는 제약을 기준으로 UPSERT한다. UPDATE 시 `value`, `source`, `question_variant_id`, `updated_at`을 갱신한다. 로그인 병합 중 같은 `user_id + question_id` row가 이미 있으면 `updated_at`이 더 최신인 값을 유지한다. 어떤 세션에서 답했는지는 별도 컬럼이 아니라 `session_events`의 `value_change` 이벤트 payload 로 추적한다.
+응답 저장은 위 unique index 중 현재 신원 상태에 맞는 제약을 기준으로 UPSERT한다. UPDATE 시 `value`, `source`, `updated_at`을 갱신한다. 로그인 병합 중 같은 `user_id + question_id` row가 이미 있으면 `updated_at`이 더 최신인 값을 유지한다. 어느 세션/variant 에서 답했는지는 별도 컬럼이 아니라 `session_events`의 `value_change` 이벤트 payload 로 추적한다.
 
 복원 규칙:
 
@@ -512,10 +510,8 @@ WHERE user_id IS NOT NULL;
   "id": "ur_001",
   "device_id": "dev_abc",
   "user_id": null,
-  "session_id": "sess_001",
   "question_id": "q_study_focus",
-  "question_variant_id": "qv_001",
-  "value": 1,
+  "value": [1],
   "source": "priority_gate",
   "created_at": "2026-05-15T10:00:00.000Z",
   "updated_at": "2026-05-15T10:03:00.000Z"

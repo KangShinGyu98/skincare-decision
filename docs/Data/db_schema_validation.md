@@ -217,9 +217,9 @@
 
 > `device_id` / `user_id` / `created_at` 보조 인덱스를 두지 않는다. 활성 세션 판정은 `session_events.session_id` 측에서 시작해 `user_sessions.id` PK 로 join 하고, 로그인-병합 트랜잭션은 `WHERE device_id = ? AND user_id IS NULL` UPDATE 한 번만 일어난다. 시간대별 분석은 후행 OLAP 단에서 처리한다.
 
-**설명**: dimension/transaction 테이블. session 의 "활동창" 런타임 상태를 컬럼으로 추적하지 않는다 (`status` / `started_at` / `last_seen_at` / `completed_at` / `expires_at` / `updated_at` 모두 없음). 세션의 종료/타임아웃 같은 시간 분포는 `session_events.created_at` 분포로 사후 분석한다. 유입 경로(entry_path / referrer) 와 사용자 신원 연결 시각(logged_in_at) 만 dimension 컨텍스트로 보존한다.
+**설명**: dimension/transaction 테이블. 유입 경로(entry_path / referrer) 와 사용자 신원 연결 시각(logged_in_at) 만 dimension 컨텍스트로 보존한다.
 
-**설계 이유**: session_events 의 fact 측에 신원·유입 dimension 을 join 으로 붙이는 별표(star)형 구조를 의도. 세션 자체에 mutate 컬럼이 없으므로 단순 INSERT + (로그인 발생 시 한 번의) UPDATE 만 일어난다. 30분 timeout 같은 비즈니스 정책이 필요하면 application/Service 레이어에서 `session_events.created_at` 기반으로 판정한다.
+**설계 이유**: 세션 자체에 mutate 컬럼이 없으므로 단순 INSERT + (로그인 발생 시 한 번의) UPDATE 만 일어난다. 30분 timeout 같은 비즈니스 정책이 필요하면 application/Service 레이어에서 서버세션/레디스세션을 기반으로 판정한다.
 
 **⚠ 불일치**: 현재 schema.prisma 에는 `status` / `started_at` / `last_seen_at` / `completed_at` / `expires_at` / `updated_at` / `ab_variant` 컬럼이 존재한다. 후속 마이그레이션 PR 에서 컬럼 제거 + `logged_in_at` 추가 + `user_sessions_status_enum` (=`SessionStatus`) DROP TYPE 진행. db_modeling.md 의 `segment` 컬럼 제안도 본 재구조와 함께 폐기 (A/B 테스트가 필요해지면 `session_events.payload` 또는 별도 테이블로 분리).
 
@@ -350,12 +350,11 @@ REFERENCES questions (id, answer_count);
 | 필드                  | Prisma 타입                                  | SQL 타입                     | 제약                                                     | 설명                                               | 예시            |
 | --------------------- | -------------------------------------------- | ---------------------------- | -------------------------------------------------------- | -------------------------------------------------- | --------------- |
 | `id`                  | `String @id @db.Uuid`                        | `UUID`                       | PK, NOT NULL                                             | 응답 row ID                                        | UUID            |
-| `device_id`           | `String @db.Uuid`                            | `UUID`                       | NOT NULL, FK → `devices.id` ON DELETE RESTRICT           | 기기                                               | UUID            |
-| `user_id`             | `String? @db.Uuid`                           | `UUID`                       | NULLABLE, FK → `users.id` ON DELETE SET NULL             | 로그인 시 자동 병합                                | UUID / null     |
-| `question_id`         | `String @db.Uuid`                            | `UUID`                       | NOT NULL, FK → `questions.id` ON DELETE RESTRICT         | canonical question ID. 복원/평가/필터 매핑 기준    | UUID            |
-| `question_variant_id` | `String? @db.Uuid`                           | `UUID`                       | NULLABLE, FK → `question_variants.id` ON DELETE SET NULL | 실제로 본 질문 variant. concern preset은 null 가능 | UUID / null     |
-| `value`               | `Int[]`                                      | `INTEGER[]`                  | NOT NULL                                                 | 내부 로직용 값. 단일 선택도 길이 1 배열로 저장     | `[3]`           |
-| `source`              | `user_responses_source_enum`                 | `user_responses_source_enum` | NOT NULL                                                 | 어디서 입력했는지                                  | `priority_gate` |
+| `device_id`   | `String @db.Uuid`                            | `UUID`                       | NOT NULL, FK → `devices.id` ON DELETE RESTRICT           | 기기                                               | UUID            |
+| `user_id`     | `String? @db.Uuid`                           | `UUID`                       | NULLABLE, FK → `users.id` ON DELETE SET NULL             | 로그인 시 자동 병합                                | UUID / null     |
+| `question_id` | `String @db.Uuid`                            | `UUID`                       | NOT NULL, FK → `questions.id` ON DELETE RESTRICT         | canonical question ID. 복원/평가/필터 매핑 기준    | UUID            |
+| `value`       | `Int[]`                                      | `INTEGER[]`                  | NOT NULL                                                 | 내부 로직용 값. 단일 선택도 길이 1 배열로 저장     | `[3]`           |
+| `source`      | `user_responses_source_enum`                 | `user_responses_source_enum` | NOT NULL                                                 | 어디서 입력했는지                                  | `priority_gate` |
 | `created_at`          | `DateTime @default(now()) @db.Timestamptz()` | `TIMESTAMPTZ`                | NOT NULL, DEFAULT `CURRENT_TIMESTAMP`                    | 최초 입력 시각                                     | 타임스탬프      |
 | `updated_at`          | `DateTime? @updatedAt @db.Timestamptz()`     | `TIMESTAMPTZ`                | NULLABLE                                                 | 마지막 변경 시각                                   | 타임스탬프      |
 
@@ -365,13 +364,12 @@ REFERENCES questions (id, answer_count);
 - `uq_user_responses_anonymous_device_question` (UNIQUE on `device_id, question_id WHERE user_id IS NULL`) — 비로그인 device별 질문 1 row
 - `uq_user_responses_user_question` (UNIQUE on `user_id, question_id WHERE user_id IS NOT NULL`) — 로그인 사용자별 질문 1 row
 - `fk_user_responses_question_id` (FK on `question_id` → `questions.id`)
-- `fk_user_responses_question_variant_id` (FK on `question_variant_id` → `question_variants.id`)
 
-> 보조 인덱스(`session_id`/`question_id`/`question_variant_id`)는 두지 않는다. `session_id` 컬럼 자체를 제거해 어느 세션에서 답했는지는 `session_events` 의 `value_change` 이벤트 payload 로 추적한다. canonical question 별 조회는 위 partial unique index 가 직접 만족시킨다.
+> 보조 인덱스는 두지 않는다. canonical question 별 조회는 위 partial unique index 가 직접 만족시키고, 어느 세션/variant 에서 답했는지는 `session_events` 의 `value_change` 이벤트 payload 로 추적한다.
 
-**설명**: 질문별 현재 답변 상태 테이블. `question_id`는 canonical `questions.id`를 항상 참조하고, 사용자가 실제로 본 질문 문구가 있으면 `question_variant_id`를 함께 저장한다. 같은 질문을 다른 화면에서 다르게 물어도 복원과 평가 기준은 `question_id`다. `question_variant_id`는 감사/분석용 단순 FK이며, variant/canonical question 쌍 일치는 DB 복합 FK가 아니라 Service insert 로직에서 보장한다.
+**설명**: 질문별 현재 답변 상태 테이블. `question_id`는 항상 canonical `questions.id`를 참조하고, row 는 canonical question 1개당 1개다. 같은 canonical question 을 여러 화면 variant 로 묻더라도 응답 row 는 하나뿐이며, 사용자가 어떤 variant 로 답했는지는 `session_events` payload (`question_variant_id` 포함) 로 추적한다.
 
-**설계 이유**: 화면 복원과 rule 평가는 "현재 답변"만 필요하다. 사용자가 답을 바꾼 이력은 `session_events`에 이벤트로 남기고, 결과 산출 당시 입력 묶음은 `decision_runs.input_snapshot`에 보존한다. 따라서 `user_responses`는 question별 1 row current-state로 두고 UPDATE/UPSERT한다.
+**설계 이유**: 화면 복원과 rule 평가는 "현재 답변"만 필요하다. 사용자가 답을 바꾼 이력은 `session_events`에 이벤트로 남기고, 결과 산출 당시 입력 묶음은 `decision_runs.input_snapshot`에 보존한다. variant FK 를 응답 row 에 두면 같은 question 에 대해 다른 variant 로 답할 때마다 값이 갱신되어 정체성이 모호해진다 — 그 정보는 events 로 옮긴다.
 
 **Prisma 주의**: partial unique index(`WHERE user_id IS NULL/IS NOT NULL`)는 Prisma schema만으로 완전 표현하기 어렵다. raw migration SQL로 추가한다.
 
@@ -383,12 +381,6 @@ WHERE user_id IS NULL;
 CREATE UNIQUE INDEX uq_user_responses_user_question
 ON user_responses (user_id, question_id)
 WHERE user_id IS NOT NULL;
-
-ALTER TABLE user_responses
-ADD CONSTRAINT fk_user_responses_question_variant_id
-FOREIGN KEY (question_variant_id)
-REFERENCES question_variants (id)
-ON DELETE SET NULL;
 ```
 
 ---
@@ -861,7 +853,6 @@ CREATE INDEX products_attr_eye_sting_idx ON products ((attributes->>'eye_sting')
 | 영속 마스터 → 사용자 활동 (user 측) | `SET NULL` | `users.id` ← devices, user_sessions, user_responses, decision_runs, reaction_reports, question_filter_mappings, avoidance_rules                            |
 | 카탈로그 → 카탈로그                 | `RESTRICT` | `questions.id` ← user_responses / priority_rule_conditions / product_filter_mappings.trigger_question_id, `category_attribute_definitions.id` ← product_filter_mappings.attribute_definition_id |
 | 카탈로그 → 카탈로그 (자식 cascade)  | `CASCADE`  | `questions.id` ← question_variants (canonical 삭제 시 variant 도 함께), `question_variants.id` ← question_visibility_conditions (variant 삭제 시 조건 함께)                                     |
-| 선택적 추적 참조                    | `SET NULL` | `question_variants.id` ← user_responses.question_variant_id                                                                                                    |
 | 옵션 참조                           | `SET NULL` | `priority_rules.recommend_category_id` → product_categories, `decision_runs.category_id` / `.filter_state_id`                                                  |
 | 모든 UPDATE                         | `CASCADE`  | 전 테이블 (Prisma 기본값)                                                                                                                                      |
 

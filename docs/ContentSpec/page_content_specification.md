@@ -182,7 +182,7 @@
 | 단계 | 처리                                                                                                                              |
 | ---- | --------------------------------------------------------------------------------------------------------------------------------- |
 | 1    | `session_events.event_name = concern_clicked` 저장                                                                                |
-| 2    | `user_responses.flow.concern` 저장 (`question_id=<flow.concern>`, `question_variant_id=null`)                                     |
+| 2    | `user_responses.flow.concern` 저장 (`question_id=<flow.concern>`). 사용자가 본 화면 variant 추적은 `session_events.value_change` payload 로 분리 |
 | 3    | preset responses를 `source = concern`인 초기 선택 상태로 저장하거나 프론트 상태에 유지                                            |
 | 4    | `route_target = priority_gate`면 `/priority-gate`로 이동하고 관련 질문을 우선 노출                                                |
 | 5    | `route_target = category_decision`면 `category.selected = suggested_category`를 seed한 뒤 `/category-decision`으로 이동           |
