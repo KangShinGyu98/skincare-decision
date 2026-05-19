@@ -1,16 +1,6 @@
-﻿> prisma.schema 가 PostgreSQL Table 로 변경되는 과정에서 문제가 없는지 확인하기 위한 문서.  
-> 본 문서는 **타겟 스키마 명세**(=확정된 목표) 를 1차 진실로 둔다. 현재 `schema.prisma` / `migration.sql` 이 타겟과 다른 항목은 [§0.3](#03-검출된-docs-↔-실제-스키마-불일치-요약) 에 ⚠ 표시로 모아두며, 후속 마이그레이션에서 정리된다.
+﻿# DB 스키마 자료형·인덱스 검증
 
-# DB 스키마 자료형·인덱스 검증
-
-> **참조 파일**
->
-> - [backend/prisma/schema.prisma](../backend/prisma/schema.prisma) — 현재 구현
-> - [backend/prisma/migrations/20260508175123_init/migration.sql](../backend/prisma/migrations/20260508175123_init/migration.sql) — 1차 init 마이그레이션
->
-> **교차 검증 대상**: [docs/Data/db_modeling.md](db_modeling.md) (특히 [§0 공통 규약](db_modeling.md#0-공통-규약-identity--timestamp--naming))
->
-> 본 문서의 표는 **타겟(=확정 명세)** 을 기준으로 작성되어 있다. 현재 schema.prisma 와 다른 항목은 §0.3 에 정리한다.
+> Prisma schema / migration 생성 시 참고할 PostgreSQL 자료형·제약·인덱스 명세서. [db_modeling.md](db_modeling.md) 와 1:1 동기.
 
 ---
 
@@ -62,14 +52,12 @@
 
 ### 0.2 enum 정의
 
-> 명명 규칙: `<table>_<column>_enum`. 공용 enum 2건(`comparison_operator_enum`, `condition_state_enum`)만 의미 단위 단일 타입으로 유지한다.  
-> 현 schema.prisma 의 PascalCase enum 이름(`UserRole`, `SessionStatus` 등)은 ⚠ — [§0.3 #5](#03-검출된-docs-↔-실제-스키마-불일치-요약) 참조.
+> 명명 규칙: `<table>_<column>_enum`. 공용 enum 2건(`comparison_operator_enum`, `condition_state_enum`)만 의미 단위 단일 타입으로 유지한다.
 
 | enum 타입                                        | 값                                                                                       | 사용 컬럼                                                                                                                                         |
 | ------------------------------------------------ | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `users_role_enum`                                | `USER`, `ADMIN`                                                                          | `users.role`                                                                                                                                      |
-| ~~`user_sessions_status_enum`~~ ※폐기 예정       | `ACTIVE`, `COMPLETED`, `EXPIRED`                                                         | (없음 — user_sessions 가 dimension 테이블로 재구조되며 `status` 컬럼 제거. [§1.3](#13-user_sessions) 참조)                                        |
-| `questions_answer_type_enum`                      | `BOOLEAN`, `THREE_CHOICE`, `FOUR_CHOICE`, `FIVE_CHOICE`, `SINGLE_CHOICE`, `MULTI_CHOICE` | `questions.answer_type`                                                                                                                            |
+| `questions_answer_type_enum`                     | `BOOLEAN`, `THREE_CHOICE`, `FOUR_CHOICE`, `FIVE_CHOICE`, `SINGLE_CHOICE`, `MULTI_CHOICE` | `questions.answer_type`                                                                                                                            |
 | `category_attribute_definitions_value_type_enum` | `BOOLEAN`, `ENUM`, `NUMBER`, `MULTI_ENUM`, `STRING`                                      | `category_attribute_definitions.value_type`                                                                                                       |
 | `question_variants_screen_enum`                  | `priority_gate`, `context`                                                               | `question_variants.screen`                                                                                                                        |
 | `question_variants_ui_section_enum`              | `life_routine`, `owned_products`, `basic`, `category`                                    | `question_variants.ui_section`                                                                                                                    |
@@ -77,56 +65,17 @@
 | `condition_state_enum` ※공용                     | `REQUIRED`, `EXCLUDED`                                                                   | `question_visibility_conditions.state`, `priority_rule_conditions.state`                                                                          |
 | `user_responses_source_enum`                     | `priority_gate`, `context`, `concern`, `traceback`                                       | `user_responses.source`                                                                                                                           |
 | `priority_rules_result_type_enum`                | `STOP`, `HOLD`, `CAUTION`, `PASS`, `ROUTE_CATEGORY`                                      | `priority_rules.result_type`                                                                                                                      |
-| ~~`decision_runs_decision_type_enum`~~ ※폐기     | `PRIORITY_GATE`, `CATEGORY_DECISION`, `PRODUCT_MATRIX`, `REACTION_TRACEBACK`             | (없음 — `decision_runs.decision_type` 은 `VARCHAR(50)` + application enum 으로 검증)                                                              |
-| ~~`products_price_band_enum`~~ ※폐기             | `UNDER_20000`, `BETWEEN_20000_50000`, `OVER_50000`                                       | (없음 — 카테고리마다 임계치가 달라 service/UI 계산값으로 이동)                                                                                    |
 | `products_volume_unit_enum`                      | `ML`, `G`, `L`, `MG`                                                                     | `products.volume_unit`                                                                                                                            |
 | `products_count_unit_enum`                       | `SHEET`, `PIECE`, `PACK`                                                                 | `products.count_unit`                                                                                                                             |
-| ~~`product_filter_mappings_filter_mode_enum`~~ ※폐기 | `HARD_FILTER`, `EXCLUDE`, `CAUTION`, `SORT`, `TAG`                                   | (없음 — MVP 는 HARD_FILTER 단일 처리. 운영 정책 변경 시 application enum)                                                                         |
-| ~~`product_filter_mappings_filter_type_enum`~~ ※폐기 | `BASIC_CONDITION`, `PERSONALIZED`                                                    | (없음 — `product_filter_mappings.curated` boolean 으로 대체)                                                                                      |
 | `question_filter_mappings_source_enum`           | `DIRECT`, `CATEGORY_DECISION_CTA`, `MANUAL`, `RESTORED`                                  | `question_filter_mappings.source`                                                                                                                 |
 | `reaction_report_products_type_enum`             | `PROBLEM`, `OK`                                                                          | `reaction_report_products.type`                                                                                                                   |
 | `suspected_causes_confidence_enum`               | `LOW`, `MEDIUM`, `HIGH`                                                                  | `suspected_causes.confidence`                                                                                                                     |
 | `avoidance_rules_action_enum`                    | `AVOID`, `CAUTION`                                                                       | `avoidance_rules.action`                                                                                                                          |
 
-### 0.3 검출된 docs ↔ 실제 스키마 불일치 (요약)
-
-> 본 문서는 타겟을 기준으로 작성됐다. 아래는 **현재 schema.prisma / migration.sql 이 타겟에 맞춰 변경되어야 하는 항목**이다. 후속 마이그레이션 PR 에서 정리.
-
-| #   | 위치                                  | 타겟 (본 문서)                                                                                                                      | 현재 schema.prisma / migration                                     | 마이그레이션 액션                                                                                                                                                         |
-| --- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | 모든 시각 컬럼                        | `TIMESTAMPTZ` (UTC)                                                                                                                 | `TIMESTAMP(3)` (타임존 없음)                                       | `@db.Timestamptz()` 명시 + `ALTER TYPE` 마이그레이션                                                                                                                      |
-| 2   | `updated_at` NULL 정책                | INSERT 시 NULL, NULLABLE 컬럼                                                                                                       | `NOT NULL` (`@updatedAt`)                                          | `DateTime?` + NULLABLE 컬럼 변경                                                                                                                                          |
-| 3   | `deleted_at` 컬럼                     | lifecycle 테이블 전부에 추가 (NULLABLE TIMESTAMPTZ)                                                                                 | 없음                                                               | 마이그레이션 + 모든 조회에 `WHERE deleted_at IS NULL` 적용                                                                                                                |
-| 4   | UUID 발급                             | UUIDv7 (application 측에서 발급)                                                                                                    | `@default(uuid())` = v4                                            | UUIDv7 생성 헬퍼 도입 + `@default(uuid())` 제거                                                                                                                           |
-| 5   | enum 타입 이름                        | `<table>_<column>_enum` (공용 2건 제외)                                                                                             | PascalCase (`UserRole`, `SessionStatus` …)                         | enum 이름 일괄 리네임 (Prisma `enum ... @@map(...)` 미지원 → 마이그레이션 SQL 로 `ALTER TYPE ... RENAME TO`)                                                              |
-| 6   | PK/FK/UQ/idx 이름                     | `pk_<t>`, `fk_<t>_<c>`, `uq_<t>_<cs>`, `idx_<t>_<cs>`                                                                               | 자동 생성(`users_pkey`, `users_email_key`, `question_variants_question_id_idx`) | `@@id(map:)`, `@relation(map:)`, `@@unique(..., map:)`, `@@index(..., map:)` 로 명시 + 마이그레이션 SQL `ALTER ... RENAME`                                                |
-| 7   | `user_sessions.segment`               | `ENUM('A','B','C','D') NULL`                                                                                                        | **컬럼 없음**                                                      | 세그먼트 측정 도입 시점에 추가 결정                                                                                                                                       |
-| 8   | `products.attributes` JSONB 조회      | "동적 SQL로 `attributes->>` 조회"                                                                                                   | GIN 인덱스 없음                                                    | catalog 규모 도달 시 GIN/Expression 인덱스 추가                                                                                                                           |
-| 9   | `priority_rules.hold_categories` 구조 | "보류 제품군 (JSONB)" 만 명시                                                                                                       | JSONB는 맞으나 스키마 미정의                                       | Service Zod 스키마 정의                                                                                                                                                   |
-| 10  | `user_sessions` 컬럼 구조             | dimension/transaction 테이블 (logged_in_at 추가, status/started_at/last_seen_at/completed_at/expires_at/updated_at/ab_variant 제거) | session 관리용 컬럼 그대로 보유                                    | 컬럼 DROP + `logged_in_at TIMESTAMPTZ NULL` 추가 + `user_sessions_status_enum` DROP TYPE. 로그인 병합 트랜잭션에 `logged_in_at = now()` 추가. ([§1.3](#13-user_sessions)) |
-| 11  | 질문 기준 테이블                      | `questions` + `question_variants`, `answer_values`/`answers` 배열 길이 FK 검증                                                       | `fact_definitions` + `context_questions`, 양쪽에 options 중복 보유 | 테이블 rename/재구성 + 생성 컬럼 `answer_count` + 복합 FK 추가                                                                                                            |
-| 12  | `question_visibility_conditions` 구조 | `question_variant_id` 단일 FK (canonical question 참조 제거), `value INTEGER`, `updated_at` 추가, `idx_..._condition_question_id` 제거 | 구 `question_id` (variant) + `condition_question_id` (canonical) 2-FK, `value JSONB` | 컬럼 DROP/rename + 생성 컬럼 정리 + service 측 평가기 재설계                                                                                                              |
-| 13  | `user_responses` 구조                 | `value INTEGER[]`, `session_id` 컬럼 제거, `idx_..._session_id`/`question_id`/`question_variant_id` 보조 인덱스 제거                  | `value JSONB` + `session_id` NOT NULL FK + 3종 보조 인덱스          | 컬럼 DROP/타입 변경, 보조 인덱스 DROP. 세션 추적은 `session_events` 이벤트로 이동                                                                                         |
-| 14  | `priority_rules`                      | `hold_categories` 객체 배열 (`[{category_id, reason}]`), 보조 인덱스(priority/is_active, recommend_category_id) 제거                  | JSONB 구조 미정의, 보조 인덱스 2종 존재                             | JSONB 구조 Zod, 인덱스 DROP                                                                                                                                              |
-| 15  | `priority_rule_conditions`            | `value INTEGER[]`, `updated_at` 추가                                                                                                  | `value JSONB`, `updated_at` 없음                                    | 컬럼 타입 변경, `updated_at` 추가                                                                                                                                         |
-| 16  | `decision_runs.decision_type`         | `VARCHAR(50)` (application enum 검증)                                                                                                 | `decision_runs_decision_type_enum`                                  | 컬럼 타입 변경 + `DROP TYPE decision_runs_decision_type_enum`                                                                                                            |
-| 17  | `products` 구조                       | `name VARCHAR(500)`, `price_krw`, `volume_amount/unit/count_amount/unit/label`. `barcode`/`price_band` 제거                            | `name VARCHAR(300)`, `price`, `barcode UNIQUE`, `price_band`, `volume VARCHAR(50)` | 컬럼 rename/DROP/ADD + `uq_products_barcode` DROP + `products_price_band_enum` DROP TYPE. `products_volume_unit_enum`/`products_count_unit_enum` 추가                  |
-| 18  | `product_filter_mappings` 구조        | trigger_/`attribute_definition_id` 기반, `curated` boolean, `filter_mode`/`filter_key`/`tag_label`/`caution_message`/`category_id`/`attribute_key` 제거 | source_/`attribute_key`/`category_id`/`filter_mode`/`filter_type`/etc. | 컬럼 일괄 rename/DROP/ADD + filter_mode/filter_type enum DROP TYPE + 인덱스 재구성                                                                                       |
-| 19  | `product_matrix_filter_states`        | `question_filter_mappings` 로 rename, `is_active` 제거, filters JSON shape `[{filter_definition_id, operator, value}]`, 보조 인덱스 4종 → 2종 | 구 이름 + `is_active` + filter_key/source_type 기반 JSON                | 테이블 rename + 컬럼 DROP + 인덱스 재구성 + filters JSON shape 마이그레이션                                                                                              |
-
-각 표 본문에서 동일 항목은 ⚠ 표시로 다시 짚는다.
-
 ---
 
 ## 1. 사용자 / 기기 / 세션 / 이벤트
 
-> **§1 이하 테이블별 컬럼표 읽는 법** — 본문 표는 자료형/제약/인덱스를 "타겟" 기준으로 갱신 중이다. 다음 항목은 §0.3 마이그레이션 todo 와 동기되며, 본문에 표기가 남아 있더라도 §0.0/§0.1 정책이 우선이다:
->
-> - **`id` 의 "PK, NOT NULL, 클라이언트 v4 발급"** → 타겟은 **UUIDv7** (application 발급). v4 표기는 현재 schema.prisma 잔류.
-> - **`updated_at` 의 "NOT NULL, Prisma가 UPDATE마다 갱신"** → 타겟은 **NULLABLE** (INSERT 시 NULL, 첫 UPDATE 부터 채워짐). Prisma 표기는 `DateTime? @updatedAt @db.Timestamptz()`.
-> - **`deleted_at`** → lifecycle 테이블(아래 ✓ 표 참조) 전부에 `TIMESTAMPTZ NULLABLE` 로 추가된다. 본문 컬럼표에 행이 누락되어 있어도 정책상 존재한다고 본다.
-> - **인덱스/제약 이름** → `users_pkey` / `users_email_key` / `question_variants_question_id_idx` 같은 자동 생성 이름은 타겟에서 `pk_users` / `uq_users_email` / `idx_question_variants_question_id` 로 리네임 예정 (§0.3 #6).
->
 > **`deleted_at` 도입 대상 (lifecycle 테이블 ✓ / append-only · bridge · current-state 예외 ✗)**
 >
 > | 테이블                           | `deleted_at`                                |
@@ -221,7 +170,7 @@
 
 **설계 이유**: 세션 자체에 mutate 컬럼이 없으므로 단순 INSERT + (로그인 발생 시 한 번의) UPDATE 만 일어난다. 30분 timeout 같은 비즈니스 정책이 필요하면 application/Service 레이어에서 서버세션/레디스세션을 기반으로 판정한다.
 
-**⚠ 불일치**: 현재 schema.prisma 에는 `status` / `started_at` / `last_seen_at` / `completed_at` / `expires_at` / `updated_at` / `ab_variant` 컬럼이 존재한다. 후속 마이그레이션 PR 에서 컬럼 제거 + `logged_in_at` 추가 + `user_sessions_status_enum` (=`SessionStatus`) DROP TYPE 진행. db_modeling.md 의 `segment` 컬럼 제안도 본 재구조와 함께 폐기 (A/B 테스트가 필요해지면 `session_events.payload` 또는 별도 테이블로 분리).
+> A/B 테스트가 필요해지면 `session_events.payload` 또는 별도 테이블로 분리한다. dimension 컬럼에는 두지 않는다.
 
 ---
 
@@ -413,7 +362,7 @@ WHERE user_id IS NOT NULL;
 
 **설명**: Priority Gate 평가의 출력 정의. 조건은 자식 테이블 `priority_rule_conditions`에 분리.
 
-**⚠ JSONB 구조**: `hold_categories`는 `[{category_id, reason}]` 형태의 객체 배열. Service 레이어에서 Zod로 구조 검증.
+**JSONB 구조**: `hold_categories`는 `[{category_id, reason}]` 형태의 객체 배열. Service 레이어에서 Zod로 구조 검증.
 
 ---
 
@@ -577,7 +526,7 @@ WHERE user_id IS NOT NULL;
 >
 > 용량은 `volume_amount + volume_unit` (액체/그램) 과 `count_amount + count_unit` (개수/장수) 로 분리하고, 화면 표시 원문은 `volume_label` 로 따로 보관한다. 양쪽 모두 nullable 이라 한쪽만 채워진 제품도 자연스럽게 표현된다.
 
-**⚠ 불일치**: db_modeling.md `Product Matrix 조회 방식`(:666)은 `attributes->>'spf'` 같은 JSONB 동적 조회를 가정하지만, 현재 마이그레이션에 `products.attributes` GIN 인덱스가 없다. 카탈로그가 커지면 풀스캔이 된다 — 도입 시점에 다음 두 종류 중 선택:
+**JSONB 인덱스 도입 시점**: `attributes->>'spf'` 같은 JSONB 동적 조회는 카탈로그 규모가 커지면 풀스캔이 된다. catalog 규모 임계치에 도달하면 다음 두 종류 중 선택해 인덱스를 추가한다.
 
 ```sql
 -- 옵션 1: 전체 JSONB GIN (가장 범용, 인덱스 크다)
@@ -858,19 +807,11 @@ CREATE INDEX products_attr_eye_sting_idx ON products ((attributes->>'eye_sting')
 
 ---
 
-## 부록 B. 후속 마이그레이션 / 결정 todo
+## 부록 B. 향후 검토 항목
 
-§0.3 와 함께 정리. 본문 컬럼표가 타겟을 100% 반영하기 위해 필요한 후속 작업.
+본 문서가 명시하지 않고 운영/규모에 따라 결정해야 하는 항목.
 
-- [x] **TIMESTAMPTZ 정책 결정** (UTC 저장) → §0.0/§0.1 확정. schema.prisma `@db.Timestamptz()` 일괄 적용 + `ALTER TYPE` 마이그레이션 필요.
-- [x] **`updated_at` NULLABLE 정책** → §0.0 확정. schema.prisma 의 `DateTime @updatedAt` 을 `DateTime? @updatedAt @db.Timestamptz()` 로 일괄 변경 + 마이그레이션.
-- [x] **`deleted_at` 도입 (소프트 삭제)** → §1 표의 lifecycle 테이블 17개에 `TIMESTAMPTZ NULLABLE` 컬럼 추가. 모든 조회에 `WHERE deleted_at IS NULL` 기본 적용 (Prisma middleware 또는 service 레이어 helper).
-- [x] **UUIDv7 도입** → application 측 발급 헬퍼(`uuid` 패키지 `v7()` 또는 동등) 작성. schema.prisma `@default(uuid())` 제거.
-- [x] **enum 타입 이름 `<table>_<column>_enum`** → 마이그레이션 SQL `ALTER TYPE "UserRole" RENAME TO users_role_enum;` 식 일괄 처리. 공용 enum 2건 (`comparison_operator_enum`, `condition_state_enum`) 만 의미 단위 이름.
-- [x] **인덱스/제약명 명명 규칙** (`pk_`, `uq_`, `idx_`, `fk_`, `chk_`) → Prisma `@@id(map:)`, `@@unique(..., map:)`, `@@index(..., map:)`, `@relation(... , map:)` 명시 + 마이그레이션 SQL `ALTER INDEX ... RENAME` / `ALTER TABLE ... RENAME CONSTRAINT`.
-- [ ] `products.attributes` GIN/Expression 인덱스 추가 시점 (catalog 규모 임계치)
-- [ ] `user_sessions.segment` 컬럼 도입 여부 결정 (db_modeling.md 동기화)
-- [ ] `priority_rules.hold_categories`, `decision_runs.*_snapshot`, `question_filter_mappings.filters` 등 JSONB 컬럼의 Zod 스키마 정의 위치
-- [ ] 소프트 삭제 cascading 정책 — 부모 row `deleted_at` 채워졌을 때 자식 row 처리 (예: `users.deleted_at` 발생 시 `devices`/`reaction_reports` 도 같이 마킹할지)
-
-> ☑ 표시는 본 문서 작성 시점의 정책 결정 완료를 의미. 실제 schema.prisma / migration.sql 반영은 후속 마이그레이션 PR 에서 진행.
+- `products.attributes` GIN/Expression 인덱스 추가 시점 (catalog 규모 임계치).
+- `user_sessions.segment` 컬럼 도입 여부 (A/B 테스트 도입 시 결정).
+- `priority_rules.hold_categories`, `decision_runs.*_snapshot`, `question_filter_mappings.filters` 등 JSONB 컬럼의 Zod 스키마 정의 위치.
+- 소프트 삭제 cascading 정책 — 부모 row `deleted_at` 채워졌을 때 자식 row 처리 (예: `users.deleted_at` 발생 시 `devices`/`reaction_reports` 도 같이 마킹할지).
