@@ -11,8 +11,9 @@
 
 ### 0.1 식별자 / 시각 컬럼 규약
 
-- **UUID 는 모두 UUIDv7** 이다. (시간 정렬 가능 / BTREE 친화적 / PK 분포 무작위 회피)  
+- **식별자 기본은 UUIDv7** 이다. (시간 정렬 가능 / BTREE 친화적 / PK 분포 무작위 회피)  
   본 문서에서 `UUID PK`, `UUID FK …` 로 표기된 모든 컬럼이 해당된다.
+- **내부 append-only 로그/스냅샷(`session_events`, `decision_runs`)의 PK 는 `BIGINT` identity** 다 (`BIGINT PK (IDENTITY)` 표기). 외부 노출·inbound FK 가 없고 대량 적재되므로 8바이트·단조 증가가 유리하다. (→ [ADR-0002](../../memory/ADR/ADR-0002-db-identity-and-fk-policy.md))
 - **모든 시각 컬럼은 `TIMESTAMPTZ`** (UTC 저장, 표시 변환은 클라이언트 책임).
 - 모든 테이블의 라이프사이클 컬럼은 다음 3종을 표준으로 둔다:
 
@@ -280,7 +281,7 @@ ingredient_groups
 
 | 컬럼       | 타입                    | 설명              |
 | ---------- | ----------------------- | ----------------- |
-| id         | UUID PK                 | 이벤트 ID         |
+| id         | BIGINT PK (IDENTITY)    | 이벤트 ID         |
 | session_id | UUID FK → user_sessions | 세션 ID           |
 | event_name | VARCHAR(100)            | 이벤트 이름       |
 | screen     | VARCHAR(100)            | 화면명            |
@@ -603,14 +604,14 @@ Priority Gate뿐 아니라 Category Decision, Product Matrix 결과까지 저장
 
 | 컬럼                     | 타입                                               | 설명                                                                                                                     |
 | ------------------------ | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| id                       | UUID PK                                            | 실행 기록 ID                                                                                                             |
+| id                       | BIGINT PK (IDENTITY)                               | 실행 기록 ID                                                                                                             |
 | device_id                | UUID FK → devices.id                               | 기기 ID                                                                                                                  |
 | user_id                  | UUID FK → users.id NULLABLE                        | 로그인 시 병합, 비로그인 null                                                                                            |
 | session_id               | UUID FK → user_sessions.id                         | 세션 ID                                                                                                                  |
 | decision_type            | VARCHAR(50)                                        | 결과 종류 (`PRIORITY_GATE` / `CATEGORY_DECISION` / `PRODUCT_MATRIX` / `REACTION_TRACEBACK` — application enum 으로 검증) |
 | source_screen            | VARCHAR(100)                                       | 발생 화면                                                                                                                |
-| category_id              | UUID FK → product_categories.id NULLABLE           | 대상 제품군                                                                                                              |
-| filter_state_id          | UUID FK → product_matrix_filter_states.id NULLABLE | 적용된 필터 상태 참조                                                                                                    |
+| category_id              | UUID NULLABLE (FK 없음 · 스냅샷 기록용)            | 대상 제품군 (당시 값 기록)                                                                                              |
+| filter_state_id          | UUID NULLABLE (FK 없음 · 스냅샷 기록용)            | 적용된 필터 상태 (당시 값 기록)                                                                                          |
 | result_type              | VARCHAR(50) NULLABLE                               | 결과 타입 snapshot                                                                                                       |
 | result_title             | TEXT NULLABLE                                      | 결과 제목 snapshot                                                                                                       |
 | result_description       | TEXT NULLABLE                                      | 결과 설명 snapshot                                                                                                       |
