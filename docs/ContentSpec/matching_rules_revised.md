@@ -8,17 +8,17 @@
 
 ## 0. 전체 흐름
 
-| 단계 | 입력                   | 처리                                                          | 출력                                                                 |
-| ---- | ---------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------- |
-| 1    | Segment / Concern 클릭 | 프론트 상수 매핑                                              | `flow.concern`, `route_target`, `preset_facts`, `suggested_category` |
-| 2    | Concern preset 적용    | `source = concern` 초기 선택 상태 저장 또는 프론트 상태 유지  | Priority Gate 질문 우선순위 또는 Category Decision seed              |
-| 3    | Priority Gate 답변     | `priority_rules` 평가                                         | HOLD / CAUTION / PASS / ROUTE_CATEGORY                               |
-| 4    | Category Decision 답변 | user_responses 저장                                           | category별 Context 완성                                              |
-| 5    | Matching Rule 적용     | `product_filter_mappings` + application layer computed filter | filter_state 생성                                                    |
-| 6    | Product Matrix 조회    | `products.attributes` 조건 조회                               | 제품 후보 + 태그 + 주의 사유                                         |
-| 7    | Product Detail         | 동일 filter_state 기준 사유 계산                              | 적합도 상세 설명                                                     |
-| 8    | Reaction Traceback     | 문제/괜찮은 제품 성분 비교                                    | avoidance_rules 생성                                                 |
-| 9    | 다음 Product Matrix    | avoidance_rules 추가 적용                                     | 회피/주의 성분 반영                                                  |
+| 단계 | 입력                   | 처리                                                                                                                                | 출력                                                                 |
+| ---- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| 1    | Segment / Concern 클릭 | 프론트 상수 매핑                                                                                                                    | `flow.concern`, `route_target`, `preset_facts`, `suggested_category` |
+| 2    | Concern preset 적용    | `source = concern` 초기 선택 상태 저장 또는 프론트 상태 유지                                                                        | Priority Gate 질문 우선순위 또는 Category Decision seed              |
+| 3    | Priority Gate 답변     | `priority_rules` 평가                                                                                                               | HOLD / CAUTION / PASS / ROUTE_CATEGORY                               |
+| 4    | Category Decision 답변 | user_responses 저장                                                                                                                 | category별 Context 완성                                              |
+| 5    | Matching Rule 적용     | `product_matrix_filter_definitions` + `product_filter_definitions` + `question_filter_mappings` + application layer computed filter | filter_state 생성                                                    |
+| 6    | Product Matrix 조회    | `products.attributes` 조건 조회                                                                                                     | 제품 후보 + 태그 + 주의 사유                                         |
+| 7    | Product Detail         | 동일 filter_state 기준 사유 계산                                                                                                    | 적합도 상세 설명                                                     |
+| 8    | Reaction Traceback     | 문제/괜찮은 제품 성분 비교                                                                                                          | avoidance_rules 생성                                                 |
+| 9    | 다음 Product Matrix    | avoidance_rules 추가 적용                                                                                                           | 회피/주의 성분 반영                                                  |
 
 ---
 
@@ -26,7 +26,7 @@
 
 ### 1.1 DB operator
 
-`product_filter_mappings`, `priority_rule_conditions`, `question_visibility_conditions`에서 기본으로 사용할 operator는 아래로 제한한다.
+`question_filter_mappings`, `product_filter_definitions` (default\_/allowed_operators), `priority_rule_conditions`, `question_visibility_conditions`에서 기본으로 사용할 operator는 아래로 제한한다.
 
 | operator   | 의미                                                   |
 | ---------- | ------------------------------------------------------ |
@@ -41,20 +41,22 @@
 
 아래 조건은 DB 스키마의 기본 operator만으로는 표현이 어렵기 때문에 application layer에서 계산한다.
 
-| computed operator | 사용처                                 | 계산 방식                                      |
-| ----------------- | -------------------------------------- | ---------------------------------------------- |
-| `CONTAINS_ANY`    | active 성분, concern fit               | 배열 중 하나라도 포함되면 true                 |
-| `CONTAINS_ANY_N`  | 기능성 제품 과다 사용                  | 지정 배열 중 N개 이상 포함되면 true            |
-| `NOT_CONTAINS`    | 세럼 병행 주의 inverse filter          | `CONTAINS` 결과를 반대로 판단                  |
-| `COMPOSITE_AND`   | `triple_moisture`, `balanced_moisture` | 여러 attribute 조건을 모두 만족해야 true       |
-| `COMPOSITE_OR`    | `barrier_ingredients`                  | 여러 attribute 조건 중 하나 이상 만족하면 true |
-| `HAS_LENGTH_GTE`  | `clear_purpose`                        | 배열 길이가 N 이상이면 true                    |
-| `PRICE_BAND_EQ`   | 예산 필터                              | `products.price_band` 직접 비교                |
-| `DERIVED_BOOLEAN` | `routine.sunscreen_use`                | 다른 fact에서 boolean 파생                     |
+| computed operator | 사용처                                 | 계산 방식                                                 |
+| ----------------- | -------------------------------------- | --------------------------------------------------------- |
+| `CONTAINS_ANY`    | active 성분, concern fit               | 배열 중 하나라도 포함되면 true                            |
+| `CONTAINS_ANY_N`  | 기능성 제품 과다 사용                  | 지정 배열 중 N개 이상 포함되면 true                       |
+| `NOT_CONTAINS`    | 세럼 병행 주의 inverse filter          | `CONTAINS` 결과를 반대로 판단                             |
+| `COMPOSITE_AND`   | `triple_moisture`, `balanced_moisture` | 여러 attribute 조건을 모두 만족해야 true                  |
+| `COMPOSITE_OR`    | `barrier_ingredients`                  | 여러 attribute 조건 중 하나 이상 만족하면 true            |
+| `HAS_LENGTH_GTE`  | `clear_purpose`                        | 배열 길이가 N 이상이면 true                               |
+| `PRICE_BAND_EQ`   | 예산 필터                              | `products.price_krw` 를 service 기준 가격대로 환산해 비교 |
+| `DERIVED_BOOLEAN` | `routine.sunscreen_use`                | 다른 fact에서 boolean 파생                                |
 
-### 1.3 filter_mode 의미
+### 1.3 처리 정책 의미 (DB 컬럼 아님)
 
-| filter_mode   | 의미                         | Product Matrix 처리                |
+`product_matrix_filter_definitions` / `product_filter_definitions` / `product_matrix_filter_states.filters`에는 처리 방식 컬럼을 두지 않는다. 아래 값은 Product Matrix service가 attribute 또는 computed 조건을 해석한 뒤 카드 표시/정렬에 쓰는 application 정책이다.
+
+| 처리 정책     | 의미                         | Product Matrix 처리                |
 | ------------- | ---------------------------- | ---------------------------------- |
 | `HARD_FILTER` | 조건 미충족 제품 제외        | WHERE 조건에 반영                  |
 | `EXCLUDE`     | 제외 권장                    | 기본 목록에서 숨기거나 하단 분리   |
@@ -62,14 +64,14 @@
 | `SORT`        | 조건 만족 제품 우선 노출     | 랭킹 점수 가산                     |
 | `TAG`         | 조건 만족 제품에 정보성 태그 | 제품 카드 태그 표시                |
 
-### 1.4 filter_type 의미
+### 1.4 필터 출처/역할 의미 (DB 컬럼 아님)
 
-| filter_type       | 의미                                                              |
-| ----------------- | ----------------------------------------------------------------- |
-| `BASIC_CONDITION` | 카테고리별 좋은 제품의 기본 조건. 카테고리 진입 시 기본 선택 상태 |
-| `PERSONALIZED`    | 사용자 답변 또는 Concern에서 생성된 개인화 필터                   |
-| `TRACEBACK`       | Reaction Traceback의 avoidance_rules에서 생성된 필터              |
-| `MANUAL`          | 사용자가 Product Matrix에서 직접 추가/삭제한 필터                 |
+| 역할              | 저장 위치 / 판정 방식                                                                   |
+| ----------------- | --------------------------------------------------------------------------------------- |
+| `BASIC_CONDITION` | `product_matrix_filter_definitions.is_default = true`                                   |
+| `PERSONALIZED`    | `question_filter_mappings` trigger 매칭으로 선택된 `matrix_filter_definition_id`        |
+| `TRACEBACK`       | `avoidance_rules` 후처리. `product_matrix_filter_states.filters`에는 source_type 미저장 |
+| `MANUAL`          | 사용자가 Product Matrix에서 추가/삭제한 `product_matrix_filter_states.filters[]` 항목   |
 
 ### 1.5 boolean attribute 해석
 
@@ -203,15 +205,15 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 
 ## 5.1 처리 방식
 
-| 단계 | 처리                                                                                                                                              |
-| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1    | Concern 태그 클릭                                                                                                                                 |
-| 2    | `session_events`에 `concern_clicked` 저장                                                                                                         |
-| 3    | `flow.concern` 저장                                                                                                                               |
-| 4    | `preset_facts`를 `source = concern` 초기 선택 상태로 저장하거나 프론트 상태에 유지                                                                |
-| 5    | `route_target = priority_gate`면 Priority Gate로 이동하고 관련 질문을 우선 노출                                                                   |
-| 6    | `route_target = category_decision`면 `category.selected = suggested_category`를 seed한 뒤 Category Decision으로 이동                              |
-| 7    | `suggested_filters`는 즉시 Product Matrix를 만들지 않고, 최종 category가 `suggested_category`와 일치할 때만 `CONCERN_PRESET` source_type으로 합성 |
+| 단계 | 처리                                                                                                                                                                  |
+| ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | Concern 태그 클릭                                                                                                                                                     |
+| 2    | `session_events`에 `concern_clicked` 저장                                                                                                                             |
+| 3    | `flow.concern` 저장                                                                                                                                                   |
+| 4    | `preset_facts`를 `source = concern` 초기 선택 상태로 저장하거나 프론트 상태에 유지                                                                                    |
+| 5    | `route_target = priority_gate`면 Priority Gate로 이동하고 관련 질문을 우선 노출                                                                                       |
+| 6    | `route_target = category_decision`면 `category.selected = suggested_category`를 seed한 뒤 Category Decision으로 이동                                                  |
+| 7    | `suggested_filters`는 즉시 Product Matrix를 만들지 않고, 최종 category가 `suggested_category`와 일치할 때만 `product_matrix_filter_definitions.key`로 resolve 해 합성 |
 
 ## 5.2 Concern Mapping Seed
 
@@ -255,9 +257,9 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 | 1    | `category.selected` 확인                                                                                              |
 | 2    | 해당 카테고리 BASIC_CONDITION 필터 추가                                                                               |
 | 3    | concern preset이 있고 최종 category가 `suggested_category`와 일치하면 `suggested_filters`를 `CONCERN_PRESET`으로 추가 |
-| 4    | Category Decision 답변을 `product_filter_mappings`로 변환                                                             |
+| 4    | Category Decision 답변을 `question_filter_mappings` trigger 와 매칭해 자동 선택할 `matrix_filter_definition_id` 도출  |
 | 5    | Reaction Traceback 회피 규칙이 있으면 TRACEBACK 필터 추가                                                             |
-| 6    | `question_filter_mappings.filters`에 저장                                                                         |
+| 6    | `product_matrix_filter_states.filters`에 저장                                                                         |
 | 7    | products 조회                                                                                                         |
 | 8    | `decision_runs`에 snapshot 저장                                                                                       |
 
@@ -615,7 +617,7 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 
 ## 12.1 충족 사유 생성
 
-| filter_mode       | Product Detail 표시        |
+| service_policy    | Product Detail 표시        |
 | ----------------- | -------------------------- |
 | HARD_FILTER 만족  | 충족 조건에 표시           |
 | SORT 만족         | 잘 맞는 이유에 표시        |
@@ -686,42 +688,42 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 | 4    | 가격대 HARD_FILTER 조건 추가            |
 | 5    | avoidance_rules `AVOID` product_id 제외 |
 | 6    | 남은 product에 CAUTION/TAG/SORT 계산    |
-| 7    | price_band별 그룹화                     |
+| 7    | `price_krw` 기반 계산 가격대별 그룹화   |
 | 8    | score DESC, sort_order ASC 정렬         |
 | 9    | `decision_runs` snapshot 저장           |
 
 ## 14.2 filter_state 저장 예시 구조
 
-| field                     | 예시                    |
-| ------------------------- | ----------------------- |
-| `source`                  | `CATEGORY_DECISION_CTA` |
-| `category_id`             | `cat_sunscreen`         |
-| `filters[].filter_key`    | `spf_50_plus`           |
-| `filters[].source_type`   | `BASIC_CONDITION`       |
-| `filters[].attribute_key` | `spf`                   |
-| `filters[].operator`      | `GTE`                   |
-| `filters[].value`         | `50`                    |
-| `filters[].mode`          | `HARD_FILTER`           |
+| field                                   | 예시                        |
+| --------------------------------------- | --------------------------- |
+| `source`                                | `CATEGORY_DECISION_CTA`     |
+| `category_id`                           | `cat_sunscreen`             |
+| `filters[].matrix_filter_definition_id` | `matrix_filter_spf_50_plus` |
+| `filters[].operator`                    | `GTE`                       |
+| `filters[].value`                       | `50`                        |
+
+> `filter_key`, `source_type`, `attribute_key`, `mode`, 표시 라벨은 state에 저장하지 않는다. 필요한 경우 `product_matrix_filter_definitions` / `product_filter_definitions` / `category_attribute_definitions` join 또는 `decision_runs.applied_filters_snapshot`으로 해석한다.
 
 ---
 
 # 15. Seed 등록 순서
 
-| 순서 | 작업                                           |
-| ---: | ---------------------------------------------- |
-|    1 | `product_categories` 6개 등록                  |
-|    2 | `category_attribute_definitions` P0 key 등록   |
-|    3 | `questions` 기본 + 추가 key 등록               |
-|    4 | `question_variants` S02~S04 질문 등록          |
-|    5 | `question_visibility_conditions` 등록          |
-|    6 | `priority_rules` 13개 등록                     |
-|    7 | `priority_rule_conditions` 등록                |
-|    8 | `product_filter_mappings` BASIC_CONDITION 등록 |
-|    9 | `product_filter_mappings` PERSONALIZED 등록    |
-|   10 | Concern route preset 프론트 상수 등록          |
-|   11 | ingredient_groups 5개 등록                     |
-|   12 | Product seed 등록                              |
-|   13 | Rule Test 화면에서 시나리오 검증               |
+| 순서 | 작업                                                       |
+| ---: | ---------------------------------------------------------- |
+|    1 | `product_categories` 6개 등록                              |
+|    2 | `category_attribute_definitions` P0 key 등록               |
+|    3 | `questions` 기본 + 추가 key 등록                           |
+|    4 | `question_variants` S02~S04 질문 등록                      |
+|    5 | `question_visibility_conditions` 등록                      |
+|    6 | `priority_rules` 13개 등록                                 |
+|    7 | `priority_rule_conditions` 등록                            |
+|    8 | `product_filter_definitions` 등록                          |
+|    9 | `product_matrix_filter_definitions` 등록 (is_default 포함) |
+|   10 | `question_filter_mappings` trigger 룰 등록                 |
+|   11 | Concern route preset 프론트 상수 등록                      |
+|   12 | ingredient_groups 5개 등록                                 |
+|   13 | Product seed 등록                                          |
+|   14 | Rule Test 화면에서 시나리오 검증                           |
 
 ---
 
@@ -771,8 +773,8 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 2. 립케어 SPF 없음은 `spf = 0`으로 저장한다.
 3. `fragrance = false`, `alcohol = false`는 확인된 무향/무알코올일 때만 저장한다.
 4. `unknown` 제품은 HARD_FILTER에서 통과시키지 않는다.
-5. Product Matrix snapshot은 `decision_runs`에 저장하되, 재조회는 `question_filter_mappings` 기준으로 현재 제품 DB를 다시 조회한다.
+5. Product Matrix snapshot은 `decision_runs`에 저장하되, 재조회는 `product_matrix_filter_states` 기준으로 현재 제품 DB를 다시 조회한다.
 6. Concern 태그는 DB가 아니라 프론트 상수로 관리한다.
 7. `CONTAINS_ANY`, `COMPOSITE_AND`, `COMPOSITE_OR`는 application layer에서 계산한다.
-8. BASIC_CONDITION이 모두 HARD_FILTER가 되면 후보가 과도하게 줄어들 수 있으므로, 사용감 조건은 기본적으로 SORT/TAG로 시작하고 개인화 답변이 있을 때 HARD_FILTER로 승격한다.
+8. `product_matrix_filter_definitions.is_default=true` 필터가 너무 많으면 후보가 과도하게 줄어들 수 있으므로, 사용감 조건은 기본 필터로 켜기보다 수동 선택 또는 service-level SORT/TAG 표시로 시작한다.
 9. Reaction Traceback은 확정 진단이 아니라 다음 선택에서 피할 가능성을 줄이는 도구로 표시한다.

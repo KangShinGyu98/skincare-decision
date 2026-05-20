@@ -179,14 +179,14 @@
 
 ### 클릭 처리
 
-| 단계 | 처리                                                                                                                              |
-| ---- | --------------------------------------------------------------------------------------------------------------------------------- |
-| 1    | `session_events.event_name = concern_clicked` 저장                                                                                |
+| 단계 | 처리                                                                                                                                             |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1    | `session_events.event_name = concern_clicked` 저장                                                                                               |
 | 2    | `user_responses.flow.concern` 저장 (`question_id=<flow.concern>`). 사용자가 본 화면 variant 추적은 `session_events.value_change` payload 로 분리 |
-| 3    | preset responses를 `source = concern`인 초기 선택 상태로 저장하거나 프론트 상태에 유지                                            |
-| 4    | `route_target = priority_gate`면 `/priority-gate`로 이동하고 관련 질문을 우선 노출                                                |
-| 5    | `route_target = category_decision`면 `category.selected = suggested_category`를 seed한 뒤 `/category-decision`으로 이동           |
-| 6    | `suggested_filters`는 즉시 `question_filter_mappings`를 만들지 않고, 최종 category가 일치할 때만 `CONCERN_PRESET` 힌트로 반영 |
+| 3    | preset responses를 `source = concern`인 초기 선택 상태로 저장하거나 프론트 상태에 유지                                                           |
+| 4    | `route_target = priority_gate`면 `/priority-gate`로 이동하고 관련 질문을 우선 노출                                                               |
+| 5    | `route_target = category_decision`면 `category.selected = suggested_category`를 seed한 뒤 `/category-decision`으로 이동                          |
+| 6    | `suggested_filters`는 즉시 `product_matrix_filter_states`를 만들지 않고, 최종 category가 일치할 때만 `CONCERN_PRESET` 힌트로 반영                |
 
 ---
 
@@ -421,15 +421,15 @@ Concern preset으로 진입한 경우에는 관련 질문을 먼저 보여준다
 
 ## 4. 제품 카드
 
-| 영역   | 데이터                |
-| ------ | --------------------- |
-| 이미지 | `products.image_url`  |
-| 브랜드 | `brands.name`         |
-| 제품명 | `products.name`       |
-| 가격   | `products.price`      |
-| 가격대 | `products.price_band` |
-| 적합도 | ✓ 적합 / △ 주의       |
-| 태그   | 적용 필터 중 최대 3개 |
+| 영역   | 데이터                          |
+| ------ | ------------------------------- |
+| 이미지 | `products.image_url`            |
+| 브랜드 | `brands.name`                   |
+| 제품명 | `products.name`                 |
+| 가격   | `products.price_krw`            |
+| 가격대 | `price_krw` 기반 service 계산값 |
+| 적합도 | ✓ 적합 / △ 주의                 |
+| 태그   | 적용 필터 중 최대 3개           |
 
 ## 5. CTA
 
@@ -454,7 +454,9 @@ Concern preset으로 진입한 경우에는 관련 질문을 먼저 보여준다
 
 ## 2. BASIC_CONDITION 태그
 
-| category      | filter_key            | 표시 라벨         | 기준                                                      |
+아래 key는 `product_matrix_filter_definitions.key`이며, 실제 attribute 기반 조건은 `product_filter_definitions`를 거쳐 해석한다. 복합/시스템 필터는 `product_matrix_filter_definitions.definition_kind = COMPUTED`로 두고 service handler가 처리한다.
+
+| category      | matrix_filter_key     | 표시 라벨         | 기준                                                      |
 | ------------- | --------------------- | ----------------- | --------------------------------------------------------- |
 | `toner`       | `hydrating_toner`     | 수분 공급         | `hydration_level IN [medium, high]`                       |
 | `toner`       | `low_irritation`      | 저자극            | `irritation_risk = low`                                   |
@@ -482,7 +484,7 @@ Concern preset으로 진입한 경우에는 관련 질문을 먼저 보여준다
 
 ## 3. PERSONALIZED 필터
 
-| source fact                                   | category                    | filter_key                 | 표시 라벨        |
+| trigger                                       | category                    | matrix_filter_key          | 표시 라벨        |
 | --------------------------------------------- | --------------------------- | -------------------------- | ---------------- |
 | `context.skin_type = oily`                    | toner                       | `oil_control`              | 피지 조절        |
 | `flow.concern = flaky_texture`                | toner                       | `gentle_exfoliation`       | 각질 케어        |
@@ -506,11 +508,11 @@ Concern preset으로 진입한 경우에는 관련 질문을 먼저 보여준다
 | `preference.fragrance_sensitive = true`       | all                         | `no_fragrance`             | 향료 회피        |
 | `preference.alcohol_sensitive = true`         | all except lipcare optional | `no_alcohol`               | 알코올 회피      |
 
-상세 mapping row는 `matching_rules_revised.md`의 Product Filter Mapping Seed를 사용한다.
+상세 seed row는 `matching_rules_revised.md`의 `product_filter_definitions` / `product_matrix_filter_definitions` / `question_filter_mappings` seed를 사용한다.
 
 ## 4. 가격대
 
-| price_band            | 라벨    | 범위                |
+| 계산 키               | 라벨    | 범위                |
 | --------------------- | ------- | ------------------- |
 | `UNDER_20000`         | ~2만원  | 0원 ~ 19,999원      |
 | `BETWEEN_20000_50000` | 2~5만원 | 20,000원 ~ 49,999원 |
@@ -700,14 +702,14 @@ Concern preset으로 진입한 경우에는 관련 질문을 먼저 보여준다
 
 # 부록 C. 구현 우선순위
 
-| 우선순위 | 작업                                                  |
-| -------- | ----------------------------------------------------- |
-| P0       | Product Matrix 6개 카테고리 BASIC_CONDITION seed      |
-| P0       | `category_attribute_definitions` P0 key 등록          |
-| P0       | `product_filter_mappings` BASIC/PERSONALIZED seed     |
-| P1       | Priority Gate 13개 Rule seed                          |
-| P1       | Category Decision 질문 + visibility condition seed    |
-| P1       | Concern route_target + preset_facts 24개 mapping 상수 |
-| P2       | Product Detail attribute 요약 UI                      |
-| P2       | Reaction Traceback ingredient group seed              |
-| P3       | 제품 seed 6개 카테고리 × 최소 6개                     |
+| 우선순위 | 작업                                                                                                 |
+| -------- | ---------------------------------------------------------------------------------------------------- |
+| P0       | Product Matrix 6개 카테고리 BASIC_CONDITION seed                                                     |
+| P0       | `category_attribute_definitions` P0 key 등록                                                         |
+| P0       | `product_filter_definitions` + `product_matrix_filter_definitions` + `question_filter_mappings` seed |
+| P1       | Priority Gate 13개 Rule seed                                                                         |
+| P1       | Category Decision 질문 + visibility condition seed                                                   |
+| P1       | Concern route_target + preset_facts 24개 mapping 상수                                                |
+| P2       | Product Detail attribute 요약 UI                                                                     |
+| P2       | Reaction Traceback ingredient group seed                                                             |
+| P3       | 제품 seed 6개 카테고리 × 최소 6개                                                                    |

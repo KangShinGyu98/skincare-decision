@@ -51,34 +51,34 @@ docs/
 
 ## 1. 폴더 인덱스
 
-| 폴더                                       | 역할                                              | 진입 파일                                              |
-| ------------------------------------------ | ------------------------------------------------- | ------------------------------------------------------ |
-| [ContentSpec/](ContentSpec/)               | 화면 콘텐츠·비즈니스 룰·UI 명세 (활성)            | [ContentSpec/AGENTS.md](ContentSpec/AGENTS.md)         |
-| [Data/](Data/)                             | DB 데이터 모델·스키마·화면 데이터 흐름 (활성)     | [Data/AGENTS.md](Data/AGENTS.md)                       |
+| 폴더                                         | 역할                                              | 진입 파일                                                      |
+| -------------------------------------------- | ------------------------------------------------- | -------------------------------------------------------------- |
+| [ContentSpec/](ContentSpec/)                 | 화면 콘텐츠·비즈니스 룰·UI 명세 (활성)            | [ContentSpec/AGENTS.md](ContentSpec/AGENTS.md)                 |
+| [Data/](Data/)                               | DB 데이터 모델·스키마·화면 데이터 흐름 (활성)     | [Data/AGENTS.md](Data/AGENTS.md)                               |
 | [DocumentIngredients/](DocumentIngredients/) | 정제 전 1차 소스 원자료 (재료)                    | [DocumentIngredients/AGENTS.md](DocumentIngredients/AGENTS.md) |
-| [Rejected/](Rejected/)                     | 토너 1차 MVP 범위 밖 보류 명세 (삭제 아님)        | [Rejected/AGENTS.md](Rejected/AGENTS.md)               |
-| [Codex_Research/](Codex_Research/)         | 시장·UX·결정 여정 조사 (배경 컨텍스트, 읽기 전용) | [Codex_Research/AGENTS.md](Codex_Research/AGENTS.md)   |
-| [ClaudeProtype/](ClaudeProtype/)           | HTML mockup (UI 톤·레이아웃 참고)                 | [ClaudeProtype/AGENTS.md](ClaudeProtype/AGENTS.md)     |
-| [crawl/](crawl/)                           | 스킨케어 아티클 크롤링 산출물 (P0 종료)           | [crawl/AGENTS.md](crawl/AGENTS.md)                     |
+| [Rejected/](Rejected/)                       | 토너 1차 MVP 범위 밖 보류 명세 (삭제 아님)        | [Rejected/AGENTS.md](Rejected/AGENTS.md)                       |
+| [Codex_Research/](Codex_Research/)           | 시장·UX·결정 여정 조사 (배경 컨텍스트, 읽기 전용) | [Codex_Research/AGENTS.md](Codex_Research/AGENTS.md)           |
+| [ClaudeProtype/](ClaudeProtype/)             | HTML mockup (UI 톤·레이아웃 참고)                 | [ClaudeProtype/AGENTS.md](ClaudeProtype/AGENTS.md)             |
+| [crawl/](crawl/)                             | 스킨케어 아티클 크롤링 산출물 (P0 종료)           | [crawl/AGENTS.md](crawl/AGENTS.md)                             |
 
 ---
 
 ## 2. 활성 명세 빠른 찾기 (키워드 인덱스)
 
-| 키워드                              | 파일                                                                                               |
-| ----------------------------------- | -------------------------------------------------------------------------------------------------- |
-| DB 25개 테이블 정의                 | [Data/db_modeling.md](Data/db_modeling.md)                                                         |
-| Prisma↔SQL 자료형·인덱스 검증       | [Data/db_schema_validation.md](Data/db_schema_validation.md)                                       |
-| 화면별 데이터 흐름 (Read/Write/...) | [Data/screen_data_specification.md](Data/screen_data_specification.md)                             |
-| ERD 시각화 다이어그램               | [Data/ERD/Skincare-after-backend.png](Data/ERD/Skincare-after-backend.png)                         |
-| Priority Gate 룰 + 필터 매핑 시드   | [ContentSpec/matching_rules_revised.md](ContentSpec/matching_rules_revised.md)                     |
-| `products.attributes` JSONB 사전    | [ContentSpec/product_attribute_schema.md](ContentSpec/product_attribute_schema.md)                 |
-| MVP 6개 카테고리 정의               | [ContentSpec/product_taxonomy.md](ContentSpec/product_taxonomy.md)                                 |
-| 화면별 카피·CTA·동적 슬롯           | [ContentSpec/page_content_specification.md](ContentSpec/page_content_specification.md)             |
-| 화면 흐름·관리자 화면 요약          | [ContentSpec/wireframe_summary.md](ContentSpec/wireframe_summary.md)                               |
-| 관리자 제품 등록 폼 명세            | [ContentSpec/admin_product_input_spec.md](ContentSpec/admin_product_input_spec.md)                 |
-| 카테고리별 선택 기준 원자료         | [ContentSpec/skincare_product_selection_rule.md](ContentSpec/skincare_product_selection_rule.md)   |
-| 토너 1차 시드 원본 (CSV)            | [화장품 성분비교.CSV](./화장품%20성분비교.CSV)                                                     |
+| 키워드                              | 파일                                                                                                       |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| DB 27개 테이블 정의                 | [Data/db_modeling.md](Data/db_modeling.md)                                                                 |
+| Prisma↔SQL 자료형·인덱스 검증       | [Data/db_schema_validation.md](Data/db_schema_validation.md)                                               |
+| 화면별 데이터 흐름 (Read/Write/...) | [Data/screen_data_specification.md](Data/screen_data_specification.md)                                     |
+| ERD 시각화 다이어그램               | [Data/ERD/Skincare-after-backend.png](Data/ERD/Skincare-after-backend.png)                                 |
+| Priority Gate 룰 + 필터 매핑 시드   | [ContentSpec/matching_rules_revised.md](ContentSpec/matching_rules_revised.md)                             |
+| `products.attributes` JSONB 사전    | [ContentSpec/product_attribute_schema.md](ContentSpec/product_attribute_schema.md)                         |
+| MVP 6개 카테고리 정의               | [ContentSpec/product_taxonomy.md](ContentSpec/product_taxonomy.md)                                         |
+| 화면별 카피·CTA·동적 슬롯           | [ContentSpec/page_content_specification.md](ContentSpec/page_content_specification.md)                     |
+| 화면 흐름·관리자 화면 요약          | [ContentSpec/wireframe_summary.md](ContentSpec/wireframe_summary.md)                                       |
+| 관리자 제품 등록 폼 명세            | [ContentSpec/admin_product_input_spec.md](ContentSpec/admin_product_input_spec.md)                         |
+| 카테고리별 선택 기준 원자료         | [ContentSpec/skincare_product_selection_rule.md](ContentSpec/skincare_product_selection_rule.md)           |
+| 토너 1차 시드 원본 (CSV)            | [화장품 성분비교.CSV](./화장품%20성분비교.CSV)                                                             |
 | 크롤링 1차 룰 (정제 전)             | [DocumentIngredients/skincare_rules_from_articles.md](DocumentIngredients/skincare_rules_from_articles.md) |
 
 ---

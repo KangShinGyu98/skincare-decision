@@ -591,3 +591,53 @@
 - `is_active` / `filter_mode` / `filter_key` / `tag_label` 같은 운영 메타데이터를 DB 컬럼에서 빼고 application/UI 가 담당하게 하면, 운영 정책 변경 시 마이그레이션이 필요 없다.
 - 보조 인덱스는 실제 쿼리 경로가 없는 한 미리 만들지 않는다 (특히 INSERT 가 잦은 fact/응답 테이블).
 - `decision_runs.decision_type` 처럼 application 단에서 자주 진화하는 enum 은 DB 에 못 박지 않는다.
+
+## [2026-05-19] Product Matrix 필터를 `product_filter_definitions` 중심으로 분리
+
+**배경:** 2026-05-18의 필터 도메인 정리에서 `product_filter_mappings`가 사용자 답변 trigger와 product attribute 조건을 동시에 들고 있었고, `product_matrix_filter_states` rename 방향도 혼선이 있었다. Product Matrix의 "+ 필터 추가" UI는 attribute 자체가 아니라 "attribute + operator + value + 표시 라벨"의 필터 태그 카탈로그가 필요하다.
+
+**결정:**
+
+- `product_filter_definitions`를 새 테이블로 추가한다.
+  - `attribute_definition_id`로 `category_attribute_definitions.id`를 참조한다.
+  - `label`, `default_operator`, `allowed_operators`, `default_value`, `input_type`, `options`, `is_default`, `is_manual_selectable`, `sort_order`, `is_active`를 가진다.
+- 기존 `product_filter_mappings`의 사용자 답변 trigger 역할은 `question_filter_mappings`로 rename/축소한다.
+  - `trigger_question_id`, `trigger_operator`, `trigger_value`, `filter_definition_id`만 가진다.
+  - attribute 조건은 직접 저장하지 않고, `filter_definition_id → product_filter_definitions → category_attribute_definitions.key`로 해석한다.
+- `product_matrix_filter_states`는 rename하지 않고 유지한다.
+  - `filters` JSONB는 `[{ filter_definition_id, operator, value }]`만 저장한다.
+  - label, attribute_key, source_type 같은 표시/snapshot 필드는 저장하지 않는다.
+- 당시 사용자가 실제로 본 필터와 attribute 조건은 `decision_runs.applied_filters_snapshot`에 `{filter_definition_id, label, attribute_key, operator, value}` 형태로 별도 보관한다.
+
+**이유:**
+
+- `category_attribute_definitions`는 `products.attributes` JSONB의 schema-of-schema이지 Product Matrix 필터 UI 카탈로그가 아니다.
+- 같은 attribute에 대해 여러 사용자-facing 필터 태그를 둘 수 있어야 한다.
+- state row에 label/attribute_key/operator/value를 모두 snapshot처럼 저장하면 중복과 stale risk가 커진다.
+- current state는 definition id 중심으로 가볍게 유지하고, 이력 복원은 `decision_runs` snapshot이 담당하는 편이 책임이 명확하다.
+
+## [2026-05-19] Product Matrix 필터를 Matrix 정의와 원자 필터로 재분리
+
+**배경:** 이전 결정은 `product_filter_definitions` 안에 Matrix 노출 정책(`is_default`, `is_manual_selectable`)까지 포함했다. 하지만 이 테이블은 attribute-backed 원자 필터이고, Product Matrix의 시스템/복합 필터는 attribute 와 1:1로 대응되지 않을 수 있다.
+
+**결정:**
+
+- `category_attribute_definitions.is_filterable`을 제거한다. attribute schema 는 제품 JSONB key/type/options 검증 책임만 가진다.
+- `product_filter_definitions`는 `attribute_definition_id + operator/value/input metadata`만 가진 attribute-backed 원자 필터로 둔다.
+  - `is_default`, `is_manual_selectable`은 이 테이블에서 제거한다.
+- `product_matrix_filter_definitions`를 추가해 Product Matrix UI/System 필터 카탈로그를 담당한다.
+  - `definition_kind = ATTRIBUTE`이면 `product_filter_definition_id`를 참조한다.
+  - `definition_kind = COMPUTED`이면 `computed_filter_key`와 `condition_payload`를 service 가 해석한다.
+  - `is_default`, `is_manual_selectable`, `sort_order`, `label`은 이 테이블의 책임이다.
+- `question_filter_mappings`는 사용자 답변 trigger가 어떤 `matrix_filter_definition_id`를 자동 선택할지만 관리한다.
+- `product_matrix_filter_states.filters`는 `[{ matrix_filter_definition_id, operator, value }]`만 저장하고, `session_id`는 두지 않는다.
+- `decision_runs.applied_filters_snapshot`에는 당시 표시 라벨/attribute 조건을 snapshot 으로 별도 보관한다.
+- `products.idx_products_brand_id`는 조회 경로가 없으므로 만들지 않는다.
+- `product_ingredients`는 `(product_id, order_index)` UNIQUE를 추가해 같은 제품 내 전성분 순서 중복을 막는다.
+- `reaction_reports.session_id`와 `idx_reaction_reports_session_id`는 제거한다. 리포트 복원/병합은 `device_id` / `user_id` 기준으로 처리한다.
+
+**이유:**
+
+- attribute schema, attribute-backed 원자 필터, Matrix 노출 필터의 변경 주기가 다르므로 한 테이블에 섞으면 이후 computed/system 필터가 들어올 때 예외가 늘어난다.
+- current state 는 현재 선택만 가볍게 유지하고, 감사/복구 목적의 풍부한 정보는 `decision_runs` snapshot 에 둔다.
+- 실제 조회 경로가 없는 보조 인덱스와 session FK 는 쓰기 비용과 스키마 결합만 늘린다.

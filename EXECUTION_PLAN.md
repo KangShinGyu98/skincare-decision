@@ -254,14 +254,14 @@ pnpm --filter backend exec prisma generate   # Generated Prisma Client (v6.19.x)
 
 ### 2.4 Prisma schema 작성
 
-`prisma/schema.prisma`를 [docs/db_modeling.md](docs/db_modeling.md)의 25개 테이블 기준으로 작성한다. 작성 순서:
+`prisma/schema.prisma`를 [docs/Data/db_modeling.md](docs/Data/db_modeling.md)의 27개 테이블 기준으로 작성한다. 작성 순서:
 
-1. enum 정의 먼저 (`UserRole`, `SessionStatus`, `FactValueType`, `PriorityResultType`, `FilterMode`, `FilterType` 등)
+1. enum 정의 먼저 (`questions_answer_type_enum`, `comparison_operator_enum`, `product_filter_definitions_input_type_enum`, `product_matrix_filter_states_source_enum` 등)
 2. 사용자 / 신원 (users → devices → user_sessions → session_events)
-3. Fact / 질문 (fact_definitions → context_questions → question_visibility_conditions → user_facts)
+3. 질문 / 응답 (questions → question_variants → question_visibility_conditions → user_responses)
 4. Priority (priority_rules → priority_rule_conditions → decision_runs)
 5. Catalog (brands → product_categories → category_attribute_definitions → products → ingredients → product_ingredients → ingredient_groups → ingredient_group_members)
-6. Filter / Matrix (product_filter_mappings → product_matrix_filter_states)
+6. Filter / Matrix (product_filter_definitions → product_matrix_filter_definitions → question_filter_mappings → product_matrix_filter_states)
 7. Traceback (reaction_reports → reaction_report_products → suspected_causes → avoidance_rules)
 
 각 모델에 `@@map("snake_case_table")`를 명시한다. JSONB는 `Json` 타입.
@@ -300,7 +300,6 @@ JSONB 인덱스 추가용 raw 마이그레이션:
 pnpm prisma migrate dev --create-only --name add_jsonb_indexes
 # 생성된 .sql 파일에 아래 추가:
 #   CREATE INDEX products_attributes_gin ON products USING GIN (attributes);
-#   CREATE INDEX user_facts_value_gin ON user_facts USING GIN (value);
 #   CREATE INDEX session_events_payload_gin ON session_events USING GIN (payload);
 pnpm prisma migrate dev
 ```
@@ -544,16 +543,16 @@ pnpm run build  # 타입 에러 0인지 확인
 
 ### 4.3 공통 결정 로직 위치 가이드
 
-| 로직                                  | 위치                                           |
-| ------------------------------------- | ---------------------------------------------- |
-| Concern 태그 → preset_facts           | FE `src/config/concerns.ts`                    |
-| Priority Rule 평가                    | BE `services/priority/priority.service.ts`     |
-| Question visibility 조건 평가         | BE `services/facts/visibility.service.ts`      |
-| product_filter_mappings → 동적 where  | BE `services/matrix/filter-builder.service.ts` |
-| application-layer computed operator   | BE `services/matrix/computed-operators.ts`     |
-| avoidance_rules 적용 (제외/주의 분기) | BE `services/matrix/avoidance.service.ts`      |
-| filter chip 렌더링 / 추가·삭제 UI     | FE `components/product/FilterChips.tsx`        |
-| 가격대 띠 (price_band)                | FE `components/product/PriceBandRow.tsx`       |
+| 로직                                                                                                        | 위치                                           |
+| ----------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| Concern 태그 → preset_facts                                                                                 | FE `src/config/concerns.ts`                    |
+| Priority Rule 평가                                                                                          | BE `services/priority/priority.service.ts`     |
+| Question visibility 조건 평가                                                                               | BE `services/facts/visibility.service.ts`      |
+| filter_state → product_matrix_filter_definitions → product_filter_definitions/computed handler → 동적 where | BE `services/matrix/filter-builder.service.ts` |
+| application-layer computed operator                                                                         | BE `services/matrix/computed-operators.ts`     |
+| avoidance_rules 적용 (제외/주의 분기)                                                                       | BE `services/matrix/avoidance.service.ts`      |
+| filter chip 렌더링 / 추가·삭제 UI                                                                           | FE `components/product/FilterChips.tsx`        |
+| 가격대 띠 (price_krw 기반 계산값)                                                                           | FE `components/product/PriceBandRow.tsx`       |
 
 ---
 
@@ -563,16 +562,18 @@ pnpm run build  # 타입 에러 0인지 확인
 
 `backend/prisma/seed.ts` 작성. 데이터 출처:
 
-| seed 항목                         | 출처                                                                   |
-| --------------------------------- | ---------------------------------------------------------------------- |
-| product_categories (6개)          | `docs/product_taxonomy.md`                                             |
-| category_attribute_definitions    | `docs/product_attribute_schema.md`                                     |
-| fact_definitions                  | `docs/db_modeling.md` 8장 + `matching_rules_revised.md`                |
-| context_questions + visibility    | `docs/page_content_specification.md` + `matching_rules_revised.md` 4장 |
-| priority_rules + conditions       | `docs/matching_rules_revised.md` 3.2 / 3.3                             |
-| product_filter_mappings           | `docs/matching_rules_revised.md` 5장 (있다면)                          |
-| brands + products (toner 25+종)   | `docs/db_seed_plan.md` + `docs/화장품 성분비교.CSV`                    |
-| ingredients + product_ingredients | `docs/db_seed_plan.md` + `docs/화장품 성분비교.CSV`                    |
+| seed 항목                         | 출처                                                                                                  |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| product_categories (6개)          | `docs/product_taxonomy.md`                                                                            |
+| category_attribute_definitions    | `docs/product_attribute_schema.md`                                                                    |
+| questions                         | `docs/Data/db_modeling.md` question 사전 + `docs/ContentSpec/matching_rules_revised.md`               |
+| question_variants + visibility    | `docs/ContentSpec/page_content_specification.md` + `docs/ContentSpec/matching_rules_revised.md`       |
+| priority_rules + conditions       | `docs/matching_rules_revised.md` 3.2 / 3.3                                                            |
+| product_filter_definitions        | attribute-backed 원자 필터 정의                                                                       |
+| product_matrix_filter_definitions | `docs/ContentSpec/matching_rules_revised.md` 7장 기본 필터 + Product Matrix 수동/시스템 필터 카탈로그 |
+| question_filter_mappings          | `docs/ContentSpec/matching_rules_revised.md` 8장 개인화 trigger 룰                                    |
+| brands + products (toner 25+종)   | `docs/db_seed_plan.md` + `docs/화장품 성분비교.CSV`                                                   |
+| ingredients + product_ingredients | `docs/db_seed_plan.md` + `docs/화장품 성분비교.CSV`                                                   |
 
 시드 구조와 의존성 순서는 [docs/db_seed_plan.md](docs/db_seed_plan.md)를 단일 진실로 사용한다. 토너 MVP 기준으로 카탈로그 seed는 toner만 넣고, 나머지 카테고리 제품은 admin UI로 점진 추가한다.
 
@@ -835,14 +836,14 @@ docker compose -f infra/docker/docker-compose.yml up --build
 
 ## 부록 B — 자주 부딪히는 함정
 
-| 증상                                          | 원인                                            | 해결                                                                                                    |
-| --------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Prisma `Json` 컬럼에 임의 값이 들어감         | Service에서 Zod 검증 누락                       | `backend/src/types/product-attributes.ts` discriminated union으로 검증 후 Repository 호출               |
-| `user_facts` 최신 값이 source 우선순위와 다름 | 단순 `created_at` 정렬                          | Repository에서 `traceback > context > priority_gate > concern` 우선순위 정렬                            |
-| Next.js Hydration mismatch                    | Server에서 device_id 읽고 client에서 다른 값    | device_id를 cookie에서만 읽고, client mount 후 부재 시 새로 발급                                        |
-| Tailwind 색이 design_system과 어긋남          | Tailwind config에 직접 hex 입력                 | `colors_and_type.css` CSS 변수 → `tailwind.config.ts`에서 `var(--...)`로 참조                           |
-| GH Actions에서 `prisma migrate deploy` 실패   | DATABASE_URL secret 누락 또는 RDS 보안그룹 차단 | OIDC role + Secrets Manager 사용, RDS SG에 GH runner egress IP 없으면 임시 EC2 bastion 또는 SSM session |
-| ECS task가 즉시 stop                          | ENV 누락 / Secrets Manager 권한 부족            | task role IAM에 `secretsmanager:GetSecretValue` (`skincare-decision/*` resource) 추가                   |
+| 증상                                        | 원인                                            | 해결                                                                                                    |
+| ------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Prisma `Json` 컬럼에 임의 값이 들어감       | Service에서 Zod 검증 누락                       | `backend/src/types/product-attributes.ts` discriminated union으로 검증 후 Repository 호출               |
+| `user_responses` 최신 값 복원이 안 됨       | question별 current-state upsert 누락            | `(device_id, question_id)` / `(user_id, question_id)` partial unique 기준으로 UPSERT                    |
+| Next.js Hydration mismatch                  | Server에서 device_id 읽고 client에서 다른 값    | device_id를 cookie에서만 읽고, client mount 후 부재 시 새로 발급                                        |
+| Tailwind 색이 design_system과 어긋남        | Tailwind config에 직접 hex 입력                 | `colors_and_type.css` CSS 변수 → `tailwind.config.ts`에서 `var(--...)`로 참조                           |
+| GH Actions에서 `prisma migrate deploy` 실패 | DATABASE_URL secret 누락 또는 RDS 보안그룹 차단 | OIDC role + Secrets Manager 사용, RDS SG에 GH runner egress IP 없으면 임시 EC2 bastion 또는 SSM session |
+| ECS task가 즉시 stop                        | ENV 누락 / Secrets Manager 권한 부족            | task role IAM에 `secretsmanager:GetSecretValue` (`skincare-decision/*` resource) 추가                   |
 
 ---
 
@@ -851,7 +852,7 @@ docker compose -f infra/docker/docker-compose.yml up --build
 각 Phase는 다음 조건 모두 만족 시 다음으로 넘어간다.
 
 - Phase 1: `pnpm install` 성공, `pnpm-workspace.yaml` 인식.
-- Phase 2: `pnpm --filter backend run start:dev` 실행 + `prisma studio`로 25개 테이블 표시.
+- Phase 2: `pnpm --filter backend run start:dev` 실행 + `prisma studio`로 27개 테이블 표시.
 - Phase 3: `pnpm --filter frontend run dev`로 layout 표시 + `pnpm run build` 통과.
 - Phase 4: 화면별 e2e 골든패스 통과 + `memory/api_contracts.md` 시그니처 일치.
 - Phase 5: `pnpm --filter backend exec prisma db seed` 멱등 + `pnpm -r run test` 통과.

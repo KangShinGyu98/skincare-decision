@@ -512,9 +512,9 @@ Product Matrix는 사용자가 선택한 제품군에서 **좋은 제품의 기�
 
 #### 2. 좋은 제품의 조건 (BASIC_CONDITION)
 
-제품군별로 반드시 확인해야 하는 핵심 기준을 태그 형태로 제공한다.  
-관리자가 코드 상수로 정의하며, Product Matrix 진입 시 기본 선택 상태로 시작된다.  
-`product_filter_mappings.filter_type = 'BASIC_CONDITION'`으로 구분한다.
+제품군별로 반드시 확인해야 하는 핵심 기준을 태그 형태로 제공한다.
+관리자가 Matrix 필터 정의로 관리하며, Product Matrix 진입 시 기본 선택 상태로 시작된다.
+`product_matrix_filter_definitions.is_default = true` 로 구분한다.
 
 **선크림**  
 `[SPF 50 이상] [PA++++] [발림성 우수] [눈시림 낮음] [백탁 적음] [메이크업 궁합]`
@@ -530,8 +530,7 @@ Product Matrix는 사용자가 선택한 제품군에서 **좋은 제품의 기�
 #### 3. 개인화 필터 (PERSONALIZED)
 
 사용자의 피부 상태와 사용 상황에 따라 제품 후보를 좁히는 필터.  
-사용자 답변(user_responses)을 `product_filter_mappings`로 변환해 자동 생성된다.  
-`product_filter_mappings.filter_type = 'PERSONALIZED'`으로 구분한다.
+사용자 답변(`user_responses`)이 `question_filter_mappings.trigger_*`와 매칭되면 해당 `matrix_filter_definition_id`가 자동 선택된다. 룰 자체는 `question_filter_mappings`, Matrix 노출 정의는 `product_matrix_filter_definitions`, attribute 조건은 필요 시 `product_filter_definitions` 에 보관된다.
 
 `[민감성 피부] [건성] [지성] [휴대성] [메이크업 전 사용] [야외 활동] [향료 회피] [눈시림 경험]`
 
@@ -760,31 +759,24 @@ Box 2와 Box 3의 각 항목은 3가지 상태로 관리한다.
 
 ### Product Filter Mapping 관리 페이지
 
-여기서는 사용자의 구어체 선택값(user_responses)이 제품 attribute 조건으로 어떻게 변환되는지 매핑을 설정한다.  
-"룰 엔진"이 아니라 "번역 테이블"이다. 실제 필터링은 product attributes를 기준으로 동적 SQL로 수행한다.
+여기서는 사용자의 구어체 선택값(user_responses)이 어떤 Product Matrix 필터를 자동으로 켤지 설정한다.
+`question_filter_mappings`는 trigger만 담당하고, 자동 선택 대상은 `product_matrix_filter_definitions`다. attribute 기반 조건은 해당 Matrix 정의가 가리키는 `product_filter_definitions.attribute_definition_id`와 기본 operator/value에서 나오고, 복합/시스템 조건은 computed handler가 해석한다.
 
-| 사용자 답변 (fact)                       | 변환 조건 (attribute)         | 처리 방식   | 필터 표시 이름 |
-| ---------------------------------------- | ----------------------------- | ----------- | -------------- |
-| context.eye_sting = true                 | eye_sting IN ["none","low"]   | HARD_FILTER | 눈시림 낮음    |
-| life.outdoor_activity IN [1_3h, over_3h] | spf >= 50                     | HARD_FILTER | 야외 사용 적합 |
-| context.white_cast_sensitive = true      | white_cast IN ["none","low"]  | HARD_FILTER | 백탁 없음      |
-| preference.fragrance_sensitive = true    | fragrance = false             | HARD_FILTER | 향료 없음      |
-| context.makeup_use = true                | makeup_compatibility = "good" | TAG         | 메이크업 궁합  |
+| 사용자 답변 (trigger)                    | 자동 선택 matrix filter | 기본 조건                     | 필터 표시 이름 |
+| ---------------------------------------- | ----------------------- | ----------------------------- | -------------- |
+| context.eye_sting = true                 | `eye_sting_low`         | eye_sting IN ["none","low"]   | 눈시림 낮음    |
+| life.outdoor_activity IN [1_3h, over_3h] | `spf_50_plus`           | spf >= 50                     | 야외 사용 적합 |
+| context.white_cast_sensitive = true      | `white_cast_low`        | white_cast IN ["none","low"]  | 백탁 없음      |
+| preference.fragrance_sensitive = true    | `no_fragrance`          | fragrance = false             | 향료 없음      |
+| context.makeup_use = true                | `makeup_compat_good`    | makeup_compatibility = "good" | 메이크업 궁합  |
 
-처리 방식(filter_mode):
-
-| 처리 방식   | 의미                                                      |
-| ----------- | --------------------------------------------------------- |
-| HARD_FILTER | attribute 조건을 WHERE에 추가해 제품 자체를 조회에서 제외 |
-| CAUTION     | 제품은 남기되 △ 주의 태그 표시                            |
-| TAG         | 조건 만족 제품에 정보성 태그 부여                         |
-| SORT        | 조건 만족 제품을 상위 노출                                |
+필터 상태에는 `{matrix_filter_definition_id, operator, value}`만 저장한다. 표시 라벨, attribute key, 입력 위젯, 선택 가능 operator는 `product_matrix_filter_definitions`와 `product_filter_definitions`를 조인해 해석한다.
 
 ---
 
 ### Product Matrix 필터 자동 생성
 
-Category Decision CTA로 Product Matrix에 진입하면, context 답변과 `product_filter_mappings`를 바탕으로 개인화 필터가 자동으로 선택 상태로 시작된다. Concern preset의 `suggested_filters`가 있다면 최종 category가 일치할 때만 함께 반영된다.
+Category Decision CTA로 Product Matrix에 진입하면, `product_matrix_filter_definitions.is_default = true` 와 context 답변이 매칭한 `question_filter_mappings.matrix_filter_definition_id` 가 자동으로 선택 상태로 시작된다. Concern preset의 `suggested_filters`가 있다면 최종 category가 일치할 때만 함께 반영된다.
 
 예를 들어 사용자가 이렇게 답했다면:
 
@@ -798,13 +790,15 @@ Product Matrix에는 이런 필터가 자동으로 선택된다.
 `[눈시림 낮음] [SPF 50 이상] [메이크업 궁합] [향료 주의]`
 
 ```txt
-Context 답변 → product_filter_mappings → attribute 조건 변환
-→ question_filter_mappings에 저장 (source: CATEGORY_DECISION_CTA)
+Context 답변 → question_filter_mappings 의 trigger 매칭 → matrix_filter_definition_id 결정
+→ product_matrix_filter_definitions 로 Matrix 노출/기본값 조회
+→ 필요 시 product_filter_definitions 로 attribute 조건 조회
+→ product_matrix_filter_states 에 저장 (source: CATEGORY_DECISION_CTA)
 → products 동적 SQL 조회
 → 결과 decision_runs에 snapshot 저장
 ```
 
-사용자가 필터를 추가/삭제하면 `question_filter_mappings.filters`가 업데이트되고, `session_events`에 이벤트로 기록된다.
+사용자가 필터를 추가/삭제하면 `product_matrix_filter_states.filters`가 업데이트되고, `session_events`에 이벤트로 기록된다.
 
 ---
 
@@ -915,13 +909,13 @@ Rule Test 화면은 Priority Decision, Context, Product Filter Mapping, Product 
 
 #### 테스트 결과
 
-| 결과 영역                     | 설명                                      |
-| ----------------------------- | ----------------------------------------- |
-| 매칭된 Priority Rule          | 어떤 Rule이 발동했는지 표시               |
-| 최종 결과 문구                | 사용자에게 보여줄 Priority Gate 결과      |
-| 노출될 Context 질문           | 현재 조건에서 어떤 질문이 보여지는지 표시 |
-| 적용된 Product Filter Mapping | 변환된 attribute 조건 + filter_mode 확인  |
-| Product Matrix 미리보기       | 실제로 어떤 제품이 노출되는지 확인        |
+| 결과 영역                        | 설명                                        |
+| -------------------------------- | ------------------------------------------- |
+| 매칭된 Priority Rule             | 어떤 Rule이 발동했는지 표시                 |
+| 최종 결과 문구                   | 사용자에게 보여줄 Priority Gate 결과        |
+| 노출될 Context 질문              | 현재 조건에서 어떤 질문이 보여지는지 표시   |
+| 적용된 Product Filter Definition | 변환된 attribute 조건 + operator/value 확인 |
+| Product Matrix 미리보기          | 실제로 어떤 제품이 노출되는지 확인          |
 
 ---
 

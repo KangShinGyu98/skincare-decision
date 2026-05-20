@@ -30,10 +30,10 @@ MVP 제품군은 아래 6개로 제한한다.
 
 ### 1.1 Core / Optional 기준
 
-| 구분     | 의미                                                                | DB 입력 기준                                                                     |
-| -------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| Core     | Product Matrix 필터, BASIC_CONDITION, PERSONALIZED 필터에 직접 사용 | `category_attribute_definitions.is_required = true`, `is_filterable = true` 권장 |
-| Optional | 상세 태그, 정렬, 설명, 보조 판단에 사용                             | `is_required = false`, 필요 시 `is_filterable = true`                            |
+| 구분     | 의미                                                                | DB 입력 기준                                                                                                            |
+| -------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Core     | Product Matrix 필터, BASIC_CONDITION, PERSONALIZED 필터에 직접 사용 | `category_attribute_definitions.is_required = true` 권장. 필터 노출 여부는 `product_matrix_filter_definitions`에서 관리 |
+| Optional | 상세 태그, 정렬, 설명, 보조 판단에 사용                             | `is_required = false`. 필요 시 Matrix 필터 정의를 별도로 추가                                                           |
 
 ### 1.2 공통 key 규칙
 
@@ -484,26 +484,26 @@ MVP 제품군은 아래 6개로 제한한다.
 
 ---
 
-## 10. Product Filter Mapping 예시
+## 10. Product Filter / Matrix Filter / Question Mapping 예시
 
-| source_fact_key                  | source 조건        | category      | attribute_key          | attribute 조건         | filter_mode   | filter_key             |
-| -------------------------------- | ------------------ | ------------- | ---------------------- | ---------------------- | ------------- | ---------------------- |
-| `context.eye_sting`              | `EQ true`          | `sunscreen`   | `eye_sting`            | `IN [none, low]`       | `HARD_FILTER` | `no_eye_sting`         |
-| `context.white_cast_sensitive`   | `EQ true`          | `sunscreen`   | `white_cast`           | `IN [none, low]`       | `HARD_FILTER` | `no_white_cast`        |
-| `context.makeup_use`             | `EQ true`          | `sunscreen`   | `makeup_compatibility` | `EQ good`              | `TAG`         | `makeup_compat_good`   |
-| `life.outdoor_activity`          | `EQ high`          | `sunscreen`   | `spf`                  | `GTE 50`               | `HARD_FILTER` | `outdoor_use`          |
-| `context.portable`               | `EQ true`          | `sunscreen`   | `portable`             | `EQ true`              | `SORT`        | `portable`             |
-| `preference.fragrance_sensitive` | `EQ true`          | all           | `fragrance`            | `EQ false`             | `HARD_FILTER` | `no_fragrance`         |
-| `preference.menthol_sensitive`   | `EQ true`          | `lipcare`     | `menthol`              | `EQ false`             | `HARD_FILTER` | `no_menthol_sensitive` |
-| `context.lip_outdoor`            | `EQ true`          | `lipcare`     | `spf`                  | `GTE 15`               | `TAG`         | `spf_included`         |
-| `context.lip_reapply`            | `EQ true`          | `lipcare`     | `moisture_lasting`     | `EQ high`              | `SORT`        | `high_moisture`        |
-| `life.recent_irritation`         | `EQ true`          | `serum`       | `irritation_risk`      | `EQ low`               | `HARD_FILTER` | `low_irritation`       |
-| `product.owned_actives`          | `CONTAINS retinol` | `serum`       | `conflict_ingredients` | `NOT_CONTAINS retinol` | `CAUTION`     | `no_conflict_retinol`  |
-| `context.usage_time`             | `EQ morning`       | `serum`       | `usage_time`           | `IN [morning, both]`   | `HARD_FILTER` | `morning_use`          |
-| `context.usage_time`             | `EQ night`         | `serum`       | `usage_time`           | `IN [night, both]`     | `HARD_FILTER` | `night_use`            |
-| `routine.recent_dry_tight`       | `EQ true`          | `moisturizer` | `triple_moisture`      | computed               | `SORT`        | `triple_moisture`      |
-| `routine.makeup_frequent`        | `EQ true`          | `moisturizer` | `makeup_compatibility` | `EQ good`              | `TAG`         | `makeup_compat_good`   |
-| `routine.cleansing_stable`       | `EQ false`         | `cleanser`    | `mild_ph`              | computed               | `SORT`        | `mild_ph`              |
+| trigger_question_key             | trigger 조건       | category      | attribute_or_computed_key | 기본 조건              | service_policy | matrix_filter_key      |
+| -------------------------------- | ------------------ | ------------- | ------------------------- | ---------------------- | -------------- | ---------------------- |
+| `context.eye_sting`              | `EQ true`          | `sunscreen`   | `eye_sting`               | `IN [none, low]`       | `HARD_FILTER`  | `no_eye_sting`         |
+| `context.white_cast_sensitive`   | `EQ true`          | `sunscreen`   | `white_cast`              | `IN [none, low]`       | `HARD_FILTER`  | `no_white_cast`        |
+| `context.makeup_use`             | `EQ true`          | `sunscreen`   | `makeup_compatibility`    | `EQ good`              | `TAG`          | `makeup_compat_good`   |
+| `life.outdoor_activity`          | `EQ high`          | `sunscreen`   | `spf`                     | `GTE 50`               | `HARD_FILTER`  | `outdoor_use`          |
+| `context.portable`               | `EQ true`          | `sunscreen`   | `portable`                | `EQ true`              | `SORT`         | `portable`             |
+| `preference.fragrance_sensitive` | `EQ true`          | all           | `fragrance`               | `EQ false`             | `HARD_FILTER`  | `no_fragrance`         |
+| `preference.menthol_sensitive`   | `EQ true`          | `lipcare`     | `menthol`                 | `EQ false`             | `HARD_FILTER`  | `no_menthol_sensitive` |
+| `context.lip_outdoor`            | `EQ true`          | `lipcare`     | `spf`                     | `GTE 15`               | `TAG`          | `spf_included`         |
+| `context.lip_reapply`            | `EQ true`          | `lipcare`     | `moisture_lasting`        | `EQ high`              | `SORT`         | `high_moisture`        |
+| `life.recent_irritation`         | `EQ true`          | `serum`       | `irritation_risk`         | `EQ low`               | `HARD_FILTER`  | `low_irritation`       |
+| `product.owned_actives`          | `CONTAINS retinol` | `serum`       | `conflict_ingredients`    | `NOT_CONTAINS retinol` | `CAUTION`      | `no_conflict_retinol`  |
+| `context.usage_time`             | `EQ morning`       | `serum`       | `usage_time`              | `IN [morning, both]`   | `HARD_FILTER`  | `morning_use`          |
+| `context.usage_time`             | `EQ night`         | `serum`       | `usage_time`              | `IN [night, both]`     | `HARD_FILTER`  | `night_use`            |
+| `routine.recent_dry_tight`       | `EQ true`          | `moisturizer` | `triple_moisture`         | computed               | `SORT`         | `triple_moisture`      |
+| `routine.makeup_frequent`        | `EQ true`          | `moisturizer` | `makeup_compatibility`    | `EQ good`              | `TAG`          | `makeup_compat_good`   |
+| `routine.cleansing_stable`       | `EQ false`         | `cleanser`    | `mild_ph`                 | computed               | `SORT`         | `mild_ph`              |
 
 주의:
 

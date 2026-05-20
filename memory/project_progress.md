@@ -392,3 +392,39 @@
 
 - `rg "idx_user_responses_device_id_question_id_created_at|idx_user_responses_user_id_question_id_created_at|ORDER BY created_at DESC|append-only 응답" docs/Data memory/api_contracts.md memory/known_issues.md`로 오래된 저장 방식 참조 없음 확인.
 - `pnpm exec prettier --check ...`로 수정 문서 포맷 검증 통과.
+
+## [2026-05-19] `product_filter_definitions` 기반 Product Matrix 필터 명세 정리
+
+### 변경 내용
+
+- [docs/Data/db_modeling.md](../docs/Data/db_modeling.md)에 `product_filter_definitions` 테이블을 추가하고, Product Filter 책임을 정의 카탈로그 / 질문 trigger 룰 / Matrix state로 분리.
+- [docs/Data/db_schema_validation.md](../docs/Data/db_schema_validation.md)에 `product_filter_definitions_input_type_enum`, `product_matrix_filter_states_source_enum`, 컬럼/FK/인덱스/JSON shape validation 기준을 반영.
+- `product_matrix_filter_states.filters`를 `[{filter_definition_id, operator, value}]`만 저장하는 current-state JSON으로 명시하고, label/attribute_key/source_type은 제외.
+- `decision_runs.applied_filters_snapshot`에는 당시 표시 라벨과 attribute 조건을 별도 snapshot으로 저장하도록 예시를 확장.
+- [docs/Data/screen_data_specification.md](../docs/Data/screen_data_specification.md), [docs/ContentSpec/page_content_specification.md](../docs/ContentSpec/page_content_specification.md), [docs/ContentSpec/wireframe_summary.md](../docs/ContentSpec/wireframe_summary.md), [docs/ContentSpec/matching_rules_revised.md](../docs/ContentSpec/matching_rules_revised.md)의 Product Matrix 필터 흐름을 새 구조 기준으로 정리.
+- 루트/문서 인덱스와 [EXECUTION_PLAN.md](../EXECUTION_PLAN.md)의 테이블 수/seed 항목을 26개 테이블 및 `product_filter_definitions` + `question_filter_mappings` 기준으로 갱신.
+
+### 검증
+
+- `rg "product_filter_mappings|question_filter_mappings\\.filters|filters\\[\\]\\.filter_key|filters\\[\\]\\.attribute_key|filters\\[\\]\\.mode|filter_mode|FilterMode|FilterType|25개 테이블|25개" ...`로 active Data/ContentSpec 주요 문서의 구형 참조를 확인. 잔여는 `구 product_filter_mappings` 설명과 ERD 이미지 갱신 필요 메모뿐.
+- `pnpm exec prettier --check ...` 통과.
+- `git diff --check` 통과 (CRLF 변환 warning만 출력).
+
+## [2026-05-19] Matrix 필터 정의 분리 및 DB schema 체크리스트 반영
+
+### 변경 내용
+
+- [docs/Data/db_modeling.md](../docs/Data/db_modeling.md)와 [docs/Data/db_schema_validation.md](../docs/Data/db_schema_validation.md)에 `product_matrix_filter_definitions`를 추가해 총 27개 테이블 기준으로 갱신.
+- `category_attribute_definitions.is_filterable`을 제거하고, Matrix 노출 여부는 `product_matrix_filter_definitions`가 관리하도록 정리.
+- `product_filter_definitions`에서 `is_default`, `is_manual_selectable`을 제거하고 attribute-backed 원자 필터 책임만 남김.
+- `question_filter_mappings`는 `matrix_filter_definition_id`를 참조하도록 변경.
+- `product_matrix_filter_states`에서 `session_id`를 제거하고 `filters` shape 을 `[{matrix_filter_definition_id, operator, value}]` 기준으로 변경.
+- `products.idx_products_brand_id`와 `reaction_reports.session_id` / `idx_reaction_reports_session_id`를 제거.
+- `product_ingredients`에 `(product_id, order_index)` UNIQUE 제약을 추가.
+- [docs/Data/screen_data_specification.md](../docs/Data/screen_data_specification.md), ContentSpec 문서, [CLAUDE.md](../CLAUDE.md), [EXECUTION_PLAN.md](../EXECUTION_PLAN.md), 루트/문서 인덱스의 필터 흐름과 테이블 수를 새 구조에 맞춤.
+
+### 검증
+
+- `pnpm exec prettier --write ...` / `pnpm exec prettier --check ...` 통과.
+- `git diff --check` 통과 (CRLF 변환 warning만 출력).
+- active Data/ContentSpec/실행 계획 문서에서 `is_filterable`, `idx_products_brand_id`, `idx_reaction_reports_session_id`, `filter_definition_slug` 구형 참조가 남지 않았음을 확인. memory 의 과거 기록과 이번 "제거" 결정 문구는 append-only 기록으로 유지.

@@ -73,7 +73,7 @@
    - 모든 폴더 최상단에 `AGENTS.md` (해당 폴더의 역할, 하위 항목, 진입 규칙)
    - 모든 코드 파일 최상단에 한 줄 주석으로 AI Agent에게 파일 의도 설명
 7. **Concern/Filter 상수는 프론트 코드 상수**: DB로 관리하지 않는다. (`docs/Data/db_modeling.md` MVP 제거 테이블 참고)
-8. **product.attributes JSONB**가 진짜 데이터다: `product_filter_mappings`는 사용자 답변 → attribute 조건의 번역기일 뿐.
+8. **product.attributes JSONB**가 진짜 데이터다: `category_attribute_definitions`는 attribute schema, `product_filter_definitions`는 attribute-backed 원자 필터, `product_matrix_filter_definitions`는 Product Matrix 노출/시스템 필터 카탈로그, `question_filter_mappings`는 사용자 답변 → matrix filter 자동 선택 룰이다.
 
 ## RPI 워크플로우 (모든 구현 작업의 기본 순서)
 
