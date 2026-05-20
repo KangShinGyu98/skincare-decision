@@ -6,9 +6,7 @@
 
 | 파일                                                       | 설명                                            |
 | ---------------------------------------------------------- | ----------------------------------------------- |
-| [CLAUDE.md](CLAUDE.md)                                     | 프로젝트 정의, 황금 원칙, 레이어 아키텍처, 범위 |
-| [EXECUTION_PLAN.md](EXECUTION_PLAN.md)                     | 백엔드/프론트엔드 단계별 구축 명령(Phase 0 → 7) |
-| [memory/MEMORY.md](memory/MEMORY.md)                       | 메모리 인덱스 (결정/진행/계약/이슈)             |
+| [CLAUDE.md](CLAUDE.md)                                     | 프로젝트 정의, 황금 원칙, 레이어 아키텍처, 범위 || [memory/MEMORY.md](memory/MEMORY.md)                       | 메모리 인덱스 (결정/진행/계약/이슈)             |
 | [memory/project_decisions.md](memory/project_decisions.md) | 설계 결정 및 가정사항                           |
 | [memory/project_progress.md](memory/project_progress.md)   | 현재 구현 상태 및 다음 작업 우선순위            |
 | [memory/api_contracts.md](memory/api_contracts.md)         | REST 엔드포인트 / 외부 API 계약                 |
@@ -56,7 +54,7 @@
 
 ---
 
-## 4. 구현 코드 (Phase 2 이후 생성)
+## 4. 구현 코드 (앱 구축 시 생성)
 
 | 폴더                                     | 설명                                                  |
 | ---------------------------------------- | ----------------------------------------------------- |

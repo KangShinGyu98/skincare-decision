@@ -109,10 +109,9 @@ lib(공유 유틸) → types(Zod/DTO) → config → api(server actions / fetche
 ├─ crawl/                 # 스킨케어 룰 추출용 크롤링 데이터 (기 종료된 P0 산출물)
 ├─ scripts/               # 크롤링/유틸 Python 스크립트
 ├─ memory/                # AI Agent 결정/진행/계약/이슈 메모리
-├─ backend/               # NestJS 앱 (EXECUTION_PLAN Phase 2부터 init)
-├─ frontend/              # Next.js App Router 앱 (EXECUTION_PLAN Phase 3부터 init)
-├─ infra/                 # Docker / IaC / GH Actions (EXECUTION_PLAN Phase 6)
-├─ EXECUTION_PLAN.md      # 단계별 구축 명령 (Phase 0 → 7)
+├─ backend/               # NestJS 앱 (재구축 예정)
+├─ frontend/              # Next.js App Router 앱 (예정)
+├─ infra/                 # Docker / IaC / GH Actions (예정)
 └─ AGENTS.md              # 파일 네비게이션 인덱스
 ```
 
@@ -137,10 +136,10 @@ lib(공유 유틸) → types(Zod/DTO) → config → api(server actions / fetche
 - DB: 로컬은 Docker compose, 원격은 AWS RDS PostgreSQL 16
 - Cache: Docker Redis 7
 
-상세 init/run 명령은 [EXECUTION_PLAN.md](EXECUTION_PLAN.md) 참조.
+상세 init/run 명령은 [README.md](README.md)의 빠른 시작 참조.
 
 ```bash
-# 일반적인 실행 진입점 (Phase 2 이후)
+# 일반적인 실행 진입점 (앱 구축 후)
 pnpm --filter backend run start:dev
 pnpm --filter frontend run dev
 docker compose up -d postgres redis
