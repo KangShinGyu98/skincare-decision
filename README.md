@@ -5,25 +5,7 @@
 
 ---
 
-## 0. AI Agent (Claude / Codex)에게 — 작업 전 필수 읽기
-
-본 저장소는 **Claude와 Codex를 번갈아 사용**합니다. 두 Agent가 동일한 컨텍스트를 공유하도록, 어느 Agent든 작업 시작 전 다음 순서로 읽습니다.
-
-| 순서 | 파일                                 | 역할                                                                   |
-| ---- | ------------------------------------ | ---------------------------------------------------------------------- |
-| 1    | [AGENTS.md](AGENTS.md)               | **시작점 + AI Agent 지시사항** — 어디서 시작하고 무엇을 하면 안 되는지 |
-| 2    | [CLAUDE.md](CLAUDE.md)               | **프로젝트 개요 + 폴더 구조 + 황금 원칙 + 기술 스택 + 범위**           |
-| 3    | [memory/MEMORY.md](memory/MEMORY.md) | 누적된 결정·진행·계약·이슈 인덱스 (필요한 메모리 파일을 따라 들어감)   |
-
-세션 종료 전에는 [memory/project_progress.md](memory/project_progress.md)에 변경 요약을 남겨, 다음 세션의 Agent가 이어받을 수 있도록 합니다.
-새 결정/리스크는 [memory/project_decisions.md](memory/project_decisions.md)에 append-only로 추가합니다.
-
-> ⛔ 위 순서를 건너뛴 채 코드를 수정하면 Claude/Codex 컨텍스트가 어긋납니다.
-> 폴더 진입 시에는 해당 폴더의 `AGENTS.md`를 먼저 엽니다.
-
----
-
-## 1. 프로젝트 설명
+## 프로젝트 설명
 
 | 기능               | 설명                                                                                       |
 | ------------------ | ------------------------------------------------------------------------------------------ |
@@ -38,7 +20,7 @@
 
 ---
 
-## 2. 기술 스택
+## 기술 스택
 
 | 영역           | 스택                                                                       |
 | -------------- | -------------------------------------------------------------------------- |
@@ -60,9 +42,88 @@
 
 ---
 
-## 3. 빠른 시작
+## 폴더 구조
 
-> 본격 셋업은 [EXECUTION_PLAN.md](EXECUTION_PLAN.md)를 따른다.
+```
+skincare-decision/
+├── README.md               # 사람용 진입점 (프로젝트 개요·폴더 구조·문서 링크)
+├── AGENTS.md               # AI 세션 시작 시 읽는 문서 인덱스
+├── CLAUDE.md               # AI 작업 규칙·워크플로우·레이어드 아키텍처·메모리 규칙
+├── memory/
+│   ├── ADR/                # 장기 설계 결정(ADR) 파일 모음 (작업당 1파일)
+│   ├── external_apis.md    # 외부 API 인터페이스 계약 및 Provider 정보
+│   └── task_plan.md        # 현재 작업의 임시 계획 / current state (작업 완료 후 삭제)
+├── docs/                   # 명세 (DB·attribute·matching rule·page spec·wireframe)
+├── design_system/          # Ant Design 기반 UI 토큰 + 프로토타입 컴포넌트
+├── Assets/                 # 와이어프레임/UX 참고 이미지
+├── scripts/                # 룰 추출용 크롤링/유틸 Python 스크립트
+├── backend/                # NestJS 앱 (docs 기준 재구축 예정)
+├── frontend/               # Next.js App Router 앱 (예정)
+└── infra/                  # Docker / IaC / GitHub Actions (예정)
+```
+
+---
+
+## 구성 요소
+
+### 하네스 구성 요소
+
+| 파일 / 폴더               | 역할                                                           | 유지 정책                |
+| ------------------------- | -------------------------------------------------------------- | ------------------------ |
+| `README.md`               | 사람용 진입점. 개요·폴더 구조·문서 링크                        | 영구                     |
+| `AGENTS.md`               | AI 세션 시작 시 읽는 문서 인덱스 (파일명 + 최소 설명)          | 영구                     |
+| `CLAUDE.md`               | AI 작업 규칙·워크플로우·아키텍처·메모리 관리 규칙              | 영구                     |
+| `memory/ADR/`             | 장기적으로 유지할 설계 결정만 ADR 형식으로 기록 (작업당 1파일) | 영구                     |
+| `memory/external_apis.md` | 외부 API 인터페이스 계약만 기록                                | 영구                     |
+| `memory/task_plan.md`     | 현재 작업의 임시 계획 + current state                          | 임시 (작업 완료 후 삭제) |
+
+### 프로젝트 구성 요소
+
+| 폴더 / 파일         | 역할                                                       | 유지 정책          |
+| ------------------- | ---------------------------------------------------------- | ------------------ |
+| `docs/`             | DB·attribute·matching rule·page spec·wireframe 명세        | 영구               |
+| `design_system/`    | Ant Design 기반 UI 토큰 + 프로토타입 컴포넌트              | 영구               |
+| `Assets/`           | 와이어프레임/UX 참고 이미지                                | 영구               |
+| `scripts/`          | 룰 추출용 크롤링/유틸 Python 스크립트                      | 영구               |
+| `backend/`          | NestJS 앱 (docs 기준 재구축 예정)                          | 영구               |
+| `frontend/`         | Next.js App Router 앱 (예정)                      | 영구               |
+| `infra/`            | Docker / IaC / GitHub Actions (예정)              | 영구               |
+---
+
+## 작업 워크플로우
+
+사람이 새 채팅과 시작 프롬프트로 작업을 열고, AI는 다음 순서로 진행합니다.
+
+1. `git branch` 생성 (목적 단위)
+2. `AGENTS.md`, `CLAUDE.md` 확인
+3. 관련 코드 및 문서 탐색
+4. `memory/task_plan.md` 초안 작성 → 사람이 검토
+5. 코드 작성 및 작은 단위 commit
+6. 필요 시 `memory/ADR/`에 새 ADR 작성 (사람 승인)
+7. 사람이 diff·commit 흐름 검토 후 branch merge 승인
+
+자세한 규칙과 레이어드 아키텍처는 [CLAUDE.md](CLAUDE.md)를 참고하세요.
+
+### 작업 단위 시작 프롬프트 예시
+
+```text
+[목적] 랜딩페이지에서 사용할 API를 구축해야 해.
+
+AGENTS.md 와 CLAUDE.md 파일을 먼저 확인하고, 워크플로우에 따라서:
+
+1. git branch 생성
+2. 관련 코드 및 문서 탐색
+3. task_plan.md 초안 작성
+
+을 먼저 진행해줘.
+
+task_plan 에는 목표 / 범위 / 파일 범위(read·write) / current state 를 포함해줘.
+구현은 내가 task_plan 을 검토한 이후 시작해.
+```
+
+---
+
+## 빠른 시작
 
 ```bash
 # 1) 인프라 (Postgres, Redis)
@@ -83,52 +144,21 @@ pnpm run dev         # http://localhost:3000
 
 ---
 
-## 4. 디렉터리 한 줄 요약
 
-```
-docs/                # 명세 (DB, attribute, matching rule, page spec)
-design_system/       # Ant Design 기반 UI 토큰 + 프로토타입 컴포넌트
-Codex_Research/      # 시장·UX·결정 여정 조사 (배경 컨텍스트)
-Assets/              # 와이어프레임 이미지
-ClaudeProtype/       # HTML mockup
-crawl/, scripts/     # 룰 추출용 크롤링 산출물 (완료)
-memory/              # AI Agent 결정/진행/계약/이슈 메모리
-backend/             # NestJS 앱 (Phase 2부터 init)
-frontend/            # Next.js App Router 앱 (Phase 3부터 init)
-infra/               # Docker/IaC/GH Actions (Phase 6)
-```
+## 참고
 
-폴더별 상세 역할은 각 폴더의 `AGENTS.md`에 있다.
+- README에는 긴 프로젝트 배경이나 세부 결정 이력을 넣지 않습니다.
+- 장기 설계 결정은 `memory/ADR/`에 ADR로 남기며, 기존 파일에 append 하지 않고 항상 새 파일로 작성합니다.
+- 진행 중 작업 상태는 `memory/task_plan.md`에 두고, 작업이 끝나면 삭제합니다.
+- AI 작업 규칙은 `CLAUDE.md`, 문서 위치 안내는 `AGENTS.md`에 둡니다.
 
 ---
 
-## 5. AI Agent (Claude / Codex) 협업 절차 상세
-
-위 0번 섹션이 진입 규칙이고, 본 절은 작업 단계별 상세 약속입니다.
-
-| 시점                       | 행동                                                                                                                                          |
-| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| 세션 시작                  | [AGENTS.md](AGENTS.md) → [CLAUDE.md](CLAUDE.md) → [memory/MEMORY.md](memory/MEMORY.md) 순독                                                   |
-| 폴더 진입                  | 해당 폴더의 `AGENTS.md`를 먼저 연다 (없으면 만들고 작업)                                                                                      |
-| 새 결정/리스크             | [memory/project_decisions.md](memory/project_decisions.md)에 append-only로 기록                                                               |
-| API 변경                   | [memory/api_contracts.md](memory/api_contracts.md)를 먼저 갱신, 그 다음 코드                                                                  |
-| 버그 해결                  | [memory/known_issues.md](memory/known_issues.md)에 증상 → 원인 → 해결책 기록                                                                  |
-| 명세 ↔ 코드 충돌           | `docs/`를 먼저 갱신한 뒤 코드를 수정                                                                                                          |
-| **폴더 구조 / 문서 이동**  | **`/sync-structure` skill 호출.** 구조-진실 문서(README §4 · `AGENTS.md` · `CLAUDE.md` · 각 `AGENTS.md`)만 갱신하고 깨진 경로를 일괄 치환한다. |
-| 세션 종료                  | [memory/project_progress.md](memory/project_progress.md)에 변경 요약 + 다음 우선순위 기록                                                     |
-
-### Claude ↔ Codex 컨텍스트 공유 원칙
-
-- 두 Agent는 동일한 `AGENTS.md` / `CLAUDE.md` / `memory/`를 진실로 삼는다.
-- 어느 Agent도 다른 Agent의 결정 기록을 **수정·삭제하지 않는다** — 새 결정으로 덮어쓴다(append-only).
-- 폴더 구조 변경은 [`/sync-structure` skill](.claude/skills/sync-structure/SKILL.md)을 호출해 처리한다. 이 skill은 **구조-진실 문서(README · AGENTS.md · CLAUDE.md · 각 폴더 AGENTS.md)만 정밀 갱신**하고, 콘텐츠 파일은 절대 읽지 않아 토큰을 최소화한다. 직접 수동 수정은 권장하지 않는다 — 누락 / 깨진 경로 위험.
-- 모든 폴더에는 `AGENTS.md`, 모든 코드 파일 최상단에는 한 줄 헤더 주석을 유지한다.
-
----
-
-## 6. 라이선스 / 기여
+## 라이선스 / 기여
 
 내부 MVP 단계. 외부 공개 전까지 라이선스 미정.
+
+---
 
 ## Git Commit Message Rules
 
