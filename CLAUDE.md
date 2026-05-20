@@ -49,8 +49,7 @@
 6. **컨텍스트를 깨끗하게 유지한다.**
    - 기록물은 장기적으로 유지해야 하는 결정 사항만 저장한다.
    - 결정 사항은 ADR 형식의 md 파일로 작성하고 ADR 폴더에 저장한다.
-   - 기존 결정 문서에 append 하지 않는다.
-   - 새로운 결정은 항상 새로운 ADR 파일로 작성한다.
+   - md 파일은 채팅/세션 단위로 생성하며, 기존 세션의 결정 문서에 append 하지 않는다.
    - 세션 로그, 임시 계획, 추론 과정은 영구 기록으로 남기지 않는다.
 
 7. **관련 문서만 선택적으로 읽는다**
@@ -112,15 +111,15 @@ Utils → Types → Config → Repo(api) → Service(hooks) → Runtime(store) �
 
 # 작업 워크플로우
 
-| 주체 | 작업                                     | 사람의 역할                  | AI - 사람 상호작용                             |
-| ---- | ---------------------------------------- | ---------------------------- | ---------------------------------------------- |
-| 사람 | 새 채팅 + 시작 프롬프트 입력             | 시작 프롬프트 양식 작성      | 새 채팅                                        |
-| AI   | git branch 생성                          | branch 목적 검토 및 승인     | branch 이름 제안 및 확인                       |
-| AI   | AGENTS.md, CLAUDE.md 확인                |                              |                                                |
-| AI   | task_plan.md 초안 작성                   | 검토                         | task_plan 검토 요청                            |
-| AI   | 실제 코드 작성 및 코드 단위 commit       | 필요 시 설계 검토            | 설계 drift, 위험 변경, ADR 필요 여부 확인 요청 |
-| AI   | ADR 작성 (필요 시)                       | 장기 결정 승인               | 새 ADR 파일 생성 및 결정 내용 저장             |
-| 사람 | AI commit 내역 확인 및 branch merge 승인 | diff, commit 흐름, 설계 검토 | merge 승인 또는 수정 요청                      |
+| 주체 | 작업                                                                 | 사람의 역할                  | AI - 사람 상호작용                             |
+| ---- | -------------------------------------------------------------------- | ---------------------------- | ---------------------------------------------- |
+| 사람 | 새 채팅 + 시작 프롬프트 입력                                         | 시작 프롬프트 양식 작성      | 새 채팅                                        |
+| AI   | git branch 생성                                                      | branch 목적 검토 및 승인     | branch 이름 제안 및 확인                       |
+| AI   | AGENTS.md, CLAUDE.md 확인                                            |                              |                                                |
+| AI   | task_plan.md 초안 작성                                               | 검토                         | task_plan 검토 요청                            |
+| AI   | 실제 코드 작성 및 코드 단위 commit, 변경된 파일구조 AGENTS.md에 반영 | 필요 시 설계 검토            | 설계 drift, 위험 변경, ADR 필요 여부 확인 요청 |
+| AI   | ADR 작성 (필요 시)                                                   | 장기 결정 승인               | 새 ADR 파일 생성 및 결정 내용 저장             |
+| 사람 | AI commit 내역 확인 및 branch merge 승인                             | diff, commit 흐름, 설계 검토 | merge 승인 또는 수정 요청                      |
 
 ---
 
@@ -128,7 +127,7 @@ Utils → Types → Config → Repo(api) → Service(hooks) → Runtime(store) �
 
 | 항목          | 의미              | 예시                                                                                                                                                                                                                                                                                                       |
 | ------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 목표          | 왜 하는가         | Product 생성 API 구현                                                                                                                                                                                                                                                                                       |
-| 범위          | 무엇을 하는가     | - ProductService.create 구현<br>- DTO validation 연결<br>- Product 생성 unit test 추가<br><br>이번 작업에서 하지 않는 것:<br>- Controller 구현<br>- DB schema 변경<br>- Frontend 수정                                                                                                                       |
+| 목표          | 왜 하는가         | Product 생성 API 구현                                                                                                                                                                                                                                                                                      |
+| 범위          | 무엇을 하는가     | - ProductService.create 구현<br>- DTO validation 연결<br>- Product 생성 unit test 추가<br><br>이번 작업에서 하지 않는 것:<br>- Controller 구현<br>- DB schema 변경<br>- Frontend 수정                                                                                                                      |
 | 파일 범위     | 어디를 건드리는가 | read:<br>- backend/app/services/product.service.ts<br>- backend/app/repositories/product.repository.ts<br>- backend/app/dto/create-product.dto.ts<br>- memory/ADR/ADR-0001-product-barcode-policy.md<br><br>write:<br>- backend/app/services/product.service.ts<br>- backend/tests/product.service.spec.ts |
-| current state | 현재 작업 상태    | - 관련 코드 탐색 완료<br>- DTO 구조 확인 완료<br>- service 구현 진행 중                                                                                                                                                                                                                                     |
+| current state | 현재 작업 상태    | - 관련 코드 탐색 완료<br>- DTO 구조 확인 완료<br>- service 구현 진행 중                                                                                                                                                                                                                                    |
