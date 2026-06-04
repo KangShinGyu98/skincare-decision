@@ -48,5 +48,8 @@ Thumbs.db
 *.swp
 *.swo
 
+# Local AI tool settings
+.claude/settings.local.json
+
 # Memory (transient — task_plan.md는 작업 중에만 존재, 완료 후 삭제)
 memory/task_plan.md
