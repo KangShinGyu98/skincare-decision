@@ -126,7 +126,7 @@ task_plan 에는 목표 / 범위 / 파일 범위(read·write) / current state �
 ## 빠른 시작
 
 ```bash
-# 1) 인프라 (Postgres, Redis)
+# 1) 인프라 (Postgres, Redis) -d 는 백그라운드 
 docker compose up -d postgres redis
 
 # 2) 백엔드

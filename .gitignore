@@ -29,6 +29,7 @@ lerna-debug.log*
 .env.development
 .env.test
 .env.production
+env.example
 
 # Temp
 .temp/
