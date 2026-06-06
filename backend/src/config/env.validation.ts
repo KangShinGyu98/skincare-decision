@@ -6,7 +6,13 @@ const envSchema = z.object({
   COOKIE_SECRET: z.string().min(1),
   CORS_ORIGIN: z.string().min(1),
   PORT: z.coerce.number().int().positive().default(3000),
-  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  NODE_ENV: z.enum(['development', 'test', 'production']).default('production'),
+  LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
+  REQUEST_ID_HEADER: z.string().min(1).default('x-request-id'),
+  DEVICE_ID_COOKIE_NAME: z.string().min(1).default('skincare_device_id'),
+  SESSION_ID_COOKIE_NAME: z.string().min(1).default('skincare_session_id'),
+  COOKIE_MAX_AGE_DAYS: z.coerce.number().int().positive().default(365),
+  TRUST_PROXY: z.coerce.boolean().default(false),
 });
 
 export type Env = z.infer<typeof envSchema>;
