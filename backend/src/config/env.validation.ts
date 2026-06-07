@@ -13,6 +13,7 @@ const envSchema = z.object({
   SESSION_ID_COOKIE_NAME: z.string().min(1).default('skincare_session_id'),
   COOKIE_MAX_AGE_DAYS: z.coerce.number().int().positive().default(365),
   TRUST_PROXY: z.coerce.boolean().default(false),
+  DEVICE_SESSION_COOKIE_MAX_AGE_DAYS: z.coerce.number().int().positive().default(30),
 });
 
 export type Env = z.infer<typeof envSchema>;

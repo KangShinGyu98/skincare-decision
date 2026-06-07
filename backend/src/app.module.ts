@@ -4,6 +4,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { validateEnv } from './config/env.validation';
 import { RequestContextMiddleware } from './common/middleware/request-context.middleware';
+import { DeviceSessionMiddleware } from './common/middleware/device-session.middleware';
 
 @Module({
   imports: [
@@ -17,6 +18,6 @@ import { RequestContextMiddleware } from './common/middleware/request-context.mi
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
-    consumer.apply(RequestContextMiddleware).forRoutes('*');
+    consumer.apply(RequestContextMiddleware, DeviceSessionMiddleware).forRoutes('*');
   }
 }
