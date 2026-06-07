@@ -3,6 +3,8 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import cookieParser from 'cookie-parser';
+import { RequestLoggingInterceptor } from './common/interceptors/request-logging.interceptor';
+import { Logger } from 'nestjs-pino';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -28,6 +30,9 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
 
   app.use(cookieParser(cookieSecret));
+  app.useLogger(app.get(Logger));
+  app.useGlobalInterceptors(app.get(RequestLoggingInterceptor));
+
   await app.listen(port);
 }
 

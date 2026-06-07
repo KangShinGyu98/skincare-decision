@@ -5,6 +5,8 @@ import { AppService } from './app.service';
 import { validateEnv } from './config/env.validation';
 import { RequestContextMiddleware } from './common/middleware/request-context.middleware';
 import { DeviceSessionMiddleware } from './common/middleware/device-session.middleware';
+import { LoggerModule } from './common/logger/logger.module';
+import { RequestLoggingInterceptor } from './common/interceptors/request-logging.interceptor';
 
 @Module({
   imports: [
@@ -12,9 +14,10 @@ import { DeviceSessionMiddleware } from './common/middleware/device-session.midd
       isGlobal: true,
       validate: validateEnv,
     }),
+    LoggerModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, RequestLoggingInterceptor],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {

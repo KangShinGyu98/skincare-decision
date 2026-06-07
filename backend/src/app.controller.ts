@@ -1,5 +1,6 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Req } from '@nestjs/common';
 import { AppService } from './app.service';
+import type { RequestWithContext } from './common/types/express-request.type';
 
 @Controller()
 export class AppController {
@@ -8,5 +9,12 @@ export class AppController {
   @Get()
   getHello(): string {
     return this.appService.getHello();
+  }
+  @Get('health')
+  health(@Req() req: RequestWithContext) {
+    return {
+      ok: true,
+      requestId: req.context.requestId,
+    };
   }
 }
