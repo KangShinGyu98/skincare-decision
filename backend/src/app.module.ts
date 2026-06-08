@@ -8,6 +8,7 @@ import { DeviceSessionMiddleware } from './common/middleware/device-session.midd
 import { LoggerModule } from './common/logger/logger.module';
 import { RequestLoggingInterceptor } from './common/interceptors/request-logging.interceptor';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { ResponseEnvelopeInterceptor } from './common/interceptors/response-envelope.interceptor';
 
 @Module({
   imports: [
@@ -18,7 +19,12 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
     LoggerModule,
   ],
   controllers: [AppController],
-  providers: [AppService, RequestLoggingInterceptor, HttpExceptionFilter],
+  providers: [
+    AppService,
+    RequestLoggingInterceptor,
+    ResponseEnvelopeInterceptor,
+    HttpExceptionFilter,
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
