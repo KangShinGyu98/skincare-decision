@@ -5,6 +5,7 @@ import { AppModule } from './app.module';
 import cookieParser from 'cookie-parser';
 import { RequestLoggingInterceptor } from './common/interceptors/request-logging.interceptor';
 import { Logger } from 'nestjs-pino';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -32,6 +33,7 @@ async function bootstrap() {
   app.use(cookieParser(cookieSecret));
   app.useLogger(app.get(Logger));
   app.useGlobalInterceptors(app.get(RequestLoggingInterceptor));
+  app.useGlobalFilters(app.get(HttpExceptionFilter));
 
   await app.listen(port);
 }
