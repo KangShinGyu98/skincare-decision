@@ -1,8 +1,15 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { validateEnv } from './config/env.validation';
+import { RequestContextMiddleware } from './common/middleware/request-context.middleware';
+import { DeviceSessionMiddleware } from './common/middleware/device-session.middleware';
+import { LoggerModule } from './common/logger/logger.module';
+import { RequestLoggingInterceptor } from './common/interceptors/request-logging.interceptor';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { ResponseEnvelopeInterceptor } from './common/interceptors/response-envelope.interceptor';
+import { CatsModule } from './modules/cats/cats.module';
 
 @Module({
   imports: [
@@ -10,8 +17,19 @@ import { validateEnv } from './config/env.validation';
       isGlobal: true,
       validate: validateEnv,
     }),
+    LoggerModule,
+    CatsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    RequestLoggingInterceptor,
+    ResponseEnvelopeInterceptor,
+    HttpExceptionFilter,
+  ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(RequestContextMiddleware, DeviceSessionMiddleware).forRoutes('*');
+  }
+}
