@@ -9,6 +9,7 @@ import { LoggerModule } from './common/logger/logger.module';
 import { RequestLoggingInterceptor } from './common/interceptors/request-logging.interceptor';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ResponseEnvelopeInterceptor } from './common/interceptors/response-envelope.interceptor';
+import { CatsModule } from './modules/cats/cats.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { ResponseEnvelopeInterceptor } from './common/interceptors/response-enve
       validate: validateEnv,
     }),
     LoggerModule,
+    CatsModule,
   ],
   controllers: [AppController],
   providers: [

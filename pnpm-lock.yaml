@@ -29,6 +29,9 @@ importers:
       '@nestjs/platform-express':
         specifier: ^11.0.1
         version: 11.1.24(@nestjs/common@11.1.24(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.24)
+      '@skincare-decision/shared':
+        specifier: workspace:*
+        version: link:../shared
       class-transformer:
         specifier: ^0.5.1
         version: 0.5.1
@@ -141,6 +144,16 @@ importers:
       typescript-eslint:
         specifier: ^8.20.0
         version: 8.60.1(eslint@9.39.4)(typescript@5.9.3)
+
+  shared:
+    dependencies:
+      zod:
+        specifier: ^4
+        version: 4.4.3
+    devDependencies:
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
 
 packages:
 

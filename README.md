@@ -79,15 +79,16 @@ skincare-decision/
 
 ### 프로젝트 구성 요소
 
-| 폴더 / 파일         | 역할                                                       | 유지 정책          |
-| ------------------- | ---------------------------------------------------------- | ------------------ |
-| `docs/`             | DB·attribute·matching rule·page spec·wireframe 명세        | 영구               |
-| `design_system/`    | Ant Design 기반 UI 토큰 + 프로토타입 컴포넌트              | 영구               |
-| `Assets/`           | 와이어프레임/UX 참고 이미지                                | 영구               |
-| `scripts/`          | 룰 추출용 크롤링/유틸 Python 스크립트                      | 영구               |
-| `backend/`          | NestJS 앱 (docs 기준 재구축 예정)                          | 영구               |
-| `frontend/`         | Next.js App Router 앱 (예정)                      | 영구               |
-| `infra/`            | Docker / IaC / GitHub Actions (예정)              | 영구               |
+| 폴더 / 파일      | 역할                                                | 유지 정책 |
+| ---------------- | --------------------------------------------------- | --------- |
+| `docs/`          | DB·attribute·matching rule·page spec·wireframe 명세 | 영구      |
+| `design_system/` | Ant Design 기반 UI 토큰 + 프로토타입 컴포넌트       | 영구      |
+| `Assets/`        | 와이어프레임/UX 참고 이미지                         | 영구      |
+| `scripts/`       | 룰 추출용 크롤링/유틸 Python 스크립트               | 영구      |
+| `backend/`       | NestJS 앱 (docs 기준 재구축 예정)                   | 영구      |
+| `frontend/`      | Next.js App Router 앱 (예정)                        | 영구      |
+| `infra/`         | Docker / IaC / GitHub Actions (예정)                | 영구      |
+
 ---
 
 ## 작업 워크플로우
@@ -123,10 +124,10 @@ task_plan 에는 목표 / 범위 / 파일 범위(read·write) / current state �
 
 ---
 
-## 빠른 시작
+## 명령어
 
 ```bash
-# 1) 인프라 (Postgres, Redis) -d 는 백그라운드 
+# 1) 인프라 (Postgres, Redis) -d 는 백그라운드
 docker compose up -d postgres redis
 
 # 2) 백엔드
@@ -140,10 +141,15 @@ pnpm run start:dev   # http://localhost:4000
 cd frontend
 pnpm install
 pnpm run dev         # http://localhost:3000
+
+
+# 4) shared 빌드 명령어 
+pnpm --filter @skincare-decision/shared run build
+
+
 ```
 
 ---
-
 
 ## 참고
 
