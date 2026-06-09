@@ -10,6 +10,10 @@ import { RequestLoggingInterceptor } from './common/interceptors/request-logging
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ResponseEnvelopeInterceptor } from './common/interceptors/response-envelope.interceptor';
 import { CatsModule } from './modules/cats/cats.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { APP_GUARD } from '@nestjs/core';
+import { AuthGuard } from './common/guards/auth.guard';
+import { PermissionGuard } from './common/guards/permission.guard';
 
 @Module({
   imports: [
@@ -19,6 +23,7 @@ import { CatsModule } from './modules/cats/cats.module';
     }),
     LoggerModule,
     CatsModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [
@@ -26,6 +31,14 @@ import { CatsModule } from './modules/cats/cats.module';
     RequestLoggingInterceptor,
     ResponseEnvelopeInterceptor,
     HttpExceptionFilter,
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: PermissionGuard,
+    },
   ],
 })
 export class AppModule implements NestModule {

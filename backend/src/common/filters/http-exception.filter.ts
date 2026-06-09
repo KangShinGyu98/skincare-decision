@@ -237,8 +237,12 @@ export class HttpExceptionFilter implements ExceptionFilter {
       payload['sessionId'] = request.context.sessionId;
     }
 
-    if (request.context?.userId) {
-      payload['userId'] = request.context.userId;
+    if (request.context?.user?.id) {
+      payload['userId'] = request.context.user.id;
+    }
+
+    if (request.context?.user?.roles) {
+      payload['userRoles'] = request.context.user.roles;
     }
 
     if (normalizedError.stack) {

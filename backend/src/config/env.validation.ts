@@ -14,6 +14,8 @@ const envSchema = z.object({
   COOKIE_MAX_AGE_DAYS: z.coerce.number().int().positive().default(365),
   TRUST_PROXY: z.coerce.boolean().default(false),
   DEVICE_SESSION_COOKIE_MAX_AGE_DAYS: z.coerce.number().int().positive().default(30),
+  JWT_ACCESS_TOKEN_SECRET: z.string().min(32),
+  JWT_ACCESS_TOKEN_TTL_SECONDS: z.coerce.number().int().positive().default(3600),
 });
 
 export type Env = z.infer<typeof envSchema>;
