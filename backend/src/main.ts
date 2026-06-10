@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 import { RequestLoggingInterceptor } from './common/interceptors/request-logging.interceptor';
 import { Logger } from 'nestjs-pino';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
@@ -15,6 +16,9 @@ async function bootstrap() {
 
   const port = configService.getOrThrow<number>('PORT');
   const corsOrigin = configService.getOrThrow<string>('CORS_ORIGIN');
+
+  app.use(helmet());
+  app.enableShutdownHooks();
 
   app.enableCors({
     origin: corsOrigin,
