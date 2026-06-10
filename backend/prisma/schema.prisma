@@ -6,3 +6,643 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum UserRole {
+  USER
+  ADMIN
+
+  @@map("users_role_enum")
+}
+
+enum QuestionAnswerType {
+  BOOLEAN
+  THREE_CHOICE
+  FOUR_CHOICE
+  FIVE_CHOICE
+  SINGLE_CHOICE
+  MULTI_CHOICE
+
+  @@map("questions_answer_type_enum")
+}
+
+enum CategoryAttributeValueType {
+  BOOLEAN
+  ENUM
+  NUMBER
+  MULTI_ENUM
+  STRING
+
+  @@map("category_attribute_definitions_value_type_enum")
+}
+
+enum QuestionVariantScreen {
+  priority_gate
+  context
+
+  @@map("question_variants_screen_enum")
+}
+
+enum QuestionVariantUiSection {
+  life_routine
+  owned_products
+  basic
+  category
+
+  @@map("question_variants_ui_section_enum")
+}
+
+enum ComparisonOperator {
+  EQ
+  IN
+  CONTAINS
+  GTE
+  LTE
+  NEQ
+
+  @@map("comparison_operator_enum")
+}
+
+enum ConditionState {
+  REQUIRED
+  EXCLUDED
+
+  @@map("condition_state_enum")
+}
+
+enum UserResponseSource {
+  priority_gate
+  context
+  concern
+  traceback
+
+  @@map("user_responses_source_enum")
+}
+
+enum PriorityRuleResultType {
+  STOP
+  HOLD
+  CAUTION
+  PASS
+  ROUTE_CATEGORY
+
+  @@map("priority_rules_result_type_enum")
+}
+
+enum ProductVolumeUnit {
+  ML
+  G
+  L
+  MG
+
+  @@map("products_volume_unit_enum")
+}
+
+enum ProductCountUnit {
+  SHEET
+  PIECE
+  PACK
+
+  @@map("products_count_unit_enum")
+}
+
+enum ProductFilterInputType {
+  NUMBER
+  SELECT
+  MULTI_SELECT
+  BOOLEAN
+
+  @@map("product_filter_definitions_input_type_enum")
+}
+
+enum ProductMatrixFilterDefinitionKind {
+  ATTRIBUTE
+  COMPUTED
+
+  @@map("product_matrix_filter_definitions_kind_enum")
+}
+
+enum ProductMatrixFilterStateSource {
+  DIRECT
+  CATEGORY_DECISION_CTA
+  MANUAL
+  RESTORED
+
+  @@map("product_matrix_filter_states_source_enum")
+}
+
+enum ReactionReportProductType {
+  PROBLEM
+  OK
+
+  @@map("reaction_report_products_type_enum")
+}
+
+enum SuspectedCauseConfidence {
+  LOW
+  MEDIUM
+  HIGH
+
+  @@map("suspected_causes_confidence_enum")
+}
+
+enum AvoidanceRuleAction {
+  AVOID
+  CAUTION
+
+  @@map("avoidance_rules_action_enum")
+}
+
+model User {
+  id                        String                     @id(map: "pk_users") @db.Uuid
+  email                     String                     @unique(map: "uq_users_email") @db.VarChar(255)
+  name                      String                     @db.VarChar(100)
+  role                      UserRole
+  createdAt                 DateTime                   @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt                 DateTime?                  @updatedAt @map("updated_at") @db.Timestamptz()
+  deletedAt                 DateTime?                  @map("deleted_at") @db.Timestamptz()
+  devices                   Device[]
+  userSessions              UserSession[]
+  userResponses             UserResponse[]
+  decisionRuns              DecisionRun[]
+  productMatrixFilterStates ProductMatrixFilterState[]
+  reactionReports           ReactionReport[]
+  avoidanceRules            AvoidanceRule[]
+
+  @@map("users")
+}
+
+model Device {
+  id                        String                     @id(map: "pk_devices") @db.Uuid
+  userId                    String?                    @map("user_id") @db.Uuid
+  lastSeenAt                DateTime                   @default(now()) @map("last_seen_at") @db.Timestamptz()
+  createdAt                 DateTime                   @default(now()) @map("created_at") @db.Timestamptz()
+  user                      User?                      @relation(fields: [userId], references: [id], onDelete: SetNull, onUpdate: Cascade, map: "fk_devices_user_id")
+  userSessions              UserSession[]
+  userResponses             UserResponse[]
+  decisionRuns              DecisionRun[]
+  productMatrixFilterStates ProductMatrixFilterState[]
+  reactionReports           ReactionReport[]
+  avoidanceRules            AvoidanceRule[]
+
+  @@map("devices")
+}
+
+model UserSession {
+  id            String         @id(map: "pk_user_sessions") @db.Uuid
+  deviceId      String         @map("device_id") @db.Uuid
+  userId        String?        @map("user_id") @db.Uuid
+  entryPath     String         @map("entry_path") @db.VarChar(255)
+  referrer      String?        @db.Text
+  loggedInAt    DateTime?      @map("logged_in_at") @db.Timestamptz()
+  createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz()
+  deletedAt     DateTime?      @map("deleted_at") @db.Timestamptz()
+  device        Device         @relation(fields: [deviceId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "fk_user_sessions_device_id")
+  user          User?          @relation(fields: [userId], references: [id], onDelete: SetNull, onUpdate: Cascade, map: "fk_user_sessions_user_id")
+  sessionEvents SessionEvent[]
+  decisionRuns  DecisionRun[]
+
+  @@map("user_sessions")
+}
+
+model SessionEvent {
+  id        BigInt      @id(map: "pk_session_events") @default(autoincrement())
+  sessionId String      @map("session_id") @db.Uuid
+  eventName String      @map("event_name") @db.VarChar(100)
+  screen    String      @db.VarChar(100)
+  elementId String?     @map("element_id") @db.VarChar(100)
+  payload   Json
+  createdAt DateTime    @default(now()) @map("created_at") @db.Timestamptz()
+  session   UserSession @relation(fields: [sessionId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "fk_session_events_session_id")
+
+  @@map("session_events")
+}
+
+model Question {
+  id                     String                  @id(map: "pk_questions") @db.Uuid
+  key                    String                  @unique(map: "uq_questions_key") @db.VarChar(100)
+  answerType             QuestionAnswerType      @map("answer_type")
+  answerValues           Int[]                   @map("answer_values")
+  answerCount            Int                     @ignore @map("answer_count")
+  isActive               Boolean                 @default(true) @map("is_active")
+  createdAt              DateTime                @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt              DateTime?               @updatedAt @map("updated_at") @db.Timestamptz()
+  deletedAt              DateTime?               @map("deleted_at") @db.Timestamptz()
+  variants               QuestionVariant[]
+  userResponses          UserResponse[]
+  priorityRuleConditions PriorityRuleCondition[]
+  questionFilterMappings QuestionFilterMapping[]
+
+  // answer_count generated column and uq_questions_id_answer_count require raw SQL migration.
+  @@map("questions")
+}
+
+model QuestionVariant {
+  id                   String                        @id(map: "pk_question_variants") @db.Uuid
+  questionId           String                        @map("question_id") @db.Uuid
+  title                String                        @db.Text
+  answers              String[]
+  answerCount          Int                           @ignore @map("answer_count")
+  screen               QuestionVariantScreen
+  uiSection            QuestionVariantUiSection      @map("ui_section")
+  sortOrder            Int                           @default(0) @map("sort_order")
+  isActive             Boolean                       @default(true) @map("is_active")
+  createdAt            DateTime                      @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt            DateTime?                     @updatedAt @map("updated_at") @db.Timestamptz()
+  deletedAt            DateTime?                     @map("deleted_at") @db.Timestamptz()
+  question             Question                      @relation(fields: [questionId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "fk_question_variants_question_id")
+  visibilityConditions QuestionVisibilityCondition[]
+
+  // answer_count generated column and question_id/answer_count composite FK require raw SQL migration.
+  @@index([questionId], map: "idx_question_variants_question_id")
+  @@index([screen, uiSection, sortOrder], map: "idx_question_variants_screen_ui_section_sort_order")
+  @@map("question_variants")
+}
+
+model QuestionVisibilityCondition {
+  id                String             @id(map: "pk_question_visibility_conditions") @db.Uuid
+  questionVariantId String             @map("question_variant_id") @db.Uuid
+  operator          ComparisonOperator
+  value             Int
+  state             ConditionState
+  createdAt         DateTime           @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt         DateTime?          @updatedAt @map("updated_at") @db.Timestamptz()
+  questionVariant   QuestionVariant    @relation(fields: [questionVariantId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "fk_question_visibility_conditions_question_variant_id")
+
+  @@index([questionVariantId], map: "idx_question_visibility_conditions_question_variant_id")
+  @@map("question_visibility_conditions")
+}
+
+model UserResponse {
+  id         String             @id(map: "pk_user_responses") @db.Uuid
+  deviceId   String             @map("device_id") @db.Uuid
+  userId     String?            @map("user_id") @db.Uuid
+  questionId String             @map("question_id") @db.Uuid
+  value      Int[]
+  source     UserResponseSource
+  createdAt  DateTime           @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt  DateTime?          @updatedAt @map("updated_at") @db.Timestamptz()
+  device     Device             @relation(fields: [deviceId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "fk_user_responses_device_id")
+  user       User?              @relation(fields: [userId], references: [id], onDelete: SetNull, onUpdate: Cascade, map: "fk_user_responses_user_id")
+  question   Question           @relation(fields: [questionId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "fk_user_responses_question_id")
+
+  // Partial unique indexes require raw SQL migration.
+  @@map("user_responses")
+}
+
+model PriorityRule {
+  id                  String                  @id(map: "pk_priority_rules") @db.Uuid
+  name                String                  @db.VarChar(200)
+  priority            Int
+  isActive            Boolean                 @default(true) @map("is_active")
+  resultType          PriorityRuleResultType  @map("result_type")
+  resultTitle         String                  @map("result_title") @db.Text
+  resultDescription   String                  @map("result_description") @db.Text
+  holdCategories      Json?                   @map("hold_categories")
+  recommendCategoryId String?                 @map("recommend_category_id") @db.Uuid
+  ctaLabel            String?                 @map("cta_label") @db.VarChar(100)
+  ctaTarget           String?                 @map("cta_target") @db.VarChar(255)
+  createdAt           DateTime                @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt           DateTime?               @updatedAt @map("updated_at") @db.Timestamptz()
+  deletedAt           DateTime?               @map("deleted_at") @db.Timestamptz()
+  recommendCategory   ProductCategory?        @relation(fields: [recommendCategoryId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "fk_priority_rules_recommend_category_id")
+  conditions          PriorityRuleCondition[]
+
+  @@map("priority_rules")
+}
+
+model PriorityRuleCondition {
+  id         String             @id(map: "pk_priority_rule_conditions") @db.Uuid
+  ruleId     String             @map("rule_id") @db.Uuid
+  questionId String             @map("question_id") @db.Uuid
+  operator   ComparisonOperator
+  value      Int[]
+  state      ConditionState
+  createdAt  DateTime           @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt  DateTime?          @updatedAt @map("updated_at") @db.Timestamptz()
+  rule       PriorityRule       @relation(fields: [ruleId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "fk_priority_rule_conditions_rule_id")
+  question   Question           @relation(fields: [questionId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "fk_priority_rule_conditions_question_id")
+
+  @@index([questionId], map: "idx_priority_rule_conditions_question_id")
+  @@index([ruleId], map: "idx_priority_rule_conditions_rule_id")
+  @@map("priority_rule_conditions")
+}
+
+model DecisionRun {
+  id                     BigInt      @id(map: "pk_decision_runs") @default(autoincrement())
+  deviceId               String      @map("device_id") @db.Uuid
+  userId                 String?     @map("user_id") @db.Uuid
+  sessionId              String      @map("session_id") @db.Uuid
+  decisionType           String      @map("decision_type") @db.VarChar(50)
+  sourceScreen           String      @map("source_screen") @db.VarChar(100)
+  categoryId             String?     @map("category_id") @db.Uuid
+  filterStateId          String?     @map("filter_state_id") @db.Uuid
+  resultType             String?     @map("result_type") @db.VarChar(50)
+  resultTitle            String?     @map("result_title") @db.Text
+  resultDescription      String?     @map("result_description") @db.Text
+  ctaLabel               String?     @map("cta_label") @db.VarChar(100)
+  ctaTarget              String?     @map("cta_target") @db.VarChar(255)
+  inputSnapshot          Json        @map("input_snapshot")
+  appliedFiltersSnapshot Json        @map("applied_filters_snapshot")
+  resultSnapshot         Json        @map("result_snapshot")
+  createdAt              DateTime    @default(now()) @map("created_at") @db.Timestamptz()
+  device                 Device      @relation(fields: [deviceId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "fk_decision_runs_device_id")
+  user                   User?       @relation(fields: [userId], references: [id], onDelete: SetNull, onUpdate: Cascade, map: "fk_decision_runs_user_id")
+  session                UserSession @relation(fields: [sessionId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "fk_decision_runs_session_id")
+
+  // category_id and filter_state_id are snapshot columns intentionally without FK.
+  @@index([deviceId, decisionType, createdAt], map: "idx_decision_runs_device_id_decision_type_created_at")
+  @@index([sessionId], map: "idx_decision_runs_session_id")
+  @@index([userId, decisionType, createdAt], map: "idx_decision_runs_user_id_decision_type_created_at")
+  @@map("decision_runs")
+}
+
+model Brand {
+  id        String    @id(map: "pk_brands") @db.Uuid
+  name      String    @unique(map: "uq_brands_name") @db.VarChar(200)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime? @updatedAt @map("updated_at") @db.Timestamptz()
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz()
+  products  Product[]
+
+  @@map("brands")
+}
+
+model ProductCategory {
+  id                        String                          @id(map: "pk_product_categories") @db.Uuid
+  key                       String                          @unique(map: "uq_product_categories_key") @db.VarChar(100)
+  name                      String                          @db.VarChar(100)
+  description               String?                         @db.Text
+  createdAt                 DateTime                        @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt                 DateTime?                       @updatedAt @map("updated_at") @db.Timestamptz()
+  deletedAt                 DateTime?                       @map("deleted_at") @db.Timestamptz()
+  attributeDefinitions      CategoryAttributeDefinition[]
+  products                  Product[]
+  priorityRules             PriorityRule[]
+  matrixFilterDefinitions   ProductMatrixFilterDefinition[]
+  productMatrixFilterStates ProductMatrixFilterState[]
+
+  @@map("product_categories")
+}
+
+model CategoryAttributeDefinition {
+  id                       String                     @id(map: "pk_category_attribute_definitions") @db.Uuid
+  categoryId               String                     @map("category_id") @db.Uuid
+  key                      String                     @db.VarChar(100)
+  label                    String                     @db.VarChar(200)
+  valueType                CategoryAttributeValueType @map("value_type")
+  options                  Json?
+  isRequired               Boolean                    @default(false) @map("is_required")
+  sortOrder                Int                        @default(0) @map("sort_order")
+  createdAt                DateTime                   @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt                DateTime?                  @updatedAt @map("updated_at") @db.Timestamptz()
+  deletedAt                DateTime?                  @map("deleted_at") @db.Timestamptz()
+  category                 ProductCategory            @relation(fields: [categoryId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "fk_category_attribute_definitions_category_id")
+  productFilterDefinitions ProductFilterDefinition[]
+
+  @@unique([categoryId, key], map: "uq_category_attribute_definitions_category_id_key")
+  @@index([categoryId, sortOrder], map: "idx_category_attribute_definitions_category_id_sort_order")
+  @@map("category_attribute_definitions")
+}
+
+model Product {
+  id                     String                  @id(map: "pk_products") @db.Uuid
+  brandId                String                  @map("brand_id") @db.Uuid
+  categoryId             String                  @map("category_id") @db.Uuid
+  name                   String                  @db.VarChar(500)
+  priceKrw               Int                     @map("price_krw")
+  volumeAmount           Decimal?                @map("volume_amount") @db.Decimal(10, 2)
+  volumeUnit             ProductVolumeUnit?      @map("volume_unit")
+  countAmount            Int?                    @map("count_amount")
+  countUnit              ProductCountUnit?       @map("count_unit")
+  volumeLabel            String?                 @map("volume_label") @db.VarChar(100)
+  imageUrl               String?                 @map("image_url") @db.Text
+  purchaseUrl            String?                 @map("purchase_url") @db.Text
+  attributes             Json
+  sortOrder              Int                     @default(0) @map("sort_order")
+  isActive               Boolean                 @default(true) @map("is_active")
+  createdAt              DateTime                @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt              DateTime?               @updatedAt @map("updated_at") @db.Timestamptz()
+  deletedAt              DateTime?               @map("deleted_at") @db.Timestamptz()
+  brand                  Brand                   @relation(fields: [brandId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "fk_products_brand_id")
+  category               ProductCategory         @relation(fields: [categoryId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "fk_products_category_id")
+  productIngredients     ProductIngredient[]
+  reactionReportProducts ReactionReportProduct[]
+
+  @@index([categoryId, isActive, sortOrder], map: "idx_products_category_id_is_active_sort_order")
+  @@map("products")
+}
+
+model ProductFilterDefinition {
+  id                      String                          @id(map: "pk_product_filter_definitions") @db.Uuid
+  attributeDefinitionId   String                          @map("attribute_definition_id") @db.Uuid
+  label                   String                          @db.VarChar(100)
+  defaultOperator         ComparisonOperator              @map("default_operator")
+  allowedOperators        ComparisonOperator[]            @map("allowed_operators")
+  defaultValue            Json                            @map("default_value")
+  inputType               ProductFilterInputType          @map("input_type")
+  options                 Json?
+  sortOrder               Int                             @default(0) @map("sort_order")
+  isActive                Boolean                         @default(true) @map("is_active")
+  createdAt               DateTime                        @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt               DateTime?                       @updatedAt @map("updated_at") @db.Timestamptz()
+  deletedAt               DateTime?                       @map("deleted_at") @db.Timestamptz()
+  attributeDefinition     CategoryAttributeDefinition     @relation(fields: [attributeDefinitionId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "fk_product_filter_definitions_attribute_definition_id")
+  matrixFilterDefinitions ProductMatrixFilterDefinition[]
+
+  @@index([attributeDefinitionId, isActive, sortOrder], map: "idx_product_filter_defs_attr_def_id_active_sort")
+  @@map("product_filter_definitions")
+}
+
+model ProductMatrixFilterDefinition {
+  id                        String                            @id(map: "pk_product_matrix_filter_definitions") @db.Uuid
+  categoryId                String                            @map("category_id") @db.Uuid
+  productFilterDefinitionId String?                           @map("product_filter_definition_id") @db.Uuid
+  key                       String                            @db.VarChar(100)
+  label                     String                            @db.VarChar(100)
+  definitionKind            ProductMatrixFilterDefinitionKind @map("definition_kind")
+  computedFilterKey         String?                           @map("computed_filter_key") @db.VarChar(100)
+  operatorOverride          ComparisonOperator?               @map("operator_override")
+  valueOverride             Json?                             @map("value_override")
+  conditionPayload          Json?                             @map("condition_payload")
+  isDefault                 Boolean                           @default(false) @map("is_default")
+  isManualSelectable        Boolean                           @default(true) @map("is_manual_selectable")
+  sortOrder                 Int                               @default(0) @map("sort_order")
+  isActive                  Boolean                           @default(true) @map("is_active")
+  createdAt                 DateTime                          @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt                 DateTime?                         @updatedAt @map("updated_at") @db.Timestamptz()
+  deletedAt                 DateTime?                         @map("deleted_at") @db.Timestamptz()
+  category                  ProductCategory                   @relation(fields: [categoryId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "fk_product_matrix_filter_definitions_category_id")
+  productFilterDefinition   ProductFilterDefinition?          @relation(fields: [productFilterDefinitionId], references: [id], onDelete: SetNull, onUpdate: Cascade, map: "fk_product_matrix_filter_defs_product_filter_definition_id")
+  questionFilterMappings    QuestionFilterMapping[]
+
+  // ATTRIBUTE/COMPUTED XOR constraint requires raw SQL migration.
+  @@unique([categoryId, key], map: "uq_product_matrix_filter_definitions_category_id_key")
+  @@index([categoryId, isActive, sortOrder], map: "idx_product_matrix_filter_defs_category_id_active_sort")
+  @@map("product_matrix_filter_definitions")
+}
+
+model QuestionFilterMapping {
+  id                       String                        @id(map: "pk_question_filter_mappings") @db.Uuid
+  triggerQuestionId        String                        @map("trigger_question_id") @db.Uuid
+  triggerOperator          ComparisonOperator            @map("trigger_operator")
+  triggerValue             Int[]                         @map("trigger_value")
+  matrixFilterDefinitionId String                        @map("matrix_filter_definition_id") @db.Uuid
+  createdAt                DateTime                      @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt                DateTime?                     @updatedAt @map("updated_at") @db.Timestamptz()
+  deletedAt                DateTime?                     @map("deleted_at") @db.Timestamptz()
+  triggerQuestion          Question                      @relation(fields: [triggerQuestionId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "fk_question_filter_mappings_trigger_question_id")
+  matrixFilterDefinition   ProductMatrixFilterDefinition @relation(fields: [matrixFilterDefinitionId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "fk_question_filter_mappings_matrix_filter_definition_id")
+
+  @@index([triggerQuestionId], map: "idx_question_filter_mappings_trigger_question_id")
+  @@index([matrixFilterDefinitionId], map: "idx_question_filter_mappings_matrix_filter_definition_id")
+  @@map("question_filter_mappings")
+}
+
+model ProductMatrixFilterState {
+  id         String                         @id(map: "pk_product_matrix_filter_states") @db.Uuid
+  deviceId   String                         @map("device_id") @db.Uuid
+  userId     String?                        @map("user_id") @db.Uuid
+  categoryId String                         @map("category_id") @db.Uuid
+  source     ProductMatrixFilterStateSource
+  filters    Json
+  createdAt  DateTime                       @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt  DateTime?                      @updatedAt @map("updated_at") @db.Timestamptz()
+  device     Device                         @relation(fields: [deviceId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "fk_product_matrix_filter_states_device_id")
+  user       User?                          @relation(fields: [userId], references: [id], onDelete: SetNull, onUpdate: Cascade, map: "fk_product_matrix_filter_states_user_id")
+  category   ProductCategory                @relation(fields: [categoryId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "fk_product_matrix_filter_states_category_id")
+
+  @@index([deviceId, categoryId], map: "idx_product_matrix_filter_states_device_id_category_id")
+  @@index([userId, categoryId], map: "idx_product_matrix_filter_states_user_id_category_id")
+  @@map("product_matrix_filter_states")
+}
+
+model Ingredient {
+  id                 String                  @id(map: "pk_ingredients") @db.Uuid
+  nameKo             String                  @map("name_ko") @db.VarChar(200)
+  nameEn             String                  @map("name_en") @db.VarChar(200)
+  inciName           String?                 @unique(map: "uq_ingredients_inci_name") @map("inci_name") @db.VarChar(300)
+  createdAt          DateTime                @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt          DateTime?               @updatedAt @map("updated_at") @db.Timestamptz()
+  deletedAt          DateTime?               @map("deleted_at") @db.Timestamptz()
+  productIngredients ProductIngredient[]
+  groupMembers       IngredientGroupMember[]
+
+  @@map("ingredients")
+}
+
+model ProductIngredient {
+  id           String     @id(map: "pk_product_ingredients") @db.Uuid
+  productId    String     @map("product_id") @db.Uuid
+  ingredientId String     @map("ingredient_id") @db.Uuid
+  orderIndex   Int        @map("order_index")
+  rawText      String?    @map("raw_text") @db.Text
+  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz()
+  product      Product    @relation(fields: [productId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "fk_product_ingredients_product_id")
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "fk_product_ingredients_ingredient_id")
+
+  @@unique([productId, ingredientId], map: "uq_product_ingredients_product_id_ingredient_id")
+  @@unique([productId, orderIndex], map: "uq_product_ingredients_product_id_order_index")
+  @@index([ingredientId], map: "idx_product_ingredients_ingredient_id")
+  @@index([productId], map: "idx_product_ingredients_product_id")
+  @@map("product_ingredients")
+}
+
+model IngredientGroup {
+  id              String                  @id(map: "pk_ingredient_groups") @db.Uuid
+  key             String                  @unique(map: "uq_ingredient_groups_key") @db.VarChar(100)
+  name            String                  @db.VarChar(200)
+  description     String?                 @db.Text
+  createdAt       DateTime                @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt       DateTime?               @updatedAt @map("updated_at") @db.Timestamptz()
+  deletedAt       DateTime?               @map("deleted_at") @db.Timestamptz()
+  members         IngredientGroupMember[]
+  suspectedCauses SuspectedCause[]
+  avoidanceRules  AvoidanceRule[]
+
+  @@map("ingredient_groups")
+}
+
+model IngredientGroupMember {
+  id                String          @id(map: "pk_ingredient_group_members") @db.Uuid
+  ingredientId      String          @map("ingredient_id") @db.Uuid
+  ingredientGroupId String          @map("ingredient_group_id") @db.Uuid
+  ingredient        Ingredient      @relation(fields: [ingredientId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "fk_ingredient_group_members_ingredient_id")
+  ingredientGroup   IngredientGroup @relation(fields: [ingredientGroupId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "fk_ingredient_group_members_ingredient_group_id")
+
+  @@unique([ingredientId, ingredientGroupId], map: "uq_ingredient_group_members_ingredient_id_ingredient_group_id")
+  @@index([ingredientGroupId], map: "idx_ingredient_group_members_ingredient_group_id")
+  @@map("ingredient_group_members")
+}
+
+model ReactionReport {
+  id                     String                  @id(map: "pk_reaction_reports") @db.Uuid
+  deviceId               String                  @map("device_id") @db.Uuid
+  userId                 String?                 @map("user_id") @db.Uuid
+  symptoms               Json
+  affectedAreas          Json                    @map("affected_areas")
+  onsetTiming            String?                 @map("onset_timing") @db.VarChar(100)
+  memo                   String?                 @db.Text
+  createdAt              DateTime                @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt              DateTime?               @updatedAt @map("updated_at") @db.Timestamptz()
+  deletedAt              DateTime?               @map("deleted_at") @db.Timestamptz()
+  device                 Device                  @relation(fields: [deviceId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "fk_reaction_reports_device_id")
+  user                   User?                   @relation(fields: [userId], references: [id], onDelete: SetNull, onUpdate: Cascade, map: "fk_reaction_reports_user_id")
+  reactionReportProducts ReactionReportProduct[]
+  suspectedCauses        SuspectedCause[]
+
+  @@index([deviceId, createdAt], map: "idx_reaction_reports_device_id_created_at")
+  @@index([userId, createdAt], map: "idx_reaction_reports_user_id_created_at")
+  @@map("reaction_reports")
+}
+
+model ReactionReportProduct {
+  id         String                    @id(map: "pk_reaction_report_products") @db.Uuid
+  reportId   String                    @map("report_id") @db.Uuid
+  productId  String                    @map("product_id") @db.Uuid
+  type       ReactionReportProductType
+  usedPeriod String?                   @map("used_period") @db.VarChar(100)
+  usedCount  Int?                      @map("used_count")
+  createdAt  DateTime                  @default(now()) @map("created_at") @db.Timestamptz()
+  report     ReactionReport            @relation(fields: [reportId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "fk_reaction_report_products_report_id")
+  product    Product                   @relation(fields: [productId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "fk_reaction_report_products_product_id")
+
+  @@index([productId], map: "idx_reaction_report_products_product_id")
+  @@index([reportId], map: "idx_reaction_report_products_report_id")
+  @@map("reaction_report_products")
+}
+
+model SuspectedCause {
+  id                String                   @id(map: "pk_suspected_causes") @db.Uuid
+  reportId          String                   @map("report_id") @db.Uuid
+  ingredientGroupId String                   @map("ingredient_group_id") @db.Uuid
+  confidence        SuspectedCauseConfidence
+  reason            String?                  @db.Text
+  createdAt         DateTime                 @default(now()) @map("created_at") @db.Timestamptz()
+  report            ReactionReport           @relation(fields: [reportId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "fk_suspected_causes_report_id")
+  ingredientGroup   IngredientGroup          @relation(fields: [ingredientGroupId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "fk_suspected_causes_ingredient_group_id")
+
+  @@index([ingredientGroupId], map: "idx_suspected_causes_ingredient_group_id")
+  @@index([reportId], map: "idx_suspected_causes_report_id")
+  @@map("suspected_causes")
+}
+
+model AvoidanceRule {
+  id                String              @id(map: "pk_avoidance_rules") @db.Uuid
+  deviceId          String              @map("device_id") @db.Uuid
+  userId            String?             @map("user_id") @db.Uuid
+  ingredientGroupId String              @map("ingredient_group_id") @db.Uuid
+  action            AvoidanceRuleAction
+  reason            String?             @db.Text
+  isActive          Boolean             @default(true) @map("is_active")
+  createdAt         DateTime            @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt         DateTime?           @updatedAt @map("updated_at") @db.Timestamptz()
+  deletedAt         DateTime?           @map("deleted_at") @db.Timestamptz()
+  device            Device              @relation(fields: [deviceId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "fk_avoidance_rules_device_id")
+  user              User?               @relation(fields: [userId], references: [id], onDelete: SetNull, onUpdate: Cascade, map: "fk_avoidance_rules_user_id")
+  ingredientGroup   IngredientGroup     @relation(fields: [ingredientGroupId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "fk_avoidance_rules_ingredient_group_id")
+
+  @@index([deviceId, isActive, updatedAt], map: "idx_avoidance_rules_device_id_is_active_updated_at")
+  @@index([ingredientGroupId], map: "idx_avoidance_rules_ingredient_group_id")
+  @@index([userId, isActive, updatedAt], map: "idx_avoidance_rules_user_id_is_active_updated_at")
+  @@map("avoidance_rules")
+}
