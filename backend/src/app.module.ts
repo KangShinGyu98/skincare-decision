@@ -14,6 +14,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './common/guards/auth.guard';
 import { PermissionGuard } from './common/guards/permission.guard';
+import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { PermissionGuard } from './common/guards/permission.guard';
       isGlobal: true,
       validate: validateEnv,
     }),
+    PrismaModule,
     LoggerModule,
     CatsModule,
     AuthModule,

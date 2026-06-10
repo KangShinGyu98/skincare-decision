@@ -143,9 +143,11 @@ pnpm install
 pnpm run dev         # http://localhost:3000
 
 
-# 4) shared 빌드 명령어 
+# 4) shared 빌드 명령어
 pnpm --filter @skincare-decision/shared run build
 
+# schema.prisma 만든 뒤 generate
+pnpm --filter backend exec prisma generate
 
 ```
 
