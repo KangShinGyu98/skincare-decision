@@ -15,6 +15,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './common/guards/auth.guard';
 import { PermissionGuard } from './common/guards/permission.guard';
 import { PrismaModule } from './prisma/prisma.module';
+import { SessionModule } from './modules/session/session.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { PrismaModule } from './prisma/prisma.module';
     PrismaModule,
     LoggerModule,
     CatsModule,
+    SessionModule,
     AuthModule,
   ],
   controllers: [AppController],

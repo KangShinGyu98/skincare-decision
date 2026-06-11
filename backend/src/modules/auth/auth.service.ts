@@ -1,33 +1,35 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
+import { Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
 import { permissionsForRoles } from '../../common/auth/rbac-policy';
 import type { AuthenticatedUser, UserRole } from '../../common/types/auth.type';
-import type { Env } from '../../config/env.validation';
+import { SessionService } from '../session/session.service';
 import { UsersService } from '../users/users.service';
 
-type AccessTokenPayload = {
-  sub: string;
-  roles: UserRole[];
+export type LoginContext = {
+  deviceId?: string;
+  oldSessionToken?: string;
+  newSessionToken: string;
+  entryPath: string;
+  referrer?: string;
 };
 
 export type LoginResult = {
-  accessToken: string;
-  tokenType: 'Bearer';
+  sessionId: string;
   expiresInSeconds: number;
   user: AuthenticatedUser;
 };
 
+/**
+ * 임시 로그인 서비스
+ */
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
-    private readonly jwtService: JwtService,
-    private readonly configService: ConfigService<Env, true>,
+    private readonly sessionService: SessionService,
   ) {}
 
-  async login(username: string, password: string): Promise<LoginResult> {
-    const user = await this.usersService.findOne(username);
+  async login(username: string, password: string, context: LoginContext): Promise<LoginResult> {
+    const user = this.usersService.findOne(username);
 
     if (!user || user.password !== password) {
       throw new UnauthorizedException({
@@ -36,44 +38,63 @@ export class AuthService {
       });
     }
 
-    const authenticatedUser = this.toAuthenticatedUser(user.id, user.roles);
-    const expiresInSeconds = this.configService.get('JWT_ACCESS_TOKEN_TTL_SECONDS', {
-      infer: true,
+    if (!context.deviceId) {
+      throw new InternalServerErrorException({
+        code: 'DEVICE_CONTEXT_MISSING',
+        message: 'Device context is missing',
+      });
+    }
+
+    await this.usersService.ensureDatabaseUser(user);
+
+    const rotatedSession = await this.sessionService.rotateToAuthenticatedSession({
+      ...(context.oldSessionToken ? { oldSessionToken: context.oldSessionToken } : {}),
+      newSessionToken: context.newSessionToken,
+      deviceId: context.deviceId,
+      userId: user.id,
+      roles: user.roles,
+      entryPath: context.entryPath,
+      ...(context.referrer ? { referrer: context.referrer } : {}),
     });
 
-    const accessToken = await this.jwtService.signAsync({
-      sub: user.id,
-      roles: user.roles,
-    } satisfies AccessTokenPayload);
-
     return {
-      accessToken,
-      tokenType: 'Bearer',
-      expiresInSeconds,
-      user: authenticatedUser,
+      sessionId: rotatedSession.sessionId,
+      expiresInSeconds: this.sessionService.getSessionTtlSeconds(),
+      user: this.toAuthenticatedUser(user.id, user.roles),
     };
   }
 
-  async authenticateAccessToken(token: string): Promise<AuthenticatedUser> {
-    let payload: AccessTokenPayload;
+  async authenticateSession(sessionToken: string): Promise<AuthenticatedUser | undefined> {
+    const storedSession = await this.sessionService.getStoredSessionByToken(sessionToken);
 
-    try {
-      payload = await this.jwtService.verifyAsync<AccessTokenPayload>(token);
-    } catch {
+    if (!storedSession?.userId) {
+      return undefined;
+    }
+
+    const roles = storedSession.roles ?? this.findUserRoles(storedSession.userId);
+
+    return this.toAuthenticatedUser(storedSession.userId, roles);
+  }
+
+  async logout(sessionToken: string | undefined): Promise<void> {
+    if (!sessionToken) {
+      return;
+    }
+
+    await this.sessionService.deleteSessionByToken(sessionToken);
+  }
+
+  private findUserRoles(userId: string): UserRole[] {
+    const user = this.usersService.findById(userId);
+
+    if (!user) {
       throw new UnauthorizedException({
-        code: 'INVALID_ACCESS_TOKEN',
-        message: 'Invalid access token',
+        code: 'INVALID_SESSION',
+        message: 'Invalid session',
       });
     }
 
-    if (!this.isAccessTokenPayload(payload)) {
-      throw new UnauthorizedException({
-        code: 'INVALID_ACCESS_TOKEN',
-        message: 'Invalid access token',
-      });
-    }
-
-    return this.toAuthenticatedUser(payload.sub, payload.roles);
+    return user.roles;
   }
 
   private toAuthenticatedUser(id: string, roles: UserRole[]): AuthenticatedUser {
@@ -82,21 +103,5 @@ export class AuthService {
       roles,
       permissions: permissionsForRoles(roles),
     };
-  }
-
-  private isAccessTokenPayload(payload: unknown): payload is AccessTokenPayload {
-    if (typeof payload !== 'object' || payload === null) {
-      return false;
-    }
-
-    const record = payload as Record<string, unknown>;
-    const sub = record['sub'];
-    const roles = record['roles'];
-
-    return (
-      typeof sub === 'string' &&
-      Array.isArray(roles) &&
-      roles.every((role) => role === 'USER' || role === 'ADMIN')
-    );
   }
 }

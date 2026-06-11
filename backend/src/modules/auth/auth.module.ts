@@ -1,26 +1,11 @@
 import { Module } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { JwtModule } from '@nestjs/jwt';
-import type { Env } from '../../config/env.validation';
+import { SessionModule } from '../session/session.module';
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 
 @Module({
-  imports: [
-    UsersModule,
-    JwtModule.registerAsync({
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService<Env, true>) => ({
-        secret: configService.get('JWT_ACCESS_TOKEN_SECRET', { infer: true }),
-        signOptions: {
-          expiresIn: configService.get('JWT_ACCESS_TOKEN_TTL_SECONDS', {
-            infer: true,
-          }),
-        },
-      }),
-    }),
-  ],
+  imports: [UsersModule, SessionModule],
   controllers: [AuthController],
   providers: [AuthService],
   exports: [AuthService],

@@ -4,68 +4,88 @@ import { Response, NextFunction } from 'express';
 import { Env } from 'src/config/env.validation';
 import { validate as isUuid, v7 as uuidv7 } from 'uuid';
 import { RequestWithContext } from '../types/express-request.type';
+import { SessionService } from 'src/modules/session/session.service';
+import { randomBytes } from 'node:crypto';
 
 /**
-  Device/Session 식별 미들웨어
-  deviceId: 장기 쿠키, 사용자를 익명으로 식별
-  sessionId: 브라우저 세션 쿠키, 현재 활동창 식별
-  쿠키 값이 없거나 UUID가 아니면 UUIDv7 새 발급
-  req.context.deviceId/sessionId에 주입
-  signed cookie로 클라이언트 임의 조작을 줄임
+ * Device/Session 식별 미들웨어
+ * deviceId, sessionId 없으면 생성해서 cookie 설정,
+ * ensureDeviceSession로 devices, sessions DB row 보장 (Redis에 있으면 lastSeenAt 업데이트, 없으면 Redis, DB 에 익명 세션 생성)
+ * sessionId 없으면 무조건 비로그인 사용자
  */
 @Injectable()
 export class DeviceSessionMiddleware implements NestMiddleware {
-  constructor(private readonly configService: ConfigService<Env, true>) {}
-  use(req: RequestWithContext, res: Response, next: NextFunction): void {
-    const deviceIdCookieName = this.configService.get('DEVICE_ID_COOKIE_NAME', {
-      infer: true,
-    });
-    const sessionIdCookieName = this.configService.get('SESSION_ID_COOKIE_NAME', {
-      infer: true,
-    });
-    const cookieMaxAgeDays = this.configService.get('DEVICE_SESSION_COOKIE_MAX_AGE_DAYS', {
-      infer: true,
-    });
+  constructor(
+    private readonly configService: ConfigService<Env, true>,
+    private readonly sessionService: SessionService,
+  ) {}
 
-    const nodeEnv = this.configService.get('NODE_ENV', { infer: true });
+  async use(req: RequestWithContext, res: Response, next: NextFunction): Promise<void> {
+    const deviceCookieName = this.configService.get('DEVICE_ID_COOKIE_NAME', { infer: true });
+    const sessionCookieName = this.configService.get('SESSION_ID_COOKIE_NAME', { infer: true });
+    const deviceCookieMaxAgeDays = this.configService.get('COOKIE_MAX_AGE_DAYS', { infer: true });
+    const sessionCookieMaxAgeSeconds = this.sessionService.getSessionTtlSeconds();
+    const secure = this.configService.get('NODE_ENV', { infer: true }) === 'production';
 
     const signedCookies = req.signedCookies as Record<string, unknown> | undefined;
-    const cookies = req.cookies as Record<string, unknown> | undefined;
 
-    const incomingDeviceId = signedCookies?.[deviceIdCookieName] ?? cookies?.[deviceIdCookieName];
-    const incomingSessionId =
-      signedCookies?.[sessionIdCookieName] ?? cookies?.[sessionIdCookieName];
+    const incomingDeviceId = signedCookies?.[deviceCookieName];
+    const incomingSessionToken = signedCookies?.[sessionCookieName];
 
     const deviceId =
       typeof incomingDeviceId === 'string' && isUuid(incomingDeviceId)
         ? incomingDeviceId
         : uuidv7();
-    const sessionId =
-      typeof incomingSessionId === 'string' && isUuid(incomingSessionId)
-        ? incomingSessionId
-        : uuidv7();
 
-    req.context.deviceId = deviceId;
-    req.context.sessionId = sessionId;
+    const sessionToken =
+      typeof incomingSessionToken === 'string' ? incomingSessionToken : this.generateSessionToken();
 
-    const secure = nodeEnv === 'production';
+    const referrer = this.readReferrer(req);
 
-    res.cookie(deviceIdCookieName, deviceId, {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure,
-      signed: true,
-      maxAge: cookieMaxAgeDays * 24 * 60 * 60 * 1000,
-    });
+    try {
+      const session = await this.sessionService.ensureDeviceSession({
+        deviceId,
+        sessionToken,
+        entryPath: req.originalUrl,
+        ...(referrer ? { referrer } : {}),
+      });
 
-    res.cookie(sessionIdCookieName, sessionId, {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure,
-      signed: true,
-      maxAge: cookieMaxAgeDays * 24 * 60 * 60 * 1000,
-    });
+      req.context.deviceId = deviceId;
+      req.context.sessionId = session.sessionId;
 
-    next();
+      res.cookie(deviceCookieName, deviceId, {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure,
+        signed: true,
+        maxAge: deviceCookieMaxAgeDays * 24 * 60 * 60 * 1000,
+      });
+
+      res.cookie(sessionCookieName, sessionToken, {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure,
+        signed: true,
+        maxAge: sessionCookieMaxAgeSeconds * 1000,
+      });
+
+      next();
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  private generateSessionToken(): string {
+    return randomBytes(32).toString('base64url');
+  }
+
+  private readReferrer(req: RequestWithContext): string | undefined {
+    const referrer = req.headers['referer'] ?? req.headers['referrer'];
+
+    if (Array.isArray(referrer)) {
+      return referrer[0];
+    }
+
+    return referrer;
   }
 }
