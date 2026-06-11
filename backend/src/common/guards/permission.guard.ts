@@ -10,6 +10,9 @@ import { AUTHENTICATED_KEY, IS_PUBLIC_KEY, PERMISSIONS_KEY } from '../decorators
 import type { Permission } from '../types/auth.type';
 import type { RequestWithContext } from '../types/express-request.type';
 
+/**
+ * PermissionGuard는 @Auth() 데코레이터로 설정된 인증/권한 요구사항을 검사하는 가드입니다.
+ */
 @Injectable()
 export class PermissionGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
