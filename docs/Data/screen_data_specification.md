@@ -1,6 +1,6 @@
 ﻿# Screen Data Specification — 화면별 데이터 흐름 명세
 
-> Service Flow: **S01 Landing → S02 Priority Gate → S03~S05 Category Decision → S06 Product Matrix → S07 Product Detail → S08 Reaction Traceback**
+> Service Flow: **S01 Landing → S02 Priority Gate → S03~S05 Category Decision → S06 Product Matrix (+ 제품 상세뷰) → S08 Reaction Traceback**
 >
 > 각 화면이 어떤 테이블에서 무엇을 **읽고(Read)**, 어디에 **쓰고(Write)**, 무엇을 **계산(Computed)**하고, 다음 화면에 무엇을 **전달(Next)**하는지 정의한다.
 >
@@ -23,34 +23,34 @@
 
 모든 요청에는 다음 컨텍스트가 동반된다.
 
-| 항목         | 출처                                             | 사용                                                                                                                              |
-| ------------ | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
-| `device_id`  | 브라우저 cookie / localStorage (영구, UUIDv7)    | 비로그인 사용자 식별, 활동 자식 테이블의 NOT NULL FK (`session_events` 제외 — `session_id → user_sessions` JOIN 으로 device 추적) |
-| `user_id`    | 로그인 세션 (NULLABLE, UUIDv7)                   | 로그인 시 신원 병합, 이력 통합                                                                                                    |
-| `session_id` | `user_sessions` (탭/유입 단위 dimension, UUIDv7) | 모든 이벤트·답변·결정 row에 매달리는 활동창 식별자                                                                                |
+| 항목         | 출처                                                   | 사용                                                                                                                              |
+| ------------ | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| `device_id`  | 브라우저 cookie (영구, UUIDv7)                         | 비로그인 사용자 식별, 활동 자식 테이블의 NOT NULL FK (`session_events` 제외 — `session_id → user_sessions` JOIN 으로 device 추적) |
+| `user_id`    | 로그인 세션 (NULLABLE, UUIDv7)                         | 로그인 시 신원 병합, 이력 통합                                                                                                    |
+| `session_id` | `user_sessions` + Redis session (탭/유입 단위, UUIDv7) | 모든 이벤트·답변·결정 row에 매달리는 활동창 식별자                                                                                |
 
-> 매 화면 진입 시 ① `devices.last_seen_at` touch, ② 현재 device 에 "최근 30분 내 `session_events` 가 있는 활성 세션" 이 없으면 `user_sessions` 신규 INSERT, ③ `session_events` 에 화면 진입 이벤트 기록은 **공통으로 발생**한다 (아래 표에서는 화면별 고유 이벤트만 명시).
+> 매 화면 진입 시 ① `device_id` 는 cookie 로 확인만 한다. cookie 가 없거나 유효하지 않으면 새 UUIDv7 을 발급해 `devices` row 를 보장한다. ② session 은 비로그인 UUID 로 시작하고, 로그인 시 `user_id` 가 연결된 인증 세션으로 승격하며 Redis 에 세션을 유지한다. ③ `session_events` 에 화면 진입 이벤트 기록은 **공통으로 발생**한다 (아래 표에서는 화면별 고유 이벤트만 명시).
 >
-> `user_sessions` 는 dimension 테이블이므로 `status` / `expires_at` 같은 런타임 상태 컬럼이 없다. "세션 만료" 는 `session_events.created_at` 분포로 후행 판정 (서버는 "이 device 의 최근 session_id 의 마지막 이벤트가 30분 이상 전이면 새 세션 발급"), 또는 클라이언트가 localStorage 의 `session_id` 와 `last_activity_at` 을 함께 보관해 가장 최근 활동을 기준으로 발급한다.
+> `user_sessions` 는 dimension 테이블이므로 `status` / `expires_at` 같은 런타임 상태 컬럼이 없다. 세션 유효성은 session cookie 와 Redis TTL 기준으로 관리하고, DB 의 `user_sessions` / `session_events` 는 활동창과 이벤트 이력을 보존한다.
+>
+> TODO: `devices.last_seen_at` 은 삭제 대상이다. DB 모델/Prisma schema/마이그레이션을 함께 갱신해야 한다.
 
 ### 0.2 항상 발생하는 쓰기
 
-| 테이블           | 이벤트                                             | 비고                                                 |
-| ---------------- | -------------------------------------------------- | ---------------------------------------------------- |
-| `devices`        | UPDATE `last_seen_at = now()`                      | 매 요청                                              |
-| `user_sessions`  | INSERT only (mutate 없음 · `logged_in_at` 만 예외) | 활성 세션 부재 시 신규 INSERT (30분 비활동 → 새 row) |
-| `session_events` | INSERT `{event_name: '<screen>_viewed'}`           | 화면 진입 시 기본 이벤트                             |
+| 테이블           | 이벤트                                             | 비고                                                        |
+| ---------------- | -------------------------------------------------- | ----------------------------------------------------------- |
+| `devices`        | INSERT / 존재 보장                                 | cookie 의 `device_id` 가 없거나 DB row 가 없을 때만 생성    |
+| `user_sessions`  | INSERT only (`user_id`, `logged_in_at` 승격 예외)  | 비로그인 session UUID 생성, 로그인 시 인증 세션으로 승격    |
+| `session_events` | INSERT `{event_name: '<screen>_viewed'}`           | 화면 진입 시 기본 이벤트                                    |
 
 ### 0.3 `decision_runs` 저장 정책
 
-사용자에게 **실제로 결과를 보여준 화면**에서만 row를 적재한다 — S02(Priority Gate), S05(Category Decision 결과), S06(Product Matrix), S08(Traceback). `input_snapshot` / `applied_filters_snapshot` / `result_snapshot`을 모두 JSONB로 보관하며, **재조회는 snapshot이 아니라 현재 데이터를 다시 쿼리**한다(이력·고객지원용).
+사용자에게 **실제로 결과를 보여준 화면**에서만 row를 적재한다 — S02(Priority Gate), S03~S05(Category Decision CTA 클릭 또는 S06 진입), S06(Product Matrix), S08(Traceback). `input_snapshot` / `applied_filters_snapshot` / `result_snapshot`을 모두 JSONB로 보관하며, **재조회는 snapshot이 아니라 현재 데이터를 다시 쿼리**한다(이력·고객지원용).
 
 ### 0.4 데이터 흐름 한눈에
 
 ```
 S01 Landing
-   ├ device_id 발급/복원
-   ├ user_sessions 시작
    └ (concern 클릭 시) flow.concern user_response + preset responses
         ↓
 S02 Priority Gate
@@ -60,8 +60,7 @@ S02 Priority Gate
         ↓ (PASS / ROUTE_CATEGORY)
 S03~S05 Category Decision (Box1 → Box2 → Box3)
    ├ context user_responses 갱신
-   ├ Box3 CTA → product_matrix_filter_states (CATEGORY_DECISION_CTA)
-   └ decision_runs (CATEGORY_DECISION)
+   └ Box3 CTA / S06 진입 → decision_runs (CATEGORY_DECISION)
         ↓
 S06 Product Matrix
    ├ filter_state 기반 products 동적 조회
@@ -69,8 +68,8 @@ S06 Product Matrix
    ├ 사용자 필터 편집 → filter_state.filters 갱신 (MANUAL)
    └ decision_runs (PRODUCT_MATRIX)
         ↓
-S07 Product Detail
-   └ 적합도 사유 + 회피 성분 표시 (조회 전용)
+S06 Product Matrix 상세뷰
+   └ 제품 카드 클릭 → 적합도 사유 + 회피 성분 표시 (모달/드로어)
         ↓ (실패 경험 시)
 S08 Reaction Traceback
    ├ reaction_reports + reaction_report_products
@@ -90,14 +89,11 @@ S08 Reaction Traceback
 | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
 | Fast Lane 카테고리 칩 후보 | `product_categories`                                                                                                                                                     | "이미 찾는 제품군 있음" 세그먼트 칩 노출                                                        |
 | Concern 태그 목록 / 매핑   | **프론트엔드 코드 상수**                                                                                                                                                 | DB 비저장 — `concern_key → {route_target, preset_facts, suggested_category, suggested_filters}` |
-| 기존 device 활성 세션      | `user_sessions s JOIN session_events e ON e.session_id = s.id WHERE s.device_id = ? AND e.created_at > now() - INTERVAL '30 minutes' ORDER BY s.created_at DESC LIMIT 1` | 최근 30분 내 이벤트가 있는 세션이 없으면 새 세션 시작                                           |
 
 ### 1.2 쓰기 데이터 (Write)
 
 | 데이터                          | 대상 테이블             | 트리거 / 조건                                                                         |
 | ------------------------------- | ----------------------- | ------------------------------------------------------------------------------------- |
-| device row (upsert)             | `devices`               | 진입 시 cookie의 `device_id` 없으면 새로 발급 INSERT                                  |
-| 신규 활성 세션                  | `user_sessions`         | 활성 세션 없거나 만료 시 INSERT (`entry_path`, `referrer`)                            |
 | `landing_viewed` 이벤트         | `session_events`        | 화면 진입                                                                             |
 | `segment_clicked` 이벤트        | `session_events`        | 4개 세그먼트 카드 중 하나 클릭                                                        |
 | `concern_clicked` 이벤트        | `session_events`        | Concern 캐러셀 태그 클릭 (payload: `{concern:"acne"}`)                                |
@@ -109,8 +105,6 @@ S08 Reaction Traceback
 
 | 계산 항목             | 입력                                   | 로직                                                                    |
 | --------------------- | -------------------------------------- | ----------------------------------------------------------------------- |
-| `device_id` 발급/복원 | cookie / localStorage                  | 없으면 v4 UUID 발급 → cookie 저장 + `devices` INSERT                    |
-| 세션 만료 판정        | `session_events.created_at` 분포       | 최근 30분 내 이벤트가 없으면 새 세션 시작 (`user_sessions` 신규 INSERT) |
 | Concern 라우팅 분기   | 클릭한 `concern_key` + 프론트 상수     | `route_target` 값에 따라 `priority_gate` / `category_decision` 결정     |
 | 진입 경로 메타        | `window.location`, `document.referrer` | `entry_path`, `referrer` 컬럼에 저장                                    |
 
@@ -118,8 +112,6 @@ S08 Reaction Traceback
 
 | 데이터                  | 전달 방식             | 다음 화면 (세그먼트별)                                         |
 | ----------------------- | --------------------- | -------------------------------------------------------------- |
-| `device_id`             | cookie 유지           | 모든 후속 화면                                                 |
-| `session_id`            | 서버 상태 / SWR       | 모든 후속 화면                                                 |
 | `flow.concern` + preset | `user_responses` 저장 | S02 (concern 진입 시) / S03 (route_target='category_decision') |
 | 라우팅 대상 카테고리    | URL 쿼리              | S03 (Fast Lane 칩 → 해당 category로 점프)                      |
 
@@ -216,8 +208,7 @@ S08 Reaction Traceback
 | context 답변                 | `user_responses`               | Box 1/Box 2 응답 시 question별 current row UPSERT (`source='context'`)                |
 | `category.selected` 답변 row | `user_responses`               | 카테고리 진입 시 current row UPSERT (Fast Lane / ROUTE_CATEGORY로 들어온 경우 포함)   |
 | 질문/카테고리 이벤트         | `session_events`               | `context_question_answered`, `category_box_advanced`, `category_decision_cta_clicked` |
-| 신규 filter_state            | `product_matrix_filter_states` | Box 3 "제품 보러가기" CTA 클릭 시 (`source='CATEGORY_DECISION_CTA'`, filters JSONB)   |
-| 결과 snapshot                | `decision_runs`                | Box 3 진입 시 (`decision_type='CATEGORY_DECISION'`, `filter_state_id` 연결)           |
+| 결과 snapshot                | `decision_runs`                | Box 3 "제품 보러가기" CTA 클릭 또는 S06 진입 시 (`decision_type='CATEGORY_DECISION'`) |
 
 ### 3.3 계산 데이터 (Computed)
 
@@ -234,8 +225,8 @@ S08 Reaction Traceback
 
 | 데이터                | 전달 방식                            | 다음 화면              |
 | --------------------- | ------------------------------------ | ---------------------- |
-| `filter_state_id`     | URL / state                          | S06 Product Matrix     |
 | `category_id`         | URL                                  | S06                    |
+| `source`              | URL / state (`CATEGORY_DECISION_CTA`) | S06                    |
 | `decision_run.id`     | 이력 표시 / 분석                     | (소비처 다양)          |
 | 현재 `user_responses` | DB에 이미 저장됨, 다음 화면이 재조회 | S06에서 필터 재구성 시 |
 
@@ -249,7 +240,7 @@ S08 Reaction Traceback
 
 | 데이터            | 소스 테이블                                                                                                        | 용도                                                                                                |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
-| 활성 filter_state | `product_matrix_filter_states WHERE (user_id=? OR device_id=?) AND category_id=? ORDER BY updated_at DESC LIMIT 1` | 직접 진입 시 복원, CTA 진입 시 방금 만든 row. `is_active` 컬럼 없음 — 가장 최근 row 가 곧 현재 상태 |
+| 활성/초기화된 filter_state | `product_matrix_filter_states WHERE (user_id=? OR device_id=?) AND category_id=? ORDER BY updated_at DESC LIMIT 1` | 직접 진입 시 기존 상태 복원. Category Decision CTA 진입이면 S06 초기화 단계에서 새 row 생성 후 사용 |
 | 카테고리 메타     | `product_categories`                                                                                               | 페이지 헤더 + Select                                                                                |
 | 필터 추가 후보    | `product_matrix_filter_definitions WHERE category_id=? AND is_manual_selectable=true AND is_active=true`           | "필터 추가" 버튼 드롭다운                                                                           |
 | 필터 라벨 변환    | `product_matrix_filter_definitions` + `product_filter_definitions`                                                 | matrix_filter_definition_id → label / input_type / options 해석 (state 에 중복 저장 X)              |
@@ -262,6 +253,7 @@ S08 Reaction Traceback
 
 | 데이터                            | 대상 테이블                    | 트리거                                                                   |
 | --------------------------------- | ------------------------------ | ------------------------------------------------------------------------ |
+| 신규 filter_state                 | `product_matrix_filter_states` | Product Matrix 진입 시 필요하면 생성 (`source='CATEGORY_DECISION_CTA'`, filters JSONB) |
 | filter_state.filters 갱신         | `product_matrix_filter_states` | 사용자가 필터 추가/제거 시 UPDATE (`source='MANUAL'`, `updated_at` 갱신) |
 | `filter_added` / `filter_removed` | `session_events`               | 필터 편집                                                                |
 | `product_card_clicked`            | `session_events`               | 제품 카드 클릭                                                           |
@@ -280,16 +272,16 @@ S08 Reaction Traceback
 
 ### 4.4 다음 화면으로 전달 (Pass to Next)
 
-| 데이터            | 전달 방식           | 다음 화면                |
-| ----------------- | ------------------- | ------------------------ |
-| `product_id`      | URL `/products/:id` | S07 Product Detail       |
-| `filter_state_id` | state               | S07 (적합도 사유 계산용) |
+| 데이터            | 전달 방식       | 다음 뷰                         |
+| ----------------- | --------------- | ------------------------------- |
+| `product_id`      | component state | S06 제품 상세뷰 (모달/드로어)   |
+| `filter_state_id` | component state | S06 제품 상세뷰 적합도 사유 계산 |
 
 ---
 
-## 5. S07 Product Detail
+## 5. S06 Product Matrix 상세뷰
 
-> 제품 상세 + 적합도 사유 + 회피/주의 성분 + 외부 구매 링크. **조회 중심 화면** (write 거의 없음).
+> Product Matrix 안에서 열리는 제품 상세 모달/드로어. 제품 상세 + 적합도 사유 + 회피/주의 성분 + 외부 구매 링크를 보여주는 **조회 중심 상세뷰**.
 
 ### 5.1 읽기 데이터 (Read)
 
@@ -308,11 +300,11 @@ S08 Reaction Traceback
 
 | 데이터                          | 대상 테이블      | 트리거                                             |
 | ------------------------------- | ---------------- | -------------------------------------------------- |
-| `product_detail_viewed`         | `session_events` | 화면 진입                                          |
+| `product_detail_viewed`         | `session_events` | 제품 상세뷰 열림                                   |
 | `purchase_link_clicked`         | `session_events` | "구매하러 가기" 클릭 (`payload.purchase_url` 포함) |
 | `traceback_started_from_detail` | `session_events` | 상세에서 Traceback CTA로 이동 시                   |
 
-> `decision_runs` 적재 없음 — Product Matrix가 이미 카드 단위 결과를 snapshot 했고, 상세는 그 안의 한 카드를 확대한 화면.
+> `decision_runs` 적재 없음 — Product Matrix가 이미 카드 단위 결과를 snapshot 했고, 상세뷰는 그 안의 한 카드를 확대한 UI 상태다.
 
 ### 5.3 계산 데이터 (Computed)
 
@@ -328,7 +320,7 @@ S08 Reaction Traceback
 | 데이터                 | 전달 방식               | 다음 화면 / 외부                              |
 | ---------------------- | ----------------------- | --------------------------------------------- |
 | `product.purchase_url` | `window.open` 외부 이동 | 외부 커머스 (올리브영 등)                     |
-| `product_id`           | URL state               | S08 Traceback (이 제품으로 문제/OK 후보 등록) |
+| `product_id`           | view state              | S08 Traceback (이 제품으로 문제/OK 후보 등록) |
 
 ---
 
@@ -344,7 +336,7 @@ S08 Reaction Traceback
 | 후보 제품 성분          | `product_ingredients JOIN ingredients WHERE product_id IN (PROBLEM 목록 ∪ OK 목록)` | 성분 비교 입력                  |
 | 성분군 매핑             | `ingredient_group_members JOIN ingredient_groups`                                   | 의심 그룹 후보 산출             |
 | 기존 회피 규칙          | `avoidance_rules WHERE (user_id=? OR device_id=?) AND is_active=true`               | 중복 추가 방지 / 기존 규칙 노출 |
-| 진입 컨텍스트 (있을 시) | URL의 `product_id` (S07에서 진입)                                                   | PROBLEM 후보 초기값             |
+| 진입 컨텍스트 (있을 시) | S06 상세뷰의 `product_id`                                                           | PROBLEM 후보 초기값             |
 
 ### 6.2 쓰기 데이터 (Write)
 
@@ -371,7 +363,7 @@ S08 Reaction Traceback
 
 | 데이터                     | 전달 방식                                         | 다음 화면 / 효과                                                                  |
 | -------------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------- |
-| 신규 `avoidance_rules` row | DB 영속 → 모든 후속 S06/S07 조회에 자동 반영      | S06 Product Matrix (AVOID 제외 / CAUTION 태그)                                    |
+| 신규 `avoidance_rules` row | DB 영속 → 모든 후속 S06 조회/상세뷰에 자동 반영  | S06 Product Matrix (AVOID 제외 / CAUTION 태그)                                    |
 | Traceback 적용 상태        | `avoidance_rules` 기준으로 service 가 항상 후처리 | `product_matrix_filter_states.filters` 에 traceback 전용 source_type 을 넣지 않음 |
 | `report.id`                | URL / 사용자 이력 화면                            | 리포트 재조회                                                                     |
 
@@ -398,35 +390,35 @@ UPDATE product_matrix_filter_states  SET user_id = :user_id WHERE device_id = :d
 
 ## 8. 부록 B — 테이블별 read/write 발생 화면 매트릭스
 
-| 테이블                              | S01 | S02 | S03~S05 | S06 | S07 | S08 |
-| ----------------------------------- | --- | --- | ------- | --- | --- | --- |
-| `users`                             | —   | —   | —       | —   | —   | —   |
-| `devices`                           | W   | W   | W       | W   | W   | W   |
-| `user_sessions`                     | W   | W   | W       | W   | W   | W   |
-| `session_events`                    | W   | W   | W       | W   | W   | W   |
-| `questions`                         | —   | R   | R       | —   | —   | —   |
-| `question_variants`                 | —   | R   | R       | —   | —   | —   |
-| `question_visibility_conditions`    | —   | R   | R       | —   | —   | —   |
-| `user_responses`                    | W   | R/W | R/W     | R   | R   | —   |
-| `priority_rules`                    | —   | R   | —       | —   | —   | —   |
-| `priority_rule_conditions`          | —   | R   | —       | —   | —   | —   |
-| `decision_runs`                     | —   | W   | W       | W   | —   | W   |
-| `product_categories`                | R   | R   | R       | R   | R   | R   |
-| `brands`                            | —   | —   | —       | R   | R   | R   |
-| `category_attribute_definitions`    | —   | —   | R       | R   | R   | —   |
-| `products`                          | —   | —   | R       | R   | R   | R   |
-| `product_filter_definitions`        | —   | —   | R       | R   | R   | —   |
-| `product_matrix_filter_definitions` | —   | —   | R       | R   | R   | —   |
-| `question_filter_mappings`          | —   | —   | R       | R   | —   | —   |
-| `product_matrix_filter_states`      | —   | —   | W       | R/W | R   | (W) |
-| `ingredients`                       | —   | —   | —       | —   | R   | R   |
-| `product_ingredients`               | —   | —   | (R)     | (R) | R   | R   |
-| `ingredient_groups`                 | —   | —   | —       | (R) | (R) | R   |
-| `ingredient_group_members`          | —   | —   | (R)     | R   | R   | R   |
-| `reaction_reports`                  | —   | —   | —       | —   | —   | W   |
-| `reaction_report_products`          | —   | —   | —       | —   | —   | W   |
-| `suspected_causes`                  | —   | —   | —       | —   | —   | W   |
-| `avoidance_rules`                   | —   | —   | R       | R   | R   | R/W |
+| 테이블                              | S01 | S02 | S03~S05 | S06 | S08 |
+| ----------------------------------- | --- | --- | ------- | --- | --- |
+| `users`                             | —   | —   | —       | —   | —   |
+| `devices`                           | W   | W   | W       | W   | W   |
+| `user_sessions`                     | W   | W   | W       | W   | W   |
+| `session_events`                    | W   | W   | W       | W   | W   |
+| `questions`                         | —   | R   | R       | —   | —   |
+| `question_variants`                 | —   | R   | R       | —   | —   |
+| `question_visibility_conditions`    | —   | R   | R       | —   | —   |
+| `user_responses`                    | W   | R/W | R/W     | R   | —   |
+| `priority_rules`                    | —   | R   | —       | —   | —   |
+| `priority_rule_conditions`          | —   | R   | —       | —   | —   |
+| `decision_runs`                     | —   | W   | W       | W   | W   |
+| `product_categories`                | R   | R   | R       | R   | R   |
+| `brands`                            | —   | —   | —       | R   | R   |
+| `category_attribute_definitions`    | —   | —   | R       | R   | —   |
+| `products`                          | —   | —   | R       | R   | R   |
+| `product_filter_definitions`        | —   | —   | R       | R   | —   |
+| `product_matrix_filter_definitions` | —   | —   | R       | R   | —   |
+| `question_filter_mappings`          | —   | —   | R       | R   | —   |
+| `product_matrix_filter_states`      | —   | —   | —       | R/W | (W) |
+| `ingredients`                       | —   | —   | —       | R   | R   |
+| `product_ingredients`               | —   | —   | (R)     | R   | R   |
+| `ingredient_groups`                 | —   | —   | —       | (R) | R   |
+| `ingredient_group_members`          | —   | —   | (R)     | R   | R   |
+| `reaction_reports`                  | —   | —   | —       | —   | W   |
+| `reaction_report_products`          | —   | —   | —       | —   | W   |
+| `suspected_causes`                  | —   | —   | —       | —   | W   |
+| `avoidance_rules`                   | —   | —   | R       | R   | R/W |
 
 > 괄호 `(R)`는 회피 규칙 적용 시 등 **부수적 조회**. `W` 옆 괄호 표시는 다른 화면 동작의 부수 효과로 갱신되는 경우.
 

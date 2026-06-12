@@ -19,6 +19,7 @@ AI 세션 시작 시 읽는 프로젝트 문서 인덱스 파일이다. 파일 �
 | db_modeling.md              | DB 테이블 모델 (Prisma schema 대응) |
 | db_schema_validation.md     | DB 스키마 검증 기록                 |
 | screen_data_specification.md | 화면별 데이터 사양                 |
+| backend_api_list.md         | 화면별 백엔드 API 초안              |
 
 ## docs/ContentSpec/ — 콘텐츠·룰 명세
 

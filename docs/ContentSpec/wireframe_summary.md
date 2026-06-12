@@ -648,7 +648,7 @@ Box 3. 원인 후보
 
 #### 다음 선택에 반영
 
-Reaction Traceback 결과는 이후 Product Matrix와 Product Detail에 반영된다.
+Reaction Traceback 결과는 이후 Product Matrix와 제품 상세뷰에 반영된다.
 
 ---
 
@@ -928,8 +928,7 @@ Rule Test 화면은 Priority Decision, Context, Product Filter Mapping, Product 
 | S03 | Category Decision — Box 1    | 기본 사용 맥락 확인 (예산, 장소, 시간, 사용감)      |
 | S04 | Category Decision — Box 2    | 제품군별 핵심 기준 확인 (선크림 / 세럼 / 립케어 등) |
 | S05 | Category Decision — Box 3    | 조건 기반 제품 후보 + CTA 노출                      |
-| S06 | Product Matrix               | 가격대별 제품 후보 비교 + 개인화 필터 적용          |
-| S07 | Product Detail               | 제품 상세 정보 + 구매 링크 + 적합도 태그            |
+| S06 | Product Matrix + 상세뷰      | 가격대별 제품 후보 비교 + 제품 상세 정보 모달/드로어 |
 | S08 | Reaction Traceback / Tracker | 실패 원인 추적 + 결과를 다음 선택에 반영            |
 
 ---
@@ -941,7 +940,7 @@ Rule Test 화면은 Priority Decision, Context, Product Filter Mapping, Product 
 > 루틴이 불안정하거나, 무엇을 사야 할지 기준 자체가 없는 사용자
 
 ```
-S01 → S02 (Priority Gate) → S03 → S04 → S05 → S06 → S07 → S08 (Tracker)
+S01 → S02 (Priority Gate) → S03 → S04 → S05 → S06(+상세뷰) → S08 (Tracker)
 ```
 
 Priority Gate를 거쳐 지금 제품을 사야 하는 상태인지 먼저 판단한 뒤, Category Decision을 순서대로 거쳐 제품을 고른다. 이후 S08에서 루틴 추적을 시작할 수 있다.
@@ -953,7 +952,7 @@ Priority Gate를 거쳐 지금 제품을 사야 하는 상태인지 먼저 판�
 > 어떤 제품군이 필요한지 모르지만, 해결하고 싶은 피부 문제가 있는 사용자
 
 ```
-S01 → S02 (Priority Gate) → S03 → S04 → S05 → S06 → S07
+S01 → S02 (Priority Gate) → S03 → S04 → S05 → S06(+상세뷰)
 ```
 
 고민 유형을 선택하면 concern preset이 먼저 저장되고, 기본적으로 Priority Gate를 거쳐 루틴 안정 여부를 먼저 판단한다. 이후 Category Decision → Product Matrix 순서로 진행한다. 입술 트임, 선크림 추천, 립 제품, 메이크업 궁합 계열처럼 제품군이 비교적 명확한 일부 고민은 Category Decision부터 시작할 수 있다.
@@ -965,7 +964,7 @@ S01 → S02 (Priority Gate) → S03 → S04 → S05 → S06 → S07
 > 선크림, 세럼 등 원하는 카테고리가 이미 정해진 사용자
 
 ```
-S01 → 제품군 칩 선택 → S03 → S04 → S05 → S06 → S07
+S01 → 제품군 칩 선택 → S03 → S04 → S05 → S06(+상세뷰)
 ```
 
 Landing에서 제품군 칩을 바로 선택해 Priority Gate를 건너뛰고 Category Decision부터 시작한다. 탐색 흐름을 단축해 빠르게 제품 후보에 도달할 수 있다.

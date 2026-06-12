@@ -53,8 +53,7 @@
 | S03 | Category Decision — Box 1 | P1       | 기본 사용 맥락 확인                        |
 | S04 | Category Decision — Box 2 | P1       | 제품군별 핵심 질문                         |
 | S05 | Category Decision — Box 3 | P1       | 조건 요약 + 자동 필터 + 제품 후보 CTA      |
-| S06 | Product Matrix            | P0       | 필터 기반 제품 비교                        |
-| S07 | Product Detail            | P2       | 제품별 적합도 사유, attribute, 성분 확인   |
+| S06 | Product Matrix + 상세뷰   | P0       | 필터 기반 제품 비교 + 제품 상세 확인       |
 | S08 | Reaction Traceback        | P3       | 문제/괜찮은 제품 비교로 원인 후보 추적     |
 
 ---
@@ -536,7 +535,9 @@ Concern preset으로 진입한 경우에는 관련 질문을 먼저 보여준다
 
 ---
 
-# S07 — Product Detail
+# S06 상세뷰 — 제품 상세뷰
+
+> Product Matrix에서 제품 카드를 클릭하면 열리는 모달/드로어 상세뷰.
 
 ## 1. 콘텐츠 슬롯
 
@@ -710,6 +711,6 @@ Concern preset으로 진입한 경우에는 관련 질문을 먼저 보여준다
 | P1       | Priority Gate 13개 Rule seed                                                                         |
 | P1       | Category Decision 질문 + visibility condition seed                                                   |
 | P1       | Concern route_target + preset_facts 24개 mapping 상수                                                |
-| P2       | Product Detail attribute 요약 UI                                                                     |
+| P2       | Product Matrix 상세뷰 attribute 요약 UI                                                              |
 | P2       | Reaction Traceback ingredient group seed                                                             |
 | P3       | 제품 seed 6개 카테고리 × 최소 6개                                                                    |
