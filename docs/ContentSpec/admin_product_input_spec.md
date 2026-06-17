@@ -81,10 +81,13 @@ price_band = (
 2. 자동 split (개행 또는 ',')
 3. 각 토큰 → ingredients 테이블 검색 (name_ko / name_en / inci_name)
    ├─ 매칭 → ingredient_id 추출
-   ├─ 신규 → "신규 등록" 버튼 (관리자가 INCI 등록)
+   ├─ 신규 → name_ko만 우선 등록 가능. name_en / inci_name은 NULL로 두고 admin/API enrichment 대상 표시
 4. preview 테이블에 [순서, 한글명, INCI, 매칭상태] 표시
 5. 저장 시 product_ingredients(product_id, ingredient_id, order_index, raw_text) 일괄 INSERT
 ```
+
+- CSV-derived seed는 성분 원문을 `ingredients.name_ko`와 `product_ingredients.raw_text`에 보존한다.
+- `ingredients.name_en`과 `ingredients.inci_name`은 검증된 외부 매핑 전까지 `NULL`이다.
 
 ### 2.2 `ingredient_concentrations` 입력 규칙
 
@@ -96,34 +99,28 @@ price_band = (
 
 ## 3. Toner 카테고리 attribute
 
-| 필드                    | 마크 | 타입       | 옵션                                                                    | 비고                                                                                          |
-| ----------------------- | ---- | ---------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `form`                  | 🟥   | enum       | `water` / `viscous` / `milky` / `pad` / `mist`                          | `milky`는 밀크토너/크림스킨                                                                   |
-| `role_tags`             | 🟥   | multi_enum | `hydration` / `calming` / `exfoliation` / `oil_control` / `barrier`     | 1개 이상. "결 정돈"은 단일 옵션 없음 — 메커니즘 단위(`exfoliation` + `hydration`)로 해체 입력 |
-| `hydration_level`       | 🟥   | enum       | `low` / `medium` / `high`                                               | 수분감                                                                                        |
-| `emollient_level`       | 🟥   | enum       | `none` / `low` / `medium` / `high`                                      | 유분감/영양감. **`oil_control`과 다름**                                                       |
-| `film_level`            | 🟥   | enum       | `none` / `low` / `medium` / `high`                                      | 쫀쫀함, 막감                                                                                  |
-| `finish`                | 🟥   | enum       | `fresh` / `moist` / `dewy` / `rich`                                     | 마무리감 (toner 전용)                                                                         |
-| `exfoliation_type`      | 🟥   | enum       | `none` / `aha` / `bha` / `pha` / `lha` / `enzyme` / `mixed`             |                                                                                               |
-| `exfoliation_strength`  | 🟥   | enum       | `none` / `low` / `medium` / `high`                                      |                                                                                               |
-| `irritation_risk`       | 🟥   | enum       | `low` / `medium` / `high`                                               |                                                                                               |
-| `alcohol`               | 🟥   | boolean    |                                                                         | 변성알코올/에탄올 등                                                                          |
-| `fragrance`             | 🟥   | boolean    |                                                                         | 향료                                                                                          |
-| `essential_oil`         | 🟥   | boolean    |                                                                         | 티트리/스피어민트/유칼립투스 등. **`fragrance = false`여도 자극원**이 될 수 있어 별도 표기    |
-| `ph_value`              | 🟨   | number     | 예: 5.5                                                                 | 실제 수치 없으면 null                                                                         |
-| `ph_label`              | 🟨   | enum       | `strong_acidic` / `weak_acidic` / `mild_acidic` / `neutral` / `unknown` | `ph_value`가 null일 때 폴백. 큐레이터가 직접 판단해 입력                                      |
-| `astringent_level`      | 🟨   | enum       | `none` / `low` / `medium` / `high`                                      | 수렴감 (위치하젤 등)                                                                          |
-| `oil_control`           | 🟨   | enum       | `none` / `low` / `medium` / `high`                                      | 피지 조절 효과. **`emollient_level`과 다름**                                                  |
-| `cooling_feel`          | 🟨   | enum       | `none` / `low` / `medium` / `high`                                      | 화한 느낌                                                                                     |
-| `application_methods`   | 🟨   | multi_enum | `wipe` / `press` / `pack` / `mist`                                      | 대부분 겸용이라 Core 필터 가치 낮음                                                           |
-| `wipe_caution`          | 🟨   | boolean    |                                                                         | 닦토 사용 시 자극/마찰 주의 필요                                                              |
-| `cotton_pad_fit`        | ⬜   | enum       | `good` / `fair` / `poor`                                                | 화장솜 적합도                                                                                 |
-| `sun_caution`           | 🟨   | enum       | `none` / `low` / `medium` / `high`                                      | 산 성분 등으로 인한 낮 사용 주의 강도 (기존 `photosensitive` 대체)                            |
-| `functional_claims`     | ⬜   | multi_enum | `brightening` / `anti_aging` / `acne_relief`                            | **식약처 기능성 인정 받은 항목만 입력**. 미인증 제품은 비움                                   |
-| `active_ingredients`    | ⬜   | multi_enum | (스키마 §2.2 참조)                                                      |                                                                                               |
-| `absorption_speed`      | ⬜   | enum       | `slow` / `medium` / `fast`                                              |                                                                                               |
-| `layer_compatibility`   | ⬜   | enum       | `good` / `fair` / `poor`                                                |                                                                                               |
-| `recommended_frequency` | ⬜   | enum       | `daily` / `weekly_1_3` / `as_needed`                                    |                                                                                               |
+Toner seed/admin 입력은 CSV/전성분 기반으로 검증 가능한 필드만 사용한다. `피부타입메모`는 product attribute가 아니므로 입력/seed 대상에서 제외한다.
+
+| 필드                    | 마크 | 타입       | 옵션                                                                    | 비고                                                                   |
+| ----------------------- | ---- | ---------- | ----------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `form`                  | 🟥   | enum       | `water` / `viscous` / `milky` / `pad` / `mist`                          | `milky`는 밀크토너/크림스킨                                            |
+| `application_methods`   | 🟥   | multi_enum | `wipe` / `press` / `pack` / `mist`                                      | CSV 사용방식 기반. 미기재 시 `press`                                   |
+| `role_tags`             | 🟥   | multi_enum | `hydration` / `calming` / `exfoliation` / `oil_control` / `barrier`     | 1개 이상. "결 정돈"은 메커니즘 단위로 해체 입력                        |
+| `ph_label`              | 🟥   | enum       | `strong_acidic` / `weak_acidic` / `mild_acidic` / `neutral` / `unknown` | pH 수치가 없을 때도 필터 폴백 가능해야 하므로 필수                     |
+| `ph_value`              | 🟨   | number     | 예: 5.5                                                                 | 실제 숫자 pH가 있을 때만 입력                                          |
+| `irritation_risk`       | 🟥   | enum       | `low` / `medium` / `high`                                               | CSV 값 우선. 누락 시 pH/산 성분/향료성 오일/각질 타입 기반 rule로 보강 |
+| `exfoliation_type`      | 🟥   | enum       | `none` / `aha` / `bha` / `pha` / `lha` / `enzyme` / `mixed`             | CSV 값 우선. 누락 시 제품명/전성분 기반 rule로 보강                    |
+| `alcohol`               | 🟥   | boolean    |                                                                         | 변성알코올/에탄올 등                                                   |
+| `fragrance`             | 🟥   | boolean    |                                                                         | 향료 및 향료성 에센셜오일 포함 여부                                    |
+| `astringent_level`      | 🟥   | enum       | `none` / `low` / `medium` / `high`                                      | 수렴 성격                                                              |
+| `oil_control`           | 🟥   | enum       | `none` / `low` / `medium` / `high`                                      | 피지 조절 효과                                                         |
+| `active_ingredients`    | 🟨   | multi_enum | (스키마 §2.1 참조)                                                      | 전성분/홍보성분에서 매핑 가능한 경우                                   |
+| `absorption_speed`      | 🟥   | enum       | `slow` / `medium` / `fast`                                              | CSV 흡수속도                                                           |
+| `layer_compatibility`   | 🟥   | enum       | `good` / `fair` / `poor`                                                | CSV 레이어링                                                           |
+| `photosensitive`        | 🟥   | boolean    |                                                                         | CSV 광민감성                                                           |
+| `recommended_frequency` | 🟥   | enum       | `daily` / `weekly_1_3` / `as_needed`                                    | CSV 사용빈도                                                           |
+
+Deprecated toner fields: `hydration_level`, `emollient_level`, `film_level`, `finish`, `exfoliation_strength`, `essential_oil`, `cooling_feel`, `wipe_caution`, `cotton_pad_fit`, `sun_caution`.
 
 ---
 

@@ -457,7 +457,7 @@ Concern preset으로 진입한 경우에는 관련 질문을 먼저 보여준다
 
 | category      | matrix_filter_key     | 표시 라벨         | 기준                                                      |
 | ------------- | --------------------- | ----------------- | --------------------------------------------------------- |
-| `toner`       | `hydrating_toner`     | 수분 공급         | `hydration_level IN [medium, high]`                       |
+| `toner`       | `hydrating_toner`     | 수분 공급         | `role_tags CONTAINS hydration`                            |
 | `toner`       | `low_irritation`      | 저자극            | `irritation_risk = low`                                   |
 | `toner`       | `mild_ph`             | 약산성            | `ph >= 4.5 AND ph <= 6.0`                                 |
 | `sunscreen`   | `spf_50_plus`         | SPF 50 이상       | `spf >= 50`                                               |

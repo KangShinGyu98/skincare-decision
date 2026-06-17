@@ -694,7 +694,7 @@ CREATE INDEX products_attr_eye_sting_idx ON products ((attributes->>'eye_sting')
 | ------------ | -------------------------------------------- | -------------- | ------------------------------------- | ----------- | ---------- |
 | `id`         | `String @id @db.Uuid`                        | `UUID`         | PK, NOT NULL                          | 성분 ID     | UUID       |
 | `name_ko`    | `String @db.VarChar(200)`                    | `VARCHAR(200)` | NOT NULL                              | 한글명      | `리날룰`   |
-| `name_en`    | `String @db.VarChar(200)`                    | `VARCHAR(200)` | NOT NULL                              | 영문명      | `Linalool` |
+| `name_en`    | `String? @db.VarChar(200)`                   | `VARCHAR(200)` | NULLABLE                              | 영문명      | `Linalool` |
 | `inci_name`  | `String? @db.VarChar(300)`                   | `VARCHAR(300)` | NULLABLE, UNIQUE                      | INCI 표준명 | `Linalool` |
 | `created_at` | `DateTime @default(now()) @db.Timestamptz()` | `TIMESTAMPTZ`  | NOT NULL, DEFAULT `CURRENT_TIMESTAMP` | 생성        | 타임스탬프 |
 | `updated_at` | `DateTime? @updatedAt @db.Timestamptz()`     | `TIMESTAMPTZ`  | NULLABLE                              | 갱신        | 타임스탬프 |
@@ -704,7 +704,7 @@ CREATE INDEX products_attr_eye_sting_idx ON products ((attributes->>'eye_sting')
 - `pk_ingredients` (PK)
 - `uq_ingredients_inci_name` (UNIQUE on `inci_name`)
 
-**설명**: INCI를 1차 식별자로 사용. 동일 INCI는 단일 row.
+**설명**: CSV seed는 한글 원문 성분명을 `name_ko`와 `product_ingredients.raw_text`에 보존하고, `name_en` / `inci_name`은 admin/API enrichment 전까지 `NULL`로 둔다. INCI가 확인된 경우 동일 INCI는 단일 row로 관리한다.
 
 ---
 
