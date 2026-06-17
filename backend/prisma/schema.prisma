@@ -1,6 +1,6 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
   moduleFormat = "cjs"
 }
 
@@ -223,7 +223,7 @@ model Question {
   key                    String                  @unique(map: "uq_questions_key") @db.VarChar(100)
   answerType             QuestionAnswerType      @map("answer_type")
   answerValues           Int[]                   @map("answer_values")
-  answerCount            Int                     @ignore @map("answer_count")
+  answerCount            Int                     @map("answer_count") @ignore
   isActive               Boolean                 @default(true) @map("is_active")
   createdAt              DateTime                @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt              DateTime?               @updatedAt @map("updated_at") @db.Timestamptz()
@@ -242,7 +242,7 @@ model QuestionVariant {
   questionId           String                        @map("question_id") @db.Uuid
   title                String                        @db.Text
   answers              String[]
-  answerCount          Int                           @ignore @map("answer_count")
+  answerCount          Int                           @map("answer_count") @ignore
   screen               QuestionVariantScreen
   uiSection            QuestionVariantUiSection      @map("ui_section")
   sortOrder            Int                           @default(0) @map("sort_order")
@@ -520,7 +520,7 @@ model ProductMatrixFilterState {
 model Ingredient {
   id                 String                  @id(map: "pk_ingredients") @db.Uuid
   nameKo             String                  @map("name_ko") @db.VarChar(200)
-  nameEn             String                  @map("name_en") @db.VarChar(200)
+  nameEn             String?                 @map("name_en") @db.VarChar(200)
   inciName           String?                 @unique(map: "uq_ingredients_inci_name") @map("inci_name") @db.VarChar(300)
   createdAt          DateTime                @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt          DateTime?               @updatedAt @map("updated_at") @db.Timestamptz()

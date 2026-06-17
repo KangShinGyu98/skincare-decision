@@ -602,25 +602,25 @@ Priority Gate뿐 아니라 Category Decision, Product Matrix 결과까지 저장
 `decision_runs`는 당시 사용자에게 실제로 보여준 결과 snapshot이며, 이력 조회 / 결과 복구 / 고객지원에 사용한다.  
 `priority_rules`는 현재 Rule 기준이고, `decision_runs`는 그 시점에 실제로 발동된 결과 기록이다.
 
-| 컬럼                     | 타입                                               | 설명                                                                                                                     |
-| ------------------------ | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| id                       | BIGINT PK (IDENTITY)                               | 실행 기록 ID                                                                                                             |
-| device_id                | UUID FK → devices.id                               | 기기 ID                                                                                                                  |
-| user_id                  | UUID FK → users.id NULLABLE                        | 로그인 시 병합, 비로그인 null                                                                                            |
-| session_id               | UUID FK → user_sessions.id                         | 세션 ID                                                                                                                  |
-| decision_type            | VARCHAR(50)                                        | 결과 종류 (`PRIORITY_GATE` / `CATEGORY_DECISION` / `PRODUCT_MATRIX` / `REACTION_TRACEBACK` — application enum 으로 검증) |
-| source_screen            | VARCHAR(100)                                       | 발생 화면                                                                                                                |
-| category_id              | UUID NULLABLE (FK 없음 · 스냅샷 기록용)            | 대상 제품군 (당시 값 기록)                                                                                              |
-| filter_state_id          | UUID NULLABLE (FK 없음 · 스냅샷 기록용)            | 적용된 필터 상태 (당시 값 기록)                                                                                          |
-| result_type              | VARCHAR(50) NULLABLE                               | 결과 타입 snapshot                                                                                                       |
-| result_title             | TEXT NULLABLE                                      | 결과 제목 snapshot                                                                                                       |
-| result_description       | TEXT NULLABLE                                      | 결과 설명 snapshot                                                                                                       |
-| cta_label                | VARCHAR(100) NULLABLE                              | CTA 문구 snapshot                                                                                                        |
-| cta_target               | VARCHAR(255) NULLABLE                              | CTA 경로 snapshot                                                                                                        |
-| input_snapshot           | JSONB                                              | 당시 입력값 (user_responses 등)                                                                                          |
-| applied_filters_snapshot | JSONB                                              | 적용된 필터 목록 + attribute 조건                                                                                        |
-| result_snapshot          | JSONB                                              | 조회된 제품 목록, tags, cautions 등                                                                                      |
-| created_at               | TIMESTAMPTZ                                        | 생성일                                                                                                                   |
+| 컬럼                     | 타입                                    | 설명                                                                                                                     |
+| ------------------------ | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| id                       | BIGINT PK (IDENTITY)                    | 실행 기록 ID                                                                                                             |
+| device_id                | UUID FK → devices.id                    | 기기 ID                                                                                                                  |
+| user_id                  | UUID FK → users.id NULLABLE             | 로그인 시 병합, 비로그인 null                                                                                            |
+| session_id               | UUID FK → user_sessions.id              | 세션 ID                                                                                                                  |
+| decision_type            | VARCHAR(50)                             | 결과 종류 (`PRIORITY_GATE` / `CATEGORY_DECISION` / `PRODUCT_MATRIX` / `REACTION_TRACEBACK` — application enum 으로 검증) |
+| source_screen            | VARCHAR(100)                            | 발생 화면                                                                                                                |
+| category_id              | UUID NULLABLE (FK 없음 · 스냅샷 기록용) | 대상 제품군 (당시 값 기록)                                                                                               |
+| filter_state_id          | UUID NULLABLE (FK 없음 · 스냅샷 기록용) | 적용된 필터 상태 (당시 값 기록)                                                                                          |
+| result_type              | VARCHAR(50) NULLABLE                    | 결과 타입 snapshot                                                                                                       |
+| result_title             | TEXT NULLABLE                           | 결과 제목 snapshot                                                                                                       |
+| result_description       | TEXT NULLABLE                           | 결과 설명 snapshot                                                                                                       |
+| cta_label                | VARCHAR(100) NULLABLE                   | CTA 문구 snapshot                                                                                                        |
+| cta_target               | VARCHAR(255) NULLABLE                   | CTA 경로 snapshot                                                                                                        |
+| input_snapshot           | JSONB                                   | 당시 입력값 (user_responses 등)                                                                                          |
+| applied_filters_snapshot | JSONB                                   | 적용된 필터 목록 + attribute 조건                                                                                        |
+| result_snapshot          | JSONB                                   | 조회된 제품 목록, tags, cautions 등                                                                                      |
+| created_at               | TIMESTAMPTZ                             | 생성일                                                                                                                   |
 
 예시 (Product Matrix 결과):
 
@@ -997,7 +997,7 @@ WHERE category_id = :category_id
 | ---------- | --------------------- | ----------- |
 | id         | UUID PK               | 성분 ID     |
 | name_ko    | VARCHAR(200)          | 한글 성분명 |
-| name_en    | VARCHAR(200)          | 영문 성분명 |
+| name_en    | VARCHAR(200) NULLABLE | 영문 성분명. CSV seed 단계에서는 `NULL`, admin/API enrichment 후 저장 |
 | inci_name  | VARCHAR(300) NULLABLE | INCI 이름   |
 | created_at | TIMESTAMPTZ           | 생성일      |
 | updated_at | TIMESTAMPTZ           | 수정일      |
@@ -1156,6 +1156,38 @@ WHERE category_id = :category_id
 
 `products.attributes` JSONB에 저장되는 제품군별 속성 key 목록.  
 `category_attribute_definitions`에도 동일하게 등록된다.
+
+Production seed 구현 위치:
+
+- `backend/src/seed/data/attributes.ts`: 카테고리별 attribute definition
+- `backend/src/seed/data/filters.ts`: product/matrix filter definition 및 question mapping
+- `backend/src/seed/data/toner-products.ts`: CSV 정규화 완료된 25개 토너 제품 상수
+- `backend/prisma/seed.ts`: `seedReferenceData(prisma)` 후 `seedProductCatalog(prisma)` 실행
+
+#### 토너 (toner)
+
+Toner seed는 `docs/화장품 성분비교.CSV`를 한 번 정규화한 TypeScript 상수를 사용하며 runtime CSV parsing을 하지 않는다. `피부타입메모`는 product attribute가 아니므로 seed하지 않는다.
+
+| key                     | value_type | 설명                  | 예시 값                                                             |
+| ----------------------- | ---------- | --------------------- | ------------------------------------------------------------------- |
+| `form`                  | ENUM       | 제형                  | `water` / `viscous` / `milky` / `pad` / `mist`                      |
+| `application_methods`   | MULTI_ENUM | 사용 방식             | `wipe` / `press` / `pack` / `mist`                                  |
+| `role_tags`             | MULTI_ENUM | 실사용 역할           | `hydration` / `calming` / `exfoliation` / `oil_control` / `barrier` |
+| `ph_label`              | ENUM       | pH 구간               | `weak_acidic` / `neutral` / `unknown`                               |
+| `ph_value`              | NUMBER     | 숫자 pH               | `3.6`                                                               |
+| `irritation_risk`       | ENUM       | 자극 가능성           | `low` / `medium` / `high`                                           |
+| `exfoliation_type`      | ENUM       | 각질 케어 타입        | `none` / `aha` / `bha` / `pha` / `lha` / `enzyme` / `mixed`         |
+| `alcohol`               | BOOLEAN    | 알코올 포함 여부      | `true` / `false`                                                    |
+| `fragrance`             | BOOLEAN    | 향료/향료성 오일 여부 | `true` / `false`                                                    |
+| `astringent_level`      | ENUM       | 수렴 성격             | `none` / `low` / `medium` / `high`                                  |
+| `oil_control`           | ENUM       | 피지 조절             | `none` / `low` / `medium` / `high`                                  |
+| `active_ingredients`    | MULTI_ENUM | 주요 성분             | `hyaluronic_acid` / `panthenol` / `ceramide`                        |
+| `absorption_speed`      | ENUM       | 흡수 속도             | `slow` / `medium` / `fast`                                          |
+| `layer_compatibility`   | ENUM       | 레이어링 적합도       | `good` / `fair` / `poor`                                            |
+| `photosensitive`        | BOOLEAN    | 광민감성/낮 사용 주의 | `true` / `false`                                                    |
+| `recommended_frequency` | ENUM       | 권장 사용 빈도        | `daily` / `weekly_1_3` / `as_needed`                                |
+
+Deprecated toner keys: `hydration_level`, `emollient_level`, `film_level`, `finish`, `exfoliation_strength`, `essential_oil`, `cooling_feel`, `wipe_caution`, `cotton_pad_fit`, `sun_caution`.
 
 #### 선크림 (sunscreen)
 

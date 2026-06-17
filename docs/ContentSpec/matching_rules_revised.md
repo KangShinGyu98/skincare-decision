@@ -280,7 +280,7 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 
 | filter_key        | label     | attribute condition                                                                               | mode        | 비고                                                                               |
 | ----------------- | --------- | ------------------------------------------------------------------------------------------------- | ----------- | ---------------------------------------------------------------------------------- |
-| `hydrating_toner` | 수분 공급 | `hydration_level IN [medium, high]`                                                               | SORT        | 좋은 토너 기본 조건. 목적이 각질이어도 수분감 우선순위 부여                        |
+| `hydrating_toner` | 수분 공급 | `role_tags CONTAINS hydration`                                                                    | SORT        | CSV/전성분 기반 역할 태그로 판정. `hydration_level`은 사용하지 않음                |
 | `low_irritation`  | 저자극    | `irritation_risk EQ low`                                                                          | HARD_FILTER | 매일 쓰는 첫 단계 제품 기준                                                        |
 | `mild_ph`         | 약산성    | `ph_value GTE 4.5` AND `ph_value LTE 6.0` (1차) / `ph_label IN [weak_acidic, mild_acidic]` (폴백) | SORT        | ph_value 우선, 없으면 ph_label로 폴백. 둘 다 없는 제품은 제외하지 않고 점수만 낮춤 |
 
@@ -335,26 +335,28 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 
 ## 8.1 공통 PERSONALIZED
 
-| source_fact_key                  | source condition | category                                       | attribute condition       | mode        | filter_key                 | label                                                           |
-| -------------------------------- | ---------------- | ---------------------------------------------- | ------------------------- | ----------- | -------------------------- | --------------------------------------------------------------- |
-| `preference.fragrance_sensitive` | `EQ true`        | all                                            | `fragrance EQ false`      | HARD_FILTER | `no_fragrance`             | 향료 회피                                                       |
-| `preference.alcohol_sensitive`   | `EQ true`        | toner, sunscreen, serum, moisturizer, cleanser | `alcohol EQ false`        | HARD_FILTER | `no_alcohol`               | 알코올 회피                                                     |
-| `context.skin_type`              | `EQ sensitive`   | toner, sunscreen, serum, moisturizer, cleanser | `irritation_risk EQ low`  | HARD_FILTER | `sensitive_low_irritation` | 민감 피부 저자극                                                |
-| `context.skin_type`              | `EQ acne_prone`  | sunscreen, serum, moisturizer, cleanser        | `non_comedogenic EQ true` | HARD_FILTER | `non_comedogenic`          | 논코메도제닉 (toner 제외 — §8.2의 `oily_skin_fit_toner`로 대체) |
+| source_fact_key                  | source condition | category                                       | attribute condition       | mode        | filter_key                 | label                                                                             |
+| -------------------------------- | ---------------- | ---------------------------------------------- | ------------------------- | ----------- | -------------------------- | --------------------------------------------------------------------------------- |
+| `preference.fragrance_sensitive` | `EQ true`        | all                                            | `fragrance EQ false`      | HARD_FILTER | `no_fragrance`             | 향료 회피                                                                         |
+| `preference.alcohol_sensitive`   | `EQ true`        | toner, sunscreen, serum, moisturizer, cleanser | `alcohol EQ false`        | HARD_FILTER | `no_alcohol`               | 알코올 회피                                                                       |
+| `context.skin_type`              | `EQ sensitive`   | toner, sunscreen, serum, moisturizer, cleanser | `irritation_risk EQ low`  | HARD_FILTER | `sensitive_low_irritation` | 민감 피부 저자극                                                                  |
+| `context.skin_type`              | `EQ acne_prone`  | sunscreen, serum, moisturizer, cleanser        | `non_comedogenic EQ true` | HARD_FILTER | `non_comedogenic`          | 논코메도제닉 (toner 제외 — §8.2의 `oil_control` + `low_irritation` 조합으로 대체) |
 
 ## 8.2 Toner PERSONALIZED
 
-| source_fact_key                 | source condition                    | attribute condition                                                                                                                                                               | mode        | filter_key                     | label          |
-| ------------------------------- | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- | ------------------------------ | -------------- |
-| `context.skin_type`             | `IN [dry, combination_uzone_dry]`   | `hydration_level EQ high` AND `film_level GTE medium` AND `emollient_level IN [low, medium]`                                                                                      | SORT        | `dry_skin_fit_toner`           | 건성 적합 토너 |
-| `context.skin_type`             | `IN [oily, combination_tzone_oily]` | `emollient_level IN [none, low]` AND `film_level IN [none, low]` AND `finish IN [fresh, moist]` AND `hydration_level GTE medium`                                                  | SORT        | `oily_skin_fit_toner`          | 지성 적합 토너 |
-| `context.skin_type`             | `EQ sensitive`                      | `alcohol EQ false` AND `fragrance EQ false` AND `essential_oil EQ false` AND `exfoliation_strength IN [none, low]` AND `irritation_risk EQ low` AND `cooling_feel IN [none, low]` | HARD_FILTER | `sensitive_skin_fit_toner`     | 민감 적합 토너 |
-| `flow.concern`                  | `EQ flaky_texture`                  | `exfoliation_type NEQ none`                                                                                                                                                       | HARD_FILTER | `gentle_exfoliation`           | 각질 케어      |
-| `context.exfoliation_sensitive` | `EQ true`                           | `exfoliation_type IN [none, pha, enzyme]` AND `exfoliation_strength IN [none, low]` AND `irritation_risk EQ low`                                                                  | HARD_FILTER | `gentle_exfoliation_sensitive` | 저자극 각질    |
-| `context.oil_control_need`      | `EQ true`                           | `oil_control IN [medium, high]`                                                                                                                                                   | SORT        | `oil_control`                  | 피지 조절      |
-| `context.acne_prone`            | `EQ true`                           | `oil_control IN [medium, high]` AND `emollient_level IN [none, low]` AND `irritation_risk EQ low`                                                                                 | HARD_FILTER | `oily_skin_fit_toner`          | 모공 막힘 주의 |
-| `context.daily_use`             | `EQ true`                           | `irritation_risk EQ low` AND `recommended_frequency IN [daily, as_needed]`                                                                                                        | HARD_FILTER | `daily_toner`                  | 매일 사용      |
-| `context.wipe_use`              | `EQ true`                           | `wipe_caution EQ false`                                                                                                                                                           | HARD_FILTER | `wipe_safe`                    | 닦토 안전      |
+| source_fact_key                  | source condition        | matrix filters / attribute condition                                                                             | mode        | filter_key           | label          |
+| -------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------- | ----------- | -------------------- | -------------- |
+| `context.skin_type`              | `IN [dry, dehydrated]`  | `role_tags CONTAINS hydration`                                                                                   | SORT        | `hydrating_toner`    | 수분 공급      |
+| `context.skin_type`              | `IN [oily, acne_prone]` | `oil_control IN [medium, high]`                                                                                  | SORT        | `oil_control`        | 피지 조절      |
+| `context.skin_type`              | `EQ sensitive`          | `irritation_risk EQ low` + `alcohol EQ false` + `fragrance EQ false` + `exfoliation_type IN [none, pha, enzyme]` | HARD_FILTER | multiple             | 민감 피부 조합 |
+| `flow.concern`                   | `EQ flaky_texture`      | `exfoliation_type NEQ none`                                                                                      | HARD_FILTER | `gentle_exfoliation` | 각질 케어      |
+| `context.exfoliation_sensitive`  | `EQ true`               | `exfoliation_type IN [none, pha, enzyme]` + `photosensitive EQ false`                                            | HARD_FILTER | multiple             | 저자극 각질    |
+| `preference.alcohol_sensitive`   | `EQ true`               | `alcohol EQ false`                                                                                               | HARD_FILTER | `alcohol_free`       | 알코올 회피    |
+| `preference.fragrance_sensitive` | `EQ true`               | `fragrance EQ false`                                                                                             | HARD_FILTER | `fragrance_free`     | 향료 회피      |
+| `context.oil_control_need`       | `EQ true`               | `oil_control IN [medium, high]`                                                                                  | SORT        | `oil_control`        | 피지 조절      |
+| `context.daily_use`              | `EQ true`               | `recommended_frequency EQ daily` + `exfoliation_type IN [none, pha, enzyme]`                                     | HARD_FILTER | multiple             | 매일 사용      |
+
+Deprecated toner filters: `dry_skin_fit_toner`, `oily_skin_fit_toner`, `sensitive_skin_fit_toner`, `wipe_safe`. 이 필터들은 `hydration_level`, `emollient_level`, `film_level`, `finish`, `exfoliation_strength`, `essential_oil`, `cooling_feel`, `wipe_caution`에 의존하므로 production seed에서 soft-deactivate한다.
 
 ## 8.3 Sunscreen PERSONALIZED
 
@@ -506,12 +508,12 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 
 ## 9.5 `gentle_exfoliation`
 
-| 항목           | 조건                                                                                                                          |
-| -------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| category       | `toner`                                                                                                                       |
-| pass           | `exfoliation_type IN [pha, enzyme, mixed]` AND `exfoliation_strength IN [low, medium]` AND `irritation_risk IN [low, medium]` |
-| sensitive pass | `exfoliation_type IN [pha, enzyme]` AND `exfoliation_strength IN [none, low]` AND `irritation_risk EQ low`                    |
-| caution        | (`exfoliation_type IN [aha, bha, lha, mixed]` OR `sun_caution IN [medium, high]`) AND `context.exfoliation_sensitive = true`  |
+| 항목           | 조건                                                                                                    |
+| -------------- | ------------------------------------------------------------------------------------------------------- |
+| category       | `toner`                                                                                                 |
+| pass           | `exfoliation_type IN [none, pha, enzyme]` OR (`exfoliation_type NEQ none` AND `irritation_risk EQ low`) |
+| sensitive pass | `exfoliation_type IN [none, pha, enzyme]` AND `irritation_risk EQ low` AND `photosensitive EQ false`    |
+| caution        | `exfoliation_type IN [aha, bha, lha, mixed]` OR `photosensitive EQ true`                                |
 
 ## 9.6 `outdoor_use`
 

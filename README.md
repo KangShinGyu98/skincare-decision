@@ -140,10 +140,10 @@ root의 env 파일 4개는 모두 git에 올리지 않습니다.
 docker compose --env-file .env.development -f infra/docker/docker-compose.dev.yml up -d postgres redis
 
 # 2) 백엔드
-cd backend
 pnpm install
-NODE_ENV=development pnpm prisma migrate dev
-NODE_ENV=development pnpm run start:dev   # http://localhost:4000
+NODE_ENV=development pnpm --filter backend exec prisma migrate deploy
+NODE_ENV=development pnpm --filter backend run prisma:seed
+NODE_ENV=development pnpm --filter backend run start:dev   # http://localhost:4000
 ```
 
 ```bash
@@ -164,6 +164,10 @@ cd backend
 pnpm install
 NODE_ENV=test pnpm prisma migrate deploy
 NODE_ENV=test pnpm test
+
+# Prisma studio
+NODE_ENV=development pnpm --filter backend exec prisma studio --browser none --port 5555
+
 ```
 
 ### Production
