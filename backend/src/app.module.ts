@@ -2,6 +2,7 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { getEnvFilePath } from './config/env-file-path';
 import { validateEnv } from './config/env.validation';
 import { RequestContextMiddleware } from './common/middleware/request-context.middleware';
 import { DeviceSessionMiddleware } from './common/middleware/device-session.middleware';
@@ -21,6 +22,7 @@ import { SessionModule } from './modules/session/session.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: getEnvFilePath(),
       validate: validateEnv,
     }),
     PrismaModule,

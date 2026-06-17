@@ -1,0 +1,40 @@
+name: skincare-decision-test
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: skincare-decision-test-postgres
+    restart: no
+    ports:
+      - '${POSTGRES_BIND_ADDRESS:-127.0.0.1}:${POSTGRES_HOST_PORT:-5433}:5432'
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      TZ: ${TZ:-UTC}
+    volumes:
+      - skincare_decision_test_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: skincare-decision-test-redis
+    restart: no
+    ports:
+      - '${REDIS_BIND_ADDRESS:-127.0.0.1}:${REDIS_HOST_PORT:-6380}:6379'
+    command: ['redis-server', '--appendonly', 'yes']
+    volumes:
+      - skincare_decision_test_redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  skincare_decision_test_postgres_data:
+  skincare_decision_test_redis_data:

@@ -126,29 +126,74 @@ task_plan 에는 목표 / 범위 / 파일 범위(read·write) / current state �
 
 ## 명령어
 
+root의 env 파일 4개는 모두 git에 올리지 않습니다.
+
+- `.env.example`
+- `.env.development`
+- `.env.test`
+- `.env.production`
+
+### Development
+
 ```bash
-# 1) 인프라 (Postgres, Redis) -d 는 백그라운드
-docker compose up -d postgres redis
+# 1) 인프라 (Postgres 5432, Redis 6379)
+docker compose --env-file .env.development -f infra/docker/docker-compose.dev.yml up -d postgres redis
 
 # 2) 백엔드
 cd backend
 pnpm install
-pnpm prisma migrate dev
-pnpm prisma db seed
-pnpm run start:dev   # http://localhost:4000
+NODE_ENV=development pnpm prisma migrate dev
+NODE_ENV=development pnpm run start:dev   # http://localhost:4000
+```
 
+```bash
 # 3) 프론트엔드 (별도 터미널)
 cd frontend
 pnpm install
 pnpm run dev         # http://localhost:3000
+```
 
+### Test
 
-# 4) shared 빌드 명령어
+```bash
+# 테스트 인프라 (Postgres 5433, Redis 6380)
+docker compose --env-file .env.test -f infra/docker/docker-compose.test.yml up -d postgres redis
+
+# 백엔드 테스트
+cd backend
+pnpm install
+NODE_ENV=test pnpm prisma migrate deploy
+NODE_ENV=test pnpm test
+```
+
+### Production
+
+```bash
+# production DB는 AWS RDS를 사용합니다. Docker Compose는 Redis만 실행합니다.
+# 실행 전 .env.production 의 DATABASE_URL과 CHANGE_ME 값을 실제 운영 값으로 교체합니다.
+docker compose --env-file .env.production -f infra/docker/docker-compose.prod.yml up -d redis
+
+# 백엔드 production 실행
+cd backend
+pnpm install
+NODE_ENV=production pnpm prisma migrate deploy
+NODE_ENV=production pnpm run build
+NODE_ENV=production pnpm run start:prod
+```
+
+### 공통
+
+```bash
+# shared 빌드
 pnpm --filter @skincare-decision/shared run build
 
 # schema.prisma 만든 뒤 generate
 pnpm --filter backend exec prisma generate
 
+# 환경별 인프라 종료
+docker compose --env-file .env.development -f infra/docker/docker-compose.dev.yml down
+docker compose --env-file .env.test -f infra/docker/docker-compose.test.yml down
+docker compose --env-file .env.production -f infra/docker/docker-compose.prod.yml down
 ```
 
 ---

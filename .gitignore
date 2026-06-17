@@ -24,12 +24,10 @@ lerna-debug.log*
 
 # Environment
 .env
+.env.*
+*.env
 .env.local
 .env.*.local
-.env.development
-.env.test
-.env.production
-env.example
 
 # Temp
 .temp/

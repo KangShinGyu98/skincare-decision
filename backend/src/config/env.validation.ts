@@ -1,6 +1,14 @@
 import { z } from 'zod';
 
 const envSchema = z.object({
+  POSTGRES_BIND_ADDRESS: z.string().min(1).default('127.0.0.1'),
+  POSTGRES_HOST_PORT: z.coerce.number().int().positive().default(5432),
+  POSTGRES_USER: z.string().min(1).optional(),
+  POSTGRES_PASSWORD: z.string().min(1).optional(),
+  POSTGRES_DB: z.string().min(1).optional(),
+  REDIS_BIND_ADDRESS: z.string().min(1).default('127.0.0.1'),
+  REDIS_HOST_PORT: z.coerce.number().int().positive().default(6379),
+  TZ: z.string().min(1).default('UTC'),
   DATABASE_URL: z.string().min(1),
   REDIS_URL: z.string().min(1),
   COOKIE_SECRET: z.string().min(1),

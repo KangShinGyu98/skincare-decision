@@ -1,0 +1,20 @@
+name: skincare-decision-prod
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: skincare-decision-prod-redis
+    restart: always
+    ports:
+      - "${REDIS_BIND_ADDRESS:-127.0.0.1}:${REDIS_HOST_PORT:-6381}:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - skincare_decision_prod_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  skincare_decision_prod_redis_data:
