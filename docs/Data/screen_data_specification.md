@@ -1,4 +1,4 @@
-﻿# Screen Data Specification — 화면별 데이터 흐름 명세
+# Screen Data Specification — 화면별 데이터 흐름 명세
 
 > Service Flow: **S01 Landing → S02 Priority Gate → S03~S05 Category Decision → S06 Product Matrix (+ 제품 상세뷰) → S08 Reaction Traceback**
 >
@@ -88,7 +88,7 @@ S08 Reaction Traceback
 | 데이터                     | 소스 테이블 / 출처                                                                                                                                                       | 용도                                                                                            |
 | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
 | Fast Lane 카테고리 칩 후보 | `product_categories`                                                                                                                                                     | "이미 찾는 제품군 있음" 세그먼트 칩 노출                                                        |
-| Concern 태그 목록 / 매핑   | **프론트엔드 코드 상수**                                                                                                                                                 | DB 비저장 — `concern_key → {route_target, preset_facts, suggested_category, suggested_filters}` |
+| Concern 태그 목록 / 매핑   | **프론트엔드 코드 상수**                                                                                                                                                 | DB 비저장 — `concern_key → {preset_facts, suggested_category, suggested_filters}` |
 
 ### 1.2 쓰기 데이터 (Write)
 
@@ -105,14 +105,14 @@ S08 Reaction Traceback
 
 | 계산 항목             | 입력                                   | 로직                                                                    |
 | --------------------- | -------------------------------------- | ----------------------------------------------------------------------- |
-| Concern 라우팅 분기   | 클릭한 `concern_key` + 프론트 상수     | `route_target` 값에 따라 `priority_gate` / `category_decision` 결정     |
+| Concern 다음 화면        | 클릭한 `concern_key`                  | Concern 선택 후 항상 `priority_gate`로 이동                                     |
 | 진입 경로 메타        | `window.location`, `document.referrer` | `entry_path`, `referrer` 컬럼에 저장                                    |
 
 ### 1.4 다음 화면으로 전달 (Pass to Next)
 
 | 데이터                  | 전달 방식             | 다음 화면 (세그먼트별)                                         |
 | ----------------------- | --------------------- | -------------------------------------------------------------- |
-| `flow.concern` + preset | `user_responses` 저장 | S02 (concern 진입 시) / S03 (route_target='category_decision') |
+| `flow.concern` + preset | `user_responses` 저장 | S02 Priority Gate (concern 진입 시) |
 | 라우팅 대상 카테고리    | URL 쿼리              | S03 (Fast Lane 칩 → 해당 category로 점프)                      |
 
 세그먼트별 다음 화면:

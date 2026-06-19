@@ -18,6 +18,7 @@ import { PermissionGuard } from './common/guards/permission.guard';
 import { PrismaModule } from './prisma/prisma.module';
 import { SessionModule } from './modules/session/session.module';
 import { ProductCategoriesModule } from './modules/product-categories/product-categories.module';
+import { LandingModule } from './modules/landing/landing.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { ProductCategoriesModule } from './modules/product-categories/product-ca
     SessionModule,
     AuthModule,
     ProductCategoriesModule,
+    LandingModule,
   ],
   controllers: [AppController],
   providers: [

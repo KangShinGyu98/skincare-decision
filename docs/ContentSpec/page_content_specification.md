@@ -147,7 +147,7 @@
 
 ### Concern Routing Preset
 
-| concern         | route_target        | preset_facts                                                                  | suggested_category | suggested_filters                                         |
+| concern         | entry_screen        | preset_facts                                                                  | suggested_category | suggested_filters                                         |
 | --------------- | ------------------- | ----------------------------------------------------------------------------- | ------------------ | --------------------------------------------------------- |
 | 뾰루지          | `priority_gate`     | `flow.concern = acne_spot`                                                    | `serum`            | `low_irritation`, `acne_fit`                              |
 | 여드름          | `priority_gate`     | `flow.concern = acne`                                                         | `cleanser`         | `mild_ph`, `low_sls`, `non_comedogenic`                   |
@@ -160,13 +160,13 @@
 | 각질            | `priority_gate`     | `flow.concern = flaky_texture`<br>`routine.recent_dry_tight = true 후보`      | `toner`            | `low_irritation`, `mild_ph`, `gentle_exfoliation`         |
 | 번들거림        | `priority_gate`     | `flow.concern = oiliness`                                                     | `toner`            | `oil_control`, `low_irritation`, `mild_ph`                |
 | 눈가 건조       | `priority_gate`     | `flow.concern = eye_area_dryness`<br>`routine.recent_dry_tight = true 후보`   | `moisturizer`      | `high_hydration`, `barrier_ingredients`, `low_irritation` |
-| 입술 트임       | `category_decision` | `flow.concern = lip_chapped`<br>`context.lip_severity = true 후보`            | `lipcare`          | `high_moisture`, `no_menthol`                             |
-| 화장 뜸         | `category_decision` | `flow.concern = makeup_floating`<br>`context.makeup_use = true 후보`          | `moisturizer`      | `makeup_compat_good`, `low_sticky`                        |
-| 밀림            | `category_decision` | `flow.concern = pilling`<br>`context.makeup_use = true 후보`                  | `sunscreen`        | `makeup_compat_good`, `low_sticky`                        |
-| 쿠션 추천       | `category_decision` | `flow.concern = cushion_help`<br>`context.makeup_use = true 후보`             | `moisturizer`      | `makeup_compat_good`, `low_sticky`, `high_hydration`      |
-| 파운데이션 고민 | `category_decision` | `flow.concern = foundation_help`<br>`context.makeup_use = true 후보`          | `moisturizer`      | `makeup_compat_good`, `low_sticky`, `high_hydration`      |
-| 선크림 추천     | `category_decision` | `flow.concern = sunscreen_need`                                               | `sunscreen`        | `spf_50_plus`, `pa_4_plus`                                |
-| 립 제품         | `category_decision` | `flow.concern = lipcare_need`                                                 | `lipcare`          | `high_moisture`, `balanced_moisture`                      |
+| 입술 트임       | `priority_gate`     | `flow.concern = lip_chapped`<br>`context.lip_severity = true 후보`            | `lipcare`          | `high_moisture`, `no_menthol`                             |
+| 화장 뜸         | `priority_gate`     | `flow.concern = makeup_floating`<br>`context.makeup_use = true 후보`          | `moisturizer`      | `makeup_compat_good`, `low_sticky`                        |
+| 밀림            | `priority_gate`     | `flow.concern = pilling`<br>`context.makeup_use = true 후보`                  | `sunscreen`        | `makeup_compat_good`, `low_sticky`                        |
+| 쿠션 추천       | `priority_gate`     | `flow.concern = cushion_help`<br>`context.makeup_use = true 후보`             | `moisturizer`      | `makeup_compat_good`, `low_sticky`, `high_hydration`      |
+| 파운데이션 고민 | `priority_gate`     | `flow.concern = foundation_help`<br>`context.makeup_use = true 후보`          | `moisturizer`      | `makeup_compat_good`, `low_sticky`, `high_hydration`      |
+| 선크림 추천     | `priority_gate`     | `flow.concern = sunscreen_need`                                               | `sunscreen`        | `spf_50_plus`, `pa_4_plus`                                |
+| 립 제품         | `priority_gate`     | `flow.concern = lipcare_need`                                                 | `lipcare`          | `high_moisture`, `balanced_moisture`                      |
 | 잡티            | `priority_gate`     | `flow.concern = pigmentation`                                                 | `serum`            | `effective_dose`, `clear_purpose`, `morning_use`          |
 | 다크서클        | `priority_gate`     | `flow.concern = dark_circle`                                                  | `serum`            | `low_irritation`, `clear_purpose`, `effective_dose`       |
 | 홍조            | `priority_gate`     | `flow.concern = redness_chronic`<br>`life.recent_irritation = true 후보`      | `serum`            | `low_irritation`, `no_fragrance`, `calming_fit`           |
@@ -183,8 +183,8 @@
 | 1    | `session_events.event_name = concern_clicked` 저장                                                                                               |
 | 2    | `user_responses.flow.concern` 저장 (`question_id=<flow.concern>`). 사용자가 본 화면 variant 추적은 `session_events.value_change` payload 로 분리 |
 | 3    | preset responses를 `source = concern`인 초기 선택 상태로 저장하거나 프론트 상태에 유지                                                           |
-| 4    | `route_target = priority_gate`면 `/priority-gate`로 이동하고 관련 질문을 우선 노출                                                               |
-| 5    | `route_target = category_decision`면 `category.selected = suggested_category`를 seed한 뒤 `/category-decision`으로 이동                          |
+| 4    | Concern 선택 후 항상 `/priority-gate`로 이동하고 관련 질문을 우선 노출 |
+| 5    | `suggested_category`는 이후 Category Decision 단계에서 참고하며, Concern 클릭 직후에는 `/category-decision`으로 이동하지 않음 |
 | 6    | `suggested_filters`는 즉시 `product_matrix_filter_states`를 만들지 않고, 최종 category가 일치할 때만 `CONCERN_PRESET` 힌트로 반영                |
 
 ---
@@ -710,7 +710,7 @@ Concern preset으로 진입한 경우에는 관련 질문을 먼저 보여준다
 | P0       | `product_filter_definitions` + `product_matrix_filter_definitions` + `question_filter_mappings` seed |
 | P1       | Priority Gate 13개 Rule seed                                                                         |
 | P1       | Category Decision 질문 + visibility condition seed                                                   |
-| P1       | Concern route_target + preset_facts 24개 mapping 상수                                                |
+| P1       | Concern entry_screen + preset_facts 24개 mapping 상수                                                |
 | P2       | Product Matrix 상세뷰 attribute 요약 UI                                                              |
 | P2       | Reaction Traceback ingredient group seed                                                             |
 | P3       | 제품 seed 6개 카테고리 × 최소 6개                                                                    |

@@ -1,4 +1,4 @@
-﻿> 테이블 메타데이터
+> 테이블 메타데이터
 > 현실 문제를 DB 테이블로 매핑하는 과정이 정리되어있음
 
 # Skincare Decision — DB 모델링
@@ -88,10 +88,10 @@
 | ------------------------- | --------------------------------------------------------------------------------------------------------- |
 | concern_groups            | Concern 태그는 프론트 상수로 관리. DB 불필요                                                              |
 | concern_tags              | 동일                                                                                                      |
-| concern_category_mappings | 동일. 태그 → `route_target`, `preset_facts`, `suggested_category`, `suggested_filters`는 코드 상수로 처리 |
+| concern_category_mappings | 동일. 태그 → `preset_facts`, `suggested_category`, `suggested_filters`는 코드 상수로 처리 |
 
 > **Concern Mapper / 고민 캐러셀은 DB 관리 대상이 아니다.**  
-> 태그 목록과 태그 → `route_target` / `preset_facts` / `suggested_category` / `suggested_filters` 매핑은 프론트엔드 상수(코드)로 관리한다.  
+> 태그 목록과 태그 → `preset_facts` / `suggested_category` / `suggested_filters` 매핑은 프론트엔드 상수(코드)로 관리한다.  
 > 태그 클릭 이벤트는 `session_events`에 `concern_clicked`로 저장하고,  
 > `user_responses`에는 `source = concern` row로 concern 내부값을 저장하고, 필요하면 `preset_facts`도 같은 source로 저장할 수 있다.  
 > 단 `source = concern`은 확정 답변이 아니라 초기 선택 상태이며, 이후 `priority_gate` / `context`에서 사용자가 직접 답한 값이 최종 판단에 우선한다.
@@ -101,7 +101,7 @@
 > ```
 > [여드름] 클릭
 >   → session_events: { event_name: "concern_clicked", payload: { concern: "acne" } }
->   → 프론트 상수에서 route_target = "priority_gate", suggested_category = "cleanser" 결정
+>   → 프론트 상수에서 `suggested_category = "cleanser"` 등 추천 힌트 결정
 >   → user_responses: { question_id: "<flow.concern question id>", value: [1], source: "concern" }
 >   → 필요 시 preset_facts 저장 또는 프론트 초기 선택 상태로 유지
 >   → Priority Gate 진입

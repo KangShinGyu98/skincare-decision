@@ -10,7 +10,7 @@
 
 | 단계 | 입력                   | 처리                                                                                                                                | 출력                                                                 |
 | ---- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| 1    | Segment / Concern 클릭 | 프론트 상수 매핑                                                                                                                    | `flow.concern`, `route_target`, `preset_facts`, `suggested_category` |
+| 1    | Segment / Concern 클릭 | 프론트 상수 매핑                                                                                                                    | `flow.concern`, `entry_screen`, `preset_facts`, `suggested_category` |
 | 2    | Concern preset 적용    | `source = concern` 초기 선택 상태 저장 또는 프론트 상태 유지                                                                        | Priority Gate 질문 우선순위 또는 Category Decision seed              |
 | 3    | Priority Gate 답변     | `priority_rules` 평가                                                                                                               | HOLD / CAUTION / PASS / ROUTE_CATEGORY                               |
 | 4    | Category Decision 답변 | user_responses 저장                                                                                                                 | category별 Context 완성                                              |
@@ -211,13 +211,13 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 | 2    | `session_events`에 `concern_clicked` 저장                                                                                                                             |
 | 3    | `flow.concern` 저장                                                                                                                                                   |
 | 4    | `preset_facts`를 `source = concern` 초기 선택 상태로 저장하거나 프론트 상태에 유지                                                                                    |
-| 5    | `route_target = priority_gate`면 Priority Gate로 이동하고 관련 질문을 우선 노출                                                                                       |
-| 6    | `route_target = category_decision`면 `category.selected = suggested_category`를 seed한 뒤 Category Decision으로 이동                                                  |
+| 4    | Concern 선택 후 항상 `/priority-gate`로 이동하고 관련 질문을 우선 노출 |
+| 5    | `suggested_category`는 이후 Category Decision 단계에서 참고하며, Concern 클릭 직후에는 `/category-decision`으로 이동하지 않음 |
 | 7    | `suggested_filters`는 즉시 Product Matrix를 만들지 않고, 최종 category가 `suggested_category`와 일치할 때만 `product_matrix_filter_definitions.key`로 resolve 해 합성 |
 
 ## 5.2 Concern Mapping Seed
 
-| concern         | flow.concern           | route_target        | preset_facts                                                                | suggested_category | suggested_filters                                         |
+| concern         | flow.concern           | entry_screen        | preset_facts                                                                | suggested_category | suggested_filters                                         |
 | --------------- | ---------------------- | ------------------- | --------------------------------------------------------------------------- | ------------------ | --------------------------------------------------------- |
 | 뾰루지          | `acne_spot`            | `priority_gate`     | `flow.concern = acne_spot`                                                  | `serum`            | `low_irritation`, `acne_fit`                              |
 | 여드름          | `acne`                 | `priority_gate`     | `flow.concern = acne`                                                       | `cleanser`         | `mild_ph`, `low_sls`, `non_comedogenic`                   |
@@ -230,13 +230,13 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 | 각질            | `flaky_texture`        | `priority_gate`     | `flow.concern = flaky_texture`, `routine.recent_dry_tight = true 후보`      | `toner`            | `low_irritation`, `mild_ph`, `gentle_exfoliation`         |
 | 번들거림        | `oiliness`             | `priority_gate`     | `flow.concern = oiliness`                                                   | `toner`            | `oil_control`, `low_irritation`, `mild_ph`                |
 | 눈가 건조       | `eye_area_dryness`     | `priority_gate`     | `flow.concern = eye_area_dryness`, `routine.recent_dry_tight = true 후보`   | `moisturizer`      | `high_hydration`, `barrier_ingredients`, `low_irritation` |
-| 입술 트임       | `lip_chapped`          | `category_decision` | `flow.concern = lip_chapped`, `context.lip_severity = true 후보`            | `lipcare`          | `high_moisture`, `no_menthol`                             |
-| 화장 뜸         | `makeup_floating`      | `category_decision` | `flow.concern = makeup_floating`, `context.makeup_use = true 후보`          | `moisturizer`      | `makeup_compat_good`, `low_sticky`                        |
-| 밀림            | `pilling`              | `category_decision` | `flow.concern = pilling`, `context.makeup_use = true 후보`                  | `sunscreen`        | `makeup_compat_good`, `low_sticky`                        |
-| 쿠션 추천       | `cushion_help`         | `category_decision` | `flow.concern = cushion_help`, `context.makeup_use = true 후보`             | `moisturizer`      | `makeup_compat_good`, `low_sticky`, `high_hydration`      |
-| 파운데이션 고민 | `foundation_help`      | `category_decision` | `flow.concern = foundation_help`, `context.makeup_use = true 후보`          | `moisturizer`      | `makeup_compat_good`, `low_sticky`, `high_hydration`      |
-| 선크림 추천     | `sunscreen_need`       | `category_decision` | `flow.concern = sunscreen_need`                                             | `sunscreen`        | `spf_50_plus`, `pa_4_plus`                                |
-| 립 제품         | `lipcare_need`         | `category_decision` | `flow.concern = lipcare_need`                                               | `lipcare`          | `high_moisture`, `balanced_moisture`                      |
+| 입술 트임       | `lip_chapped`          | `priority_gate`     | `flow.concern = lip_chapped`, `context.lip_severity = true 후보`            | `lipcare`          | `high_moisture`, `no_menthol`                             |
+| 화장 뜸         | `makeup_floating`      | `priority_gate`     | `flow.concern = makeup_floating`, `context.makeup_use = true 후보`          | `moisturizer`      | `makeup_compat_good`, `low_sticky`                        |
+| 밀림            | `pilling`              | `priority_gate`     | `flow.concern = pilling`, `context.makeup_use = true 후보`                  | `sunscreen`        | `makeup_compat_good`, `low_sticky`                        |
+| 쿠션 추천       | `cushion_help`         | `priority_gate`     | `flow.concern = cushion_help`, `context.makeup_use = true 후보`             | `moisturizer`      | `makeup_compat_good`, `low_sticky`, `high_hydration`      |
+| 파운데이션 고민 | `foundation_help`      | `priority_gate`     | `flow.concern = foundation_help`, `context.makeup_use = true 후보`          | `moisturizer`      | `makeup_compat_good`, `low_sticky`, `high_hydration`      |
+| 선크림 추천     | `sunscreen_need`       | `priority_gate`     | `flow.concern = sunscreen_need`                                             | `sunscreen`        | `spf_50_plus`, `pa_4_plus`                                |
+| 립 제품         | `lipcare_need`         | `priority_gate`     | `flow.concern = lipcare_need`                                               | `lipcare`          | `high_moisture`, `balanced_moisture`                      |
 | 잡티            | `pigmentation`         | `priority_gate`     | `flow.concern = pigmentation`                                               | `serum`            | `effective_dose`, `clear_purpose`, `morning_use`          |
 | 다크서클        | `dark_circle`          | `priority_gate`     | `flow.concern = dark_circle`                                                | `serum`            | `low_irritation`, `clear_purpose`, `effective_dose`       |
 | 홍조            | `redness_chronic`      | `priority_gate`     | `flow.concern = redness_chronic`, `life.recent_irritation = true 후보`      | `serum`            | `low_irritation`, `no_fragrance`, `calming_fit`           |
