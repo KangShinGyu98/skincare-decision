@@ -206,8 +206,8 @@ Concern Mapper는 제품군 라우터가 아니라 **Priority Gate preset**으�
 1. `session_events`에 `concern_clicked` 이벤트 저장
 2. `user_responses`에 `flow.concern` 저장 (`question_id=<flow.concern>`, `source: "concern"`). 사용자가 본 화면 variant 추적은 `session_events.value_change` payload 로 분리
 3. 관련 preset responses를 초기 선택 상태로 저장하거나 프론트 상태에 유지
-4. `route_target = "priority_gate"`면 S02로 이동하고 관련 Life / 루틴 질문을 우선 노출
-5. `route_target = "category_decision"`면 `category.selected = suggested_category`를 seed한 뒤 S03로 이동
+4. Concern 선택 후 항상 S02 Priority Gate로 이동하고 관련 Life / 루틴 질문을 우선 노출
+5. `suggested_category`는 이후 Category Decision 단계에서 참고하며, Concern 클릭 직후에는 S03로 이동하지 않는다.
 6. `suggested_filters`는 Product Matrix 직행용이 아니라, 이후 Category Decision CTA에서만 `CONCERN_PRESET` 힌트로 반영
 
 ```

@@ -11,7 +11,7 @@
 | 페이지 | 이벤트 설명 | 메서드 | URI (`/api`) | Service layer 역할 |
 | ------ | ----------- | ------ | ------------ | ------------------ |
 | Landing | `product_categories`에서 목록 가져오기 | GET | `/product-categories` | 카테고리 목록 조회 |
-| Landing | 메인 화면 Concern 클릭 | POST | `/landing/concern-selections` | 1. 클릭 이벤트 저장<br>2. 체크리스트 클릭처럼 mapping 해서 `user_responses` 저장 |
+| Landing | 메인 화면 Concern 클릭 | POST | `/landing/concern-selections` | 1. 클릭 이벤트 저장<br>2. Concern preset을 `user_responses`에 저장<br>3. 입력받은 `concern` 반환 |
 | Priority Gate | 체크리스트에 채울 질문, 답 선택지, 기존 답변 조회 | GET | `/priority-gate` | 질문 목록, 답 선택지, 기존 답변 조회 |
 | Priority Gate | 질문 답변 하나 클릭 | POST/PATCH | `/priority-gate/responses` | 1. 답변 저장<br>2. 이벤트 기록<br>3. rule 계산 후 결론 박스에 들어갈 preview result 반환 |
 | Priority Gate | CTA 버튼 클릭 | POST | `/priority-gate/snapshot` | 1. 결과 snapshot 저장<br>2. 이벤트 기록 |
