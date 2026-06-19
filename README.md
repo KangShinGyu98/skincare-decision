@@ -144,6 +144,9 @@ pnpm install
 NODE_ENV=development pnpm --filter backend exec prisma migrate deploy
 NODE_ENV=development pnpm --filter backend run prisma:seed
 NODE_ENV=development pnpm --filter backend run start:dev   # http://localhost:4000
+
+# zod 스키마 추가
+pnpm --filter @skincare-decision/shared run build
 ```
 
 ```bash

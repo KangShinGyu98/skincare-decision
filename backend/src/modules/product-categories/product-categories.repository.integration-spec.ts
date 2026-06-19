@@ -2,7 +2,7 @@ import { ConfigModule } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { validateEnv } from 'src/config/env.validation';
 import { PrismaService } from 'src/prisma/prisma.service';
-
+import { ProductCategoriesRepository } from './product-categories.repository';
 /**
  * /product-categories 엔드포인트에 대한 통합 테스트입니다.
  * - 테스트 DB의 product_categories row를 반환해야 한다.

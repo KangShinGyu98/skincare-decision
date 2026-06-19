@@ -17,6 +17,7 @@ import { AuthGuard } from './common/guards/auth.guard';
 import { PermissionGuard } from './common/guards/permission.guard';
 import { PrismaModule } from './prisma/prisma.module';
 import { SessionModule } from './modules/session/session.module';
+import { ProductCategoriesModule } from './modules/product-categories/product-categories.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { SessionModule } from './modules/session/session.module';
     CatsModule,
     SessionModule,
     AuthModule,
+    ProductCategoriesModule,
   ],
   controllers: [AppController],
   providers: [
