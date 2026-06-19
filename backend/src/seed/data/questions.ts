@@ -12,7 +12,7 @@ export const QUESTION_SEEDS = [
   { key: 'routine.cleansing_before_sleep', answerType: 'BOOLEAN', answerValues: [0, 1] },
   {
     key: 'flow.concern',
-    answerType: 'SINGLE_CHOICE',
+    answerType: 'MULTI_CHOICE',
     answerValues: Array.from({ length: 24 }, (_, index) => index + 1),
   },
   { key: 'life.outdoor_activity', answerType: 'THREE_CHOICE', answerValues: [1, 2, 3] },
