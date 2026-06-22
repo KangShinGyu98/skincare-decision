@@ -145,7 +145,7 @@ pnpm --filter backend exec prisma migrate deploy
 pnpm --filter backend run prisma:seed
 pnpm --filter backend run start:dev   # http://localhost:4000
 
-# zod 스키마 추가했을 때 
+# zod 스키마 추가했을 때
 pnpm --filter @skincare-decision/shared run build
 ```
 
@@ -167,6 +167,19 @@ cd backend
 pnpm install
 NODE_ENV=test pnpm prisma migrate deploy
 NODE_ENV=test pnpm test
+
+# 테스트 DB 초기화: test DB를 drop/recreate 하고 migration 재적용
+NODE_ENV=test pnpm exec prisma migrate reset --force --skip-seed
+
+
+# unit + integration 전체 실행
+NODE_ENV=test pnpm test
+
+# unit만 실행
+NODE_ENV=test pnpm run test:unit
+
+# integration만 실행
+NODE_ENV=test pnpm run test:integration
 
 # Prisma studio
 NODE_ENV=development pnpm --filter backend exec prisma studio --browser none --port 5555

@@ -1,5 +1,6 @@
 import { ConfigModule } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
+import { getEnvFilePath } from 'src/config/env-file-path';
 import { validateEnv } from 'src/config/env.validation';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ProductCategoriesRepository } from './product-categories.repository';
@@ -19,6 +20,7 @@ describe('/product-categories', () => {
       imports: [
         ConfigModule.forRoot({
           isGlobal: true,
+          envFilePath: getEnvFilePath(),
           validate: validateEnv,
         }),
       ],
@@ -41,8 +43,8 @@ describe('/product-categories', () => {
 
   afterAll(async () => {
     // DB 연결 종료
-    await prisma.$disconnect();
-    await module.close();
+    await prisma?.$disconnect();
+    await module?.close();
   });
 
   it('product_categories 테이블의 row를 반환해야 한다', async () => {
