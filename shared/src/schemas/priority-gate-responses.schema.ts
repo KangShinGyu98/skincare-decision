@@ -43,3 +43,14 @@ export const upsertPriorityGateResponseResponseSchema = z
 export type UpsertPriorityGateResponseResponse = z.infer<
   typeof upsertPriorityGateResponseResponseSchema
 >;
+
+export const createPriorityGateSnapshotResponseSchema = z
+  .object({
+    decisionRunId: z.string().min(1),
+    previewResult: previewResultSchema,
+  })
+  .strict();
+
+export type CreatePriorityGateSnapshotResponse = z.infer<
+  typeof createPriorityGateSnapshotResponseSchema
+>;

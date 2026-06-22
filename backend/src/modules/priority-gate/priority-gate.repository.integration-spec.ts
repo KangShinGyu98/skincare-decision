@@ -42,6 +42,7 @@ describe('PriorityGateRepository', () => {
   beforeEach(async () => {
     await prisma.$executeRawUnsafe(`
       TRUNCATE TABLE
+        decision_runs,
         session_events,
         user_responses,
         user_sessions,
@@ -290,6 +291,79 @@ describe('PriorityGateRepository', () => {
         },
       ]),
     );
+  });
+
+  it('createDecisionRun은 priority gate snapshot을 저장한다', async () => {
+    const deviceId = randomUUID();
+    const sessionId = randomUUID();
+
+    await prisma.device.create({
+      data: {
+        id: deviceId,
+      },
+    });
+    await prisma.userSession.create({
+      data: {
+        id: sessionId,
+        deviceId,
+        entryPath: '/priority-gate',
+      },
+    });
+
+    const decisionRun = await repository.createDecisionRun({
+      deviceId,
+      sessionId,
+      decisionType: 'PRIORITY_GATE',
+      sourceScreen: 'priority_gate',
+      resultType: 'PASS',
+      resultTitle: '현재 답변에서는 우선 확인할 신호가 없습니다',
+      resultDescription:
+        '지금까지 선택한 내용만으로는 새 제품 선택을 멈추거나 특정 제품군을 먼저 볼 조건이 발견되지 않았습니다.',
+      ctaLabel: '제품군 고르기',
+      ctaTarget: '/category-decision',
+      inputSnapshot: {
+        responses: [],
+      },
+      appliedFiltersSnapshot: {},
+      resultSnapshot: {
+        resultType: 'PASS',
+      },
+    });
+
+    const saved = await prisma.decisionRun.findUniqueOrThrow({
+      where: {
+        id: decisionRun.id,
+      },
+      select: {
+        deviceId: true,
+        sessionId: true,
+        decisionType: true,
+        sourceScreen: true,
+        resultType: true,
+        resultTitle: true,
+        ctaTarget: true,
+        inputSnapshot: true,
+        appliedFiltersSnapshot: true,
+        resultSnapshot: true,
+      },
+    });
+
+    expect(saved).toEqual({
+      deviceId,
+      sessionId,
+      decisionType: 'PRIORITY_GATE',
+      sourceScreen: 'priority_gate',
+      resultType: 'PASS',
+      resultTitle: '현재 답변에서는 우선 확인할 신호가 없습니다',
+      ctaTarget: '/category-decision',
+      inputSnapshot: {
+        responses: [],
+      },
+      appliedFiltersSnapshot: {},
+      resultSnapshot: {
+        resultType: 'PASS',
+      },
+    });
   });
 
   async function createQuestionVariant(input: {

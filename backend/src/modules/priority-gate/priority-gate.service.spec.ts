@@ -24,6 +24,7 @@ describe('PriorityGateService', () => {
       | 'findCurrentResponses'
       | 'findPriorityRules'
       | 'findProductCategoriesByKeysOrIds'
+      | 'createDecisionRun'
     >
   >;
   let userResponsesServiceMock: jest.Mocked<Pick<UserResponsesService, 'upsertCurrentResponse'>>;
@@ -34,6 +35,7 @@ describe('PriorityGateService', () => {
       findCurrentResponses: jest.fn(),
       findPriorityRules: jest.fn(),
       findProductCategoriesByKeysOrIds: jest.fn(),
+      createDecisionRun: jest.fn(),
     };
     userResponsesServiceMock = {
       upsertCurrentResponse: jest.fn(),
@@ -255,6 +257,67 @@ describe('PriorityGateService', () => {
       ],
     });
   });
+
+  it('createSnapshot은 현재 답변과 previewResult를 decision_runs에 저장한다', async () => {
+    const question = createQuestionRecord({
+      questionId: '018f0000-0000-7000-8000-000000000201',
+      key: 'life.recent_irritation',
+    });
+
+    repositoryMock.findPriorityRules.mockResolvedValue([]);
+    repositoryMock.findCurrentResponses.mockResolvedValueOnce([]).mockResolvedValueOnce([
+      {
+        questionId: question.questionId,
+        value: [1],
+      },
+    ]);
+    repositoryMock.findPriorityGateQuestions.mockResolvedValue([question]);
+    repositoryMock.createDecisionRun.mockResolvedValue({
+      id: 123n,
+    });
+
+    const result = await service.createSnapshot({
+      deviceId: '018f0000-0000-7000-8000-000000000001',
+      sessionId: '018f0000-0000-7000-8000-000000000002',
+    });
+
+    expect(repositoryMock.createDecisionRun).toHaveBeenCalledWith({
+      deviceId: '018f0000-0000-7000-8000-000000000001',
+      sessionId: '018f0000-0000-7000-8000-000000000002',
+      decisionType: 'PRIORITY_GATE',
+      sourceScreen: 'priority_gate',
+      resultType: 'PASS',
+      resultTitle: '현재 답변에서는 우선 확인할 신호가 없습니다',
+      resultDescription:
+        '지금까지 선택한 내용만으로는 새 제품 선택을 멈추거나 특정 제품군을 먼저 볼 조건이 발견되지 않았습니다.',
+      ctaLabel: '제품군 고르기',
+      ctaTarget: '/category-decision',
+      inputSnapshot: {
+        responses: [
+          {
+            questionId: question.questionId,
+            key: 'life.recent_irritation',
+            value: [1],
+          },
+        ],
+      },
+      appliedFiltersSnapshot: {},
+      resultSnapshot: {
+        resultType: 'PASS',
+        title: '현재 답변에서는 우선 확인할 신호가 없습니다',
+        description:
+          '지금까지 선택한 내용만으로는 새 제품 선택을 멈추거나 특정 제품군을 먼저 볼 조건이 발견되지 않았습니다.',
+        cta: {
+          label: '제품군 고르기',
+          target: '/category-decision',
+        },
+        recommendCategory: null,
+        holdCategories: [],
+      },
+    });
+    expect(result.decisionRunId).toBe('123');
+    expect(result.previewResult.resultType).toBe('PASS');
+  });
 });
 
 function createQuestionRecord(
@@ -290,10 +353,10 @@ function createPriorityRuleRecord(overrides: Partial<PriorityRuleRecord> = {}): 
     id: overrides.id ?? '018f0000-0000-7000-8000-000000000401',
     priority: overrides.priority ?? 10,
     resultType: overrides.resultType ?? PriorityRuleResultType.PASS,
-    resultTitle: overrides.resultTitle ?? '지금은 제품군을 선택해도 괜찮습니다',
+    resultTitle: overrides.resultTitle ?? '현재 답변에서는 우선 확인할 신호가 없습니다',
     resultDescription:
       overrides.resultDescription ??
-      '입력한 조건에서는 우선 보류하거나 특정 제품군으로 우회해야 할 신호가 없습니다.',
+      '지금까지 선택한 내용만으로는 새 제품 선택을 멈추거나 특정 제품군을 먼저 볼 조건이 발견되지 않았습니다.',
     holdCategories: overrides.holdCategories ?? null,
     ctaLabel: overrides.ctaLabel ?? '제품군 고르기',
     ctaTarget: overrides.ctaTarget ?? '/category-decision',

@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Req } from '@nestjs/common';
 import { Public } from '../../common/decorators/auth.decorator';
 import {
+  type CreatePriorityGateSnapshotResponse,
   type PriorityGateResponseDto,
   type UpsertPriorityGateResponseRequest,
   type UpsertPriorityGateResponseResponse,
@@ -54,5 +55,31 @@ export class PriorityGateController {
       ...(user ? { userId: user.id } : {}),
       body,
     });
+  }
+
+  @Post('snapshot')
+  async createSnapshot(
+    @Req() request: RequestWithContext,
+  ): Promise<CreatePriorityGateSnapshotResponse> {
+    const { deviceId, sessionId, user } = request.context;
+    const snapshot = await this.service.createSnapshot({
+      deviceId: deviceId!,
+      sessionId: sessionId!,
+      ...(user ? { userId: user.id } : {}),
+    });
+
+    await this.sessionEventService.record({
+      sessionId: sessionId!,
+      eventName: 'priority_gate_cta_clicked',
+      screen: 'priority_gate',
+      elementId: 'priority_gate.cta',
+      payload: {
+        decisionRunId: snapshot.decisionRunId,
+        resultType: snapshot.previewResult.resultType,
+        ctaTarget: snapshot.previewResult.cta?.target ?? null,
+      },
+    });
+
+    return snapshot;
   }
 }

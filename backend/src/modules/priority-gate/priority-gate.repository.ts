@@ -56,6 +56,27 @@ export type PriorityRuleRecord = {
   conditions: PriorityRuleConditionRecord[];
 };
 
+export type CreateDecisionRunInput = {
+  deviceId: string;
+  sessionId: string;
+  userId?: string;
+  decisionType: string;
+  sourceScreen: string;
+  categoryId?: string;
+  resultType?: string;
+  resultTitle?: string;
+  resultDescription?: string;
+  ctaLabel?: string;
+  ctaTarget?: string;
+  inputSnapshot: Prisma.InputJsonValue;
+  appliedFiltersSnapshot: Prisma.InputJsonValue;
+  resultSnapshot: Prisma.InputJsonValue;
+};
+
+export type DecisionRunRecord = {
+  id: bigint;
+};
+
 @Injectable()
 export class PriorityGateRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -180,6 +201,31 @@ export class PriorityGateRepository {
         key: true,
         name: true,
         description: true,
+      },
+    });
+  }
+
+  async createDecisionRun(input: CreateDecisionRunInput): Promise<DecisionRunRecord> {
+    return this.prisma.decisionRun.create({
+      data: {
+        deviceId: input.deviceId,
+        sessionId: input.sessionId,
+        ...(input.userId ? { userId: input.userId } : {}),
+        decisionType: input.decisionType,
+        sourceScreen: input.sourceScreen,
+        categoryId: input.categoryId ?? null,
+        filterStateId: null,
+        resultType: input.resultType ?? null,
+        resultTitle: input.resultTitle ?? null,
+        resultDescription: input.resultDescription ?? null,
+        ctaLabel: input.ctaLabel ?? null,
+        ctaTarget: input.ctaTarget ?? null,
+        inputSnapshot: input.inputSnapshot,
+        appliedFiltersSnapshot: input.appliedFiltersSnapshot,
+        resultSnapshot: input.resultSnapshot,
+      },
+      select: {
+        id: true,
       },
     });
   }
