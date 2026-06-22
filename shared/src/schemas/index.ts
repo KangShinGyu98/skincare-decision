@@ -4,3 +4,4 @@ export * from './session-event.schema.js';
 export * from './product-category.schema.js';
 export * from './landing.schema.js';
 export * from './priority-gate.schema.js';
+export * from './priority-gate-responses.schema.js';

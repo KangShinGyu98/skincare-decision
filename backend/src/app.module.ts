@@ -19,6 +19,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { SessionModule } from './modules/session/session.module';
 import { ProductCategoriesModule } from './modules/product-categories/product-categories.module';
 import { LandingModule } from './modules/landing/landing.module';
+import { PriorityGateModule } from './modules/priority-gate/priority-gate.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { LandingModule } from './modules/landing/landing.module';
     AuthModule,
     ProductCategoriesModule,
     LandingModule,
+    PriorityGateModule,
   ],
   controllers: [AppController],
   providers: [
