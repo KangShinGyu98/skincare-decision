@@ -5,3 +5,4 @@ export * from './product-category.schema.js';
 export * from './landing.schema.js';
 export * from './priority-gate.schema.js';
 export * from './priority-gate-responses.schema.js';
+export * from './category-decision.schema.js';
