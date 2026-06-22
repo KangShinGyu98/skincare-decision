@@ -20,6 +20,7 @@ import { SessionModule } from './modules/session/session.module';
 import { ProductCategoriesModule } from './modules/product-categories/product-categories.module';
 import { LandingModule } from './modules/landing/landing.module';
 import { PriorityGateModule } from './modules/priority-gate/priority-gate.module';
+import { CategoryDecisionModule } from './modules/category-decision/category-decision.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { PriorityGateModule } from './modules/priority-gate/priority-gate.module
     ProductCategoriesModule,
     LandingModule,
     PriorityGateModule,
+    CategoryDecisionModule,
   ],
   controllers: [AppController],
   providers: [
