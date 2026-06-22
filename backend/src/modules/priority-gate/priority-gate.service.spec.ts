@@ -1,18 +1,42 @@
 import { Test, type TestingModule } from '@nestjs/testing';
-import { QuestionAnswerType, UiSection } from '../../generated/prisma/enums';
-import { PriorityGateRepository, type QuestionRecord } from './priority-gate.repository';
+import {
+  ComparisonOperator,
+  ConditionState,
+  PriorityRuleResultType,
+  QuestionAnswerType,
+  UiSection,
+  UserResponseSource,
+} from '../../generated/prisma/enums';
+import { UserResponsesService } from '../user-responses/user-responses.service';
+import {
+  PriorityGateRepository,
+  type PriorityRuleRecord,
+  type QuestionRecord,
+} from './priority-gate.repository';
 import { PriorityGateService } from './priority-gate.service';
 
 describe('PriorityGateService', () => {
   let service: PriorityGateService;
   let repositoryMock: jest.Mocked<
-    Pick<PriorityGateRepository, 'findPriorityGateQuestions' | 'findCurrentResponses'>
+    Pick<
+      PriorityGateRepository,
+      | 'findPriorityGateQuestions'
+      | 'findCurrentResponses'
+      | 'findPriorityRules'
+      | 'findProductCategoriesByKeysOrIds'
+    >
   >;
+  let userResponsesServiceMock: jest.Mocked<Pick<UserResponsesService, 'upsertCurrentResponse'>>;
 
   beforeEach(async () => {
     repositoryMock = {
       findPriorityGateQuestions: jest.fn(),
       findCurrentResponses: jest.fn(),
+      findPriorityRules: jest.fn(),
+      findProductCategoriesByKeysOrIds: jest.fn(),
+    };
+    userResponsesServiceMock = {
+      upsertCurrentResponse: jest.fn(),
     };
 
     const testingModule: TestingModule = await Test.createTestingModule({
@@ -21,6 +45,10 @@ describe('PriorityGateService', () => {
         {
           provide: PriorityGateRepository,
           useValue: repositoryMock,
+        },
+        {
+          provide: UserResponsesService,
+          useValue: userResponsesServiceMock,
         },
       ],
     }).compile();
@@ -138,6 +166,95 @@ describe('PriorityGateService', () => {
       },
     ]);
   });
+
+  it('getResponseReaction는 답변을 저장하고 fallback previewResult를 반환한다', async () => {
+    const body = {
+      questionId: '018f0000-0000-7000-8000-000000000201',
+      questionVariantId: '018f0000-0000-7000-8000-000000000101',
+      value: [1],
+    };
+
+    repositoryMock.findCurrentResponses.mockResolvedValue([]);
+    repositoryMock.findPriorityRules.mockResolvedValue([]);
+
+    const result = await service.getResponseReaction({
+      deviceId: '018f0000-0000-7000-8000-000000000001',
+      body,
+    });
+
+    expect(userResponsesServiceMock.upsertCurrentResponse).toHaveBeenCalledWith({
+      deviceId: '018f0000-0000-7000-8000-000000000001',
+      questionId: body.questionId,
+      value: [1],
+      source: UserResponseSource.priority_gate,
+    });
+    expect(result.response).toEqual(body);
+    expect(result.previewResult.resultType).toBe('PASS');
+  });
+
+  it('getResponseReaction는 매칭된 priority rule 결과를 previewResult로 반환한다', async () => {
+    const body = {
+      questionId: '018f0000-0000-7000-8000-000000000201',
+      questionVariantId: '018f0000-0000-7000-8000-000000000101',
+      value: [1],
+    };
+    const rule = createPriorityRuleRecord({
+      resultType: PriorityRuleResultType.HOLD,
+      resultTitle: '기능성 제품 추가는 보류하는 편이 안전합니다',
+      resultDescription: '이미 활성 성분이 많은 루틴에서는 중복을 줄여야 합니다.',
+      ctaLabel: '성분 중복 확인',
+      ctaTarget: '/decision/traceback',
+      holdCategories: ['serum'],
+      conditions: [
+        {
+          questionId: body.questionId,
+          operator: ComparisonOperator.EQ,
+          value: [1],
+          state: ConditionState.REQUIRED,
+        },
+      ],
+    });
+
+    repositoryMock.findCurrentResponses.mockResolvedValueOnce([]).mockResolvedValueOnce([
+      {
+        questionId: body.questionId,
+        value: [1],
+      },
+    ]);
+    repositoryMock.findPriorityRules.mockResolvedValue([rule]);
+    repositoryMock.findProductCategoriesByKeysOrIds.mockResolvedValue([
+      {
+        id: '018f0000-0000-7000-8000-000000000301',
+        key: 'serum',
+        name: '세럼',
+        description: null,
+      },
+    ]);
+
+    const result = await service.getResponseReaction({
+      deviceId: '018f0000-0000-7000-8000-000000000001',
+      body,
+    });
+
+    expect(result.previewResult).toEqual({
+      resultType: 'HOLD',
+      title: '기능성 제품 추가는 보류하는 편이 안전합니다',
+      description: '이미 활성 성분이 많은 루틴에서는 중복을 줄여야 합니다.',
+      cta: {
+        label: '성분 중복 확인',
+        target: '/decision/traceback',
+      },
+      recommendCategory: null,
+      holdCategories: [
+        {
+          id: '018f0000-0000-7000-8000-000000000301',
+          key: 'serum',
+          name: '세럼',
+          description: null,
+        },
+      ],
+    });
+  });
 });
 
 function createQuestionRecord(
@@ -165,5 +282,22 @@ function createQuestionRecord(
       answerType: overrides.answerType ?? QuestionAnswerType.BOOLEAN,
       answerValues: overrides.answerValues ?? [0, 1],
     },
+  };
+}
+
+function createPriorityRuleRecord(overrides: Partial<PriorityRuleRecord> = {}): PriorityRuleRecord {
+  return {
+    id: overrides.id ?? '018f0000-0000-7000-8000-000000000401',
+    priority: overrides.priority ?? 10,
+    resultType: overrides.resultType ?? PriorityRuleResultType.PASS,
+    resultTitle: overrides.resultTitle ?? '지금은 제품군을 선택해도 괜찮습니다',
+    resultDescription:
+      overrides.resultDescription ??
+      '입력한 조건에서는 우선 보류하거나 특정 제품군으로 우회해야 할 신호가 없습니다.',
+    holdCategories: overrides.holdCategories ?? null,
+    ctaLabel: overrides.ctaLabel ?? '제품군 고르기',
+    ctaTarget: overrides.ctaTarget ?? '/category-decision',
+    recommendCategory: overrides.recommendCategory ?? null,
+    conditions: overrides.conditions ?? [],
   };
 }

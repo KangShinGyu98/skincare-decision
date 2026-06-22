@@ -1,4 +1,12 @@
-import { Screen, UiSection, type QuestionAnswerType } from '../../generated/prisma/enums';
+import { Prisma } from '../../generated/prisma/client';
+import {
+  type ComparisonOperator,
+  type ConditionState,
+  type PriorityRuleResultType,
+  Screen,
+  UiSection,
+  type QuestionAnswerType,
+} from '../../generated/prisma/enums';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 
@@ -19,6 +27,33 @@ export type QuestionRecord = {
 export type CurrentResponseRecord = {
   questionId: string;
   value: number[];
+};
+
+export type ProductCategoryRecord = {
+  id: string;
+  key: string;
+  name: string;
+  description: string | null;
+};
+
+export type PriorityRuleConditionRecord = {
+  questionId: string;
+  operator: ComparisonOperator;
+  value: number[];
+  state: ConditionState;
+};
+
+export type PriorityRuleRecord = {
+  id: string;
+  priority: number;
+  resultType: PriorityRuleResultType;
+  resultTitle: string;
+  resultDescription: string;
+  holdCategories: Prisma.JsonValue | null;
+  ctaLabel: string | null;
+  ctaTarget: string | null;
+  recommendCategory: ProductCategoryRecord | null;
+  conditions: PriorityRuleConditionRecord[];
 };
 
 @Injectable()
@@ -84,5 +119,68 @@ export class PriorityGateRepository {
       orderBy: [{ questionId: 'asc' }, { updatedAt: 'desc' }, { createdAt: 'desc' }],
     });
     return records;
+  }
+
+  async findPriorityRules(): Promise<PriorityRuleRecord[]> {
+    return this.prisma.priorityRule.findMany({
+      where: {
+        isActive: true,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        priority: true,
+        resultType: true,
+        resultTitle: true,
+        resultDescription: true,
+        holdCategories: true,
+        ctaLabel: true,
+        ctaTarget: true,
+        recommendCategory: {
+          select: {
+            id: true,
+            key: true,
+            name: true,
+            description: true,
+          },
+        },
+        conditions: {
+          select: {
+            questionId: true,
+            operator: true,
+            value: true,
+            state: true,
+          },
+        },
+      },
+      orderBy: [{ priority: 'asc' }, { createdAt: 'asc' }],
+    });
+  }
+
+  async findProductCategoriesByKeysOrIds(
+    keys: readonly string[],
+    ids: readonly string[],
+  ): Promise<ProductCategoryRecord[]> {
+    const or = [
+      ...(keys.length > 0 ? [{ key: { in: [...keys] } }] : []),
+      ...(ids.length > 0 ? [{ id: { in: [...ids] } }] : []),
+    ];
+
+    if (or.length === 0) {
+      return [];
+    }
+
+    return this.prisma.productCategory.findMany({
+      where: {
+        deletedAt: null,
+        OR: or,
+      },
+      select: {
+        id: true,
+        key: true,
+        name: true,
+        description: true,
+      },
+    });
   }
 }
