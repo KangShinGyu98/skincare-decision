@@ -4,6 +4,12 @@ generator client {
   moduleFormat = "cjs"
 }
 
+generator dbml {
+  provider = "prisma-dbml-generator"
+  output   = "../docs/Data/ERD/schema.dbml"
+}
+
+
 datasource db {
   provider = "postgresql"
 }
@@ -36,14 +42,14 @@ enum CategoryAttributeValueType {
   @@map("category_attribute_definitions_value_type_enum")
 }
 
-enum QuestionVariantScreen {
+enum Screen {
   priority_gate
   context
 
   @@map("question_variants_screen_enum")
 }
 
-enum QuestionVariantUiSection {
+enum UiSection {
   life_routine
   owned_products
   basic
@@ -243,8 +249,8 @@ model QuestionVariant {
   title                String                        @db.Text
   answers              String[]
   answerCount          Int                           @map("answer_count") @ignore
-  screen               QuestionVariantScreen
-  uiSection            QuestionVariantUiSection      @map("ui_section")
+  screen               Screen
+  uiSection            UiSection      @map("ui_section")
   sortOrder            Int                           @default(0) @map("sort_order")
   isActive             Boolean                       @default(true) @map("is_active")
   createdAt            DateTime                      @default(now()) @map("created_at") @db.Timestamptz()
