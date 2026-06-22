@@ -1,5 +1,6 @@
 import { Test, type TestingModule } from '@nestjs/testing';
 import type {
+  CreatePriorityGateSnapshotResponse,
   PriorityGateResponseDto,
   UpsertPriorityGateResponseResponse,
 } from '@skincare-decision/shared/schemas';
@@ -11,7 +12,7 @@ import { PriorityGateService } from './priority-gate.service';
 describe('PriorityGateController', () => {
   let controller: PriorityGateController;
   let serviceMock: jest.Mocked<
-    Pick<PriorityGateService, 'getPriorityGate' | 'getResponseReaction'>
+    Pick<PriorityGateService, 'getPriorityGate' | 'getResponseReaction' | 'createSnapshot'>
   >;
   let sessionEventServiceMock: jest.Mocked<Pick<SessionEventService, 'record'>>;
 
@@ -19,6 +20,7 @@ describe('PriorityGateController', () => {
     serviceMock = {
       getPriorityGate: jest.fn(),
       getResponseReaction: jest.fn(),
+      createSnapshot: jest.fn(),
     };
     sessionEventServiceMock = {
       record: jest.fn(),
@@ -128,9 +130,9 @@ describe('PriorityGateController', () => {
       response: body,
       previewResult: {
         resultType: 'PASS',
-        title: '지금은 제품군을 선택해도 괜찮습니다',
+        title: '현재 답변에서는 우선 확인할 신호가 없습니다',
         description:
-          '입력한 조건에서는 우선 보류하거나 특정 제품군으로 우회해야 할 신호가 없습니다.',
+          '지금까지 선택한 내용만으로는 새 제품 선택을 멈추거나 특정 제품군을 먼저 볼 조건이 발견되지 않았습니다.',
         cta: {
           label: '제품군 고르기',
           target: '/category-decision',
@@ -161,6 +163,51 @@ describe('PriorityGateController', () => {
       screen: 'priority_gate',
       elementId: body.questionVariantId,
       payload: body,
+    });
+  });
+
+  it('createSnapshot은 snapshot을 저장하고 CTA 클릭 이벤트를 기록한다', async () => {
+    const response: CreatePriorityGateSnapshotResponse = {
+      decisionRunId: '123',
+      previewResult: {
+        resultType: 'PASS',
+        title: '현재 답변에서는 우선 확인할 신호가 없습니다',
+        description:
+          '지금까지 선택한 내용만으로는 새 제품 선택을 멈추거나 특정 제품군을 먼저 볼 조건이 발견되지 않았습니다.',
+        cta: {
+          label: '제품군 고르기',
+          target: '/category-decision',
+        },
+        recommendCategory: null,
+        holdCategories: [],
+      },
+    };
+    const request = {
+      context: {
+        requestId: '018f0000-0000-7000-8000-000000000001',
+        deviceId: '018f0000-0000-7000-8000-000000000002',
+        sessionId: '018f0000-0000-7000-8000-000000000004',
+        startedAt: Date.now(),
+      },
+    } as unknown as RequestWithContext;
+
+    serviceMock.createSnapshot.mockResolvedValue(response);
+
+    await expect(controller.createSnapshot(request)).resolves.toBe(response);
+    expect(serviceMock.createSnapshot).toHaveBeenCalledWith({
+      deviceId: '018f0000-0000-7000-8000-000000000002',
+      sessionId: '018f0000-0000-7000-8000-000000000004',
+    });
+    expect(sessionEventServiceMock.record).toHaveBeenCalledWith({
+      sessionId: '018f0000-0000-7000-8000-000000000004',
+      eventName: 'priority_gate_cta_clicked',
+      screen: 'priority_gate',
+      elementId: 'priority_gate.cta',
+      payload: {
+        decisionRunId: '123',
+        resultType: 'PASS',
+        ctaTarget: '/category-decision',
+      },
     });
   });
 });

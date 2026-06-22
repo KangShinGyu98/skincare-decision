@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import {
+  createPriorityGateSnapshotResponseSchema,
   priorityGateResponseSchema,
   questionAnswerTypeSchema,
   questionUiSectionSchema,
+  type CreatePriorityGateSnapshotResponse,
   type ProductCategoryItemDto,
   type PriorityGateResponseDto,
   type QuestionAnswerDto,
@@ -36,6 +38,19 @@ type PostInput = {
   deviceId: string;
   userId?: string;
   body: UpsertPriorityGateResponseRequest;
+};
+type SnapshotInput = {
+  deviceId: string;
+  sessionId: string;
+  userId?: string;
+};
+type CalculatePreviewResultInput = {
+  deviceId: string;
+  userId?: string;
+  responseOverride?: {
+    questionId: string;
+    value: number[];
+  };
 };
 type PreviewResult = UpsertPriorityGateResponseResponse['previewResult'];
 type CategoryRef = {
@@ -76,10 +91,49 @@ export class PriorityGateService {
       source: UserResponseSource.priority_gate,
     });
 
-    const previewResult = await this.calculatePreviewResult(input);
+    const previewResult = await this.calculatePreviewResult({
+      deviceId: input.deviceId,
+      ...(input.userId ? { userId: input.userId } : {}),
+      responseOverride: {
+        questionId: input.body.questionId,
+        value: input.body.value,
+      },
+    });
 
     return upsertPriorityGateResponseResponseSchema.parse({
       response: input.body,
+      previewResult,
+    });
+  }
+
+  async createSnapshot(input: SnapshotInput): Promise<CreatePriorityGateSnapshotResponse> {
+    const previewResult = await this.calculatePreviewResult(input);
+    const inputSnapshot = await this.createInputSnapshot(input);
+    const decisionRun = await this.repository.createDecisionRun({
+      deviceId: input.deviceId,
+      sessionId: input.sessionId,
+      ...(input.userId ? { userId: input.userId } : {}),
+      decisionType: 'PRIORITY_GATE',
+      sourceScreen: 'priority_gate',
+      ...(previewResult.recommendCategory
+        ? { categoryId: previewResult.recommendCategory.id }
+        : {}),
+      resultType: previewResult.resultType,
+      resultTitle: previewResult.title,
+      resultDescription: previewResult.description,
+      ...(previewResult.cta
+        ? {
+            ctaLabel: previewResult.cta.label,
+            ctaTarget: previewResult.cta.target,
+          }
+        : {}),
+      inputSnapshot,
+      appliedFiltersSnapshot: {},
+      resultSnapshot: previewResult,
+    });
+
+    return createPriorityGateSnapshotResponseSchema.parse({
+      decisionRunId: decisionRun.id.toString(),
       previewResult,
     });
   }
@@ -163,7 +217,7 @@ export class PriorityGateService {
     });
   }
 
-  private async calculatePreviewResult(input: PostInput): Promise<PreviewResult> {
+  private async calculatePreviewResult(input: CalculatePreviewResultInput): Promise<PreviewResult> {
     const rules = await this.repository.findPriorityRules();
     //rules 에서 필요한 questionsId 추출
     const conditionQuestionIds = this.collectConditionQuestionIds(rules);
@@ -174,7 +228,9 @@ export class PriorityGateService {
     );
     const responseMap = this.toResponseMap(responseRecords);
 
-    responseMap.set(input.body.questionId, input.body.value);
+    if (input.responseOverride) {
+      responseMap.set(input.responseOverride.questionId, input.responseOverride.value);
+    }
 
     const matchedRule = rules.find((rule) => this.isRuleMatched(rule, responseMap));
 
@@ -183,6 +239,41 @@ export class PriorityGateService {
     }
 
     return this.toPreviewResult(matchedRule);
+  }
+
+  private async createInputSnapshot(input: SnapshotInput): Promise<{
+    responses: Array<{
+      questionId: string;
+      key: string;
+      value: number[];
+    }>;
+  }> {
+    const questions = await this.repository.findPriorityGateQuestions();
+    const questionIds = questions.map((question) => question.questionId);
+    const responseRecords = await this.repository.findCurrentResponses(
+      input.deviceId,
+      questionIds,
+      input.userId,
+    );
+    const responseMap = this.toResponseMap(responseRecords);
+
+    return {
+      responses: questions.flatMap((question) => {
+        const value = responseMap.get(question.questionId);
+
+        if (!value) {
+          return [];
+        }
+
+        return [
+          {
+            questionId: question.questionId,
+            key: question.question.key,
+            value,
+          },
+        ];
+      }),
+    };
   }
 
   private collectConditionQuestionIds(rules: PriorityRuleRecord[]): string[] {
