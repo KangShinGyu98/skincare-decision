@@ -24,11 +24,7 @@ export const questionAnswerSchema = z
 
 export type QuestionAnswerDto = z.infer<typeof questionAnswerSchema>;
 
-export const currentResponseSchema = z
-  .object({
-    value: z.array(z.number().int()),
-  })
-  .strict();
+export const currentResponseSchema = z.array(z.number().int());
 
 export type CurrentResponseDto = z.infer<typeof currentResponseSchema>;
 
@@ -64,3 +60,26 @@ export const priorityGateResponseSchema = z
   .strict();
 
 export type PriorityGateResponseDto = z.infer<typeof priorityGateResponseSchema>;
+export const priorityGateResponseExample = {
+  sections: [
+    {
+      key: 'life_routine',
+      questions: [
+        {
+          questionId: '018f0000-0000-7000-8000-000000000201',
+          questionVariantId: '018f0000-0000-7000-8000-000000000101',
+          key: 'life.recent_irritation',
+          title: 'Recent irritation',
+          answerType: 'BOOLEAN',
+          uiSection: 'life_routine',
+          sortOrder: 10,
+          answers: [
+            { label: 'No', value: 0 },
+            { label: 'Yes', value: 1 },
+          ],
+          currentResponse: [1],
+        },
+      ],
+    },
+  ],
+} satisfies PriorityGateResponseDto;
