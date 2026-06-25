@@ -91,6 +91,32 @@ skincare-decision/
 
 ---
 
+## 모노레포 설정 파일 원칙
+
+- 루트 `package.json`은 워크스페이스 공통 script, `packageManager`, `engines`, 공통 개발 도구만 관리합니다.
+- 앱/패키지 전용 의존성, script, 실행 설정은 `backend/package.json`, `frontend/package.json`, `shared/package.json`에 둡니다.
+- 루트 `tsconfig.base.json`은 모든 패키지에 적용할 TypeScript 공통 규칙만 관리합니다.
+- 패키지별 `tsconfig.json`은 루트 base를 확장하고 NestJS, Next.js, shared build처럼 각 실행 환경에 필요한 설정만 둡니다.
+- 자세한 운영 규칙은 [CLAUDE.md](CLAUDE.md#모노레포-설정-파일-관리-규칙)를 참고하세요.
+
+의존성 추가 예시:
+
+```bash
+# 프론트 전용
+pnpm --filter frontend add @tanstack/react-query
+
+# 백엔드 전용
+pnpm --filter backend add ioredis
+
+# FE/BE 공용 schema/type 패키지
+pnpm --filter @skincare-decision/shared add zod
+
+# 전체 워크스페이스 공통 개발 도구일 때만 루트
+pnpm add -w -D prettier
+```
+
+---
+
 ## 작업 워크플로우
 
 사람이 새 채팅과 시작 프롬프트로 작업을 열고, AI는 다음 순서로 진행합니다.
@@ -151,9 +177,7 @@ pnpm --filter @skincare-decision/shared run build
 
 ```bash
 # 3) 프론트엔드 (별도 터미널)
-cd frontend
-pnpm install
-pnpm run dev         # http://localhost:3000
+pnpm --filter frontend run dev         # http://localhost:3000
 ```
 
 ### Test

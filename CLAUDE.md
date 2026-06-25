@@ -67,6 +67,47 @@ Utils → Types → Config → Repo(api) → Service(hooks) → Runtime(store) �
 
 ---
 
+# 모노레포 설정 파일 관리 규칙
+
+## package.json
+
+1. 루트 `package.json`은 워크스페이스 공통 설정만 가진다.
+   - `packageManager`, `engines`, 전체 패키지에 대한 공통 script만 둔다.
+   - 예: `dev:backend`, `dev:frontend`, `build`, `lint`, `typecheck`, `test`, `format`.
+   - 특정 앱에서만 쓰는 런타임 의존성은 루트에 설치하지 않는다.
+
+2. 개별 패키지의 `package.json`은 해당 패키지 실행에 필요한 설정만 가진다.
+   - `backend/package.json`: NestJS, Prisma, Redis, backend test/build/lint 의존성.
+   - `frontend/package.json`: Next.js, React, Tailwind, TanStack Query, Zustand, frontend lint/build/dev 의존성.
+   - `shared/package.json`: FE/BE가 함께 쓰는 Zod schema, DTO type, 공용 도메인 상수와 `exports`.
+
+3. 의존성 추가는 설치 위치를 명시한다.
+   - 공용 contract/schema/type 의존성: `pnpm --filter @skincare-decision/shared add <pkg>`.
+   - 프론트 전용 의존성: `pnpm --filter frontend add <pkg>`.
+   - 백엔드 전용 의존성: `pnpm --filter backend add <pkg>`.
+   - 전체 워크스페이스 개발 도구가 분명할 때만 루트에 `pnpm add -w -D <pkg>`를 사용한다.
+
+4. lockfile은 루트의 `pnpm-lock.yaml` 하나만 사용한다.
+   - 패키지별 `package-lock.json`, `yarn.lock`, 별도 lockfile을 만들지 않는다.
+   - `pnpm install`은 기본적으로 루트에서 실행한다.
+
+## tsconfig
+
+1. 루트 `tsconfig.base.json`은 전체 TypeScript 공통 규칙만 가진다.
+   - `strict`, module resolution, target, casing, unused check 등 모든 패키지에 적용할 compiler option을 둔다.
+   - 특정 앱의 `include`, `exclude`, `outDir`, `rootDir`, JSX, framework plugin 설정은 두지 않는다.
+
+2. 개별 패키지의 `tsconfig.json`은 루트 base를 확장하고 패키지별 실행 환경만 정의한다.
+   - `backend/tsconfig.json`: NestJS 빌드와 Node 런타임에 필요한 설정.
+   - `frontend/tsconfig.json`: Next.js App Router, React JSX, Next plugin, noEmit 등 프론트 전용 설정.
+   - `shared/tsconfig.json`: 배포 가능한 공용 타입/스키마 빌드를 위한 declaration, outDir, include 설정.
+
+3. 공통 규칙을 완화해야 할 때는 먼저 개별 패키지에서 예외를 둔다.
+   - 여러 패키지에서 같은 예외가 반복될 때만 루트 `tsconfig.base.json` 변경을 검토한다.
+   - 루트 strictness를 낮추는 변경은 장기 설계 영향이 있으므로 ADR 또는 명시 승인을 우선한다.
+
+---
+
 # 메모리 관리 규칙
 
 1. 메모리는 memory 폴더에 ADR 폴더와 내부 md 파일, external_apis.md, task_plan.md로 구성되어있다.
