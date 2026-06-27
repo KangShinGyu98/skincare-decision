@@ -1,18 +1,7 @@
-/**
- * Skincare Decision Design System
- * CSS Variables — Colors, Typography, Spacing, Shadows
- * Based on Ant Design 4.x tokens
- */
-
-/* ─────────────────────────────────────────────
-   Google Fonts
-   ───────────────────────────────────────────── */
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap');
+@import "tailwindcss";
 
 :root {
-  /* ─────────────────────────────────────────
-     COLOR PALETTE — Ant Design Base Colors
-     ───────────────────────────────────────── */
 
   /* Daybreak Blue (Brand Primary) */
   --blue-1: #e6f7ff;
@@ -351,15 +340,7 @@ small {
   color: var(--color-text-tertiary);
 }
 
-a {
-  color: var(--color-text-link);
-  text-decoration: none;
-  transition: color var(--transition-fast);
-}
 
-a:hover {
-  color: var(--color-text-link-hover);
-}
 
 code,
 pre {
