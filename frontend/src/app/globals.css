@@ -123,12 +123,16 @@
   --color-bg-white: #ffffff;
   --color-bg-dark: #001529; /* header/sider dark */
   --color-bg-dark-hover: #002140;
+  --color-bg-card: rgba(255, 255, 255, 0.7);
+  --color-bg-card-hover: rgba(255, 255, 255, 0.88);
 
   /* Border */
   --color-border: #d9d9d9;
   --color-border-strong: #bfbfbf;
   --color-border-light: #f0f0f0;
   --color-border-split: rgba(0, 0, 0, 0.06);
+  --color-border-card: rgba(0, 0, 0, 0.1);
+  --color-border-card-hover: rgba(0, 0, 0, 0.2);
 
   /* ─────────────────────────────────────────
      TYPOGRAPHY
@@ -222,6 +226,8 @@
   --shadow-2: 0 2px 8px rgba(0, 0, 0, 0.15); /* card, dropdown */
   --shadow-3: 0 4px 12px rgba(0, 0, 0, 0.15); /* elevated card */
   --shadow-btn: 0 2px 0 rgba(0, 0, 0, 0.016); /* button press shadow */
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-card-hover: 0 4px 14px rgba(0, 0, 0, 0.1);
   --shadow-focus: 0 0 0 2px rgba(24, 144, 255, 0.2); /* focus ring */
   --shadow-inset: inset 0 1px 0 var(--color-border-light);
 
@@ -322,7 +328,7 @@ h6 {
 }
 
 p {
-  font-size: var(--font-size-base);
+  font-size: inherit;
   font-weight: var(--font-weight-regular);
   line-height: var(--line-height-normal);
   color: var(--color-text-primary);
