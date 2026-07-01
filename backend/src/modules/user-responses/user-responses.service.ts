@@ -12,6 +12,12 @@ export type UpsertUserResponseInput = {
   source: UserResponseSource;
 };
 
+export type DeleteUserResponsesInput = {
+  deviceId: string;
+  userId?: string;
+  questionIds: string[];
+};
+
 @Injectable()
 export class UserResponsesService {
   constructor(private readonly prisma: PrismaService) {}
@@ -37,6 +43,31 @@ export class UserResponsesService {
           : this.createAnonymousCurrentResponseUpsert(input),
       ),
     );
+  }
+
+  async deleteCurrentResponses(input: DeleteUserResponsesInput): Promise<number> {
+    const questionIds = [...new Set(input.questionIds)];
+
+    if (questionIds.length === 0) {
+      return 0;
+    }
+
+    const questionIdList = this.toUuidListSql(questionIds);
+
+    if (input.userId) {
+      return this.prisma.$executeRaw`
+        DELETE FROM user_responses
+        WHERE user_id = ${input.userId}::uuid
+          AND question_id IN (${questionIdList})
+      `;
+    }
+
+    return this.prisma.$executeRaw`
+      DELETE FROM user_responses
+      WHERE device_id = ${input.deviceId}::uuid
+        AND user_id IS NULL
+        AND question_id IN (${questionIdList})
+    `;
   }
 
   private createUserCurrentResponseUpsert(input: UpsertUserResponseInput) {
@@ -99,5 +130,9 @@ export class UserResponsesService {
     }
 
     return Prisma.sql`ARRAY[${Prisma.join(value)}]::integer[]`;
+  }
+
+  private toUuidListSql(value: string[]): Prisma.Sql {
+    return Prisma.join(value.map((id) => Prisma.sql`${id}::uuid`));
   }
 }

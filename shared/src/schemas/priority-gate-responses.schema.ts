@@ -1,25 +1,8 @@
 import { z } from 'zod';
-import { productCategoryItemSchema } from './product-category.schema.js';
-
-const resultTypeSchema = z.enum(['STOP', 'HOLD', 'CAUTION', 'PASS', 'ROUTE_CATEGORY']);
-
-const ctaSchema = z
-  .object({
-    label: z.string().min(1),
-    target: z.string().min(1),
-  })
-  .strict();
-
-const previewResultSchema = z
-  .object({
-    resultType: resultTypeSchema,
-    title: z.string().min(1),
-    description: z.string().min(1),
-    cta: ctaSchema.nullable(),
-    recommendCategory: productCategoryItemSchema.nullable(),
-    holdCategories: z.array(productCategoryItemSchema),
-  })
-  .strict();
+import {
+  priorityGatePreviewResultSchema,
+  questionUiSectionSchema,
+} from './priority-gate.schema.js';
 
 export const priorityGateResponseValueSchema = z
   .object({
@@ -43,7 +26,7 @@ export type UpsertPriorityGateResponsesRequest = z.infer<
 export const upsertPriorityGateResponsesResponseSchema = z
   .object({
     responses: z.record(z.uuid(), priorityGateResponseValueSchema),
-    previewResults: z.array(previewResultSchema).min(1).max(3),
+    previewResults: z.array(priorityGatePreviewResultSchema).min(1).max(3),
   })
   .strict();
 
@@ -51,10 +34,30 @@ export type UpsertPriorityGateResponsesResponse = z.infer<
   typeof upsertPriorityGateResponsesResponseSchema
 >;
 
+export const resetPriorityGateResponsesRequestSchema = z
+  .object({
+    uiSection: questionUiSectionSchema,
+  })
+  .strict();
+
+export type ResetPriorityGateResponsesRequest = z.infer<
+  typeof resetPriorityGateResponsesRequestSchema
+>;
+
+export const resetPriorityGateResponsesResponseSchema = z
+  .object({
+    deletedCount: z.number().int().nonnegative(),
+  })
+  .strict();
+
+export type ResetPriorityGateResponsesResponse = z.infer<
+  typeof resetPriorityGateResponsesResponseSchema
+>;
+
 export const createPriorityGateSnapshotResponseSchema = z
   .object({
     decisionRunId: z.string().min(1),
-    previewResult: previewResultSchema,
+    previewResult: priorityGatePreviewResultSchema,
   })
   .strict();
 

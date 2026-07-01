@@ -1,6 +1,10 @@
 import {
   type PriorityGateResponseDto,
   priorityGateResponseSchema,
+  type ResetPriorityGateResponsesRequest,
+  resetPriorityGateResponsesRequestSchema,
+  type ResetPriorityGateResponsesResponse,
+  resetPriorityGateResponsesResponseSchema,
   type UpsertPriorityGateResponsesRequest,
   upsertPriorityGateResponsesRequestSchema,
   type UpsertPriorityGateResponsesResponse,
@@ -98,10 +102,19 @@ function handleResponse(
   response: Response,
   schema: typeof upsertPriorityGateResponsesResponseSchema,
 ): Promise<UpsertPriorityGateResponsesResponse>;
+function handleResponse(
+  response: Response,
+  schema: typeof resetPriorityGateResponsesResponseSchema,
+): Promise<ResetPriorityGateResponsesResponse>;
 async function handleResponse(
   response: Response,
-  schema: typeof priorityGateResponseSchema | typeof upsertPriorityGateResponsesResponseSchema,
-): Promise<PriorityGateResponseDto | UpsertPriorityGateResponsesResponse> {
+  schema:
+    | typeof priorityGateResponseSchema
+    | typeof upsertPriorityGateResponsesResponseSchema
+    | typeof resetPriorityGateResponsesResponseSchema,
+): Promise<
+  PriorityGateResponseDto | UpsertPriorityGateResponsesResponse | ResetPriorityGateResponsesResponse
+> {
   const data = await readJson(response);
 
   if (!response.ok) {
@@ -158,5 +171,27 @@ export const priorityGateApi = {
     });
 
     return handleResponse(response, upsertPriorityGateResponsesResponseSchema);
+  },
+
+  resetResponses: async (
+    data: ResetPriorityGateResponsesRequest,
+  ): Promise<ResetPriorityGateResponsesResponse> => {
+    const parsed = resetPriorityGateResponsesRequestSchema.safeParse(data);
+
+    if (!parsed.success) {
+      throw new ApiValidationError(
+        `Invalid priority gate reset request: ${parsed.error.message}`,
+      );
+    }
+
+    const searchParams = new URLSearchParams({
+      uiSection: parsed.data.uiSection,
+    });
+    const response = await fetch(getPriorityGateUrl(`/reset-responses?${searchParams}`), {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+
+    return handleResponse(response, resetPriorityGateResponsesResponseSchema);
   },
 };

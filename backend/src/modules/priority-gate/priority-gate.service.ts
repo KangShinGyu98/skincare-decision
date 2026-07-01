@@ -11,8 +11,10 @@ import {
   type QuestionDto,
   type QuestionSectionDto,
   type QuestionUiSectionDto,
+  type ResetPriorityGateResponsesResponse,
   type UpsertPriorityGateResponsesRequest,
   type UpsertPriorityGateResponsesResponse,
+  resetPriorityGateResponsesResponseSchema,
   upsertPriorityGateResponsesResponseSchema,
 } from '@skincare-decision/shared/schemas';
 import {
@@ -38,6 +40,11 @@ type PostInput = {
   deviceId: string;
   userId?: string;
   body: UpsertPriorityGateResponsesRequest;
+};
+type ResetResponsesInput = {
+  deviceId: string;
+  userId?: string;
+  uiSection: QuestionUiSectionDto;
 };
 type SnapshotInput = {
   deviceId: string;
@@ -72,10 +79,19 @@ export class PriorityGateService {
     );
 
     const questionsWithResponses = this.combineQuestionsWithResponses(questions, responseRecords);
-    const questionsBySections = this.groupQuestionsBySections(questionsWithResponses);
+    const sections = this.groupQuestionsBySections(questionsWithResponses);
+    const previewResults = this.hasCurrentResponses(responseRecords)
+      ? await this.calculatePreviewResults({
+          deviceId: input.deviceId,
+          ...(input.userId ? { userId: input.userId } : {}),
+        })
+      : [];
     //TODO: questionsFilter DB Schema에 sourceQuestions 추가하고, 해당 필터 로직 적용하기
 
-    return priorityGateResponseSchema.parse(questionsBySections);
+    return priorityGateResponseSchema.parse({
+      sections,
+      previewResults,
+    });
   }
 
   async getResponseReaction(input: PostInput): Promise<UpsertPriorityGateResponsesResponse> {
@@ -99,6 +115,23 @@ export class PriorityGateService {
     return upsertPriorityGateResponsesResponseSchema.parse({
       responses: input.body.responses,
       previewResults,
+    });
+  }
+
+  async resetResponses(input: ResetResponsesInput): Promise<ResetPriorityGateResponsesResponse> {
+    const questions = await this.repository.findPriorityGateQuestions();
+    const questionIds = questions
+      .filter((question) => questionUiSectionSchema.parse(question.uiSection) === input.uiSection)
+      .map((question) => question.questionId);
+
+    const deletedCount = await this.userResponsesService.deleteCurrentResponses({
+      deviceId: input.deviceId,
+      ...(input.userId ? { userId: input.userId } : {}),
+      questionIds,
+    });
+
+    return resetPriorityGateResponsesResponseSchema.parse({
+      deletedCount,
     });
   }
 
@@ -166,7 +199,7 @@ export class PriorityGateService {
     return questionsWithResponses;
   }
 
-  private groupQuestionsBySections(questions: QuestionDto[]): PriorityGateResponseDto {
+  private groupQuestionsBySections(questions: QuestionDto[]): QuestionSectionDto[] {
     const sectionMap = new Map<QuestionUiSectionDto, QuestionDto[]>();
 
     for (const question of questions) {
@@ -191,7 +224,7 @@ export class PriorityGateService {
       })
       .filter((section): section is QuestionSectionDto => section !== null);
 
-    return { sections };
+    return sections;
   }
 
   private toAnswers(question: QuestionRecord): QuestionAnswerDto[] {
@@ -211,6 +244,10 @@ export class PriorityGateService {
         value,
       };
     });
+  }
+
+  private hasCurrentResponses(responses: CurrentResponseRecord[]): boolean {
+    return responses.some((response) => response.value.length > 0);
   }
 
   private async calculatePreviewResult(input: CalculatePreviewResultInput): Promise<PreviewResult> {
@@ -366,6 +403,10 @@ export class PriorityGateService {
   }
 
   private async toPreviewResult(rule: PriorityRuleRecord): Promise<PreviewResult> {
+    const recommendCategory = rule.recommendCategory
+      ? this.toProductCategoryItem(rule.recommendCategory)
+      : null;
+
     return {
       resultType: rule.resultType,
       title: rule.resultTitle,
@@ -374,12 +415,10 @@ export class PriorityGateService {
         rule.ctaLabel && rule.ctaTarget
           ? {
               label: rule.ctaLabel,
-              target: rule.ctaTarget,
+              target: this.createCtaTarget(rule.ctaTarget, recommendCategory),
             }
           : null,
-      recommendCategory: rule.recommendCategory
-        ? this.toProductCategoryItem(rule.recommendCategory)
-        : null,
+      recommendCategory,
       holdCategories: await this.toHoldCategories(rule.holdCategories),
     };
   }
@@ -465,5 +504,26 @@ export class PriorityGateService {
       name: category.name,
       description: category.description,
     };
+  }
+
+  private createCtaTarget(
+    ctaTarget: string,
+    recommendCategory: ProductCategoryItemDto | null,
+  ): string {
+    if (recommendCategory) {
+      return this.createCategoryDecisionTarget(recommendCategory.key);
+    }
+
+    const productCategoryTarget = ctaTarget.match(/^\/products\/([^/?#]+)(?:[?#].*)?$/);
+
+    if (productCategoryTarget?.[1]) {
+      return this.createCategoryDecisionTarget(productCategoryTarget[1]);
+    }
+
+    return ctaTarget;
+  }
+
+  private createCategoryDecisionTarget(categoryKey: string): string {
+    return `/category-decision?category=${encodeURIComponent(categoryKey)}`;
   }
 }
