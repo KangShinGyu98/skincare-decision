@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { UpsertPriorityGateResponseRequest } from '@skincare-decision/shared/schemas';
+import type { UpsertPriorityGateResponsesRequest } from '@skincare-decision/shared/schemas';
 import { priorityGateApi } from './api';
 
 export const queryKeys = {
@@ -20,7 +20,7 @@ export function useSubmitPriorityGate() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: UpsertPriorityGateResponseRequest) => priorityGateApi.submitResponse(data),
+    mutationFn: (data: UpsertPriorityGateResponsesRequest) => priorityGateApi.submitResponses(data),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.priorityGate.questions });
     },

@@ -27,7 +27,7 @@ describe('PriorityGateService', () => {
       | 'createDecisionRun'
     >
   >;
-  let userResponsesServiceMock: jest.Mocked<Pick<UserResponsesService, 'upsertCurrentResponse'>>;
+  let userResponsesServiceMock: jest.Mocked<Pick<UserResponsesService, 'upsertCurrentResponses'>>;
 
   beforeEach(async () => {
     repositoryMock = {
@@ -38,7 +38,7 @@ describe('PriorityGateService', () => {
       createDecisionRun: jest.fn(),
     };
     userResponsesServiceMock = {
-      upsertCurrentResponse: jest.fn(),
+      upsertCurrentResponses: jest.fn(),
     };
 
     const testingModule: TestingModule = await Test.createTestingModule({
@@ -170,10 +170,15 @@ describe('PriorityGateService', () => {
   });
 
   it('getResponseReaction는 답변을 저장하고 fallback previewResult를 반환한다', async () => {
-    const body = {
+    const questionVariantId = '018f0000-0000-7000-8000-000000000101';
+    const responseValue = {
       questionId: '018f0000-0000-7000-8000-000000000201',
-      questionVariantId: '018f0000-0000-7000-8000-000000000101',
       value: [1],
+    };
+    const body = {
+      responses: {
+        [questionVariantId]: responseValue,
+      },
     };
 
     repositoryMock.findCurrentResponses.mockResolvedValue([]);
@@ -184,21 +189,28 @@ describe('PriorityGateService', () => {
       body,
     });
 
-    expect(userResponsesServiceMock.upsertCurrentResponse).toHaveBeenCalledWith({
-      deviceId: '018f0000-0000-7000-8000-000000000001',
-      questionId: body.questionId,
-      value: [1],
-      source: UserResponseSource.priority_gate,
-    });
-    expect(result.response).toEqual(body);
-    expect(result.previewResult.resultType).toBe('PASS');
+    expect(userResponsesServiceMock.upsertCurrentResponses).toHaveBeenCalledWith([
+      {
+        deviceId: '018f0000-0000-7000-8000-000000000001',
+        questionId: responseValue.questionId,
+        value: [1],
+        source: UserResponseSource.priority_gate,
+      },
+    ]);
+    expect(result.responses).toEqual(body.responses);
+    expect(result.previewResults[0]?.resultType).toBe('PASS');
   });
 
-  it('getResponseReaction는 매칭된 priority rule 결과를 previewResult로 반환한다', async () => {
-    const body = {
+  it('getResponseReaction는 매칭된 priority rule 결과를 previewResults로 반환한다', async () => {
+    const questionVariantId = '018f0000-0000-7000-8000-000000000101';
+    const responseValue = {
       questionId: '018f0000-0000-7000-8000-000000000201',
-      questionVariantId: '018f0000-0000-7000-8000-000000000101',
       value: [1],
+    };
+    const body = {
+      responses: {
+        [questionVariantId]: responseValue,
+      },
     };
     const rule = createPriorityRuleRecord({
       resultType: PriorityRuleResultType.HOLD,
@@ -209,7 +221,7 @@ describe('PriorityGateService', () => {
       holdCategories: ['serum'],
       conditions: [
         {
-          questionId: body.questionId,
+          questionId: responseValue.questionId,
           operator: ComparisonOperator.EQ,
           value: [1],
           state: ConditionState.REQUIRED,
@@ -217,9 +229,9 @@ describe('PriorityGateService', () => {
       ],
     });
 
-    repositoryMock.findCurrentResponses.mockResolvedValueOnce([]).mockResolvedValueOnce([
+    repositoryMock.findCurrentResponses.mockResolvedValue([
       {
-        questionId: body.questionId,
+        questionId: responseValue.questionId,
         value: [1],
       },
     ]);
@@ -238,24 +250,74 @@ describe('PriorityGateService', () => {
       body,
     });
 
-    expect(result.previewResult).toEqual({
-      resultType: 'HOLD',
-      title: '기능성 제품 추가는 보류하는 편이 안전합니다',
-      description: '이미 활성 성분이 많은 루틴에서는 중복을 줄여야 합니다.',
-      cta: {
-        label: '성분 중복 확인',
-        target: '/decision/traceback',
-      },
-      recommendCategory: null,
-      holdCategories: [
-        {
-          id: '018f0000-0000-7000-8000-000000000301',
-          key: 'serum',
-          name: '세럼',
-          description: null,
+    expect(result.previewResults).toEqual([
+      {
+        resultType: 'HOLD',
+        title: '기능성 제품 추가는 보류하는 편이 안전합니다',
+        description: '이미 활성 성분이 많은 루틴에서는 중복을 줄여야 합니다.',
+        cta: {
+          label: '성분 중복 확인',
+          target: '/decision/traceback',
         },
-      ],
+        recommendCategory: null,
+        holdCategories: [
+          {
+            id: '018f0000-0000-7000-8000-000000000301',
+            key: 'serum',
+            name: '세럼',
+            description: null,
+          },
+        ],
+      },
+    ]);
+  });
+
+  it('getResponseReaction는 매칭된 priority rule 결과를 최대 3개까지 반환한다', async () => {
+    const questionId = '018f0000-0000-7000-8000-000000000201';
+    const body = {
+      responses: {
+        '018f0000-0000-7000-8000-000000000101': {
+          questionId,
+          value: [1],
+        },
+      },
+    };
+
+    repositoryMock.findCurrentResponses.mockResolvedValue([
+      {
+        questionId,
+        value: [1],
+      },
+    ]);
+    repositoryMock.findPriorityRules.mockResolvedValue(
+      [1, 2, 3, 4].map((index) =>
+        createPriorityRuleRecord({
+          id: `018f0000-0000-7000-8000-00000000040${index}`,
+          priority: index,
+          resultTitle: `matched rule ${index}`,
+          conditions: [
+            {
+              questionId,
+              operator: ComparisonOperator.EQ,
+              value: [1],
+              state: ConditionState.REQUIRED,
+            },
+          ],
+        }),
+      ),
+    );
+    repositoryMock.findProductCategoriesByKeysOrIds.mockResolvedValue([]);
+
+    const result = await service.getResponseReaction({
+      deviceId: '018f0000-0000-7000-8000-000000000001',
+      body,
     });
+
+    expect(result.previewResults.map((previewResult) => previewResult.title)).toEqual([
+      'matched rule 1',
+      'matched rule 2',
+      'matched rule 3',
+    ]);
   });
 
   it('createSnapshot은 현재 답변과 previewResult를 decision_runs에 저장한다', async () => {

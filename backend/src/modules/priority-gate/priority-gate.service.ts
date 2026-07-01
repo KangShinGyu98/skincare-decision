@@ -11,9 +11,9 @@ import {
   type QuestionDto,
   type QuestionSectionDto,
   type QuestionUiSectionDto,
-  type UpsertPriorityGateResponseRequest,
-  type UpsertPriorityGateResponseResponse,
-  upsertPriorityGateResponseResponseSchema,
+  type UpsertPriorityGateResponsesRequest,
+  type UpsertPriorityGateResponsesResponse,
+  upsertPriorityGateResponsesResponseSchema,
 } from '@skincare-decision/shared/schemas';
 import {
   ComparisonOperator,
@@ -37,7 +37,7 @@ type GetInput = {
 type PostInput = {
   deviceId: string;
   userId?: string;
-  body: UpsertPriorityGateResponseRequest;
+  body: UpsertPriorityGateResponsesRequest;
 };
 type SnapshotInput = {
   deviceId: string;
@@ -47,12 +47,8 @@ type SnapshotInput = {
 type CalculatePreviewResultInput = {
   deviceId: string;
   userId?: string;
-  responseOverride?: {
-    questionId: string;
-    value: number[];
-  };
 };
-type PreviewResult = UpsertPriorityGateResponseResponse['previewResult'];
+type PreviewResult = UpsertPriorityGateResponsesResponse['previewResults'][number];
 type CategoryRef = {
   key?: string;
   id?: string;
@@ -82,27 +78,27 @@ export class PriorityGateService {
     return priorityGateResponseSchema.parse(questionsBySections);
   }
 
-  async getResponseReaction(input: PostInput): Promise<UpsertPriorityGateResponseResponse> {
-    await this.userResponsesService.upsertCurrentResponse({
+  async getResponseReaction(input: PostInput): Promise<UpsertPriorityGateResponsesResponse> {
+    const responses = Object.values(input.body.responses);
+
+    await this.userResponsesService.upsertCurrentResponses(
+      responses.map((response) => ({
+        deviceId: input.deviceId,
+        ...(input.userId ? { userId: input.userId } : {}),
+        questionId: response.questionId,
+        value: response.value,
+        source: UserResponseSource.priority_gate,
+      })),
+    );
+
+    const previewResults = await this.calculatePreviewResults({
       deviceId: input.deviceId,
       ...(input.userId ? { userId: input.userId } : {}),
-      questionId: input.body.questionId,
-      value: input.body.value,
-      source: UserResponseSource.priority_gate,
     });
 
-    const previewResult = await this.calculatePreviewResult({
-      deviceId: input.deviceId,
-      ...(input.userId ? { userId: input.userId } : {}),
-      responseOverride: {
-        questionId: input.body.questionId,
-        value: input.body.value,
-      },
-    });
-
-    return upsertPriorityGateResponseResponseSchema.parse({
-      response: input.body,
-      previewResult,
+    return upsertPriorityGateResponsesResponseSchema.parse({
+      responses: input.body.responses,
+      previewResults,
     });
   }
 
@@ -218,6 +214,14 @@ export class PriorityGateService {
   }
 
   private async calculatePreviewResult(input: CalculatePreviewResultInput): Promise<PreviewResult> {
+    const [previewResult] = await this.calculatePreviewResults(input);
+
+    return previewResult ?? this.createFallbackPassResult();
+  }
+
+  private async calculatePreviewResults(
+    input: CalculatePreviewResultInput,
+  ): Promise<PreviewResult[]> {
     const rules = await this.repository.findPriorityRules();
     //rules 에서 필요한 questionsId 추출
     const conditionQuestionIds = this.collectConditionQuestionIds(rules);
@@ -227,18 +231,25 @@ export class PriorityGateService {
       input.userId,
     );
     const responseMap = this.toResponseMap(responseRecords);
+    const previewResults: PreviewResult[] = [];
 
-    if (input.responseOverride) {
-      responseMap.set(input.responseOverride.questionId, input.responseOverride.value);
+    for (const rule of rules) {
+      if (!this.isRuleMatched(rule, responseMap)) {
+        continue;
+      }
+
+      previewResults.push(await this.toPreviewResult(rule));
+
+      if (previewResults.length >= 3) {
+        return previewResults;
+      }
     }
 
-    const matchedRule = rules.find((rule) => this.isRuleMatched(rule, responseMap));
-
-    if (!matchedRule) {
-      return this.createFallbackPassResult();
+    if (previewResults.length === 0) {
+      return [this.createFallbackPassResult()];
     }
 
-    return this.toPreviewResult(matchedRule);
+    return previewResults;
   }
 
   private async createInputSnapshot(input: SnapshotInput): Promise<{

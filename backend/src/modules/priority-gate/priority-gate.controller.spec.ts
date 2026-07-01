@@ -2,7 +2,7 @@ import { Test, type TestingModule } from '@nestjs/testing';
 import type {
   CreatePriorityGateSnapshotResponse,
   PriorityGateResponseDto,
-  UpsertPriorityGateResponseResponse,
+  UpsertPriorityGateResponsesResponse,
 } from '@skincare-decision/shared/schemas';
 import type { RequestWithContext } from '../../common/types/express-request.type';
 import { SessionEventService } from '../session/session-event.service';
@@ -121,25 +121,32 @@ describe('PriorityGateController', () => {
   });
 
   it('selectChecklist는 request context와 body를 service에 전달한다', async () => {
-    const body = {
+    const questionVariantId = '018f0000-0000-7000-8000-000000000101';
+    const responseValue = {
       questionId: '018f0000-0000-7000-8000-000000000201',
-      questionVariantId: '018f0000-0000-7000-8000-000000000101',
       value: [1],
     };
-    const response: UpsertPriorityGateResponseResponse = {
-      response: body,
-      previewResult: {
-        resultType: 'PASS',
-        title: '현재 답변에서는 우선 확인할 신호가 없습니다',
-        description:
-          '지금까지 선택한 내용만으로는 새 제품 선택을 멈추거나 특정 제품군을 먼저 볼 조건이 발견되지 않았습니다.',
-        cta: {
-          label: '제품군 고르기',
-          target: '/category-decision',
-        },
-        recommendCategory: null,
-        holdCategories: [],
+    const body = {
+      responses: {
+        [questionVariantId]: responseValue,
       },
+    };
+    const response: UpsertPriorityGateResponsesResponse = {
+      responses: body.responses,
+      previewResults: [
+        {
+          resultType: 'PASS',
+          title: '현재 답변에서는 우선 확인할 신호가 없습니다',
+          description:
+            '지금까지 선택한 내용만으로는 새 제품 선택을 멈추거나 특정 제품군을 먼저 볼 조건이 발견되지 않았습니다.',
+          cta: {
+            label: '제품군 고르기',
+            target: '/category-decision',
+          },
+          recommendCategory: null,
+          holdCategories: [],
+        },
+      ],
     };
     const request = {
       context: {
@@ -161,8 +168,11 @@ describe('PriorityGateController', () => {
       sessionId: '018f0000-0000-7000-8000-000000000004',
       eventName: 'priority_question_answered',
       screen: 'priority_gate',
-      elementId: body.questionVariantId,
-      payload: body,
+      elementId: questionVariantId,
+      payload: {
+        questionVariantId,
+        ...responseValue,
+      },
     });
   });
 

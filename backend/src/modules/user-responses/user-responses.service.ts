@@ -18,15 +18,29 @@ export class UserResponsesService {
 
   async upsertCurrentResponse(input: UpsertUserResponseInput): Promise<void> {
     if (input.userId) {
-      await this.upsertUserCurrentResponse(input);
+      await this.createUserCurrentResponseUpsert(input);
       return;
     }
 
-    await this.upsertAnonymousCurrentResponse(input);
+    await this.createAnonymousCurrentResponseUpsert(input);
   }
 
-  private async upsertUserCurrentResponse(input: UpsertUserResponseInput): Promise<void> {
-    await this.prisma.$executeRaw`
+  async upsertCurrentResponses(inputs: UpsertUserResponseInput[]): Promise<void> {
+    if (inputs.length === 0) {
+      return;
+    }
+
+    await this.prisma.$transaction(
+      inputs.map((input) =>
+        input.userId
+          ? this.createUserCurrentResponseUpsert(input)
+          : this.createAnonymousCurrentResponseUpsert(input),
+      ),
+    );
+  }
+
+  private createUserCurrentResponseUpsert(input: UpsertUserResponseInput) {
+    return this.prisma.$executeRaw`
       INSERT INTO user_responses (
         id,
         device_id,
@@ -52,8 +66,8 @@ export class UserResponsesService {
     `;
   }
 
-  private async upsertAnonymousCurrentResponse(input: UpsertUserResponseInput): Promise<void> {
-    await this.prisma.$executeRaw`
+  private createAnonymousCurrentResponseUpsert(input: UpsertUserResponseInput) {
+    return this.prisma.$executeRaw`
       INSERT INTO user_responses (
         id,
         device_id,

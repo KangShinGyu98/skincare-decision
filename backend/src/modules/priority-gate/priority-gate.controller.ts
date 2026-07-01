@@ -3,9 +3,9 @@ import { Public } from '../../common/decorators/auth.decorator';
 import {
   type CreatePriorityGateSnapshotResponse,
   type PriorityGateResponseDto,
-  type UpsertPriorityGateResponseRequest,
-  type UpsertPriorityGateResponseResponse,
-  upsertPriorityGateResponseRequestSchema,
+  type UpsertPriorityGateResponsesRequest,
+  type UpsertPriorityGateResponsesResponse,
+  upsertPriorityGateResponsesRequestSchema,
 } from '@skincare-decision/shared/schemas';
 import type { RequestWithContext } from 'src/common/types/express-request.type';
 import { PriorityGateService } from './priority-gate.service';
@@ -40,16 +40,24 @@ export class PriorityGateController {
   @Post('responses')
   async selectChecklist(
     @Req() request: RequestWithContext,
-    @ZodBody(upsertPriorityGateResponseRequestSchema) body: UpsertPriorityGateResponseRequest,
-  ): Promise<UpsertPriorityGateResponseResponse> {
+    @ZodBody(upsertPriorityGateResponsesRequestSchema) body: UpsertPriorityGateResponsesRequest,
+  ): Promise<UpsertPriorityGateResponsesResponse> {
     const { deviceId, sessionId, user } = request.context;
-    await this.sessionEventService.record({
-      sessionId: sessionId!,
-      eventName: 'priority_question_answered',
-      screen: 'priority_gate',
-      elementId: body.questionVariantId,
-      payload: body,
-    });
+    await Promise.all(
+      Object.entries(body.responses).map(([questionVariantId, response]) =>
+        this.sessionEventService.record({
+          sessionId: sessionId!,
+          eventName: 'priority_question_answered',
+          screen: 'priority_gate',
+          elementId: questionVariantId,
+          payload: {
+            questionVariantId,
+            ...response,
+          },
+        }),
+      ),
+    );
+
     return this.service.getResponseReaction({
       deviceId: deviceId!,
       ...(user ? { userId: user.id } : {}),

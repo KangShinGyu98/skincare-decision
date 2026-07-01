@@ -21,27 +21,34 @@ const previewResultSchema = z
   })
   .strict();
 
-export const upsertPriorityGateResponseRequestSchema = z
+export const priorityGateResponseValueSchema = z
   .object({
     questionId: z.uuid(),
-    questionVariantId: z.uuid(),
     value: z.array(z.number().int()),
   })
   .strict();
 
-export type UpsertPriorityGateResponseRequest = z.infer<
-  typeof upsertPriorityGateResponseRequestSchema
->;
+export type PriorityGateResponseValue = z.infer<typeof priorityGateResponseValueSchema>;
 
-export const upsertPriorityGateResponseResponseSchema = z
+export const upsertPriorityGateResponsesRequestSchema = z
   .object({
-    response: upsertPriorityGateResponseRequestSchema,
-    previewResult: previewResultSchema,
+    responses: z.record(z.uuid(), priorityGateResponseValueSchema),
   })
   .strict();
 
-export type UpsertPriorityGateResponseResponse = z.infer<
-  typeof upsertPriorityGateResponseResponseSchema
+export type UpsertPriorityGateResponsesRequest = z.infer<
+  typeof upsertPriorityGateResponsesRequestSchema
+>;
+
+export const upsertPriorityGateResponsesResponseSchema = z
+  .object({
+    responses: z.record(z.uuid(), priorityGateResponseValueSchema),
+    previewResults: z.array(previewResultSchema).min(1).max(3),
+  })
+  .strict();
+
+export type UpsertPriorityGateResponsesResponse = z.infer<
+  typeof upsertPriorityGateResponsesResponseSchema
 >;
 
 export const createPriorityGateSnapshotResponseSchema = z

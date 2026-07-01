@@ -1,10 +1,10 @@
 import {
   type PriorityGateResponseDto,
   priorityGateResponseSchema,
-  type UpsertPriorityGateResponseRequest,
-  upsertPriorityGateResponseRequestSchema,
-  type UpsertPriorityGateResponseResponse,
-  upsertPriorityGateResponseResponseSchema,
+  type UpsertPriorityGateResponsesRequest,
+  upsertPriorityGateResponsesRequestSchema,
+  type UpsertPriorityGateResponsesResponse,
+  upsertPriorityGateResponsesResponseSchema,
 } from '@skincare-decision/shared/schemas';
 
 type ApiErrorPayload = {
@@ -96,12 +96,12 @@ function handleResponse(
 ): Promise<PriorityGateResponseDto>;
 function handleResponse(
   response: Response,
-  schema: typeof upsertPriorityGateResponseResponseSchema,
-): Promise<UpsertPriorityGateResponseResponse>;
+  schema: typeof upsertPriorityGateResponsesResponseSchema,
+): Promise<UpsertPriorityGateResponsesResponse>;
 async function handleResponse(
   response: Response,
-  schema: typeof priorityGateResponseSchema | typeof upsertPriorityGateResponseResponseSchema,
-): Promise<PriorityGateResponseDto | UpsertPriorityGateResponseResponse> {
+  schema: typeof priorityGateResponseSchema | typeof upsertPriorityGateResponsesResponseSchema,
+): Promise<PriorityGateResponseDto | UpsertPriorityGateResponsesResponse> {
   const data = await readJson(response);
 
   if (!response.ok) {
@@ -137,10 +137,10 @@ export const priorityGateApi = {
     return handleResponse(response, priorityGateResponseSchema);
   },
 
-  submitResponse: async (
-    data: UpsertPriorityGateResponseRequest,
-  ): Promise<UpsertPriorityGateResponseResponse> => {
-    const parsed = upsertPriorityGateResponseRequestSchema.safeParse(data);
+  submitResponses: async (
+    data: UpsertPriorityGateResponsesRequest,
+  ): Promise<UpsertPriorityGateResponsesResponse> => {
+    const parsed = upsertPriorityGateResponsesRequestSchema.safeParse(data);
 
     if (!parsed.success) {
       throw new ApiValidationError(
@@ -157,6 +157,6 @@ export const priorityGateApi = {
       body: JSON.stringify(parsed.data),
     });
 
-    return handleResponse(response, upsertPriorityGateResponseResponseSchema);
+    return handleResponse(response, upsertPriorityGateResponsesResponseSchema);
   },
 };

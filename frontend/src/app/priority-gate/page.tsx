@@ -2,8 +2,8 @@
 
 //todo timeout 읽고 스피너 확인하기
 import type {
-  UpsertPriorityGateResponseRequest,
-  UpsertPriorityGateResponseResponse,
+  PriorityGateResponseValue,
+  UpsertPriorityGateResponsesResponse,
 } from '@skincare-decision/shared/schemas';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { PriorityGateQuestionItem } from '@/components/PriorityGateQuestionItem';
@@ -13,11 +13,11 @@ import { usePriorityGateQuestions, useSubmitPriorityGate } from '@/lib/hooks';
 
 const RESPONSE_SAVE_DEBOUNCE_MS = 800;
 
-type PreviewResult = UpsertPriorityGateResponseResponse['previewResult'];
+type PreviewResult = UpsertPriorityGateResponsesResponse['previewResults'][number];
 
 export default function PriorityGatePage() {
   const { data, error, isError, isLoading } = usePriorityGateQuestions();
-  const { mutateAsync: submitPriorityGateResponse } = useSubmitPriorityGate();
+  const { mutateAsync: submitPriorityGateResponses } = useSubmitPriorityGate();
 
   const sections = data?.sections ?? [];
   const lifeRoutineSection = sections.find((section) => section.key === 'life_routine');
@@ -28,34 +28,28 @@ export default function PriorityGatePage() {
   // 저장 대기 중인 요청들
   // key: questionVariantId
   // value: 마지막으로 선택된 저장 요청
-  const requestMapRef = useRef(new Map<string, UpsertPriorityGateResponseRequest>());
+  const requestMapRef = useRef(new Map<string, PriorityGateResponseValue>());
 
-  const [previewResult, setPreviewResult] = useState<PreviewResult | null>(null);
+  const [previewResults, setPreviewResults] = useState<PreviewResult[]>([]);
   const [submitError, setSubmitError] = useState<Error | null>(null);
   const [isSavingResponse, setIsSavingResponse] = useState(false);
 
   const flushResponses = useCallback(() => {
-    const requests = Array.from(requestMapRef.current.values());
+    const responses = Object.fromEntries(requestMapRef.current.entries());
 
     requestMapRef.current.clear();
     timeoutIdRef.current = null;
 
-    if (requests.length === 0) {
+    if (Object.keys(responses).length === 0) {
       return;
     }
 
     setIsSavingResponse(true);
     setSubmitError(null);
 
-    void Promise.all(requests.map((request) => submitPriorityGateResponse(request)))
-      .then((responses) => {
-        const lastResponse = responses.at(-1);
-
-        if (!lastResponse) {
-          return;
-        }
-
-        setPreviewResult(lastResponse.previewResult);
+    void submitPriorityGateResponses({ responses })
+      .then((response) => {
+        setPreviewResults(response.previewResults);
       })
       .catch((requestError: unknown) => {
         setSubmitError(
@@ -65,11 +59,11 @@ export default function PriorityGatePage() {
       .finally(() => {
         setIsSavingResponse(false);
       });
-  }, [submitPriorityGateResponse]);
+  }, [submitPriorityGateResponses]);
 
   const saveResponse = useCallback(
-    (request: UpsertPriorityGateResponseRequest) => {
-      requestMapRef.current.set(request.questionVariantId, request);
+    (questionVariantId: string, response: PriorityGateResponseValue) => {
+      requestMapRef.current.set(questionVariantId, response);
 
       if (timeoutIdRef.current) {
         clearTimeout(timeoutIdRef.current);
@@ -119,11 +113,13 @@ export default function PriorityGatePage() {
                 key={question.questionVariantId}
                 question={question}
                 onValueChange={(value) => {
-                  saveResponse({
-                    questionId: question.questionId,
-                    questionVariantId: question.questionVariantId,
-                    value,
-                  });
+                  saveResponse(
+                    question.questionVariantId,
+                    {
+                      questionId: question.questionId,
+                      value,
+                    },
+                  );
                 }}
               />
             ))
@@ -143,11 +139,13 @@ export default function PriorityGatePage() {
                 key={question.questionVariantId}
                 question={question}
                 onValueChange={(value) => {
-                  saveResponse({
-                    questionId: question.questionId,
-                    questionVariantId: question.questionVariantId,
-                    value,
-                  });
+                  saveResponse(
+                    question.questionVariantId,
+                    {
+                      questionId: question.questionId,
+                      value,
+                    },
+                  );
                 }}
               />
             ))
@@ -163,19 +161,26 @@ export default function PriorityGatePage() {
               <Spinner className="size-7 text-[var(--color-primary)]" />
             ) : submitError ? (
               <p className="text-center text-sm text-[var(--color-error)]">{submitError.message}</p>
-            ) : previewResult ? (
+            ) : previewResults.length > 0 ? (
               <div className="flex w-full flex-col gap-3 text-center">
-                <p className="text-base font-semibold text-[var(--color-text-primary)]">
-                  {previewResult.title}
-                </p>
-                <p className="text-sm leading-relaxed text-[var(--color-text-secondary)]">
-                  {previewResult.description}
-                </p>
-                {previewResult.recommendCategory ? (
-                  <p className="text-sm font-medium text-[var(--color-primary-active)]">
-                    추천 제품군: {previewResult.recommendCategory.name}
-                  </p>
-                ) : null}
+                {previewResults.map((previewResult) => (
+                  <section
+                    key={`${previewResult.resultType}-${previewResult.title}`}
+                    className="rounded-lg border border-[var(--color-border-light)] p-3"
+                  >
+                    <p className="text-base font-semibold text-[var(--color-text-primary)]">
+                      {previewResult.title}
+                    </p>
+                    <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">
+                      {previewResult.description}
+                    </p>
+                    {previewResult.recommendCategory ? (
+                      <p className="mt-2 text-sm font-medium text-[var(--color-primary-active)]">
+                        추천 제품군: {previewResult.recommendCategory.name}
+                      </p>
+                    ) : null}
+                  </section>
+                ))}
               </div>
             ) : (
               <span className="text-sm text-[var(--color-text-tertiary)]">
