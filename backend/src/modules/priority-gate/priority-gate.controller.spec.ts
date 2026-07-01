@@ -2,7 +2,8 @@ import { Test, type TestingModule } from '@nestjs/testing';
 import type {
   CreatePriorityGateSnapshotResponse,
   PriorityGateResponseDto,
-  UpsertPriorityGateResponseResponse,
+  ResetPriorityGateResponsesResponse,
+  UpsertPriorityGateResponsesResponse,
 } from '@skincare-decision/shared/schemas';
 import type { RequestWithContext } from '../../common/types/express-request.type';
 import { SessionEventService } from '../session/session-event.service';
@@ -12,7 +13,10 @@ import { PriorityGateService } from './priority-gate.service';
 describe('PriorityGateController', () => {
   let controller: PriorityGateController;
   let serviceMock: jest.Mocked<
-    Pick<PriorityGateService, 'getPriorityGate' | 'getResponseReaction' | 'createSnapshot'>
+    Pick<
+      PriorityGateService,
+      'getPriorityGate' | 'getResponseReaction' | 'resetResponses' | 'createSnapshot'
+    >
   >;
   let sessionEventServiceMock: jest.Mocked<Pick<SessionEventService, 'record'>>;
 
@@ -20,6 +24,7 @@ describe('PriorityGateController', () => {
     serviceMock = {
       getPriorityGate: jest.fn(),
       getResponseReaction: jest.fn(),
+      resetResponses: jest.fn(),
       createSnapshot: jest.fn(),
     };
     sessionEventServiceMock = {
@@ -51,6 +56,7 @@ describe('PriorityGateController', () => {
           questions: [],
         },
       ],
+      previewResults: [],
     };
     const request = {
       context: {
@@ -69,6 +75,7 @@ describe('PriorityGateController', () => {
   it('getPriorityGate는 request context의 deviceId와 userId를 service에 전달한다', async () => {
     const response: PriorityGateResponseDto = {
       sections: [],
+      previewResults: [],
     };
     const request = {
       context: {
@@ -97,6 +104,7 @@ describe('PriorityGateController', () => {
   it('getPriorityGate는 priority gate 진입 이벤트를 기록한다', async () => {
     const response: PriorityGateResponseDto = {
       sections: [],
+      previewResults: [],
     };
     const request = {
       context: {
@@ -121,25 +129,32 @@ describe('PriorityGateController', () => {
   });
 
   it('selectChecklist는 request context와 body를 service에 전달한다', async () => {
-    const body = {
+    const questionVariantId = '018f0000-0000-7000-8000-000000000101';
+    const responseValue = {
       questionId: '018f0000-0000-7000-8000-000000000201',
-      questionVariantId: '018f0000-0000-7000-8000-000000000101',
       value: [1],
     };
-    const response: UpsertPriorityGateResponseResponse = {
-      response: body,
-      previewResult: {
-        resultType: 'PASS',
-        title: '현재 답변에서는 우선 확인할 신호가 없습니다',
-        description:
-          '지금까지 선택한 내용만으로는 새 제품 선택을 멈추거나 특정 제품군을 먼저 볼 조건이 발견되지 않았습니다.',
-        cta: {
-          label: '제품군 고르기',
-          target: '/category-decision',
-        },
-        recommendCategory: null,
-        holdCategories: [],
+    const body = {
+      responses: {
+        [questionVariantId]: responseValue,
       },
+    };
+    const response: UpsertPriorityGateResponsesResponse = {
+      responses: body.responses,
+      previewResults: [
+        {
+          resultType: 'PASS',
+          title: '현재 답변에서는 우선 확인할 신호가 없습니다',
+          description:
+            '지금까지 선택한 내용만으로는 새 제품 선택을 멈추거나 특정 제품군을 먼저 볼 조건이 발견되지 않았습니다.',
+          cta: {
+            label: '제품군 고르기',
+            target: '/category-decision',
+          },
+          recommendCategory: null,
+          holdCategories: [],
+        },
+      ],
     };
     const request = {
       context: {
@@ -161,8 +176,47 @@ describe('PriorityGateController', () => {
       sessionId: '018f0000-0000-7000-8000-000000000004',
       eventName: 'priority_question_answered',
       screen: 'priority_gate',
-      elementId: body.questionVariantId,
-      payload: body,
+      elementId: questionVariantId,
+      payload: {
+        questionVariantId,
+        ...responseValue,
+      },
+    });
+  });
+
+  it('resetResponses는 섹션 초기화 요청을 service에 전달하고 이벤트를 기록한다', async () => {
+    const response: ResetPriorityGateResponsesResponse = {
+      deletedCount: 2,
+    };
+    const request = {
+      context: {
+        requestId: '018f0000-0000-7000-8000-000000000001',
+        deviceId: '018f0000-0000-7000-8000-000000000002',
+        sessionId: '018f0000-0000-7000-8000-000000000004',
+        startedAt: Date.now(),
+      },
+    } as unknown as RequestWithContext;
+
+    serviceMock.resetResponses.mockResolvedValue(response);
+
+    await expect(
+      controller.resetResponses(request, {
+        uiSection: 'life_routine',
+      }),
+    ).resolves.toBe(response);
+    expect(serviceMock.resetResponses).toHaveBeenCalledWith({
+      deviceId: '018f0000-0000-7000-8000-000000000002',
+      uiSection: 'life_routine',
+    });
+    expect(sessionEventServiceMock.record).toHaveBeenCalledWith({
+      sessionId: '018f0000-0000-7000-8000-000000000004',
+      eventName: 'priority_responses_reset',
+      screen: 'priority_gate',
+      elementId: 'priority_gate.reset.life_routine',
+      payload: {
+        uiSection: 'life_routine',
+        deletedCount: 2,
+      },
     });
   });
 

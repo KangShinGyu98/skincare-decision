@@ -28,7 +28,7 @@ export const PRIORITY_RULE_SEEDS: readonly PriorityRuleSeed[] = [
     resultDescription: '낮 사용 루틴에서는 자외선 차단이 다른 기능성 제품보다 우선입니다.',
     recommendCategoryKey: 'sunscreen',
     ctaLabel: '선크림 보기',
-    ctaTarget: '/products/sunscreen',
+    ctaTarget: '/category-decision?category=sunscreen',
     conditions: [
       {
         questionKey: 'routine.sunscreen_reapply',
@@ -53,7 +53,7 @@ export const PRIORITY_RULE_SEEDS: readonly PriorityRuleSeed[] = [
     resultDescription: '세안 후 당김이나 잔여감이 있으면 이후 단계 제품 판단이 흐려질 수 있습니다.',
     recommendCategoryKey: 'cleanser',
     ctaLabel: '클렌저 보기',
-    ctaTarget: '/products/cleanser',
+    ctaTarget: '/category-decision?category=cleanser',
     conditions: [
       {
         questionKey: 'routine.cleansing_stable',
@@ -93,7 +93,7 @@ export const PRIORITY_RULE_SEEDS: readonly PriorityRuleSeed[] = [
       '토너를 추가할 때는 보습/진정/각질 케어 목적이 기존 제품과 겹치지 않는지 확인해야 합니다.',
     holdCategories: ['toner'],
     ctaLabel: '토너 필터 조정',
-    ctaTarget: '/products/toner',
+    ctaTarget: '/category-decision?category=toner',
     conditions: [
       {
         questionKey: 'product.toner_overlap',

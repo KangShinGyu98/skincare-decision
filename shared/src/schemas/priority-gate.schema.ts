@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { productCategoryItemSchema } from './product-category.schema.js';
 
 export const questionAnswerTypeSchema = z.enum([
   'BOOLEAN',
@@ -28,6 +29,34 @@ export const currentResponseSchema = z.array(z.number().int());
 
 export type CurrentResponseDto = z.infer<typeof currentResponseSchema>;
 
+export const priorityGateResultTypeSchema = z.enum([
+  'STOP',
+  'HOLD',
+  'CAUTION',
+  'PASS',
+  'ROUTE_CATEGORY',
+]);
+
+export const priorityGateCtaSchema = z
+  .object({
+    label: z.string().min(1),
+    target: z.string().min(1),
+  })
+  .strict();
+
+export const priorityGatePreviewResultSchema = z
+  .object({
+    resultType: priorityGateResultTypeSchema,
+    title: z.string().min(1),
+    description: z.string().min(1),
+    cta: priorityGateCtaSchema.nullable(),
+    recommendCategory: productCategoryItemSchema.nullable(),
+    holdCategories: z.array(productCategoryItemSchema),
+  })
+  .strict();
+
+export type PriorityGatePreviewResultDto = z.infer<typeof priorityGatePreviewResultSchema>;
+
 export const questionSchema = z
   .object({
     questionId: z.uuid(),
@@ -56,6 +85,7 @@ export type QuestionSectionDto = z.infer<typeof questionSectionSchema>;
 export const priorityGateResponseSchema = z
   .object({
     sections: z.array(questionSectionSchema),
+    previewResults: z.array(priorityGatePreviewResultSchema).max(3),
   })
   .strict();
 
@@ -82,4 +112,5 @@ export const priorityGateResponseExample = {
       ],
     },
   ],
+  previewResults: [],
 } satisfies PriorityGateResponseDto;

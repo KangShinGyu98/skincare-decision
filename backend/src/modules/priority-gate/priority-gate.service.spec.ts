@@ -27,7 +27,9 @@ describe('PriorityGateService', () => {
       | 'createDecisionRun'
     >
   >;
-  let userResponsesServiceMock: jest.Mocked<Pick<UserResponsesService, 'upsertCurrentResponse'>>;
+  let userResponsesServiceMock: jest.Mocked<
+    Pick<UserResponsesService, 'upsertCurrentResponses' | 'deleteCurrentResponses'>
+  >;
 
   beforeEach(async () => {
     repositoryMock = {
@@ -38,8 +40,11 @@ describe('PriorityGateService', () => {
       createDecisionRun: jest.fn(),
     };
     userResponsesServiceMock = {
-      upsertCurrentResponse: jest.fn(),
+      upsertCurrentResponses: jest.fn(),
+      deleteCurrentResponses: jest.fn(),
     };
+    repositoryMock.findPriorityRules.mockResolvedValue([]);
+    repositoryMock.findProductCategoriesByKeysOrIds.mockResolvedValue([]);
 
     const testingModule: TestingModule = await Test.createTestingModule({
       providers: [
@@ -104,22 +109,99 @@ describe('PriorityGateService', () => {
       deviceId: '018f0000-0000-7000-8000-000000000001',
     });
 
-    expect(result).toEqual({
-      sections: [
+    expect(result.sections).toEqual([
+      {
+        key: 'life_routine',
+        questions: [
+          expect.objectContaining({
+            answers: [
+              { label: 'No', value: 0 },
+              { label: 'Yes', value: 1 },
+            ],
+            currentResponse: [1],
+          }),
+        ],
+      },
+    ]);
+    expect(result.previewResults).toEqual([
+      expect.objectContaining({
+        resultType: 'PASS',
+      }),
+    ]);
+  });
+
+  it('getPriorityGate는 저장된 답변이 없으면 previewResults를 빈 배열로 반환한다', async () => {
+    repositoryMock.findPriorityGateQuestions.mockResolvedValue([
+      createQuestionRecord({
+        questionId: '018f0000-0000-7000-8000-000000000201',
+      }),
+    ]);
+    repositoryMock.findCurrentResponses.mockResolvedValue([]);
+
+    const result = await service.getPriorityGate({
+      deviceId: '018f0000-0000-7000-8000-000000000001',
+    });
+
+    expect(repositoryMock.findPriorityRules).not.toHaveBeenCalled();
+    expect(result.previewResults).toEqual([]);
+  });
+
+  it('getPriorityGate는 저장된 답변이 있으면 현재 답변 기준 previewResults를 반환한다', async () => {
+    const questionId = '018f0000-0000-7000-8000-000000000201';
+    const question = createQuestionRecord({
+      questionId,
+    });
+    const rule = createPriorityRuleRecord({
+      resultType: PriorityRuleResultType.HOLD,
+      resultTitle: '기능성 제품 추가는 보류하는 편이 안전합니다',
+      resultDescription: '이미 활성 성분이 많은 루틴에서는 중복을 줄여야 합니다.',
+      conditions: [
         {
-          key: 'life_routine',
-          questions: [
-            expect.objectContaining({
-              answers: [
-                { label: 'No', value: 0 },
-                { label: 'Yes', value: 1 },
-              ],
-              currentResponse: [1],
-            }),
-          ],
+          questionId,
+          operator: ComparisonOperator.EQ,
+          value: [1],
+          state: ConditionState.REQUIRED,
         },
       ],
     });
+
+    repositoryMock.findPriorityGateQuestions.mockResolvedValue([question]);
+    repositoryMock.findCurrentResponses
+      .mockResolvedValueOnce([
+        {
+          questionId,
+          value: [1],
+        },
+      ])
+      .mockResolvedValueOnce([
+        {
+          questionId,
+          value: [1],
+        },
+      ]);
+    repositoryMock.findPriorityRules.mockResolvedValue([rule]);
+
+    const result = await service.getPriorityGate({
+      deviceId: '018f0000-0000-7000-8000-000000000001',
+      userId: '018f0000-0000-7000-8000-000000000002',
+    });
+
+    expect(result.previewResults).toEqual([
+      expect.objectContaining({
+        resultType: 'HOLD',
+        title: '기능성 제품 추가는 보류하는 편이 안전합니다',
+      }),
+    ]);
+    expect(result.sections).toEqual([
+      {
+        key: 'life_routine',
+        questions: [
+          expect.objectContaining({
+            currentResponse: [1],
+          }),
+        ],
+      },
+    ]);
   });
 
   it('getPriorityGate는 uiSection 기준으로 sections 배열을 만든다', async () => {
@@ -170,10 +252,15 @@ describe('PriorityGateService', () => {
   });
 
   it('getResponseReaction는 답변을 저장하고 fallback previewResult를 반환한다', async () => {
-    const body = {
+    const questionVariantId = '018f0000-0000-7000-8000-000000000101';
+    const responseValue = {
       questionId: '018f0000-0000-7000-8000-000000000201',
-      questionVariantId: '018f0000-0000-7000-8000-000000000101',
       value: [1],
+    };
+    const body = {
+      responses: {
+        [questionVariantId]: responseValue,
+      },
     };
 
     repositoryMock.findCurrentResponses.mockResolvedValue([]);
@@ -184,21 +271,28 @@ describe('PriorityGateService', () => {
       body,
     });
 
-    expect(userResponsesServiceMock.upsertCurrentResponse).toHaveBeenCalledWith({
-      deviceId: '018f0000-0000-7000-8000-000000000001',
-      questionId: body.questionId,
-      value: [1],
-      source: UserResponseSource.priority_gate,
-    });
-    expect(result.response).toEqual(body);
-    expect(result.previewResult.resultType).toBe('PASS');
+    expect(userResponsesServiceMock.upsertCurrentResponses).toHaveBeenCalledWith([
+      {
+        deviceId: '018f0000-0000-7000-8000-000000000001',
+        questionId: responseValue.questionId,
+        value: [1],
+        source: UserResponseSource.priority_gate,
+      },
+    ]);
+    expect(result.responses).toEqual(body.responses);
+    expect(result.previewResults[0]?.resultType).toBe('PASS');
   });
 
-  it('getResponseReaction는 매칭된 priority rule 결과를 previewResult로 반환한다', async () => {
-    const body = {
+  it('getResponseReaction는 매칭된 priority rule 결과를 previewResults로 반환한다', async () => {
+    const questionVariantId = '018f0000-0000-7000-8000-000000000101';
+    const responseValue = {
       questionId: '018f0000-0000-7000-8000-000000000201',
-      questionVariantId: '018f0000-0000-7000-8000-000000000101',
       value: [1],
+    };
+    const body = {
+      responses: {
+        [questionVariantId]: responseValue,
+      },
     };
     const rule = createPriorityRuleRecord({
       resultType: PriorityRuleResultType.HOLD,
@@ -209,7 +303,7 @@ describe('PriorityGateService', () => {
       holdCategories: ['serum'],
       conditions: [
         {
-          questionId: body.questionId,
+          questionId: responseValue.questionId,
           operator: ComparisonOperator.EQ,
           value: [1],
           state: ConditionState.REQUIRED,
@@ -217,9 +311,9 @@ describe('PriorityGateService', () => {
       ],
     });
 
-    repositoryMock.findCurrentResponses.mockResolvedValueOnce([]).mockResolvedValueOnce([
+    repositoryMock.findCurrentResponses.mockResolvedValue([
       {
-        questionId: body.questionId,
+        questionId: responseValue.questionId,
         value: [1],
       },
     ]);
@@ -238,23 +332,211 @@ describe('PriorityGateService', () => {
       body,
     });
 
-    expect(result.previewResult).toEqual({
-      resultType: 'HOLD',
-      title: '기능성 제품 추가는 보류하는 편이 안전합니다',
-      description: '이미 활성 성분이 많은 루틴에서는 중복을 줄여야 합니다.',
-      cta: {
-        label: '성분 중복 확인',
-        target: '/decision/traceback',
+    expect(result.previewResults).toEqual([
+      {
+        resultType: 'HOLD',
+        title: '기능성 제품 추가는 보류하는 편이 안전합니다',
+        description: '이미 활성 성분이 많은 루틴에서는 중복을 줄여야 합니다.',
+        cta: {
+          label: '성분 중복 확인',
+          target: '/decision/traceback',
+        },
+        recommendCategory: null,
+        holdCategories: [
+          {
+            id: '018f0000-0000-7000-8000-000000000301',
+            key: 'serum',
+            name: '세럼',
+            description: null,
+          },
+        ],
       },
-      recommendCategory: null,
-      holdCategories: [
+    ]);
+  });
+
+  it('getResponseReaction는 추천 카테고리 CTA를 category query target으로 반환한다', async () => {
+    const questionId = '018f0000-0000-7000-8000-000000000201';
+    const body = {
+      responses: {
+        '018f0000-0000-7000-8000-000000000101': {
+          questionId,
+          value: [1],
+        },
+      },
+    };
+    const rule = createPriorityRuleRecord({
+      resultType: PriorityRuleResultType.ROUTE_CATEGORY,
+      resultTitle: '선크림을 먼저 고르는 것이 좋습니다',
+      resultDescription: '낮 사용 루틴에서는 자외선 차단이 우선입니다.',
+      ctaLabel: '선크림 보기',
+      ctaTarget: '/products/sunscreen',
+      recommendCategory: {
+        id: '018f0000-0000-7000-8000-000000000301',
+        key: 'sunscreen',
+        name: '선크림',
+        description: null,
+      },
+      conditions: [
         {
-          id: '018f0000-0000-7000-8000-000000000301',
-          key: 'serum',
-          name: '세럼',
-          description: null,
+          questionId,
+          operator: ComparisonOperator.EQ,
+          value: [1],
+          state: ConditionState.REQUIRED,
         },
       ],
+    });
+
+    repositoryMock.findCurrentResponses.mockResolvedValue([
+      {
+        questionId,
+        value: [1],
+      },
+    ]);
+    repositoryMock.findPriorityRules.mockResolvedValue([rule]);
+
+    const result = await service.getResponseReaction({
+      deviceId: '018f0000-0000-7000-8000-000000000001',
+      body,
+    });
+
+    expect(result.previewResults[0]).toEqual(
+      expect.objectContaining({
+        resultType: 'ROUTE_CATEGORY',
+        cta: {
+          label: '선크림 보기',
+          target: '/category-decision?category=sunscreen',
+        },
+        recommendCategory: {
+          id: '018f0000-0000-7000-8000-000000000301',
+          key: 'sunscreen',
+          name: '선크림',
+          description: null,
+        },
+      }),
+    );
+  });
+
+  it('getResponseReaction는 기존 products 카테고리 CTA target도 category query target으로 정규화한다', async () => {
+    const questionId = '018f0000-0000-7000-8000-000000000201';
+    const body = {
+      responses: {
+        '018f0000-0000-7000-8000-000000000101': {
+          questionId,
+          value: [1],
+        },
+      },
+    };
+    const rule = createPriorityRuleRecord({
+      resultType: PriorityRuleResultType.CAUTION,
+      resultTitle: '비슷한 토너를 이미 쓰고 있을 수 있습니다',
+      resultDescription: '토너를 추가할 때는 기존 제품과 겹치지 않는지 확인해야 합니다.',
+      ctaLabel: '토너 필터 조정',
+      ctaTarget: '/products/toner',
+      conditions: [
+        {
+          questionId,
+          operator: ComparisonOperator.EQ,
+          value: [1],
+          state: ConditionState.REQUIRED,
+        },
+      ],
+    });
+
+    repositoryMock.findCurrentResponses.mockResolvedValue([
+      {
+        questionId,
+        value: [1],
+      },
+    ]);
+    repositoryMock.findPriorityRules.mockResolvedValue([rule]);
+
+    const result = await service.getResponseReaction({
+      deviceId: '018f0000-0000-7000-8000-000000000001',
+      body,
+    });
+
+    expect(result.previewResults[0]?.cta).toEqual({
+      label: '토너 필터 조정',
+      target: '/category-decision?category=toner',
+    });
+  });
+
+  it('getResponseReaction는 매칭된 priority rule 결과를 최대 3개까지 반환한다', async () => {
+    const questionId = '018f0000-0000-7000-8000-000000000201';
+    const body = {
+      responses: {
+        '018f0000-0000-7000-8000-000000000101': {
+          questionId,
+          value: [1],
+        },
+      },
+    };
+
+    repositoryMock.findCurrentResponses.mockResolvedValue([
+      {
+        questionId,
+        value: [1],
+      },
+    ]);
+    repositoryMock.findPriorityRules.mockResolvedValue(
+      [1, 2, 3, 4].map((index) =>
+        createPriorityRuleRecord({
+          id: `018f0000-0000-7000-8000-00000000040${index}`,
+          priority: index,
+          resultTitle: `matched rule ${index}`,
+          conditions: [
+            {
+              questionId,
+              operator: ComparisonOperator.EQ,
+              value: [1],
+              state: ConditionState.REQUIRED,
+            },
+          ],
+        }),
+      ),
+    );
+    repositoryMock.findProductCategoriesByKeysOrIds.mockResolvedValue([]);
+
+    const result = await service.getResponseReaction({
+      deviceId: '018f0000-0000-7000-8000-000000000001',
+      body,
+    });
+
+    expect(result.previewResults.map((previewResult) => previewResult.title)).toEqual([
+      'matched rule 1',
+      'matched rule 2',
+      'matched rule 3',
+    ]);
+  });
+
+  it('resetResponses는 요청한 uiSection의 질문 답변만 삭제한다', async () => {
+    repositoryMock.findPriorityGateQuestions.mockResolvedValue([
+      createQuestionRecord({
+        id: '018f0000-0000-7000-8000-000000000101',
+        questionId: '018f0000-0000-7000-8000-000000000201',
+        uiSection: UiSection.life_routine,
+      }),
+      createQuestionRecord({
+        id: '018f0000-0000-7000-8000-000000000102',
+        questionId: '018f0000-0000-7000-8000-000000000202',
+        uiSection: UiSection.owned_products,
+      }),
+    ]);
+    userResponsesServiceMock.deleteCurrentResponses.mockResolvedValue(1);
+
+    const result = await service.resetResponses({
+      deviceId: '018f0000-0000-7000-8000-000000000001',
+      userId: '018f0000-0000-7000-8000-000000000002',
+      uiSection: 'life_routine',
+    });
+
+    expect(userResponsesServiceMock.deleteCurrentResponses).toHaveBeenCalledWith({
+      deviceId: '018f0000-0000-7000-8000-000000000001',
+      userId: '018f0000-0000-7000-8000-000000000002',
+      questionIds: ['018f0000-0000-7000-8000-000000000201'],
+    });
+    expect(result).toEqual({
+      deletedCount: 1,
     });
   });
 

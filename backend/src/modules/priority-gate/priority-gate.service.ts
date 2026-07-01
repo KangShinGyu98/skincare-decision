@@ -11,9 +11,11 @@ import {
   type QuestionDto,
   type QuestionSectionDto,
   type QuestionUiSectionDto,
-  type UpsertPriorityGateResponseRequest,
-  type UpsertPriorityGateResponseResponse,
-  upsertPriorityGateResponseResponseSchema,
+  type ResetPriorityGateResponsesResponse,
+  type UpsertPriorityGateResponsesRequest,
+  type UpsertPriorityGateResponsesResponse,
+  resetPriorityGateResponsesResponseSchema,
+  upsertPriorityGateResponsesResponseSchema,
 } from '@skincare-decision/shared/schemas';
 import {
   ComparisonOperator,
@@ -37,7 +39,12 @@ type GetInput = {
 type PostInput = {
   deviceId: string;
   userId?: string;
-  body: UpsertPriorityGateResponseRequest;
+  body: UpsertPriorityGateResponsesRequest;
+};
+type ResetResponsesInput = {
+  deviceId: string;
+  userId?: string;
+  uiSection: QuestionUiSectionDto;
 };
 type SnapshotInput = {
   deviceId: string;
@@ -47,12 +54,8 @@ type SnapshotInput = {
 type CalculatePreviewResultInput = {
   deviceId: string;
   userId?: string;
-  responseOverride?: {
-    questionId: string;
-    value: number[];
-  };
 };
-type PreviewResult = UpsertPriorityGateResponseResponse['previewResult'];
+type PreviewResult = UpsertPriorityGateResponsesResponse['previewResults'][number];
 type CategoryRef = {
   key?: string;
   id?: string;
@@ -76,33 +79,59 @@ export class PriorityGateService {
     );
 
     const questionsWithResponses = this.combineQuestionsWithResponses(questions, responseRecords);
-    const questionsBySections = this.groupQuestionsBySections(questionsWithResponses);
+    const sections = this.groupQuestionsBySections(questionsWithResponses);
+    const previewResults = this.hasCurrentResponses(responseRecords)
+      ? await this.calculatePreviewResults({
+          deviceId: input.deviceId,
+          ...(input.userId ? { userId: input.userId } : {}),
+        })
+      : [];
     //TODO: questionsFilter DB Schema에 sourceQuestions 추가하고, 해당 필터 로직 적용하기
 
-    return priorityGateResponseSchema.parse(questionsBySections);
+    return priorityGateResponseSchema.parse({
+      sections,
+      previewResults,
+    });
   }
 
-  async getResponseReaction(input: PostInput): Promise<UpsertPriorityGateResponseResponse> {
-    await this.userResponsesService.upsertCurrentResponse({
+  async getResponseReaction(input: PostInput): Promise<UpsertPriorityGateResponsesResponse> {
+    const responses = Object.values(input.body.responses);
+
+    await this.userResponsesService.upsertCurrentResponses(
+      responses.map((response) => ({
+        deviceId: input.deviceId,
+        ...(input.userId ? { userId: input.userId } : {}),
+        questionId: response.questionId,
+        value: response.value,
+        source: UserResponseSource.priority_gate,
+      })),
+    );
+
+    const previewResults = await this.calculatePreviewResults({
       deviceId: input.deviceId,
       ...(input.userId ? { userId: input.userId } : {}),
-      questionId: input.body.questionId,
-      value: input.body.value,
-      source: UserResponseSource.priority_gate,
     });
 
-    const previewResult = await this.calculatePreviewResult({
+    return upsertPriorityGateResponsesResponseSchema.parse({
+      responses: input.body.responses,
+      previewResults,
+    });
+  }
+
+  async resetResponses(input: ResetResponsesInput): Promise<ResetPriorityGateResponsesResponse> {
+    const questions = await this.repository.findPriorityGateQuestions();
+    const questionIds = questions
+      .filter((question) => questionUiSectionSchema.parse(question.uiSection) === input.uiSection)
+      .map((question) => question.questionId);
+
+    const deletedCount = await this.userResponsesService.deleteCurrentResponses({
       deviceId: input.deviceId,
       ...(input.userId ? { userId: input.userId } : {}),
-      responseOverride: {
-        questionId: input.body.questionId,
-        value: input.body.value,
-      },
+      questionIds,
     });
 
-    return upsertPriorityGateResponseResponseSchema.parse({
-      response: input.body,
-      previewResult,
+    return resetPriorityGateResponsesResponseSchema.parse({
+      deletedCount,
     });
   }
 
@@ -170,7 +199,7 @@ export class PriorityGateService {
     return questionsWithResponses;
   }
 
-  private groupQuestionsBySections(questions: QuestionDto[]): PriorityGateResponseDto {
+  private groupQuestionsBySections(questions: QuestionDto[]): QuestionSectionDto[] {
     const sectionMap = new Map<QuestionUiSectionDto, QuestionDto[]>();
 
     for (const question of questions) {
@@ -195,7 +224,7 @@ export class PriorityGateService {
       })
       .filter((section): section is QuestionSectionDto => section !== null);
 
-    return { sections };
+    return sections;
   }
 
   private toAnswers(question: QuestionRecord): QuestionAnswerDto[] {
@@ -217,7 +246,19 @@ export class PriorityGateService {
     });
   }
 
+  private hasCurrentResponses(responses: CurrentResponseRecord[]): boolean {
+    return responses.some((response) => response.value.length > 0);
+  }
+
   private async calculatePreviewResult(input: CalculatePreviewResultInput): Promise<PreviewResult> {
+    const [previewResult] = await this.calculatePreviewResults(input);
+
+    return previewResult ?? this.createFallbackPassResult();
+  }
+
+  private async calculatePreviewResults(
+    input: CalculatePreviewResultInput,
+  ): Promise<PreviewResult[]> {
     const rules = await this.repository.findPriorityRules();
     //rules 에서 필요한 questionsId 추출
     const conditionQuestionIds = this.collectConditionQuestionIds(rules);
@@ -227,18 +268,25 @@ export class PriorityGateService {
       input.userId,
     );
     const responseMap = this.toResponseMap(responseRecords);
+    const previewResults: PreviewResult[] = [];
 
-    if (input.responseOverride) {
-      responseMap.set(input.responseOverride.questionId, input.responseOverride.value);
+    for (const rule of rules) {
+      if (!this.isRuleMatched(rule, responseMap)) {
+        continue;
+      }
+
+      previewResults.push(await this.toPreviewResult(rule));
+
+      if (previewResults.length >= 3) {
+        return previewResults;
+      }
     }
 
-    const matchedRule = rules.find((rule) => this.isRuleMatched(rule, responseMap));
-
-    if (!matchedRule) {
-      return this.createFallbackPassResult();
+    if (previewResults.length === 0) {
+      return [this.createFallbackPassResult()];
     }
 
-    return this.toPreviewResult(matchedRule);
+    return previewResults;
   }
 
   private async createInputSnapshot(input: SnapshotInput): Promise<{
@@ -355,6 +403,10 @@ export class PriorityGateService {
   }
 
   private async toPreviewResult(rule: PriorityRuleRecord): Promise<PreviewResult> {
+    const recommendCategory = rule.recommendCategory
+      ? this.toProductCategoryItem(rule.recommendCategory)
+      : null;
+
     return {
       resultType: rule.resultType,
       title: rule.resultTitle,
@@ -363,12 +415,10 @@ export class PriorityGateService {
         rule.ctaLabel && rule.ctaTarget
           ? {
               label: rule.ctaLabel,
-              target: rule.ctaTarget,
+              target: this.createCtaTarget(rule.ctaTarget, recommendCategory),
             }
           : null,
-      recommendCategory: rule.recommendCategory
-        ? this.toProductCategoryItem(rule.recommendCategory)
-        : null,
+      recommendCategory,
       holdCategories: await this.toHoldCategories(rule.holdCategories),
     };
   }
@@ -454,5 +504,26 @@ export class PriorityGateService {
       name: category.name,
       description: category.description,
     };
+  }
+
+  private createCtaTarget(
+    ctaTarget: string,
+    recommendCategory: ProductCategoryItemDto | null,
+  ): string {
+    if (recommendCategory) {
+      return this.createCategoryDecisionTarget(recommendCategory.key);
+    }
+
+    const productCategoryTarget = ctaTarget.match(/^\/products\/([^/?#]+)(?:[?#].*)?$/);
+
+    if (productCategoryTarget?.[1]) {
+      return this.createCategoryDecisionTarget(productCategoryTarget[1]);
+    }
+
+    return ctaTarget;
+  }
+
+  private createCategoryDecisionTarget(categoryKey: string): string {
+    return `/category-decision?category=${encodeURIComponent(categoryKey)}`;
   }
 }
