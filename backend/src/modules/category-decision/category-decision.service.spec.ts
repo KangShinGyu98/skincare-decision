@@ -18,7 +18,12 @@ describe('CategoryDecisionService', () => {
       | 'findQuestionByKey'
     >
   >;
-  let userResponsesServiceMock: jest.Mocked<Pick<UserResponsesService, 'upsertCurrentResponse'>>;
+  let userResponsesServiceMock: jest.Mocked<
+    Pick<
+      UserResponsesService,
+      'upsertCurrentResponse' | 'upsertCurrentResponses' | 'deleteCurrentResponses'
+    >
+  >;
 
   beforeEach(async () => {
     repositoryMock = {
@@ -29,6 +34,8 @@ describe('CategoryDecisionService', () => {
     };
     userResponsesServiceMock = {
       upsertCurrentResponse: jest.fn(),
+      upsertCurrentResponses: jest.fn(),
+      deleteCurrentResponses: jest.fn(),
     };
 
     const testingModule: TestingModule = await Test.createTestingModule({
@@ -104,15 +111,6 @@ describe('CategoryDecisionService', () => {
     expect(result.selectedCategory).toEqual(category);
     expect(result.sections).toEqual([
       {
-        key: 'category',
-        questions: [
-          expect.objectContaining({
-            key: 'category.selected',
-            currentResponse: [2],
-          }),
-        ],
-      },
-      {
         key: 'basic',
         questions: [
           expect.objectContaining({
@@ -121,7 +119,96 @@ describe('CategoryDecisionService', () => {
           }),
         ],
       },
+      {
+        key: 'category',
+        questions: [
+          expect.objectContaining({
+            key: 'category.selected',
+            currentResponse: [2],
+          }),
+        ],
+      },
     ]);
+    expect(result.previewResults).toEqual([
+      {
+        title: 'Ready to narrow Sunscreen',
+        description:
+          'The saved answers will be used to prepare the initial product matrix filters.',
+        cta: {
+          label: 'View product matrix',
+          target: '/product-matrix?category=sunscreen&source=CATEGORY_DECISION_CTA',
+        },
+        selectedCategory: category,
+        answeredQuestionCount: 1,
+        totalQuestionCount: 2,
+      },
+    ]);
+  });
+
+  it('resetResponses deletes current answers for the selected ui section', async () => {
+    const categoryQuestion = createQuestionRecord({
+      id: '018f0000-0000-7000-8000-000000000101',
+      questionId: '018f0000-0000-7000-8000-000000000201',
+      key: 'category.selected',
+      uiSection: UiSection.category,
+    });
+    const skinQuestion = createQuestionRecord({
+      id: '018f0000-0000-7000-8000-000000000102',
+      questionId: '018f0000-0000-7000-8000-000000000202',
+      key: 'context.skin_type',
+      uiSection: UiSection.basic,
+    });
+
+    repositoryMock.findCategoryDecisionQuestions.mockResolvedValue([
+      categoryQuestion,
+      skinQuestion,
+    ]);
+    userResponsesServiceMock.deleteCurrentResponses.mockResolvedValue(1);
+
+    const result = await service.resetResponses({
+      deviceId: '018f0000-0000-7000-8000-000000000001',
+      userId: '018f0000-0000-7000-8000-000000000002',
+      uiSection: 'basic',
+    });
+
+    expect(userResponsesServiceMock.deleteCurrentResponses).toHaveBeenCalledWith({
+      deviceId: '018f0000-0000-7000-8000-000000000001',
+      userId: '018f0000-0000-7000-8000-000000000002',
+      questionIds: [skinQuestion.questionId],
+    });
+    expect(result).toEqual({
+      deletedCount: 1,
+    });
+  });
+
+  it('getCategoryDecision returns empty previewResults when no answer is saved', async () => {
+    const categoryQuestion = createQuestionRecord({
+      questionId: '018f0000-0000-7000-8000-000000000201',
+      key: 'category.selected',
+      answerType: QuestionAnswerType.SINGLE_CHOICE,
+      answers: ['Toner', 'Sunscreen', 'Serum', 'Lipcare', 'Moisturizer', 'Cleanser'],
+      answerValues: [1, 2, 3, 4, 5, 6],
+      uiSection: UiSection.category,
+    });
+    const skinQuestion = createQuestionRecord({
+      id: '018f0000-0000-7000-8000-000000000102',
+      questionId: '018f0000-0000-7000-8000-000000000202',
+      key: 'context.skin_type',
+      uiSection: UiSection.basic,
+    });
+
+    repositoryMock.findCategoryDecisionQuestions.mockResolvedValue([
+      categoryQuestion,
+      skinQuestion,
+    ]);
+    repositoryMock.findCurrentResponses.mockResolvedValue([]);
+
+    const result = await service.getCategoryDecision({
+      deviceId: '018f0000-0000-7000-8000-000000000001',
+    });
+
+    expect(result.selectedCategory).toBeNull();
+    expect(result.previewResults).toEqual([]);
   });
 
   it('getResponseReaction saves context answer and returns product matrix CTA when category is selected', async () => {
@@ -140,16 +227,24 @@ describe('CategoryDecisionService', () => {
       uiSection: UiSection.basic,
     });
     const body = {
-      questionId: categoryQuestion.questionId,
-      questionVariantId: categoryQuestion.id,
-      value: [2],
+      responses: {
+        [categoryQuestion.id]: {
+          questionId: categoryQuestion.questionId,
+          value: [2],
+        },
+      },
     };
 
     repositoryMock.findCategoryDecisionQuestions.mockResolvedValue([
       categoryQuestion,
       skinQuestion,
     ]);
-    repositoryMock.findCurrentResponses.mockResolvedValue([]);
+    repositoryMock.findCurrentResponses.mockResolvedValue([
+      {
+        questionId: categoryQuestion.questionId,
+        value: [2],
+      },
+    ]);
     repositoryMock.findProductCategoryByKey.mockResolvedValue({
       id: '018f0000-0000-7000-8000-000000000301',
       key: 'sunscreen',
@@ -162,29 +257,34 @@ describe('CategoryDecisionService', () => {
       body,
     });
 
-    expect(userResponsesServiceMock.upsertCurrentResponse).toHaveBeenCalledWith({
-      deviceId: '018f0000-0000-7000-8000-000000000001',
-      questionId: body.questionId,
-      value: [2],
-      source: UserResponseSource.context,
-    });
-    expect(result.response).toEqual(body);
-    expect(result.previewResult).toEqual({
-      title: 'Ready to narrow Sunscreen',
-      description: 'The saved answers will be used to prepare the initial product matrix filters.',
-      cta: {
-        label: 'View product matrix',
-        target: '/product-matrix?category=sunscreen&source=CATEGORY_DECISION_CTA',
+    expect(userResponsesServiceMock.upsertCurrentResponses).toHaveBeenCalledWith([
+      {
+        deviceId: '018f0000-0000-7000-8000-000000000001',
+        questionId: categoryQuestion.questionId,
+        value: [2],
+        source: UserResponseSource.context,
       },
-      selectedCategory: {
-        id: '018f0000-0000-7000-8000-000000000301',
-        key: 'sunscreen',
-        name: 'Sunscreen',
-        description: null,
+    ]);
+    expect(result.responses).toEqual(body.responses);
+    expect(result.previewResults).toEqual([
+      {
+        title: 'Ready to narrow Sunscreen',
+        description:
+          'The saved answers will be used to prepare the initial product matrix filters.',
+        cta: {
+          label: 'View product matrix',
+          target: '/product-matrix?category=sunscreen&source=CATEGORY_DECISION_CTA',
+        },
+        selectedCategory: {
+          id: '018f0000-0000-7000-8000-000000000301',
+          key: 'sunscreen',
+          name: 'Sunscreen',
+          description: null,
+        },
+        answeredQuestionCount: 1,
+        totalQuestionCount: 2,
       },
-      answeredQuestionCount: 1,
-      totalQuestionCount: 2,
-    });
+    ]);
   });
 });
 

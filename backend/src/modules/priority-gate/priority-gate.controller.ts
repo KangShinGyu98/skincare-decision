@@ -46,20 +46,14 @@ export class PriorityGateController {
     @ZodBody(upsertPriorityGateResponsesRequestSchema) body: UpsertPriorityGateResponsesRequest,
   ): Promise<UpsertPriorityGateResponsesResponse> {
     const { deviceId, sessionId, user } = request.context;
-    await Promise.all(
-      Object.entries(body.responses).map(([questionVariantId, response]) =>
-        this.sessionEventService.record({
-          sessionId: sessionId!,
-          eventName: 'priority_question_answered',
-          screen: 'priority_gate',
-          elementId: questionVariantId,
-          payload: {
-            questionVariantId,
-            ...response,
-          },
-        }),
-      ),
-    );
+
+    await this.sessionEventService.record({
+      sessionId: sessionId!,
+      eventName: 'priority_question_answered',
+      screen: 'priority_gate',
+      elementId: 'priority_gate.responses',
+      payload: body,
+    });
 
     return this.service.getResponseReaction({
       deviceId: deviceId!,

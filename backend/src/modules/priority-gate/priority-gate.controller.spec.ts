@@ -172,15 +172,13 @@ describe('PriorityGateController', () => {
       deviceId: '018f0000-0000-7000-8000-000000000002',
       body,
     });
+    expect(sessionEventServiceMock.record).toHaveBeenCalledTimes(1);
     expect(sessionEventServiceMock.record).toHaveBeenCalledWith({
       sessionId: '018f0000-0000-7000-8000-000000000004',
       eventName: 'priority_question_answered',
       screen: 'priority_gate',
-      elementId: questionVariantId,
-      payload: {
-        questionVariantId,
-        ...responseValue,
-      },
+      elementId: 'priority_gate.responses',
+      payload: body,
     });
   });
 

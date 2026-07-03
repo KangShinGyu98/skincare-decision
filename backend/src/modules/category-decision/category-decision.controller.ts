@@ -1,11 +1,14 @@
-import { Controller, Get, Post, Req } from '@nestjs/common';
+import { Controller, Delete, Get, Post, Req } from '@nestjs/common';
 import {
   categoryDecisionQuerySchema,
+  resetCategoryDecisionResponsesRequestSchema,
   type CategoryDecisionQuery,
   type CategoryDecisionResponse,
-  type UpsertCategoryDecisionResponseRequest,
-  type UpsertCategoryDecisionResponseResponse,
-  upsertCategoryDecisionResponseRequestSchema,
+  type ResetCategoryDecisionResponsesRequest,
+  type ResetCategoryDecisionResponsesResponse,
+  type UpsertCategoryDecisionResponsesRequest,
+  type UpsertCategoryDecisionResponsesResponse,
+  upsertCategoryDecisionResponsesRequestSchema,
 } from '@skincare-decision/shared/schemas';
 import { Public } from '../../common/decorators/auth.decorator';
 import { ZodBody, ZodQuery } from '../../common/decorators/zod-body.decorator';
@@ -38,16 +41,16 @@ export class CategoryDecisionController {
   @Post('responses')
   async selectChecklist(
     @Req() request: RequestWithContext,
-    @ZodBody(upsertCategoryDecisionResponseRequestSchema)
-    body: UpsertCategoryDecisionResponseRequest,
-  ): Promise<UpsertCategoryDecisionResponseResponse> {
+    @ZodBody(upsertCategoryDecisionResponsesRequestSchema)
+    body: UpsertCategoryDecisionResponsesRequest,
+  ): Promise<UpsertCategoryDecisionResponsesResponse> {
     const { deviceId, sessionId, user } = request.context;
 
     await this.sessionEventService.record({
       sessionId: sessionId!,
       eventName: 'context_question_answered',
       screen: 'category_decision',
-      elementId: body.questionVariantId,
+      elementId: 'category_decision.responses',
       payload: body,
     });
 
@@ -56,5 +59,32 @@ export class CategoryDecisionController {
       ...(user ? { userId: user.id } : {}),
       body,
     });
+  }
+
+  @Delete('reset-responses')
+  async resetResponses(
+    @Req() request: RequestWithContext,
+    @ZodQuery(resetCategoryDecisionResponsesRequestSchema)
+    query: ResetCategoryDecisionResponsesRequest,
+  ): Promise<ResetCategoryDecisionResponsesResponse> {
+    const { deviceId, sessionId, user } = request.context;
+    const result = await this.service.resetResponses({
+      deviceId: deviceId!,
+      ...(user ? { userId: user.id } : {}),
+      uiSection: query.uiSection,
+    });
+
+    await this.sessionEventService.record({
+      sessionId: sessionId!,
+      eventName: 'context_responses_reset',
+      screen: 'category_decision',
+      elementId: `category_decision.reset.${query.uiSection}`,
+      payload: {
+        uiSection: query.uiSection,
+        deletedCount: result.deletedCount,
+      },
+    });
+
+    return result;
   }
 }

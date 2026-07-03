@@ -1,142 +1,61 @@
 'use client';
 
-//todo timeout 읽고 스피너 확인하기
-import type {
-  PriorityGatePreviewResultDto,
-  PriorityGateResponseValue,
-  QuestionUiSectionDto,
-} from '@skincare-decision/shared/schemas';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { QuestionUiSectionDto } from '@skincare-decision/shared/schemas';
+import { useCallback, useMemo } from 'react';
 import { PriorityGateQuestionItem } from '@/components/PriorityGateQuestionItem';
 import { PriorityGateResultCard } from '@/components/PriorityGateResultCard';
 import { SectionResetButton } from '@/components/SectionResetButton';
 import { SkeletonCard } from '@/components/shadcn/skeleton-card';
 import { Spinner } from '@/components/shadcn/spinner';
 import {
+  useDebouncedPriorityGateResponseBatch,
   usePriorityGateQuestions,
   useResetPriorityGateResponses,
-  useSubmitPriorityGate,
 } from '@/lib/hooks';
-
-const RESPONSE_SAVE_DEBOUNCE_MS = 800;
-
-type PreviewResult = PriorityGatePreviewResultDto;
-type ResponseValueOverridesByQuestionVariantId = Record<string, number[]>;
 
 export default function PriorityGatePage() {
   const { data, error, isError, isLoading } = usePriorityGateQuestions();
-  const { mutateAsync: submitPriorityGateResponses } = useSubmitPriorityGate();
-  const { mutateAsync: resetPriorityGateResponses, isPending: isResettingResponses } =
-    useResetPriorityGateResponses();
+  const {
+    clearError: clearSubmitError,
+    clearPendingResponses,
+    error: submitError,
+    isPending: isSubmittingPriorityGateResponses,
+    saveResponse,
+  } = useDebouncedPriorityGateResponseBatch();
+  const {
+    error: resetError,
+    isPending: isResettingResponses,
+    mutate: resetPriorityGateResponses,
+    reset: clearResetError,
+  } = useResetPriorityGateResponses();
 
   const sections = useMemo(() => data?.sections ?? [], [data?.sections]);
   const lifeRoutineSection = sections.find((section) => section.key === 'life_routine');
   const ownedProductsSection = sections.find((section) => section.key === 'owned_products');
-  // 전체 debounce timer 1개
-  const timeoutIdRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // 저장 대기 중인 요청들
-  // key: questionVariantId
-  // value: 마지막으로 선택된 저장 요청
-  const requestMapRef = useRef(new Map<string, PriorityGateResponseValue>());
+  const previewResults = data?.previewResults ?? [];
+  const responseError = submitError ?? resetError;
 
-  const [previewResultsOverride, setPreviewResultsOverride] = useState<PreviewResult[] | null>(
-    null,
-  );
-  const [responseValueOverridesByQuestionVariantId, setResponseValueOverridesByQuestionVariantId] =
-    useState<ResponseValueOverridesByQuestionVariantId>({});
-  const [submitError, setSubmitError] = useState<Error | null>(null);
-  const [isSavingResponse, setIsSavingResponse] = useState(false);
-  const previewResults = previewResultsOverride ?? data?.previewResults ?? [];
-
-  const flushResponses = useCallback(() => {
-    const responses = Object.fromEntries(requestMapRef.current.entries());
-
-    requestMapRef.current.clear();
-    timeoutIdRef.current = null;
-
-    if (Object.keys(responses).length === 0) {
-      return;
-    }
-
-    setIsSavingResponse(true);
-    setSubmitError(null);
-
-    void submitPriorityGateResponses({ responses })
-      .then((response) => {
-        setPreviewResultsOverride(response.previewResults);
-      })
-      .catch((requestError: unknown) => {
-        setSubmitError(
-          requestError instanceof Error ? requestError : new Error('답변 저장에 실패했습니다.'),
-        );
-      })
-      .finally(() => {
-        setIsSavingResponse(false);
+  const handleResponseValueChange = useCallback(
+    (questionVariantId: string, questionId: string, value: number[]) => {
+      clearResetError();
+      saveResponse(questionVariantId, {
+        questionId,
+        value,
       });
-  }, [submitPriorityGateResponses]);
-
-  const saveResponse = useCallback(
-    (questionVariantId: string, response: PriorityGateResponseValue) => {
-      requestMapRef.current.set(questionVariantId, response);
-
-      if (timeoutIdRef.current) {
-        clearTimeout(timeoutIdRef.current);
-      }
-
-      timeoutIdRef.current = setTimeout(flushResponses, RESPONSE_SAVE_DEBOUNCE_MS);
     },
-    [flushResponses],
+    [clearResetError, saveResponse],
   );
 
   const resetSectionResponses = useCallback(
     (uiSection: QuestionUiSectionDto) => {
-      if (timeoutIdRef.current) {
-        clearTimeout(timeoutIdRef.current);
-        timeoutIdRef.current = null;
-      }
-
-      requestMapRef.current.clear();
-      setSubmitError(null);
-
-      const questionVariantIds =
-        sections
-          .find((section) => section.key === uiSection)
-          ?.questions.map((question) => question.questionVariantId) ?? [];
-
-      void resetPriorityGateResponses({ uiSection })
-        .then(() => {
-          setPreviewResultsOverride([]);
-          setResponseValueOverridesByQuestionVariantId((previousValues) => {
-            const nextValues = { ...previousValues };
-
-            for (const questionVariantId of questionVariantIds) {
-              nextValues[questionVariantId] = [];
-            }
-
-            return nextValues;
-          });
-        })
-        .catch((requestError: unknown) => {
-          setSubmitError(
-            requestError instanceof Error ? requestError : new Error('답변 초기화에 실패했습니다.'),
-          );
-        });
+      clearPendingResponses();
+      clearSubmitError();
+      clearResetError();
+      resetPriorityGateResponses({ uiSection });
     },
-    [resetPriorityGateResponses, sections],
+    [clearPendingResponses, clearResetError, clearSubmitError, resetPriorityGateResponses],
   );
-
-  //unmount 시 flush
-  useEffect(() => {
-    return () => {
-      if (timeoutIdRef.current) {
-        clearTimeout(timeoutIdRef.current);
-        timeoutIdRef.current = null;
-      }
-
-      flushResponses();
-    };
-  }, [flushResponses]);
 
   return (
     <main
@@ -161,7 +80,7 @@ export default function PriorityGatePage() {
             <SectionResetButton
               uiSection="life_routine"
               sectionTitle="루틴 점검"
-              disabled={isLoading || isSavingResponse || isResettingResponses}
+              disabled={isLoading || isSubmittingPriorityGateResponses || isResettingResponses}
               onReset={() => resetSectionResponses('life_routine')}
             />
           </div>
@@ -172,23 +91,13 @@ export default function PriorityGatePage() {
               <PriorityGateQuestionItem
                 key={question.questionVariantId}
                 question={question}
-                value={
-                  responseValueOverridesByQuestionVariantId[question.questionVariantId] ??
-                  question.currentResponse ??
-                  []
-                }
+                value={question.currentResponse ?? []}
                 disabled={isResettingResponses}
                 onValueChange={(value) => {
-                  setResponseValueOverridesByQuestionVariantId((previousValues) => ({
-                    ...previousValues,
-                    [question.questionVariantId]: value,
-                  }));
-                  saveResponse(
+                  handleResponseValueChange(
                     question.questionVariantId,
-                    {
-                      questionId: question.questionId,
-                      value,
-                    },
+                    question.questionId,
+                    value,
                   );
                 }}
               />
@@ -205,7 +114,7 @@ export default function PriorityGatePage() {
             <SectionResetButton
               uiSection="owned_products"
               sectionTitle="사용 제품"
-              disabled={isLoading || isSavingResponse || isResettingResponses}
+              disabled={isLoading || isSubmittingPriorityGateResponses || isResettingResponses}
               onReset={() => resetSectionResponses('owned_products')}
             />
           </div>
@@ -216,23 +125,13 @@ export default function PriorityGatePage() {
               <PriorityGateQuestionItem
                 key={question.questionVariantId}
                 question={question}
-                value={
-                  responseValueOverridesByQuestionVariantId[question.questionVariantId] ??
-                  question.currentResponse ??
-                  []
-                }
+                value={question.currentResponse ?? []}
                 disabled={isResettingResponses}
                 onValueChange={(value) => {
-                  setResponseValueOverridesByQuestionVariantId((previousValues) => ({
-                    ...previousValues,
-                    [question.questionVariantId]: value,
-                  }));
-                  saveResponse(
+                  handleResponseValueChange(
                     question.questionVariantId,
-                    {
-                      questionId: question.questionId,
-                      value,
-                    },
+                    question.questionId,
+                    value,
                   );
                 }}
               />
@@ -245,10 +144,12 @@ export default function PriorityGatePage() {
         >
           <h3 className="text-lg font-semibold text-[var(--color-text-heading)]">결론</h3>
           <div className="flex min-h-0 flex-1 items-start justify-center overflow-y-auto">
-            {isLoading || isSavingResponse || isResettingResponses ? (
+            {isLoading || isSubmittingPriorityGateResponses || isResettingResponses ? (
               <Spinner className="size-7 text-[var(--color-primary)]" />
-            ) : submitError ? (
-              <p className="text-center text-sm text-[var(--color-error)]">{submitError.message}</p>
+            ) : responseError ? (
+              <p className="text-center text-sm text-[var(--color-error)]">
+                {responseError.message}
+              </p>
             ) : previewResults.length > 0 ? (
               <div className="flex w-full flex-col gap-3">
                 {previewResults.map((previewResult) => (

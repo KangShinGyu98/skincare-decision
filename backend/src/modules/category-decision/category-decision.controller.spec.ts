@@ -1,7 +1,8 @@
 import { Test, type TestingModule } from '@nestjs/testing';
 import type {
   CategoryDecisionResponse,
-  UpsertCategoryDecisionResponseResponse,
+  ResetCategoryDecisionResponsesResponse,
+  UpsertCategoryDecisionResponsesResponse,
 } from '@skincare-decision/shared/schemas';
 import type { RequestWithContext } from '../../common/types/express-request.type';
 import { SessionEventService } from '../session/session-event.service';
@@ -11,7 +12,7 @@ import { CategoryDecisionService } from './category-decision.service';
 describe('CategoryDecisionController', () => {
   let controller: CategoryDecisionController;
   let serviceMock: jest.Mocked<
-    Pick<CategoryDecisionService, 'getCategoryDecision' | 'getResponseReaction'>
+    Pick<CategoryDecisionService, 'getCategoryDecision' | 'getResponseReaction' | 'resetResponses'>
   >;
   let sessionEventServiceMock: jest.Mocked<Pick<SessionEventService, 'record'>>;
 
@@ -19,6 +20,7 @@ describe('CategoryDecisionController', () => {
     serviceMock = {
       getCategoryDecision: jest.fn(),
       getResponseReaction: jest.fn(),
+      resetResponses: jest.fn(),
     };
     sessionEventServiceMock = {
       record: jest.fn(),
@@ -45,6 +47,7 @@ describe('CategoryDecisionController', () => {
     const response: CategoryDecisionResponse = {
       selectedCategory: null,
       sections: [],
+      previewResults: [],
     };
     const request = createRequest({
       userId: '018f0000-0000-7000-8000-000000000003',
@@ -65,29 +68,34 @@ describe('CategoryDecisionController', () => {
 
   it('selectChecklist records event and passes body to service', async () => {
     const body = {
-      questionId: '018f0000-0000-7000-8000-000000000201',
-      questionVariantId: '018f0000-0000-7000-8000-000000000101',
-      value: [2],
-    };
-    const response: UpsertCategoryDecisionResponseResponse = {
-      response: body,
-      previewResult: {
-        title: 'Ready to narrow Sunscreen',
-        description:
-          'The saved answers will be used to prepare the initial product matrix filters.',
-        cta: {
-          label: 'View product matrix',
-          target: '/product-matrix?category=sunscreen&source=CATEGORY_DECISION_CTA',
+      responses: {
+        '018f0000-0000-7000-8000-000000000101': {
+          questionId: '018f0000-0000-7000-8000-000000000201',
+          value: [2],
         },
-        selectedCategory: {
-          id: '018f0000-0000-7000-8000-000000000301',
-          key: 'sunscreen',
-          name: 'Sunscreen',
-          description: null,
-        },
-        answeredQuestionCount: 1,
-        totalQuestionCount: 2,
       },
+    };
+    const response: UpsertCategoryDecisionResponsesResponse = {
+      responses: body.responses,
+      previewResults: [
+        {
+          title: 'Ready to narrow Sunscreen',
+          description:
+            'The saved answers will be used to prepare the initial product matrix filters.',
+          cta: {
+            label: 'View product matrix',
+            target: '/product-matrix?category=sunscreen&source=CATEGORY_DECISION_CTA',
+          },
+          selectedCategory: {
+            id: '018f0000-0000-7000-8000-000000000301',
+            key: 'sunscreen',
+            name: 'Sunscreen',
+            description: null,
+          },
+          answeredQuestionCount: 1,
+          totalQuestionCount: 2,
+        },
+      ],
     };
     const request = createRequest();
 
@@ -95,16 +103,48 @@ describe('CategoryDecisionController', () => {
 
     await expect(controller.selectChecklist(request, body)).resolves.toBe(response);
 
+    expect(sessionEventServiceMock.record).toHaveBeenCalledTimes(1);
     expect(sessionEventServiceMock.record).toHaveBeenCalledWith({
       sessionId: '018f0000-0000-7000-8000-000000000004',
       eventName: 'context_question_answered',
       screen: 'category_decision',
-      elementId: body.questionVariantId,
+      elementId: 'category_decision.responses',
       payload: body,
     });
     expect(serviceMock.getResponseReaction).toHaveBeenCalledWith({
       deviceId: '018f0000-0000-7000-8000-000000000002',
       body,
+    });
+  });
+
+  it('resetResponses passes request context to service and records event', async () => {
+    const response: ResetCategoryDecisionResponsesResponse = {
+      deletedCount: 2,
+    };
+    const request = createRequest({
+      userId: '018f0000-0000-7000-8000-000000000003',
+    });
+
+    serviceMock.resetResponses.mockResolvedValue(response);
+
+    await expect(controller.resetResponses(request, { uiSection: 'basic' })).resolves.toBe(
+      response,
+    );
+
+    expect(serviceMock.resetResponses).toHaveBeenCalledWith({
+      deviceId: '018f0000-0000-7000-8000-000000000002',
+      userId: '018f0000-0000-7000-8000-000000000003',
+      uiSection: 'basic',
+    });
+    expect(sessionEventServiceMock.record).toHaveBeenCalledWith({
+      sessionId: '018f0000-0000-7000-8000-000000000004',
+      eventName: 'context_responses_reset',
+      screen: 'category_decision',
+      elementId: 'category_decision.reset.basic',
+      payload: {
+        uiSection: 'basic',
+        deletedCount: 2,
+      },
     });
   });
 
