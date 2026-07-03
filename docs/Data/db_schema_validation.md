@@ -37,20 +37,20 @@
 
 ### 0.1 Prisma → PostgreSQL 자료형 매핑
 
-| Prisma                                                        | PostgreSQL                                        | 비고                                                                    |
-| ------------------------------------------------------------- | ------------------------------------------------- | ----------------------------------------------------------------------- |
-| `String @id @db.Uuid` (app에서 v7 생성)                       | `UUID` (PK)                                       | UUIDv7 을 application 에서 발급. DB default 없음                        |
-| `String @db.VarChar(N)`                                       | `VARCHAR(N)`                                      | 길이 제한                                                               |
-| `String @db.Text`                                             | `TEXT`                                            | 길이 무제한                                                             |
-| `Int`                                                         | `INTEGER`                                         | 32-bit                                                                  |
+| Prisma                                                        | PostgreSQL                                        | 비고                                                                                           |
+| ------------------------------------------------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `String @id @db.Uuid` (app에서 v7 생성)                       | `UUID` (PK)                                       | UUIDv7 을 application 에서 발급. DB default 없음                                               |
+| `String @db.VarChar(N)`                                       | `VARCHAR(N)`                                      | 길이 제한                                                                                      |
+| `String @db.Text`                                             | `TEXT`                                            | 길이 무제한                                                                                    |
+| `Int`                                                         | `INTEGER`                                         | 32-bit                                                                                         |
 | `BigInt @id @default(autoincrement())`                        | `BIGINT GENERATED ALWAYS AS IDENTITY` (PK)        | 내부 append-only 로그/스냅샷 PK (`session_events`, `decision_runs`). 외부 노출·inbound FK 없음 |
-| `Boolean`                                                     | `BOOLEAN`                                         |                                                                         |
-| `Json`                                                        | `JSONB`                                           | 인덱싱 가능, 단 GIN 인덱스는 별도 추가 필요                             |
-| `DateTime @default(now()) @db.Timestamptz()`                  | `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`  | UTC 저장. **밀리초 표기 필요 시 `@db.Timestamptz(3)`** 으로 정밀도 지정 |
-| `DateTime? @updatedAt @db.Timestamptz()`                      | `TIMESTAMPTZ` (NULLABLE)                          | INSERT 시 NULL → 첫 UPDATE 부터 Prisma 가 채움                          |
-| `DateTime? @db.Timestamptz()` (`deleted_at`)                  | `TIMESTAMPTZ` (NULLABLE)                          | 소프트 삭제용. 평소 NULL                                                |
-| `enum X { A B }` (스키마 enum 이름 = `<table>_<column>_enum`) | `CREATE TYPE "<table>_<column>_enum" AS ENUM (…)` | enum 타입 이름을 명명 규칙 그대로 사용                                  |
-| `String? ...`                                                 | 동일 타입 (NULL 허용)                             | 모든 nullable은 `NOT NULL`을 떼고 생성됨                                |
+| `Boolean`                                                     | `BOOLEAN`                                         |                                                                                                |
+| `Json`                                                        | `JSONB`                                           | 인덱싱 가능, 단 GIN 인덱스는 별도 추가 필요                                                    |
+| `DateTime @default(now()) @db.Timestamptz()`                  | `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP`  | UTC 저장. **밀리초 표기 필요 시 `@db.Timestamptz(3)`** 으로 정밀도 지정                        |
+| `DateTime? @updatedAt @db.Timestamptz()`                      | `TIMESTAMPTZ` (NULLABLE)                          | INSERT 시 NULL → 첫 UPDATE 부터 Prisma 가 채움                                                 |
+| `DateTime? @db.Timestamptz()` (`deleted_at`)                  | `TIMESTAMPTZ` (NULLABLE)                          | 소프트 삭제용. 평소 NULL                                                                       |
+| `enum X { A B }` (스키마 enum 이름 = `<table>_<column>_enum`) | `CREATE TYPE "<table>_<column>_enum" AS ENUM (…)` | enum 타입 이름을 명명 규칙 그대로 사용                                                         |
+| `String? ...`                                                 | 동일 타입 (NULL 허용)                             | 모든 nullable은 `NOT NULL`을 떼고 생성됨                                                       |
 
 ### 0.2 enum 정의
 
@@ -374,16 +374,16 @@ WHERE user_id IS NOT NULL;
 
 ### 3.2 `priority_rule_conditions`
 
-| 필드          | Prisma 타입                                  | SQL 타입                   | 제약                                                  | 설명                   | 예시       |
-| ------------- | -------------------------------------------- | -------------------------- | ----------------------------------------------------- | ---------------------- | ---------- |
-| `id`          | `String @id @db.Uuid`                        | `UUID`                     | PK, NOT NULL                                          | 조건 ID                | UUID       |
-| `rule_id`     | `String @db.Uuid`                            | `UUID`                     | NOT NULL, FK → `priority_rules.id` ON DELETE CASCADE  | 소속 Rule              | UUID       |
-| `question_id` | `String @db.Uuid`                            | `UUID`                     | NOT NULL, FK → `questions.id` ON DELETE RESTRICT      | 평가할 기준 질문       | UUID       |
-| `operator`    | `comparison_operator_enum`                   | `comparison_operator_enum` | NOT NULL                                              | 연산자                 | `IN`       |
-| `value`       | `Int[]`                                      | `INTEGER[]`                | NOT NULL                                              | 비교값 (단일도 길이 1) | `[3,2]`    |
-| `state`       | `condition_state_enum`                       | `condition_state_enum`     | NOT NULL                                              | REQUIRED / EXCLUDED    | `REQUIRED` |
-| `created_at`  | `DateTime @default(now()) @db.Timestamptz()` | `TIMESTAMPTZ`              | NOT NULL, DEFAULT `CURRENT_TIMESTAMP`                 | 생성                   | 타임스탬프 |
-| `updated_at`  | `DateTime? @updatedAt @db.Timestamptz()`     | `TIMESTAMPTZ`              | NULLABLE                                              | 마지막 변경 시각       | 타임스탬프 |
+| 필드          | Prisma 타입                                  | SQL 타입                   | 제약                                                 | 설명                   | 예시       |
+| ------------- | -------------------------------------------- | -------------------------- | ---------------------------------------------------- | ---------------------- | ---------- |
+| `id`          | `String @id @db.Uuid`                        | `UUID`                     | PK, NOT NULL                                         | 조건 ID                | UUID       |
+| `rule_id`     | `String @db.Uuid`                            | `UUID`                     | NOT NULL, FK → `priority_rules.id` ON DELETE CASCADE | 소속 Rule              | UUID       |
+| `question_id` | `String @db.Uuid`                            | `UUID`                     | NOT NULL, FK → `questions.id` ON DELETE RESTRICT     | 평가할 기준 질문       | UUID       |
+| `operator`    | `comparison_operator_enum`                   | `comparison_operator_enum` | NOT NULL                                             | 연산자                 | `IN`       |
+| `value`       | `Int[]`                                      | `INTEGER[]`                | NOT NULL                                             | 비교값 (단일도 길이 1) | `[3,2]`    |
+| `state`       | `condition_state_enum`                       | `condition_state_enum`     | NOT NULL                                             | REQUIRED / EXCLUDED    | `REQUIRED` |
+| `created_at`  | `DateTime @default(now()) @db.Timestamptz()` | `TIMESTAMPTZ`              | NOT NULL, DEFAULT `CURRENT_TIMESTAMP`                | 생성                   | 타임스탬프 |
+| `updated_at`  | `DateTime? @updatedAt @db.Timestamptz()`     | `TIMESTAMPTZ`              | NULLABLE                                             | 마지막 변경 시각       | 타임스탬프 |
 
 **인덱스**
 
@@ -397,25 +397,25 @@ WHERE user_id IS NOT NULL;
 
 ### 3.3 `decision_runs`
 
-| 필드                       | Prisma 타입                                  | SQL 타입       | 제약                                                                | 설명                                                                                                        | 예시                     |
-| -------------------------- | -------------------------------------------- | -------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------ |
-| `id`                       | `BigInt @id @default(autoincrement())`       | `BIGINT`       | PK, NOT NULL, IDENTITY                                              | 실행 기록 ID                                                                                                | `1024`                   |
-| `device_id`                | `String @db.Uuid`                            | `UUID`         | NOT NULL, FK → `devices.id` ON DELETE RESTRICT                      | 기기                                                                                                        | UUID                     |
-| `user_id`                  | `String? @db.Uuid`                           | `UUID`         | NULLABLE, FK → `users.id` ON DELETE SET NULL                        | 로그인 사용자                                                                                               | UUID / null              |
-| `session_id`               | `String @db.Uuid`                            | `UUID`         | NOT NULL, FK → `user_sessions.id` ON DELETE RESTRICT                | 세션                                                                                                        | UUID                     |
-| `decision_type`            | `String @db.VarChar(50)`                     | `VARCHAR(50)`  | NOT NULL                                                            | 종류 (PRIORITY_GATE / CATEGORY_DECISION / PRODUCT_MATRIX / REACTION_TRACEBACK) — application enum 으로 검증 | `PRODUCT_MATRIX`         |
-| `source_screen`            | `String @db.VarChar(100)`                    | `VARCHAR(100)` | NOT NULL                                                            | 발생 화면                                                                                                   | `product_matrix`         |
-| `category_id`              | `String? @db.Uuid`                           | `UUID`         | NULLABLE, **FK 없음** (스냅샷 기록용 plain 컬럼)                    | 관련 제품군 (당시 값 기록)                                                                                  | UUID                     |
-| `filter_state_id`          | `String? @db.Uuid`                           | `UUID`         | NULLABLE, **FK 없음** (스냅샷 기록용 plain 컬럼)                    | 사용된 필터 상태 (당시 값 기록)                                                                             | UUID / null              |
-| `result_type`              | `String? @db.VarChar(50)`                    | `VARCHAR(50)`  | NULLABLE                                                            | 결과 타입 snapshot (Priority Gate면 `HOLD` 등)                                                              | `HOLD`                   |
-| `result_title`             | `String? @db.Text`                           | `TEXT`         | NULLABLE                                                            | 결과 제목 snapshot                                                                                          | 텍스트                   |
-| `result_description`       | `String? @db.Text`                           | `TEXT`         | NULLABLE                                                            | 결과 설명 snapshot                                                                                          | 텍스트                   |
-| `cta_label`                | `String? @db.VarChar(100)`                   | `VARCHAR(100)` | NULLABLE                                                            | CTA 문구 snapshot                                                                                           | `선크림 보러가기`        |
-| `cta_target`               | `String? @db.VarChar(255)`                   | `VARCHAR(255)` | NULLABLE                                                            | CTA 경로 snapshot                                                                                           | `/category/sunscreen`    |
-| `input_snapshot`           | `Json`                                       | `JSONB`        | NOT NULL                                                            | 당시 user_responses 등 입력값 묶음                                                                          | `{ "responses": {...} }` |
-| `applied_filters_snapshot` | `Json`                                       | `JSONB`        | NOT NULL                                                            | 적용된 필터 + attribute 조건                                                                                | `{ "filters": [...] }`   |
-| `result_snapshot`          | `Json`                                       | `JSONB`        | NOT NULL                                                            | 조회된 제품/태그 등 최종 결과                                                                               | `{ "products": [...] }`  |
-| `created_at`               | `DateTime @default(now()) @db.Timestamptz()` | `TIMESTAMPTZ`  | NOT NULL, DEFAULT `CURRENT_TIMESTAMP`                               | 발생 시각                                                                                                   | 타임스탬프               |
+| 필드                       | Prisma 타입                                  | SQL 타입       | 제약                                                 | 설명                                                                                                        | 예시                     |
+| -------------------------- | -------------------------------------------- | -------------- | ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------ |
+| `id`                       | `BigInt @id @default(autoincrement())`       | `BIGINT`       | PK, NOT NULL, IDENTITY                               | 실행 기록 ID                                                                                                | `1024`                   |
+| `device_id`                | `String @db.Uuid`                            | `UUID`         | NOT NULL, FK → `devices.id` ON DELETE RESTRICT       | 기기                                                                                                        | UUID                     |
+| `user_id`                  | `String? @db.Uuid`                           | `UUID`         | NULLABLE, FK → `users.id` ON DELETE SET NULL         | 로그인 사용자                                                                                               | UUID / null              |
+| `session_id`               | `String @db.Uuid`                            | `UUID`         | NOT NULL, FK → `user_sessions.id` ON DELETE RESTRICT | 세션                                                                                                        | UUID                     |
+| `decision_type`            | `String @db.VarChar(50)`                     | `VARCHAR(50)`  | NOT NULL                                             | 종류 (PRIORITY_GATE / CATEGORY_DECISION / PRODUCT_MATRIX / REACTION_TRACEBACK) — application enum 으로 검증 | `PRODUCT_MATRIX`         |
+| `source_screen`            | `String @db.VarChar(100)`                    | `VARCHAR(100)` | NOT NULL                                             | 발생 화면                                                                                                   | `product_matrix`         |
+| `category_id`              | `String? @db.Uuid`                           | `UUID`         | NULLABLE, **FK 없음** (스냅샷 기록용 plain 컬럼)     | 관련 제품군 (당시 값 기록)                                                                                  | UUID                     |
+| `filter_state_id`          | `String? @db.Uuid`                           | `UUID`         | NULLABLE, **FK 없음** (스냅샷 기록용 plain 컬럼)     | 사용된 필터 상태 (당시 값 기록)                                                                             | UUID / null              |
+| `result_type`              | `String? @db.VarChar(50)`                    | `VARCHAR(50)`  | NULLABLE                                             | 결과 타입 snapshot (Priority Gate면 `HOLD` 등)                                                              | `HOLD`                   |
+| `result_title`             | `String? @db.Text`                           | `TEXT`         | NULLABLE                                             | 결과 제목 snapshot                                                                                          | 텍스트                   |
+| `result_description`       | `String? @db.Text`                           | `TEXT`         | NULLABLE                                             | 결과 설명 snapshot                                                                                          | 텍스트                   |
+| `cta_label`                | `String? @db.VarChar(100)`                   | `VARCHAR(100)` | NULLABLE                                             | CTA 문구 snapshot                                                                                           | `선크림 보러가기`        |
+| `cta_target`               | `String? @db.VarChar(255)`                   | `VARCHAR(255)` | NULLABLE                                             | CTA 경로 snapshot                                                                                           | `/category/sunscreen`    |
+| `input_snapshot`           | `Json`                                       | `JSONB`        | NOT NULL                                             | 당시 user_responses 등 입력값 묶음                                                                          | `{ "responses": {...} }` |
+| `applied_filters_snapshot` | `Json`                                       | `JSONB`        | NOT NULL                                             | 적용된 필터 + attribute 조건                                                                                | `{ "filters": [...] }`   |
+| `result_snapshot`          | `Json`                                       | `JSONB`        | NOT NULL                                             | 조회된 제품/태그 등 최종 결과                                                                               | `{ "products": [...] }`  |
+| `created_at`               | `DateTime @default(now()) @db.Timestamptz()` | `TIMESTAMPTZ`  | NOT NULL, DEFAULT `CURRENT_TIMESTAMP`                | 발생 시각                                                                                                   | 타임스탬프               |
 
 **인덱스**
 
@@ -458,6 +458,7 @@ WHERE user_id IS NOT NULL;
 | `key`         | `String @db.VarChar(100)`                    | `VARCHAR(100)` | NOT NULL, UNIQUE                      | 영문 키   | `sunscreen` |
 | `name`        | `String @db.VarChar(100)`                    | `VARCHAR(100)` | NOT NULL                              | 한글명    | `선크림`    |
 | `description` | `String? @db.Text`                           | `TEXT`         | NULLABLE                              | 설명      | 텍스트      |
+| `sort_order`  | `Int @default(0)`                            | `INTEGER`      | NOT NULL, DEFAULT `0`                 | 노출 순서 | `20`        |
 | `created_at`  | `DateTime @default(now()) @db.Timestamptz()` | `TIMESTAMPTZ`  | NOT NULL, DEFAULT `CURRENT_TIMESTAMP` | 생성      | 타임스탬프  |
 | `updated_at`  | `DateTime? @updatedAt @db.Timestamptz()`     | `TIMESTAMPTZ`  | NULLABLE                              | 갱신      | 타임스탬프  |
 
@@ -465,8 +466,9 @@ WHERE user_id IS NOT NULL;
 
 - `pk_product_categories` (PK)
 - `uq_product_categories_key` (UNIQUE on `key`)
+- `idx_product_categories_sort_order` (`sort_order`)
 
-**설명**: 6개 카테고리(toner/sunscreen/serum/lipcare/moisturizer/cleanser) 등록. 코드 상수로 `key`를 참조한다.
+**설명**: 6개 카테고리(toner/sunscreen/serum/lipcare/moisturizer/cleanser) 등록. 코드 상수로 `key`를 참조하고, 헤더/Select 노출 순서는 `sort_order ASC, key ASC`를 따른다.
 
 ---
 
@@ -865,14 +867,14 @@ CREATE INDEX products_attr_eye_sting_idx ON products ((attributes->>'eye_sting')
 
 ## 부록 A. FK ON DELETE 정책 한눈에 보기
 
-| 패턴                                | ON DELETE  | 적용 예                                                                                                                                                                                                                                                                      |
-| ----------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 영속 마스터 → 사용자 활동           | `RESTRICT` | `devices.id` ← user_sessions, user_responses, decision_runs, reaction_reports, product_matrix_filter_states, avoidance_rules                                                                                                                                                 |
-| 영속 마스터 → 사용자 활동 (user 측) | `SET NULL` | `users.id` ← devices, user_sessions, user_responses, decision_runs, reaction_reports, product_matrix_filter_states, avoidance_rules                                                                                                                                          |
+| 패턴                                | ON DELETE  | 적용 예                                                                                                                                                                                                                                                                                                               |
+| ----------------------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 영속 마스터 → 사용자 활동           | `RESTRICT` | `devices.id` ← user_sessions, user_responses, decision_runs, reaction_reports, product_matrix_filter_states, avoidance_rules                                                                                                                                                                                          |
+| 영속 마스터 → 사용자 활동 (user 측) | `SET NULL` | `users.id` ← devices, user_sessions, user_responses, decision_runs, reaction_reports, product_matrix_filter_states, avoidance_rules                                                                                                                                                                                   |
 | 카탈로그 → 카탈로그                 | `RESTRICT` | `questions.id` ← user_responses / priority_rule_conditions / question_filter_mappings.trigger_question_id, `product_categories.id` ← product_matrix_filter_definitions.category_id / `priority_rules.recommend_category_id`, `category_attribute_definitions.id` ← product_filter_definitions.attribute_definition_id |
-| 카탈로그 → 카탈로그 (자식 cascade)  | `CASCADE`  | `questions.id` ← question_variants, `question_variants.id` ← question_visibility_conditions, `product_matrix_filter_definitions.id` ← question_filter_mappings.matrix_filter_definition_id, `priority_rules.id` ← priority_rule_conditions                                                                                   |
-| 옵션 참조                           | `SET NULL` | `product_matrix_filter_definitions.product_filter_definition_id`                                                                                              |
-| 모든 UPDATE                         | `CASCADE`  | 전 테이블 (Prisma 기본값)                                                                                                                                                                                                                                                    |
+| 카탈로그 → 카탈로그 (자식 cascade)  | `CASCADE`  | `questions.id` ← question_variants, `question_variants.id` ← question_visibility_conditions, `product_matrix_filter_definitions.id` ← question_filter_mappings.matrix_filter_definition_id, `priority_rules.id` ← priority_rule_conditions                                                                            |
+| 옵션 참조                           | `SET NULL` | `product_matrix_filter_definitions.product_filter_definition_id`                                                                                                                                                                                                                                                      |
+| 모든 UPDATE                         | `CASCADE`  | 전 테이블 (Prisma 기본값)                                                                                                                                                                                                                                                                                             |
 
 > `decision_runs.category_id` / `.filter_state_id` 는 FK 를 두지 않는다 — append-only 스냅샷이라 reference 생명주기가 과거 기록을 건드리면 안 되고, 무결성의 단일 진실은 `applied_filters_snapshot` 등 JSONB 다. 카테고리/필터상태로 `decision_runs` 를 조회하는 화면도 없어 단일 인덱스(`idx_decision_runs_category_id`, `idx_decision_runs_filter_state_id`)까지 제거했다. (→ [ADR-0002](../../memory/ADR/ADR-0002-db-identity-and-fk-policy.md))
 

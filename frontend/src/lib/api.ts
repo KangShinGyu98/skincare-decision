@@ -1,15 +1,26 @@
 import {
+  type CategoryDecisionResponse,
+  categoryDecisionResponseSchema,
   type PriorityGateResponseDto,
   priorityGateResponseSchema,
+  type ResetCategoryDecisionResponsesRequest,
+  resetCategoryDecisionResponsesRequestSchema,
+  type ResetCategoryDecisionResponsesResponse,
+  resetCategoryDecisionResponsesResponseSchema,
   type ResetPriorityGateResponsesRequest,
   resetPriorityGateResponsesRequestSchema,
   type ResetPriorityGateResponsesResponse,
   resetPriorityGateResponsesResponseSchema,
+  type UpsertCategoryDecisionResponsesRequest,
+  upsertCategoryDecisionResponsesRequestSchema,
+  type UpsertCategoryDecisionResponsesResponse,
+  upsertCategoryDecisionResponsesResponseSchema,
   type UpsertPriorityGateResponsesRequest,
   upsertPriorityGateResponsesRequestSchema,
   type UpsertPriorityGateResponsesResponse,
   upsertPriorityGateResponsesResponseSchema,
 } from '@skincare-decision/shared/schemas';
+import type { z } from 'zod';
 
 type ApiErrorPayload = {
   statusCode?: number;
@@ -47,6 +58,10 @@ function getApiBaseUrl() {
 
 function getPriorityGateUrl(path = '') {
   return `${getApiBaseUrl()}/priority-gate${path}`;
+}
+
+function getCategoryDecisionUrl(path = '') {
+  return `${getApiBaseUrl()}/category-decision${path}`;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -94,27 +109,10 @@ function parseEnvelopeData(data: unknown): unknown {
   return data.data;
 }
 
-function handleResponse(
+async function handleResponse<TSchema extends z.ZodType>(
   response: Response,
-  schema: typeof priorityGateResponseSchema,
-): Promise<PriorityGateResponseDto>;
-function handleResponse(
-  response: Response,
-  schema: typeof upsertPriorityGateResponsesResponseSchema,
-): Promise<UpsertPriorityGateResponsesResponse>;
-function handleResponse(
-  response: Response,
-  schema: typeof resetPriorityGateResponsesResponseSchema,
-): Promise<ResetPriorityGateResponsesResponse>;
-async function handleResponse(
-  response: Response,
-  schema:
-    | typeof priorityGateResponseSchema
-    | typeof upsertPriorityGateResponsesResponseSchema
-    | typeof resetPriorityGateResponsesResponseSchema,
-): Promise<
-  PriorityGateResponseDto | UpsertPriorityGateResponsesResponse | ResetPriorityGateResponsesResponse
-> {
+  schema: TSchema,
+): Promise<z.infer<TSchema>> {
   const data = await readJson(response);
 
   if (!response.ok) {
@@ -179,9 +177,7 @@ export const priorityGateApi = {
     const parsed = resetPriorityGateResponsesRequestSchema.safeParse(data);
 
     if (!parsed.success) {
-      throw new ApiValidationError(
-        `Invalid priority gate reset request: ${parsed.error.message}`,
-      );
+      throw new ApiValidationError(`Invalid priority gate reset request: ${parsed.error.message}`);
     }
 
     const searchParams = new URLSearchParams({
@@ -193,5 +189,63 @@ export const priorityGateApi = {
     });
 
     return handleResponse(response, resetPriorityGateResponsesResponseSchema);
+  },
+};
+
+export const categoryDecisionApi = {
+  getCategoryDecision: async (category?: string): Promise<CategoryDecisionResponse> => {
+    await sleep(3000);
+    const searchParams = category ? `?${new URLSearchParams({ category })}` : '';
+    const response = await fetch(getCategoryDecisionUrl(searchParams), {
+      method: 'GET',
+      credentials: 'include',
+    });
+
+    return handleResponse(response, categoryDecisionResponseSchema);
+  },
+
+  submitResponses: async (
+    data: UpsertCategoryDecisionResponsesRequest,
+  ): Promise<UpsertCategoryDecisionResponsesResponse> => {
+    const parsed = upsertCategoryDecisionResponsesRequestSchema.safeParse(data);
+
+    if (!parsed.success) {
+      throw new ApiValidationError(
+        `Invalid category decision response request: ${parsed.error.message}`,
+      );
+    }
+
+    const response = await fetch(getCategoryDecisionUrl('/responses'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify(parsed.data),
+    });
+
+    return handleResponse(response, upsertCategoryDecisionResponsesResponseSchema);
+  },
+
+  resetResponses: async (
+    data: ResetCategoryDecisionResponsesRequest,
+  ): Promise<ResetCategoryDecisionResponsesResponse> => {
+    const parsed = resetCategoryDecisionResponsesRequestSchema.safeParse(data);
+
+    if (!parsed.success) {
+      throw new ApiValidationError(
+        `Invalid category decision reset request: ${parsed.error.message}`,
+      );
+    }
+
+    const searchParams = new URLSearchParams({
+      uiSection: parsed.data.uiSection,
+    });
+    const response = await fetch(getCategoryDecisionUrl(`/reset-responses?${searchParams}`), {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+
+    return handleResponse(response, resetCategoryDecisionResponsesResponseSchema);
   },
 };

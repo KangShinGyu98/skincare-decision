@@ -2,6 +2,7 @@ import LoginButton from '@/components/LoginButton';
 import NavMenu from '@/components/NavMenu';
 import { WalletIcon } from '@/components/icons/Icons';
 import Link from 'next/link';
+import { Suspense } from 'react';
 
 export default function SiteHeader() {
   return (
@@ -13,7 +14,9 @@ export default function SiteHeader() {
             <WalletIcon className="size-12 text-white" />
             <div className="text-white text-[24px]">Logo</div>
           </Link>
-          <NavMenu />
+          <Suspense fallback={null}>
+            <NavMenu />
+          </Suspense>
         </div>
         <LoginButton />
       </div>

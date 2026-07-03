@@ -7,7 +7,7 @@ import { ProductCategoriesRepository } from './product-categories.repository';
 /**
  * /product-categories 엔드포인트에 대한 통합 테스트입니다.
  * - 테스트 DB의 product_categories row를 반환해야 한다.
- * - 각 카테고리는 id, key, name, description만 포함해야 한다.
+ * - 각 카테고리는 id, key, name, description, sortOrder만 포함해야 한다.
  */
 describe('/product-categories', () => {
   let module: TestingModule;
@@ -55,12 +55,14 @@ describe('/product-categories', () => {
           key: 'cleanser',
           name: 'Cleanser',
           description: 'Face wash category',
+          sortOrder: 60,
         },
         {
           id: '01935b8f-0000-7000-8000-000000000002',
           key: 'toner',
           name: 'Toner',
           description: 'Hydration category',
+          sortOrder: 10,
         },
       ],
     });
@@ -69,27 +71,30 @@ describe('/product-categories', () => {
 
     expect(result).toEqual([
       expect.objectContaining({
-        id: '01935b8f-0000-7000-8000-000000000001',
-        key: 'cleanser',
-        name: 'Cleanser',
-        description: 'Face wash category',
-      }),
-      expect.objectContaining({
         id: '01935b8f-0000-7000-8000-000000000002',
         key: 'toner',
         name: 'Toner',
         description: 'Hydration category',
+        sortOrder: 10,
+      }),
+      expect.objectContaining({
+        id: '01935b8f-0000-7000-8000-000000000001',
+        key: 'cleanser',
+        name: 'Cleanser',
+        description: 'Face wash category',
+        sortOrder: 60,
       }),
     ]);
   });
 
-  it('각 카테고리는 id, key, name, description만을 포함해야 한다', async () => {
+  it('각 카테고리는 id, key, name, description, sortOrder만을 포함해야 한다', async () => {
     await prisma.productCategory.create({
       data: {
         id: '01935b8f-0000-7000-8000-000000000001',
         key: 'cleanser',
         name: 'Cleanser',
         description: 'Face wash category',
+        sortOrder: 60,
       },
     });
 
@@ -100,6 +105,7 @@ describe('/product-categories', () => {
       key: 'cleanser',
       name: 'Cleanser',
       description: 'Face wash category',
+      sortOrder: 60,
     });
   });
 });

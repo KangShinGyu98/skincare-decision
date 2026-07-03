@@ -1,11 +1,21 @@
 'use client';
 
-import type { QuestionAnswerTypeDto, QuestionDto } from '@skincare-decision/shared/schemas';
+import type { QuestionAnswerDto, QuestionAnswerTypeDto } from '@skincare-decision/shared/schemas';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
+type ChoiceQuestion = {
+  questionId: string;
+  questionVariantId: string;
+  key: string;
+  title: string;
+  answerType: QuestionAnswerTypeDto;
+  answers: QuestionAnswerDto[];
+  currentResponse: number[] | null;
+};
+
 type PriorityGateQuestionItemProps = {
-  question: QuestionDto;
+  question: ChoiceQuestion;
   value?: number[];
   disabled?: boolean;
   onValueChange?: (value: number[]) => void;
@@ -20,7 +30,7 @@ const ANSWER_INPUT_TYPE = {
   MULTI_CHOICE: 'checkbox',
 } satisfies Record<QuestionAnswerTypeDto, 'checkbox' | 'radio'>;
 
-function getNextValue(question: QuestionDto, selectedValues: number[], answerValue: number) {
+function getNextValue(question: ChoiceQuestion, selectedValues: number[], answerValue: number) {
   if (question.answerType !== 'MULTI_CHOICE') {
     return [answerValue];
   }

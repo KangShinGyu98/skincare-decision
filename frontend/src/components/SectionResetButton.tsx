@@ -1,6 +1,5 @@
 'use client';
 
-import type { QuestionUiSectionDto } from '@skincare-decision/shared/schemas';
 import { RotateCcwIcon } from 'lucide-react';
 import { useState } from 'react';
 import {
@@ -18,9 +17,10 @@ import {
 import { Button } from '@/components/shadcn/button';
 
 type SectionResetButtonProps = {
-  uiSection: QuestionUiSectionDto;
+  uiSection: string;
   sectionTitle: string;
   disabled: boolean;
+  elementIdPrefix?: string;
   onReset: () => void;
 };
 
@@ -28,10 +28,11 @@ export function SectionResetButton({
   uiSection,
   sectionTitle,
   disabled,
+  elementIdPrefix = 'priority_gate.reset',
   onReset,
 }: SectionResetButtonProps) {
   const [open, setOpen] = useState(false);
-  const elementId = `priority_gate.reset.${uiSection}`;
+  const elementId = `${elementIdPrefix}.${uiSection}`;
 
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>

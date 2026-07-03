@@ -3,15 +3,18 @@ import {
   categoryDecisionResponseSchema,
   categoryDecisionUiSectionSchema,
   questionAnswerTypeSchema,
+  type CategoryDecisionPreviewResult,
   type CategoryDecisionQuestion,
   type CategoryDecisionResponse,
   type CategoryDecisionSection,
   type CategoryDecisionUiSection,
   type ProductCategoryItemDto,
   type QuestionAnswerDto,
-  type UpsertCategoryDecisionResponseRequest,
-  type UpsertCategoryDecisionResponseResponse,
-  upsertCategoryDecisionResponseResponseSchema,
+  type ResetCategoryDecisionResponsesResponse,
+  type UpsertCategoryDecisionResponsesRequest,
+  type UpsertCategoryDecisionResponsesResponse,
+  resetCategoryDecisionResponsesResponseSchema,
+  upsertCategoryDecisionResponsesResponseSchema,
 } from '@skincare-decision/shared/schemas';
 import { UserResponseSource } from '../../generated/prisma/enums';
 import { UserResponsesService } from '../user-responses/user-responses.service';
@@ -44,19 +47,21 @@ type GetInput = {
 type PostInput = {
   deviceId: string;
   userId?: string;
-  body: UpsertCategoryDecisionResponseRequest;
+  body: UpsertCategoryDecisionResponsesRequest;
 };
 
-type CalculatePreviewResultInput = {
+type ResetResponsesInput = {
   deviceId: string;
   userId?: string;
-  responseOverride?: {
-    questionId: string;
-    value: number[];
-  };
+  uiSection: CategoryDecisionUiSection;
 };
 
-type PreviewResult = UpsertCategoryDecisionResponseResponse['previewResult'];
+type CalculatePreviewResultsInput = {
+  deviceId: string;
+  userId?: string;
+};
+
+type PreviewResult = CategoryDecisionPreviewResult;
 
 @Injectable()
 export class CategoryDecisionService {
@@ -78,36 +83,67 @@ export class CategoryDecisionService {
     const selectedCategory =
       selectedCategoryFromQuery ?? (await this.findSelectedCategory(questions, responseMap));
 
-    const questionsWithResponses = this.combineQuestionsWithResponses(questions, responseRecords);
+    if (selectedCategoryFromQuery) {
+      this.setSelectedCategoryResponse(questions, responseMap, selectedCategoryFromQuery);
+    }
+
+    const questionsWithResponses = this.combineQuestionsWithResponses(questions, responseMap);
     const sections = this.groupQuestionsBySections(questionsWithResponses);
+    const previewResults = this.createPreviewResults({
+      selectedCategory,
+      answeredQuestionCount: this.countAnsweredQuestions(questionIds, responseMap),
+      totalQuestionCount: questionIds.length,
+    });
 
     return categoryDecisionResponseSchema.parse({
       selectedCategory,
       sections,
+      previewResults,
     });
   }
 
-  async getResponseReaction(input: PostInput): Promise<UpsertCategoryDecisionResponseResponse> {
-    await this.userResponsesService.upsertCurrentResponse({
+  async getResponseReaction(input: PostInput): Promise<UpsertCategoryDecisionResponsesResponse> {
+    const responses = Object.values(input.body.responses);
+
+    await this.userResponsesService.upsertCurrentResponses(
+      responses.map((response) => ({
+        deviceId: input.deviceId,
+        ...(input.userId ? { userId: input.userId } : {}),
+        questionId: response.questionId,
+        value: response.value,
+        source: UserResponseSource.context,
+      })),
+    );
+
+    const previewResults = await this.calculatePreviewResults({
       deviceId: input.deviceId,
       ...(input.userId ? { userId: input.userId } : {}),
-      questionId: input.body.questionId,
-      value: input.body.value,
-      source: UserResponseSource.context,
     });
 
-    const previewResult = await this.calculatePreviewResult({
+    return upsertCategoryDecisionResponsesResponseSchema.parse({
+      responses: input.body.responses,
+      previewResults,
+    });
+  }
+
+  async resetResponses(
+    input: ResetResponsesInput,
+  ): Promise<ResetCategoryDecisionResponsesResponse> {
+    const questions = await this.repository.findCategoryDecisionQuestions();
+    const questionIds = questions
+      .filter(
+        (question) => categoryDecisionUiSectionSchema.parse(question.uiSection) === input.uiSection,
+      )
+      .map((question) => question.questionId);
+
+    const deletedCount = await this.userResponsesService.deleteCurrentResponses({
       deviceId: input.deviceId,
       ...(input.userId ? { userId: input.userId } : {}),
-      responseOverride: {
-        questionId: input.body.questionId,
-        value: input.body.value,
-      },
+      questionIds,
     });
 
-    return upsertCategoryDecisionResponseResponseSchema.parse({
-      response: input.body,
-      previewResult,
+    return resetCategoryDecisionResponsesResponseSchema.parse({
+      deletedCount,
     });
   }
 
@@ -149,10 +185,8 @@ export class CategoryDecisionService {
 
   private combineQuestionsWithResponses(
     questions: CategoryDecisionQuestionRecord[],
-    responses: CategoryDecisionCurrentResponseRecord[],
+    responseMap: Map<string, number[]>,
   ): CategoryDecisionQuestion[] {
-    const responseMap = this.toResponseMap(responses);
-
     return questions.map((question) => {
       const uiSection = categoryDecisionUiSectionSchema.parse(question.uiSection);
       const responseValue = responseMap.get(question.questionId);
@@ -218,7 +252,9 @@ export class CategoryDecisionService {
     });
   }
 
-  private async calculatePreviewResult(input: CalculatePreviewResultInput): Promise<PreviewResult> {
+  private async calculatePreviewResults(
+    input: CalculatePreviewResultsInput,
+  ): Promise<PreviewResult[]> {
     const questions = await this.repository.findCategoryDecisionQuestions();
     const questionIds = questions.map((question) => question.questionId);
     const responseRecords = await this.repository.findCurrentResponses(
@@ -228,20 +264,11 @@ export class CategoryDecisionService {
     );
     const responseMap = this.toResponseMap(responseRecords);
 
-    if (input.responseOverride) {
-      responseMap.set(input.responseOverride.questionId, input.responseOverride.value);
-    }
-
     const selectedCategory = await this.findSelectedCategory(questions, responseMap);
-    const answeredQuestionCount = questionIds.filter((questionId) => {
-      const response = responseMap.get(questionId);
 
-      return response !== undefined && response.length > 0;
-    }).length;
-
-    return this.createPreviewResult({
+    return this.createPreviewResults({
       selectedCategory,
-      answeredQuestionCount,
+      answeredQuestionCount: this.countAnsweredQuestions(questionIds, responseMap),
       totalQuestionCount: questionIds.length,
     });
   }
@@ -275,6 +302,18 @@ export class CategoryDecisionService {
     return category ? this.toProductCategoryItem(category) : null;
   }
 
+  private createPreviewResults(input: {
+    selectedCategory: ProductCategoryItemDto | null;
+    answeredQuestionCount: number;
+    totalQuestionCount: number;
+  }): PreviewResult[] {
+    if (input.answeredQuestionCount === 0) {
+      return [];
+    }
+
+    return [this.createPreviewResult(input)];
+  }
+
   private createPreviewResult(input: {
     selectedCategory: ProductCategoryItemDto | null;
     answeredQuestionCount: number;
@@ -302,6 +341,34 @@ export class CategoryDecisionService {
       answeredQuestionCount: input.answeredQuestionCount,
       totalQuestionCount: input.totalQuestionCount,
     };
+  }
+
+  private countAnsweredQuestions(
+    questionIds: readonly string[],
+    responseMap: Map<string, number[]>,
+  ): number {
+    return questionIds.filter((questionId) => {
+      const response = responseMap.get(questionId);
+
+      return response !== undefined && response.length > 0;
+    }).length;
+  }
+
+  private setSelectedCategoryResponse(
+    questions: CategoryDecisionQuestionRecord[],
+    responseMap: Map<string, number[]>,
+    selectedCategory: ProductCategoryItemDto,
+  ) {
+    const categoryQuestion = questions.find(
+      (question) => question.question.key === 'category.selected',
+    );
+    const selectedValue = CATEGORY_VALUE_BY_KEY.get(selectedCategory.key);
+
+    if (!categoryQuestion || !selectedValue) {
+      return;
+    }
+
+    responseMap.set(categoryQuestion.questionId, [selectedValue]);
   }
 
   private toResponseMap(responses: CategoryDecisionCurrentResponseRecord[]): Map<string, number[]> {

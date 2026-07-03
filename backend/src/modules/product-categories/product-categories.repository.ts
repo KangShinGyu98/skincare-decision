@@ -6,6 +6,7 @@ export type ProductCategoryRepositoryItem = {
   key: string;
   name: string;
   description: string | null;
+  sortOrder: number;
 };
 
 @Injectable()
@@ -22,10 +23,9 @@ export class ProductCategoriesRepository {
         key: true,
         name: true,
         description: true,
+        sortOrder: true,
       },
-      orderBy: {
-        key: 'asc',
-      },
+      orderBy: [{ sortOrder: 'asc' }, { key: 'asc' }],
     });
   }
 }

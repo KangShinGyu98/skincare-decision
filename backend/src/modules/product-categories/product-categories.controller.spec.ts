@@ -39,6 +39,7 @@ describe('ProductCategoriesController', () => {
           key: 'cleanser',
           name: '클렌저',
           description: '세안 제품',
+          sortOrder: 60,
         },
       ],
     };

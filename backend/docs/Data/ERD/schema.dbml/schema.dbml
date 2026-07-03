@@ -184,6 +184,7 @@ Table product_categories {
   key String [unique, not null]
   name String [not null]
   description String
+  sortOrder Int [not null, default: 0]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime
   deletedAt DateTime
