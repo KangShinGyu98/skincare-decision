@@ -3,6 +3,8 @@ import {
   categoryDecisionResponseSchema,
   type PriorityGateResponseDto,
   priorityGateResponseSchema,
+  type ProductCategoriesResponseDto,
+  productCategoriesResponseSchema,
   type ResetCategoryDecisionResponsesRequest,
   resetCategoryDecisionResponsesRequestSchema,
   type ResetCategoryDecisionResponsesResponse,
@@ -62,6 +64,10 @@ function getPriorityGateUrl(path = '') {
 
 function getCategoryDecisionUrl(path = '') {
   return `${getApiBaseUrl()}/category-decision${path}`;
+}
+
+function getProductCategoriesUrl(path = '') {
+  return `${getApiBaseUrl()}/product-categories${path}`;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -177,9 +183,7 @@ export const priorityGateApi = {
     const parsed = resetPriorityGateResponsesRequestSchema.safeParse(data);
 
     if (!parsed.success) {
-      throw new ApiValidationError(
-        `Invalid priority gate reset request: ${parsed.error.message}`,
-      );
+      throw new ApiValidationError(`Invalid priority gate reset request: ${parsed.error.message}`);
     }
 
     const searchParams = new URLSearchParams({
@@ -196,6 +200,7 @@ export const priorityGateApi = {
 
 export const categoryDecisionApi = {
   getCategoryDecision: async (category?: string): Promise<CategoryDecisionResponse> => {
+    await sleep(3000);
     const searchParams = category ? `?${new URLSearchParams({ category })}` : '';
     const response = await fetch(getCategoryDecisionUrl(searchParams), {
       method: 'GET',
@@ -248,5 +253,16 @@ export const categoryDecisionApi = {
     });
 
     return handleResponse(response, resetCategoryDecisionResponsesResponseSchema);
+  },
+};
+
+export const productCategoriesApi = {
+  getCategories: async (): Promise<ProductCategoriesResponseDto> => {
+    const response = await fetch(getProductCategoriesUrl(), {
+      method: 'GET',
+      credentials: 'include',
+    });
+
+    return handleResponse(response, productCategoriesResponseSchema);
   },
 };
