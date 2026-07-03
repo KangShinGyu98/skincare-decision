@@ -1,13 +1,13 @@
 'use client';
 
-import type {QuestionUiSectionDto} from '@skincare-decision/shared/schemas';
-import {useCallback} from 'react';
-import {PriorityGateQuestionItem} from '@/components/PriorityGateQuestionItem';
-import {PriorityGateResultCard} from '@/components/PriorityGateResultCard';
-import {SectionResetButton} from '@/components/SectionResetButton';
-import {SkeletonCard} from '@/components/shadcn/skeleton-card';
-import {Spinner} from '@/components/shadcn/spinner';
-import {usePriorityGateActions, usePriorityGateQuestions} from '@/lib/hooks';
+import type { QuestionUiSectionDto } from '@skincare-decision/shared/schemas';
+import { useCallback } from 'react';
+import { PriorityGateQuestionItem } from '@/components/PriorityGateQuestionItem';
+import { PriorityGateResultCard } from '@/components/PriorityGateResultCard';
+import { SectionResetButton } from '@/components/SectionResetButton';
+import { SkeletonCard } from '@/components/shadcn/skeleton-card';
+import { Spinner } from '@/components/shadcn/spinner';
+import { usePriorityGateActions, usePriorityGateQuestions } from '@/lib/hooks';
 
 export default function PriorityGatePage() {
   const { data, error, isError, isLoading } = usePriorityGateQuestions();

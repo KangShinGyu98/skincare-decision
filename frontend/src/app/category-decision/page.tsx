@@ -6,20 +6,10 @@ import { Suspense } from 'react';
 import { CategoryDecisionResultCard } from '@/components/CategoryDecisionResultCard';
 import { PriorityGateQuestionItem } from '@/components/PriorityGateQuestionItem';
 import { SectionResetButton } from '@/components/SectionResetButton';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/shadcn/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from '@/components/shadcn/select';
 import { SkeletonCard } from '@/components/shadcn/skeleton-card';
 import { Spinner } from '@/components/shadcn/spinner';
-import {
-  useCategoryDecision,
-  useCategoryDecisionActions,
-  useProductCategories,
-} from '@/lib/hooks';
+import { useCategoryDecision, useCategoryDecisionActions, useProductCategories } from '@/lib/hooks';
 
 const SECTION_TITLE_BY_KEY = {
   basic: '기본 확인',
@@ -83,6 +73,10 @@ function CategoryDecisionPageContent() {
     : SECTION_TITLE_BY_KEY.category;
   const selectedCategoryKey = category ?? selectedCategory?.key ?? null;
   const categories = categoriesData?.items ?? [];
+  const getCategoryLabel = (categoryKey: string | null) =>
+    categories.find((productCategory) => productCategory.key === categoryKey)?.name ??
+    selectedCategory?.name ??
+    '제품군 선택';
   const isCategorySelectDisabled = isCategoriesLoading || isCategoriesError;
 
   const handleCategoryChange = (nextCategory: string | null) => {
@@ -102,8 +96,8 @@ function CategoryDecisionPageContent() {
       data-fetch-state={isLoading ? 'loading' : isError ? 'error' : 'success'}
     >
       <div className="col-span-2 flex flex-col items-center gap-3">
+        <h2>제품군 선택 기준을 정리합니다.</h2>
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <h2>제품군 선택 기준을 정리합니다.</h2>
           <Select
             value={selectedCategoryKey}
             onValueChange={(value) => handleCategoryChange(value)}
@@ -113,9 +107,11 @@ function CategoryDecisionPageContent() {
               aria-label="제품군 선택"
               className="min-w-40 border-[var(--color-border)] bg-[var(--color-bg-white)]"
             >
-              <SelectValue placeholder="제품군 선택" />
+              <SelectValue placeholder="제품군 선택">
+                {(value: string | null) => getCategoryLabel(value)}
+              </SelectValue>
             </SelectTrigger>
-            <SelectContent align="center">
+            <SelectContent align="center" alignItemWithTrigger={false}>
               {categories.map((productCategory) => (
                 <SelectItem key={productCategory.id} value={productCategory.key}>
                   {productCategory.name}
@@ -123,10 +119,10 @@ function CategoryDecisionPageContent() {
               ))}
             </SelectContent>
           </Select>
+          <span className="space-y-3 text-base leading-2 text-[var(--color-text-secondary)]">
+            제품군에 맞는 질문만 확인하고, 답변은 이후 필터에 반영합니다.
+          </span>
         </div>
-        <span className="space-y-3 text-base leading-2 text-[var(--color-text-secondary)]">
-          제품군에 맞는 질문만 확인하고, 답변은 이후 필터에 반영합니다.
-        </span>
       </div>
       <div className="flex h-[70vh] w-full max-w-[1200px] translate-y-8 gap-6 overflow-hidden shadow-lg">
         <div
