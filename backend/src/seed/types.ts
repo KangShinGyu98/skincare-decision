@@ -30,6 +30,7 @@ export interface ProductCategorySeed {
   key: SeedCategoryKey;
   name: string;
   description: string;
+  sortOrder: number;
 }
 
 export interface CategoryAttributeSeed {

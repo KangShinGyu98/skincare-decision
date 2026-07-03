@@ -84,10 +84,10 @@
 
 ### MVP에서 제거된 테이블
 
-| 테이블명                  | 제거 이유                                                                                                 |
-| ------------------------- | --------------------------------------------------------------------------------------------------------- |
-| concern_groups            | Concern 태그는 프론트 상수로 관리. DB 불필요                                                              |
-| concern_tags              | 동일                                                                                                      |
+| 테이블명                  | 제거 이유                                                                                 |
+| ------------------------- | ----------------------------------------------------------------------------------------- |
+| concern_groups            | Concern 태그는 프론트 상수로 관리. DB 불필요                                              |
+| concern_tags              | 동일                                                                                      |
 | concern_category_mappings | 동일. 태그 → `preset_facts`, `suggested_category`, `suggested_filters`는 코드 상수로 처리 |
 
 > **Concern Mapper / 고민 캐러셀은 DB 관리 대상이 아니다.**  
@@ -687,10 +687,11 @@ Priority Gate뿐 아니라 Category Decision, Product Matrix 결과까지 저장
 | key         | VARCHAR(100) UNIQUE | 영문 키   |
 | name        | VARCHAR(100)        | 한글명    |
 | description | TEXT NULLABLE       | 설명      |
+| sort_order  | INTEGER             | 노출 순서 |
 | created_at  | TIMESTAMPTZ         | 생성일    |
 | updated_at  | TIMESTAMPTZ         | 수정일    |
 
-예시: `{ "key": "sunscreen", "name": "선크림" }`
+예시: `{ "key": "sunscreen", "name": "선크림", "sort_order": 20 }`
 
 ---
 
@@ -993,14 +994,14 @@ WHERE category_id = :category_id
 
 ### ingredients
 
-| 컬럼       | 타입                  | 설명        |
-| ---------- | --------------------- | ----------- |
-| id         | UUID PK               | 성분 ID     |
-| name_ko    | VARCHAR(200)          | 한글 성분명 |
+| 컬럼       | 타입                  | 설명                                                                  |
+| ---------- | --------------------- | --------------------------------------------------------------------- |
+| id         | UUID PK               | 성분 ID                                                               |
+| name_ko    | VARCHAR(200)          | 한글 성분명                                                           |
 | name_en    | VARCHAR(200) NULLABLE | 영문 성분명. CSV seed 단계에서는 `NULL`, admin/API enrichment 후 저장 |
-| inci_name  | VARCHAR(300) NULLABLE | INCI 이름   |
-| created_at | TIMESTAMPTZ           | 생성일      |
-| updated_at | TIMESTAMPTZ           | 수정일      |
+| inci_name  | VARCHAR(300) NULLABLE | INCI 이름                                                             |
+| created_at | TIMESTAMPTZ           | 생성일                                                                |
+| updated_at | TIMESTAMPTZ           | 수정일                                                                |
 
 ---
 

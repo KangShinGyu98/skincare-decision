@@ -9,6 +9,11 @@ import { SkeletonCard } from '@/components/shadcn/skeleton-card';
 import { Spinner } from '@/components/shadcn/spinner';
 import { usePriorityGateActions, usePriorityGateQuestions } from '@/lib/hooks';
 
+const SECTION_TITLE_BY_KEY = {
+  life_routine: '루틴 점검',
+  owned_products: '사용 제품',
+} satisfies Record<QuestionUiSectionDto, string>;
+
 export default function PriorityGatePage() {
   const { data, error, isError, isLoading } = usePriorityGateQuestions();
   const {
@@ -43,17 +48,19 @@ export default function PriorityGatePage() {
           스킨케어 루틴과 사용 제품을 알려주세요.
         </span>
       </div>
-      <div className="flex h-[70vh] w-full max-w-[1200px] translate-y-8 overflow-hidden   shadow-lg gap-6">
+      <div className="flex h-[70vh] w-full max-w-[1200px] translate-y-8 gap-6 overflow-hidden shadow-lg">
         <div
           id={lifeRoutineSection?.key ?? 'life_routine'}
           data-question-count={lifeRoutineSection?.questions.length ?? 0}
           className="flex h-full w-full flex-1 flex-col gap-4 overflow-y-auto rounded-xl border border-[var(--color-border-light)] border-t-[3px] border-t-[var(--color-primary-border)] bg-[var(--color-bg-white)] p-4 shadow-sm"
         >
           <div className="flex items-center justify-between gap-3">
-            <h3 className="text-lg font-semibold text-[var(--color-text-heading)]">루틴 점검</h3>
+            <h3 className="text-lg font-semibold text-[var(--color-text-heading)]">
+              {SECTION_TITLE_BY_KEY.life_routine}
+            </h3>
             <SectionResetButton
               uiSection="life_routine"
-              sectionTitle="루틴 점검"
+              sectionTitle={SECTION_TITLE_BY_KEY.life_routine}
               disabled={isLoading || isPriorityGateActionPending}
               onReset={() => resetSectionResponses('life_routine')}
             />
@@ -83,10 +90,12 @@ export default function PriorityGatePage() {
           className="flex h-full w-full flex-1 flex-col gap-4 overflow-y-auto rounded-xl border border-[var(--color-border-light)] border-t-[3px] border-t-[var(--gold-3)] bg-[var(--color-bg-white)] p-4 shadow-sm"
         >
           <div className="flex items-center justify-between gap-3">
-            <h3 className="text-lg font-semibold text-[var(--color-text-heading)]">사용 제품</h3>
+            <h3 className="text-lg font-semibold text-[var(--color-text-heading)]">
+              {SECTION_TITLE_BY_KEY.owned_products}
+            </h3>
             <SectionResetButton
               uiSection="owned_products"
-              sectionTitle="사용 제품"
+              sectionTitle={SECTION_TITLE_BY_KEY.owned_products}
               disabled={isLoading || isPriorityGateActionPending}
               onReset={() => resetSectionResponses('owned_products')}
             />

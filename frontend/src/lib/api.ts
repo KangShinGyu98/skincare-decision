@@ -3,8 +3,6 @@ import {
   categoryDecisionResponseSchema,
   type PriorityGateResponseDto,
   priorityGateResponseSchema,
-  type ProductCategoriesResponseDto,
-  productCategoriesResponseSchema,
   type ResetCategoryDecisionResponsesRequest,
   resetCategoryDecisionResponsesRequestSchema,
   type ResetCategoryDecisionResponsesResponse,
@@ -64,10 +62,6 @@ function getPriorityGateUrl(path = '') {
 
 function getCategoryDecisionUrl(path = '') {
   return `${getApiBaseUrl()}/category-decision${path}`;
-}
-
-function getProductCategoriesUrl(path = '') {
-  return `${getApiBaseUrl()}/product-categories${path}`;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -253,16 +247,5 @@ export const categoryDecisionApi = {
     });
 
     return handleResponse(response, resetCategoryDecisionResponsesResponseSchema);
-  },
-};
-
-export const productCategoriesApi = {
-  getCategories: async (): Promise<ProductCategoriesResponseDto> => {
-    const response = await fetch(getProductCategoriesUrl(), {
-      method: 'GET',
-      credentials: 'include',
-    });
-
-    return handleResponse(response, productCategoriesResponseSchema);
   },
 };

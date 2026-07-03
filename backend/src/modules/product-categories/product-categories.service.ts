@@ -15,6 +15,7 @@ export class ProductCategoriesService {
         key: category.key,
         name: category.name,
         description: category.description,
+        sortOrder: category.sortOrder,
       })),
     };
   }

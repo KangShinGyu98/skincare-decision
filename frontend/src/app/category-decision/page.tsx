@@ -2,19 +2,33 @@
 
 import type { CategoryDecisionUiSection } from '@skincare-decision/shared/schemas';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense } from 'react';
 import { CategoryDecisionResultCard } from '@/components/CategoryDecisionResultCard';
 import { PriorityGateQuestionItem } from '@/components/PriorityGateQuestionItem';
 import { SectionResetButton } from '@/components/SectionResetButton';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from '@/components/shadcn/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/shadcn/select';
 import { SkeletonCard } from '@/components/shadcn/skeleton-card';
 import { Spinner } from '@/components/shadcn/spinner';
-import { useCategoryDecision, useCategoryDecisionActions, useProductCategories } from '@/lib/hooks';
+import { useCategoryDecision, useCategoryDecisionActions } from '@/lib/hooks';
 
 const SECTION_TITLE_BY_KEY = {
   basic: '기본 확인',
   category: '제품군 기준',
 } satisfies Record<CategoryDecisionUiSection, string>;
+
+const CATEGORY_SELECT_ITEMS = [
+  { id: 'toner', key: 'toner', name: '토너' },
+  { id: 'sunscreen', key: 'sunscreen', name: '선크림' },
+  { id: 'serum', key: 'serum', name: '세럼' },
+  { id: 'lipcare', key: 'lipcare', name: '립케어' },
+  { id: 'moisturizer', key: 'moisturizer', name: '로션 / 크림' },
+  { id: 'cleanser', key: 'cleanser', name: '클렌저' },
+] as const;
 
 function getCategoryParam(searchParams: { get: (name: string) => string | null }) {
   const category = searchParams.get('category')?.trim();
@@ -22,40 +36,11 @@ function getCategoryParam(searchParams: { get: (name: string) => string | null }
   return category && category.length > 0 ? category : undefined;
 }
 
-function CategoryDecisionLoadingPage() {
-  return (
-    <main
-      className="flex min-h-screen w-full flex-col items-center justify-center bg-[var(--color-bg-page)] p-10"
-      aria-busy="true"
-      data-fetch-state="loading"
-    >
-      <div className="col-span-2 flex flex-col items-center gap-2">
-        <h2>제품군 선택 기준을 정리합니다.</h2>
-        <span className="space-y-3 text-base leading-2 text-[var(--color-text-secondary)]">
-          답변을 불러오는 중입니다.
-        </span>
-      </div>
-      <div className="flex h-[70vh] w-full max-w-[1200px] translate-y-8 gap-6 overflow-hidden shadow-lg">
-        <SkeletonCard />
-        <SkeletonCard />
-        <div className="flex h-full w-full flex-1 items-center justify-center rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-white)] p-4 shadow-sm">
-          <Spinner className="size-7 text-[var(--color-primary)]" />
-        </div>
-      </div>
-    </main>
-  );
-}
-
-function CategoryDecisionPageContent() {
+export default function CategoryDecisionPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const category = getCategoryParam(searchParams);
   const { data, error, isError, isLoading } = useCategoryDecision(category);
-  const {
-    data: categoriesData,
-    isError: isCategoriesError,
-    isLoading: isCategoriesLoading,
-  } = useProductCategories();
   const {
     error: responseError,
     isPending: isCategoryDecisionActionPending,
@@ -72,12 +57,10 @@ function CategoryDecisionPageContent() {
     ? `${selectedCategory.name} 기준`
     : SECTION_TITLE_BY_KEY.category;
   const selectedCategoryKey = category ?? selectedCategory?.key ?? null;
-  const categories = categoriesData?.items ?? [];
   const getCategoryLabel = (categoryKey: string | null) =>
-    categories.find((productCategory) => productCategory.key === categoryKey)?.name ??
+    CATEGORY_SELECT_ITEMS.find((productCategory) => productCategory.key === categoryKey)?.name ??
     selectedCategory?.name ??
     '제품군 선택';
-  const isCategorySelectDisabled = isCategoriesLoading || isCategoriesError;
 
   const handleCategoryChange = (nextCategory: string | null) => {
     if (!nextCategory || nextCategory === selectedCategoryKey) {
@@ -101,7 +84,6 @@ function CategoryDecisionPageContent() {
           <Select
             value={selectedCategoryKey}
             onValueChange={(value) => handleCategoryChange(value)}
-            disabled={isCategorySelectDisabled}
           >
             <SelectTrigger
               aria-label="제품군 선택"
@@ -112,7 +94,7 @@ function CategoryDecisionPageContent() {
               </SelectValue>
             </SelectTrigger>
             <SelectContent align="center" alignItemWithTrigger={false}>
-              {categories.map((productCategory) => (
+              {CATEGORY_SELECT_ITEMS.map((productCategory) => (
                 <SelectItem key={productCategory.id} value={productCategory.key}>
                   {productCategory.name}
                 </SelectItem>
@@ -240,13 +222,5 @@ function CategoryDecisionPageContent() {
         </p>
       ) : null}
     </main>
-  );
-}
-
-export default function CategoryDecisionPage() {
-  return (
-    <Suspense fallback={<CategoryDecisionLoadingPage />}>
-      <CategoryDecisionPageContent />
-    </Suspense>
   );
 }

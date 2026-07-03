@@ -12,7 +12,7 @@ import type {
   QuestionUiSectionDto,
   UpsertPriorityGateResponsesRequest,
 } from '@skincare-decision/shared/schemas';
-import { categoryDecisionApi, priorityGateApi, productCategoriesApi } from './api';
+import { categoryDecisionApi, priorityGateApi } from './api';
 
 export const queryKeys = {
   priorityGate: {
@@ -22,9 +22,6 @@ export const queryKeys = {
   categoryDecision: {
     all: ['category-decision'] as const,
     detail: (category?: string) => ['category-decision', { category: category ?? null }] as const,
-  },
-  productCategories: {
-    all: ['product-categories'] as const,
   },
 };
 
@@ -212,13 +209,6 @@ export function useCategoryDecision(category?: string) {
   return useQuery({
     queryKey: queryKeys.categoryDecision.detail(category),
     queryFn: () => categoryDecisionApi.getCategoryDecision(category),
-  });
-}
-
-export function useProductCategories() {
-  return useQuery({
-    queryKey: queryKeys.productCategories.all,
-    queryFn: productCategoriesApi.getCategories,
   });
 }
 

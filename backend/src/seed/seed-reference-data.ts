@@ -80,11 +80,13 @@ export async function seedProductCategories(prisma: PrismaClient): Promise<Categ
         key: seed.key,
         name: seed.name,
         description: seed.description,
+        sortOrder: seed.sortOrder,
         deletedAt: null,
       },
       update: {
         name: seed.name,
         description: seed.description,
+        sortOrder: seed.sortOrder,
         deletedAt: null,
       },
     });

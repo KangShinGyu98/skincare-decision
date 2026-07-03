@@ -6,6 +6,7 @@ export const productCategoryItemSchema = z
     key: z.string().min(1),
     name: z.string().min(1),
     description: z.string().nullable(),
+    sortOrder: z.number().int(),
   })
   .strict();
 
