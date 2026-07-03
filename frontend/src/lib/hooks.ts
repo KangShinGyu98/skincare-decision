@@ -6,6 +6,7 @@ import type {
   ResetCategoryDecisionResponsesRequest,
   UpsertCategoryDecisionResponsesRequest,
   ResetPriorityGateResponsesRequest,
+  QuestionUiSectionDto,
   UpsertPriorityGateResponsesRequest,
 } from '@skincare-decision/shared/schemas';
 import { categoryDecisionApi, priorityGateApi } from './api';
@@ -177,6 +178,28 @@ export function useResetPriorityGateResponses() {
       await queryClient.invalidateQueries({ queryKey: queryKeys.priorityGate.questions });
     },
   });
+}
+
+export function usePriorityGateActions() {
+  const batch = useDebouncedPriorityGateResponseBatch();
+  const reset = useResetPriorityGateResponses();
+
+  const resetPriorityGateSection = useCallback(
+    (uiSection: QuestionUiSectionDto) => {
+      batch.clearPendingResponses();
+      batch.clearError();
+      reset.reset();
+      reset.mutate({ uiSection });
+    },
+    [batch, reset],
+  );
+
+  return {
+    error: batch.error ?? reset.error,
+    isPending: batch.isPending || reset.isPending,
+    resetPriorityGateSection,
+    saveResponse: batch.saveResponse,
+  };
 }
 
 export function useCategoryDecision(category?: string) {

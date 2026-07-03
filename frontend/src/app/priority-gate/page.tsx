@@ -1,60 +1,34 @@
 'use client';
 
-import type { QuestionUiSectionDto } from '@skincare-decision/shared/schemas';
-import { useCallback, useMemo } from 'react';
-import { PriorityGateQuestionItem } from '@/components/PriorityGateQuestionItem';
-import { PriorityGateResultCard } from '@/components/PriorityGateResultCard';
-import { SectionResetButton } from '@/components/SectionResetButton';
-import { SkeletonCard } from '@/components/shadcn/skeleton-card';
-import { Spinner } from '@/components/shadcn/spinner';
-import {
-  useDebouncedPriorityGateResponseBatch,
-  usePriorityGateQuestions,
-  useResetPriorityGateResponses,
-} from '@/lib/hooks';
+import type {QuestionUiSectionDto} from '@skincare-decision/shared/schemas';
+import {useCallback} from 'react';
+import {PriorityGateQuestionItem} from '@/components/PriorityGateQuestionItem';
+import {PriorityGateResultCard} from '@/components/PriorityGateResultCard';
+import {SectionResetButton} from '@/components/SectionResetButton';
+import {SkeletonCard} from '@/components/shadcn/skeleton-card';
+import {Spinner} from '@/components/shadcn/spinner';
+import {usePriorityGateActions, usePriorityGateQuestions} from '@/lib/hooks';
 
 export default function PriorityGatePage() {
   const { data, error, isError, isLoading } = usePriorityGateQuestions();
   const {
-    clearError: clearSubmitError,
-    clearPendingResponses,
-    error: submitError,
-    isPending: isSubmittingPriorityGateResponses,
+    error: responseError,
+    isPending: isPriorityGateActionPending,
+    resetPriorityGateSection,
     saveResponse,
-  } = useDebouncedPriorityGateResponseBatch();
-  const {
-    error: resetError,
-    isPending: isResettingResponses,
-    mutate: resetPriorityGateResponses,
-    reset: clearResetError,
-  } = useResetPriorityGateResponses();
+  } = usePriorityGateActions();
 
-  const sections = useMemo(() => data?.sections ?? [], [data?.sections]);
+  const sections = data?.sections ?? [];
   const lifeRoutineSection = sections.find((section) => section.key === 'life_routine');
   const ownedProductsSection = sections.find((section) => section.key === 'owned_products');
 
   const previewResults = data?.previewResults ?? [];
-  const responseError = submitError ?? resetError;
-
-  const handleResponseValueChange = useCallback(
-    (questionVariantId: string, questionId: string, value: number[]) => {
-      clearResetError();
-      saveResponse(questionVariantId, {
-        questionId,
-        value,
-      });
-    },
-    [clearResetError, saveResponse],
-  );
 
   const resetSectionResponses = useCallback(
     (uiSection: QuestionUiSectionDto) => {
-      clearPendingResponses();
-      clearSubmitError();
-      clearResetError();
-      resetPriorityGateResponses({ uiSection });
+      resetPriorityGateSection(uiSection);
     },
-    [clearPendingResponses, clearResetError, clearSubmitError, resetPriorityGateResponses],
+    [resetPriorityGateSection],
   );
 
   return (
@@ -80,7 +54,7 @@ export default function PriorityGatePage() {
             <SectionResetButton
               uiSection="life_routine"
               sectionTitle="루틴 점검"
-              disabled={isLoading || isSubmittingPriorityGateResponses || isResettingResponses}
+              disabled={isLoading || isPriorityGateActionPending}
               onReset={() => resetSectionResponses('life_routine')}
             />
           </div>
@@ -92,13 +66,12 @@ export default function PriorityGatePage() {
                 key={question.questionVariantId}
                 question={question}
                 value={question.currentResponse ?? []}
-                disabled={isResettingResponses}
+                disabled={isPriorityGateActionPending}
                 onValueChange={(value) => {
-                  handleResponseValueChange(
-                    question.questionVariantId,
-                    question.questionId,
+                  saveResponse(question.questionVariantId, {
+                    questionId: question.questionId,
                     value,
-                  );
+                  });
                 }}
               />
             ))
@@ -114,7 +87,7 @@ export default function PriorityGatePage() {
             <SectionResetButton
               uiSection="owned_products"
               sectionTitle="사용 제품"
-              disabled={isLoading || isSubmittingPriorityGateResponses || isResettingResponses}
+              disabled={isLoading || isPriorityGateActionPending}
               onReset={() => resetSectionResponses('owned_products')}
             />
           </div>
@@ -126,13 +99,12 @@ export default function PriorityGatePage() {
                 key={question.questionVariantId}
                 question={question}
                 value={question.currentResponse ?? []}
-                disabled={isResettingResponses}
+                disabled={isPriorityGateActionPending}
                 onValueChange={(value) => {
-                  handleResponseValueChange(
-                    question.questionVariantId,
-                    question.questionId,
+                  saveResponse(question.questionVariantId, {
+                    questionId: question.questionId,
                     value,
-                  );
+                  });
                 }}
               />
             ))
@@ -144,7 +116,7 @@ export default function PriorityGatePage() {
         >
           <h3 className="text-lg font-semibold text-[var(--color-text-heading)]">결론</h3>
           <div className="flex min-h-0 flex-1 items-start justify-center overflow-y-auto">
-            {isLoading || isSubmittingPriorityGateResponses || isResettingResponses ? (
+            {isLoading || isPriorityGateActionPending ? (
               <Spinner className="size-7 text-[var(--color-primary)]" />
             ) : responseError ? (
               <p className="text-center text-sm text-[var(--color-error)]">
