@@ -7,3 +7,4 @@ export * from './priority-gate.schema.js';
 export * from './priority-gate-responses.schema.js';
 export * from './category-decision.schema.js';
 export * from './admin-rule.schema.js';
+export * from './admin-question.schema.js';

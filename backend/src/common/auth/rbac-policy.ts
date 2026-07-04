@@ -13,6 +13,7 @@ export const ADMIN_PERMISSIONS = [
   'products:create:any',
   'products:update:any',
   'products:delete:any',
+  'questions:manage:any',
   'priority_rules:manage:any',
   'user_responses:read:any',
   'session_events:read:any',

@@ -5,6 +5,7 @@ export type PermissionScope = 'self' | 'own' | 'any';
 export type PermissionResource =
   | 'products'
   | 'user_responses'
+  | 'questions'
   | 'priority_rules'
   | 'session_events';
 
