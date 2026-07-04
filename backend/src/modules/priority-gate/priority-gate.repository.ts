@@ -34,6 +34,7 @@ export type ProductCategoryRecord = {
   key: string;
   name: string;
   description: string | null;
+  sortOrder: number;
 };
 
 export type PriorityRuleConditionRecord = {
@@ -163,6 +164,7 @@ export class PriorityGateRepository {
             key: true,
             name: true,
             description: true,
+            sortOrder: true,
           },
         },
         conditions: {
@@ -201,6 +203,7 @@ export class PriorityGateRepository {
         key: true,
         name: true,
         description: true,
+        sortOrder: true,
       },
     });
   }

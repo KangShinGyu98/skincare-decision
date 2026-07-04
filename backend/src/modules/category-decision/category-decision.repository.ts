@@ -26,6 +26,7 @@ export type CategoryDecisionProductCategoryRecord = {
   key: string;
   name: string;
   description: string | null;
+  sortOrder: number;
 };
 
 export type QuestionIdentityRecord = {
@@ -109,6 +110,7 @@ export class CategoryDecisionRepository {
         key: true,
         name: true,
         description: true,
+        sortOrder: true,
       },
     });
   }

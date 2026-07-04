@@ -391,6 +391,7 @@ export class CategoryDecisionService {
       key: category.key,
       name: category.name,
       description: category.description,
+      sortOrder: category.sortOrder,
     };
   }
 }

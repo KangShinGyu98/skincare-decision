@@ -503,6 +503,7 @@ export class PriorityGateService {
       key: category.key,
       name: category.name,
       description: category.description,
+      sortOrder: category.sortOrder,
     };
   }
 

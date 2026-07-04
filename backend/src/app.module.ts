@@ -21,6 +21,7 @@ import { ProductCategoriesModule } from './modules/product-categories/product-ca
 import { LandingModule } from './modules/landing/landing.module';
 import { PriorityGateModule } from './modules/priority-gate/priority-gate.module';
 import { CategoryDecisionModule } from './modules/category-decision/category-decision.module';
+import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { CategoryDecisionModule } from './modules/category-decision/category-dec
     LandingModule,
     PriorityGateModule,
     CategoryDecisionModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [

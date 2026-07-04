@@ -91,6 +91,7 @@ describe('CategoryDecisionController', () => {
             key: 'sunscreen',
             name: 'Sunscreen',
             description: null,
+            sortOrder: 20,
           },
           answeredQuestionCount: 1,
           totalQuestionCount: 2,

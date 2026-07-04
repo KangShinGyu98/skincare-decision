@@ -80,6 +80,7 @@ describe('CategoryDecisionService', () => {
       key: 'sunscreen',
       name: 'Sunscreen',
       description: null,
+      sortOrder: 20,
     };
 
     repositoryMock.findProductCategoryByKey.mockResolvedValue(category);
@@ -250,6 +251,7 @@ describe('CategoryDecisionService', () => {
       key: 'sunscreen',
       name: 'Sunscreen',
       description: null,
+      sortOrder: 20,
     });
 
     const result = await service.getResponseReaction({
@@ -280,6 +282,7 @@ describe('CategoryDecisionService', () => {
           key: 'sunscreen',
           name: 'Sunscreen',
           description: null,
+          sortOrder: 20,
         },
         answeredQuestionCount: 1,
         totalQuestionCount: 2,

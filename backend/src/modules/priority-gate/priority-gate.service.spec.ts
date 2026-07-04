@@ -324,6 +324,7 @@ describe('PriorityGateService', () => {
         key: 'serum',
         name: '세럼',
         description: null,
+        sortOrder: 30,
       },
     ]);
 
@@ -348,6 +349,7 @@ describe('PriorityGateService', () => {
             key: 'serum',
             name: '세럼',
             description: null,
+            sortOrder: 30,
           },
         ],
       },
@@ -375,6 +377,7 @@ describe('PriorityGateService', () => {
         key: 'sunscreen',
         name: '선크림',
         description: null,
+        sortOrder: 20,
       },
       conditions: [
         {
@@ -411,6 +414,7 @@ describe('PriorityGateService', () => {
           key: 'sunscreen',
           name: '선크림',
           description: null,
+          sortOrder: 20,
         },
       }),
     );
