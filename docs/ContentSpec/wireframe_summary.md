@@ -654,268 +654,142 @@ Reaction Traceback 결과는 이후 Product Matrix와 제품 상세뷰에 반영
 
 ## 관리자 화면
 
-### Priority Gate 관리자 화면
+관리자 화면 MVP는 **Rule Check**와 **Question Check** 두 화면만 먼저 만든다.
+목표는 관리자에게 전체 설정 편집기를 제공하는 것이 아니라, 현재 seed/DB에 들어간 판단 조건과 질문 노출 상태를 검수할 수 있게 하는 것이다.
 
-**Box 1: Rule 우선순위 목록**
-
-- drag & drop
-- 위험도
-- 결과 문구
-- ON/OFF
-
-**Box 2: Life / 루틴 조건**
-
-- 각 항목을 ✓ 필수 / ✕ 제외 / - 무관으로 설정
-
-**Box 3: 사용 중인 Skin Care 제품 조건**
-
-- 각 제품군을 ✓ 필수 / ✕ 제외 / - 무관으로 설정
-
----
-
-### Context 관리자 화면
-
-> **사용자에게 어떤 질문을 보여줄지, 그 질문이 어떤 조건에서 노출될지 관리하는 화면**
-
-Context 관리자 화면은 Priority Decision 화면과 비슷하게 **3박스 구조**로 구성한다.
-
-다만 역할은 다르다.
+관리자 화면에서 조건은 자연어 문장이 아니라 `fact_key OP value` 형식으로 보여준다.
 
 ```txt
-Priority Gate = 어떤 조건이면 어떤 결론을 낼지 관리
-Context       = 어떤 조건이면 어떤 질문을 보여줄지 관리
+life.recent_irritation EQ true
+routine.sunscreen_frequency IN [rarely, never]
+routine.cleansing_stable EQ false OR routine.foam_enough EQ false
+category.selected EQ sunscreen AND context.eye_sting EQ true
 ```
 
-**화면 구조**
-
-- Box 1. Context 질문 목록
-- Box 2. 선택한 질문의 Life / 루틴 노출 조건
-- Box 3. 선택한 질문의 제품 / 카테고리 노출 조건
+`skincare_product_selection_rule.md`는 룰/질문 행의 메모 근거로만 참조한다. 예를 들어 민감 피부의 알코올/향료 회피, 토너의 저자극/약산성 기준, 선크림의 눈시림/백탁 기준처럼 "왜 이 질문이나 조건이 필요한지"를 메모에 남길 때 사용한다.
 
 ---
 
-#### Box 1. Context 질문 목록
+### Admin 1 — Rule Check
 
-사용자에게 보여줄 질문들을 관리한다.
+> **Priority Gate 룰이 어떤 질문/조건을 보고 어떤 단순 결론을 내는지 확인하는 화면**
 
-질문들은 화면에 노출되는 순서를 가지며, Drag & Drop으로 순서를 변경할 수 있다.
+Rule Check는 `priority_rules`와 `priority_rule_conditions`를 사람이 읽기 쉬운 표로 보여준다.
+평가 순서(`priority`)는 기본 정렬에는 사용하지만 MVP 테이블 컬럼으로 노출하지 않는다. 순서 조정, 상세 조건 편집, CTA 상세 관리는 후속 모달에서 다룬다.
 
-질문 카드 예시:
+#### 화면 구조
 
 ```txt
-[1] 선크림 사용 여부
-    질문: 외출할 때 선크림을 바르나요?
-    Key: routine.sunscreen_frequency
-    입력 방식: 단일 선택
-    상태: ON
+[상단 필터]
+result_type: 전체 / HOLD / CAUTION / PASS / ROUTE_CATEGORY
+status: 전체 / active / inactive
 
-[2] 야외 활동 여부
-    질문: 하루 기준, 낮에 밖에 있는 시간은 어느 정도인가요?
-    Key: life.outdoor_activity
-    입력 방식: 단일 선택
-    상태: ON
-
-[3] 눈시림 여부
-    질문: 선크림을 바르면 눈이 시린 편인가요?
-    Key: context.eye_sting
-    입력 방식: 예 / 아니오
-    상태: ON
+[Rule Check Table]
+룰 이름 | 질문 | 조건 | 결론 | 상태 | 메모
 ```
 
-Box 1에서 질문 하나를 선택하면, Box 2 / Box 3에서 해당 질문이 언제 노출될지 설정한다.
+#### 컬럼 정의
+
+| 컬럼    | 표시 내용                                                       | 데이터 기준                                      |
+| ------- | --------------------------------------------------------------- | ------------------------------------------------ |
+| 룰 이름 | 관리자용 룰 이름. 가능하면 rule key도 함께 보조 표시            | `priority_rules.name`                            |
+| 질문    | 조건이 참조하는 기준 질문 key 목록                              | `priority_rule_conditions.question_id → questions.key` |
+| 조건    | `fact_key OP value` 형식. OR/AND가 있으면 한 줄 또는 줄바꿈 표시 | `priority_rule_conditions.operator/value/state`  |
+| 결론    | 현재는 단순 결과 메시지 1줄만 표시                              | `priority_rules.result_title`                    |
+| 상태    | `active` / `inactive` 라디오                                    | `priority_rules.is_active`                       |
+| 메모    | 근거, 보류 이유, 추후 수정 필요점                               | MVP 저장 방식 미정. 후속 `admin_note` 또는 `admin_notes` 검토 |
+
+#### 행 예시
+
+| 룰 이름                 | 질문                                      | 조건                                                                 | 결론                                                   | 상태   | 메모                                |
+| ----------------------- | ----------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------ | ------ | ----------------------------------- |
+| 최근 자극 보류          | `life.recent_irritation`                  | `life.recent_irritation EQ true`                                     | 지금은 새 제품보다 피부 반응 안정화가 먼저예요.        | active | 모든 제품군 추천보다 우선            |
+| 기능성 과다 보류        | `product.owned_categories`                | `product.active_overload EQ true`                                    | 자극 가능성이 높아 새 세럼이나 필링 제품은 보류해요.   | active | 레티놀/비타민C/AHA/BHA 병행 주의     |
+| 클렌징 루틴 우선        | `routine.cleansing_stable`, `routine.foam_enough` | `routine.cleansing_stable EQ false OR routine.foam_enough EQ false` | 메이크업이나 선크림 제거 방식부터 점검하는 게 좋아요. | active | 클렌저 카테고리 연결                 |
+| 선크림 루틴 우선        | `life.outdoor_activity`, `routine.sunscreen_frequency` | `life.outdoor_activity IN [1_3h, over_3h] AND routine.sunscreen_use EQ false` | 세럼보다 선크림 루틴이 먼저예요.                      | active | 잡티/탄력 고민이어도 선크림 우선     |
+| 기본 통과               | -                                         | `fallback`                                                           | 지금은 기능성 제품군을 봐도 괜찮아요.                  | active | 매칭 룰이 없을 때 마지막으로 적용    |
+
+#### MVP 제외
+
+- drag & drop 우선순위 변경
+- Rule 조건 직접 편집
+- CTA 상세 편집
+- result description 전체 편집
+- 룰 발동 테스트 / 제품 후보 미리보기
 
 ---
 
-#### Box 2. Life / 루틴 노출 조건
+### Admin 2 — Question Check
 
-선택한 질문이 어떤 Life / 루틴 조건에서 노출될지 설정한다.
+> **사용자에게 보이는 질문 문구, 답변 타입, 선택지, 노출 조건, 활성 상태를 확인하는 화면**
 
-예를 들어 눈시림 여부 질문은 모든 사용자에게 물을 필요가 없다.
+Question Check는 `questions`와 `question_variants`를 같이 보여준다.
+관리자가 주로 검수하는 대상은 canonical question이 아니라 실제 화면 질문인 `question_variants`다.
 
-> 질문: 선크림을 바르면 눈이 시린 편인가요?
-
-Box 2와 Box 3의 각 항목은 3가지 상태로 관리한다.
-
-| 상태   | 의미                                  |
-| ------ | ------------------------------------- |
-| ✓ 필수 | 이 조건이 맞아야 질문이 노출됨        |
-| ✕ 제외 | 이 조건이 맞으면 질문이 노출되지 않음 |
-| - 무관 | 이 질문에서는 사용하지 않음           |
-
----
-
-#### 최종 정리
-
-| 박스  | 역할                                         |
-| ----- | -------------------------------------------- |
-| Box 1 | 질문 목록과 노출 순서 관리                   |
-| Box 2 | 선택한 질문의 Life / 루틴 노출 조건 관리     |
-| Box 3 | 선택한 질문의 제품 / 카테고리 노출 조건 관리 |
-
-즉, Context 관리자 화면의 목적은:  
-어떤 질문을 / 어떤 사용자에게 / 어떤 제품군에서 / 언제 보여줄지 관리하는 것
-
----
-
-### Product Filter Mapping 관리 페이지
-
-여기서는 사용자의 구어체 선택값(user_responses)이 어떤 Product Matrix 필터를 자동으로 켤지 설정한다.
-`question_filter_mappings`는 trigger만 담당하고, 자동 선택 대상은 `product_matrix_filter_definitions`다. attribute 기반 조건은 해당 Matrix 정의가 가리키는 `product_filter_definitions.attribute_definition_id`와 기본 operator/value에서 나오고, 복합/시스템 조건은 computed handler가 해석한다.
-
-| 사용자 답변 (trigger)                    | 자동 선택 matrix filter | 기본 조건                     | 필터 표시 이름 |
-| ---------------------------------------- | ----------------------- | ----------------------------- | -------------- |
-| context.eye_sting = true                 | `eye_sting_low`         | eye_sting IN ["none","low"]   | 눈시림 낮음    |
-| life.outdoor_activity IN [1_3h, over_3h] | `spf_50_plus`           | spf >= 50                     | 야외 사용 적합 |
-| context.white_cast_sensitive = true      | `white_cast_low`        | white_cast IN ["none","low"]  | 백탁 없음      |
-| preference.fragrance_sensitive = true    | `no_fragrance`          | fragrance = false             | 향료 없음      |
-| context.makeup_use = true                | `makeup_compat_good`    | makeup_compatibility = "good" | 메이크업 궁합  |
-
-필터 상태에는 `{matrix_filter_definition_id, operator, value}`만 저장한다. 표시 라벨, attribute key, 입력 위젯, 선택 가능 operator는 `product_matrix_filter_definitions`와 `product_filter_definitions`를 조인해 해석한다.
-
----
-
-### Product Matrix 필터 자동 생성
-
-Category Decision CTA로 Product Matrix에 진입하면, `product_matrix_filter_definitions.is_default = true` 와 context 답변이 매칭한 `question_filter_mappings.matrix_filter_definition_id` 가 자동으로 선택 상태로 시작된다. Concern preset의 `suggested_filters`가 있다면 최종 category가 일치할 때만 함께 반영된다.
-
-예를 들어 사용자가 이렇게 답했다면:
-
-- 눈시림 있음
-- 야외에서 사용
-- 메이크업 전 사용
-- 민감성 피부
-
-Product Matrix에는 이런 필터가 자동으로 선택된다.
-
-`[눈시림 낮음] [SPF 50 이상] [메이크업 궁합] [향료 주의]`
+#### 화면 구조
 
 ```txt
-Context 답변 → question_filter_mappings 의 trigger 매칭 → matrix_filter_definition_id 결정
-→ product_matrix_filter_definitions 로 Matrix 노출/기본값 조회
-→ 필요 시 product_filter_definitions 로 attribute 조건 조회
-→ product_matrix_filter_states 에 저장 (source: CATEGORY_DECISION_CTA)
-→ products 동적 SQL 조회
-→ 결과 decision_runs에 snapshot 저장
+[상단 필터]
+screen: 전체 / priority_gate / context
+ui_section: 전체 / life_routine / owned_products / basic / category
+category: 전체 / toner / sunscreen / serum / lipcare / moisturizer / cleanser
+status: 전체 / active / inactive
+
+[Question Check Table]
+question | question_variant | answer_type | user_options | 노출 조건 | 상태 | 메모
 ```
 
-사용자가 필터를 추가/삭제하면 `product_matrix_filter_states.filters`가 업데이트되고, `session_events`에 이벤트로 기록된다.
+#### 컬럼 정의
+
+| 컬럼             | 표시 내용                                                            | 데이터 기준                                           |
+| ---------------- | -------------------------------------------------------------------- | ----------------------------------------------------- |
+| question         | 내부 기준 질문 key                                                   | `questions.key`                                       |
+| question_variant | 사용자에게 실제로 보이는 질문 문구                                   | `question_variants.title`                             |
+| answer_type      | 답변 형식                                                            | `questions.answer_type`                               |
+| user_options     | 사용자에게 보이는 선택지. 내부값은 필요 시 보조 표시                 | `question_variants.answers` + `questions.answer_values` |
+| 노출 조건        | `screen/ui_section/category.selected/visibility condition` 조합       | `question_variants.screen/ui_section` + `question_visibility_conditions` |
+| 상태             | `active` / `inactive` 라디오. 화면 질문 단위로 제어                  | `question_variants.is_active`                         |
+| 메모             | 문구 수정 의도, 룰 연결, 제품 선택 기준 근거                         | MVP 저장 방식 미정. 후속 `admin_note` 또는 `admin_notes` 검토 |
+
+#### ui_section 필터 의미
+
+| ui_section       | 의미                         | 주요 화면 |
+| ---------------- | ---------------------------- | --------- |
+| `life_routine`   | 최근 자극, 선크림, 세안, 위생, 밤 루틴 질문 | Priority Gate |
+| `owned_products` | 보유 중인 스킨케어 제품 체크 | Priority Gate |
+| `basic`          | 제품군 공통 사용 맥락 질문   | Category Decision Box 1 |
+| `category`       | 제품군별 핵심 기준 질문      | Category Decision Box 2 |
+
+#### 행 예시
+
+| question                         | question_variant                                      | answer_type   | user_options                              | 노출 조건                                               | 상태   | 메모                               |
+| -------------------------------- | ----------------------------------------------------- | ------------- | ----------------------------------------- | ------------------------------------------------------- | ------ | ---------------------------------- |
+| `life.recent_irritation`         | 최근 따가움, 붉어짐, 가려움 같은 문제가 있나요?       | BOOLEAN       | 예 / 아니오                               | `screen EQ priority_gate AND ui_section EQ life_routine` | active | 최상위 HOLD 룰과 연결              |
+| `routine.sunscreen_frequency`    | 외출할 때 선크림을 바르나요?                          | SINGLE_SELECT | `daily` / `sometimes` / `rarely` / `never` | `screen EQ priority_gate` 또는 `category.selected EQ serum` | active | 선크림 우선 룰, 세럼 사용 주의와 연결 |
+| `context.skin_type`              | 피부 타입에 가장 가까운 것은 무엇인가요?              | SINGLE_SELECT | dry / oily / combination / sensitive 등    | `category.selected IN [toner, sunscreen, serum, moisturizer, cleanser]` | active | 립케어에는 노출하지 않음            |
+| `context.eye_sting`              | 선크림을 바르면 눈이 시린 편인가요?                   | BOOLEAN       | 예 / 아니오                               | `category.selected EQ sunscreen`                         | active | 선크림 눈시림 낮음 필터와 연결      |
+| `preference.menthol_sensitive`   | 화한 립밤을 쓰면 불편한가요?                          | BOOLEAN       | 예 / 아니오                               | `category.selected EQ lipcare`                           | active | 립케어 멘톨 회피 기준               |
+
+#### MVP 제외
+
+- 질문 신규 생성
+- answer option 편집
+- canonical question 비활성화
+- visibility condition 직접 편집
+- Product Matrix 필터 매핑 편집
 
 ---
 
-### Product DB 관리
+### 후속 관리자 화면
 
-> **제품 추가, 제품군별 속성, 성분, 가격, 이미지, 구매 링크를 관리하는 화면**
+아래 화면은 Rule Check / Question Check 안정화 후 확장한다.
 
-Product DB 관리 화면은 Product Matrix와 Reaction Traceback에서 사용할 제품 데이터를 등록하고 수정하는 화면이다.
-
-**화면 역할**
-
-```txt
-제품 기본 정보 등록
-→ 제품군 선택
-→ 제품군별 Attribute 입력
-→ 성분 정보 입력
-→ 노출 여부 관리
-```
-
-#### 관리 항목
-
-| 항목          | 설명                                                           |
-| ------------- | -------------------------------------------------------------- |
-| 브랜드        | 제품 브랜드                                                    |
-| 제품명        | 상품명                                                         |
-| 제품군        | 스킨/토너, 선크림, 에센스/세럼/앰플, 립케어, 로션,크림, 클렌저 |
-| 가격          | 제품 가격                                                      |
-| 가격대        | ~2만원 / 2~5만원 / 5만원+                                      |
-| 용량          | ml / g                                                         |
-| 이미지        | 제품 이미지                                                    |
-| 구매 링크     | 올리브영 / 브랜드몰 / 기타 링크                                |
-| 성분표        | 전성분 정보                                                    |
-| 제품군별 속성 | SPF, PA, 눈시림, 멘톨 여부 등                                  |
-| 노출 여부     | Product Matrix 노출 / 비노출                                   |
-
-#### 제품군별 Attribute
-
-**선크림**
-
-- SPF
-- PA
-- 필터 타입
-- 눈시림 정도
-- 백탁 정도
-- 발림성
-- 끈적임
-- 메이크업 궁합
-- 휴대성
-
-**세럼**
-
-- 목적 성분
-- 자극 가능성
-- 병행 주의 성분
-- 사용 시간대
-- 기대 시차
-- 제형
-
-**립케어**
-
-- 멘톨 여부
-- 향료 여부
-- SPF 여부
-- 보습 지속력
-- 제형
-- 휴대성
-
-#### 상품 등록 방식
-
-1. 브랜드 선택
-2. 제품군 선택
-3. 제품명 입력
-4. 가격 / 용량 / 이미지 입력
-5. 제품군별 Attribute 입력
-6. 성분표 입력
-7. 구매 링크 입력
-8. 노출 여부 설정
-
-> Product DB 관리는 단순 상품 등록 화면이 아니다. 제품군별 attributes와 성분 데이터를 함께 관리해서 Product Matrix, Product Filter Mapping, Reaction Traceback에서 사용할 수 있게 만든다. attributes를 얼마나 정확하게 입력하느냐가 필터링 품질을 결정한다.
-
----
-
-### Rule Test 화면
-
-> **관리자가 만든 Rule이 실제 사용자 조건에서 어떻게 작동하는지 확인하는 테스트 화면**
-
-Rule Test 화면은 Priority Decision, Context, Product Filter Mapping, Product DB가 제대로 연결되는지 검증하는 화면이다.
-
-**화면 역할**
-
-```txt
-가상 사용자 조건 입력
-→ 매칭되는 Priority Rule 확인
-→ 노출될 Context 질문 확인
-→ Product Filter Mapping 적용 확인
-→ Product Matrix 결과 미리보기
-```
-
-#### 테스트 입력 항목
-
-| 항목             | 설명                                                |
-| ---------------- | --------------------------------------------------- |
-| Life / 루틴 조건 | 최근 자극, 야외 활동, 선크림 사용, 클렌징 안정성 등 |
-| 사용 중인 제품   | 세럼, 선크림, 레티놀, 비타민C 등                    |
-| 선택 제품군      | 선크림 / 세럼 / 립케어 등                           |
-| Context 답변     | 눈시림, 향료 회피, 휴대성, 메이크업 전 사용 등      |
-| 가격대           | 전체 가격대 기준으로 확인                           |
-
-#### 테스트 결과
-
-| 결과 영역                        | 설명                                        |
-| -------------------------------- | ------------------------------------------- |
-| 매칭된 Priority Rule             | 어떤 Rule이 발동했는지 표시                 |
-| 최종 결과 문구                   | 사용자에게 보여줄 Priority Gate 결과        |
-| 노출될 Context 질문              | 현재 조건에서 어떤 질문이 보여지는지 표시   |
-| 적용된 Product Filter Definition | 변환된 attribute 조건 + operator/value 확인 |
-| Product Matrix 미리보기          | 실제로 어떤 제품이 노출되는지 확인          |
+| 화면                         | 역할                                      |
+| ---------------------------- | ----------------------------------------- |
+| Product Filter Mapping 관리  | 사용자 답변이 어떤 Matrix 필터를 자동으로 켜는지 관리 |
+| Product DB 관리              | 제품 기본 정보, 카테고리 attribute, 성분, 이미지, 구매 링크 관리 |
+| Rule Test                    | 가상 사용자 입력으로 룰/질문/필터/제품 후보 연결을 검증 |
+| Concern Preset 관리          | Concern 태그의 preset facts, suggested category/filter 검수 |
 
 ---
 

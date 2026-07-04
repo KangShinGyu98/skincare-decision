@@ -369,7 +369,106 @@ S08 Reaction Traceback
 
 ---
 
-## 7. 부록 A — 로그인 자동 병합 (cross-screen)
+## 7. Admin Rule Check / Question Check
+
+> 사용자 플로우가 아니라 seed/DB 검수용 관리자 화면이다. MVP 범위는 **Rule Check**와 **Question Check** 두 화면이며, Product Filter Mapping / Product DB / Rule Test는 후속 화면으로 둔다.
+
+관리자 화면의 조건 표기는 자연어 설명이 아니라 `fact_key OP value` 형식을 기본으로 한다.
+
+```txt
+life.recent_irritation EQ true
+routine.sunscreen_frequency IN [rarely, never]
+routine.cleansing_stable EQ false OR routine.foam_enough EQ false
+category.selected EQ sunscreen AND context.eye_sting EQ true
+```
+
+`docs/ContentSpec/skincare_product_selection_rule.md`는 런타임 데이터가 아니라 룰/질문 메모의 근거 문서로 참조한다.
+
+### 7.1 Admin Rule Check
+
+> `priority_rules`와 `priority_rule_conditions`를 검수하는 화면. 평가 순서(`priority`)는 기본 정렬에는 사용하지만 MVP 테이블 컬럼에는 노출하지 않는다.
+
+#### 7.1.1 읽기 데이터 (Read)
+
+| 데이터                  | 소스 테이블 / 출처                                                                 | 용도                                                        |
+| ----------------------- | ---------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| Rule 목록               | `priority_rules ORDER BY priority ASC`                                             | 룰 이름, 결과 타입, 결론 메시지, 활성 상태 표시             |
+| Rule 조건               | `priority_rule_conditions WHERE rule_id IN (...)`                                  | 조건식을 `fact_key OP value` 형식으로 표시                  |
+| 기준 질문 key           | `questions` (`priority_rule_conditions.question_id`)                               | 조건의 좌변 fact key 표시                                   |
+| 질문 표시명 후보        | `question_variants` (동일 `question_id`의 활성 variant)                            | "질문" 컬럼에 보조 표시. 없으면 `questions.key`만 표시      |
+| 추천 카테고리           | `product_categories` (`priority_rules.recommend_category_id`)                      | ROUTE_CATEGORY 룰의 추천 카테고리 보조 표시                 |
+| 룰/질문 근거 문서       | `docs/ContentSpec/skincare_product_selection_rule.md`                              | 메모 작성 시 제품 선택 기준/성분 근거 확인                  |
+
+#### 7.1.2 쓰기 데이터 (Write)
+
+| 데이터                  | 대상 테이블 / 저장 위치              | 트리거 / 조건                                                                 |
+| ----------------------- | ------------------------------------ | ----------------------------------------------------------------------------- |
+| Rule 활성 상태          | `priority_rules.is_active`           | Rule Check 행의 active/inactive 라디오 변경                                   |
+| Rule 갱신 시각          | `priority_rules.updated_at`          | `is_active` 변경 시 application 이 갱신                                       |
+| Rule 메모               | **미정**                             | MVP 화면 컬럼으로는 노출하되, 영속 저장은 `admin_note` 컬럼 또는 `admin_notes` 테이블 결정 후 추가 |
+
+> MVP에서 Rule Check는 조건 자체를 편집하지 않는다. `priority`, `result_type`, `result_title`, `result_description`, `cta_*`, `priority_rule_conditions` 직접 편집은 후속 상세 모달 범위다.
+
+#### 7.1.3 계산 데이터 (Computed)
+
+| 계산 항목              | 입력                                              | 로직                                                                                 |
+| ---------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| 조건식 표시            | `priority_rule_conditions` + `questions.key`      | `question.key operator value` 문자열로 조립. REQUIRED/EXCLUDED 상태는 조건 그룹에 반영 |
+| 질문 컬럼              | 조건의 `question_id` 목록                         | 중복 제거 후 `questions.key`를 기본 표시하고, 필요 시 활성 variant title을 보조 표시 |
+| 결론 표시              | `priority_rules.result_title`                     | MVP에서는 한 줄 결론만 표시. CTA/description은 후속 모달로 이동                     |
+| 상태 필터              | `priority_rules.is_active`                        | 전체 / active / inactive 필터                                                        |
+
+#### 7.1.4 다음 화면으로 전달 (Pass to Next)
+
+| 데이터     | 전달 방식 | 다음 화면 |
+| ---------- | --------- | --------- |
+| 없음       | -         | MVP에서는 Rule Check 단일 목록 화면으로 종료 |
+
+---
+
+### 7.2 Admin Question Check
+
+> `questions`와 `question_variants`를 함께 검수하는 화면. 관리자 조작 대상은 canonical question이 아니라 화면 질문인 `question_variants`다.
+
+#### 7.2.1 읽기 데이터 (Read)
+
+| 데이터              | 소스 테이블 / 출처                                                                 | 용도                                                     |
+| ------------------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| 화면 질문 목록      | `question_variants ORDER BY screen, ui_section, sort_order`                        | 질문 문구, 화면, 섹션, 활성 상태 표시                    |
+| 기준 질문 정의      | `questions` (`question_variants.question_id`)                                      | `question` key, `answer_type`, 내부 `answer_values` 표시 |
+| 질문 노출 조건      | `question_visibility_conditions WHERE question_variant_id IN (...)`                | 노출 조건을 `fact_key OP value` 형식으로 표시             |
+| 카테고리 메타       | `product_categories`                                                               | `category.selected` 조건을 카테고리 key/label로 해석      |
+| 룰/질문 근거 문서   | `docs/ContentSpec/skincare_product_selection_rule.md`                              | 질문 메모 작성 시 제품군별 선택 기준/성분 근거 확인      |
+
+#### 7.2.2 쓰기 데이터 (Write)
+
+| 데이터                  | 대상 테이블 / 저장 위치              | 트리거 / 조건                                                                  |
+| ----------------------- | ------------------------------------ | ------------------------------------------------------------------------------ |
+| 화면 질문 활성 상태     | `question_variants.is_active`        | Question Check 행의 active/inactive 라디오 변경                                |
+| 화면 질문 갱신 시각     | `question_variants.updated_at`       | `is_active` 변경 시 application 이 갱신                                        |
+| 질문 메모               | **미정**                             | MVP 화면 컬럼으로는 노출하되, 영속 저장은 `admin_note` 컬럼 또는 `admin_notes` 테이블 결정 후 추가 |
+
+> MVP에서 Question Check는 질문 문구, 답변 선택지, answer type, visibility condition을 직접 편집하지 않는다. canonical `questions.is_active`도 이 화면에서 변경하지 않는다.
+
+#### 7.2.3 계산 데이터 (Computed)
+
+| 계산 항목              | 입력                                                       | 로직                                                                                          |
+| ---------------------- | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| ui_section 필터        | `question_variants.ui_section`                             | life_routine / owned_products / basic / category 단위 select 필터                              |
+| category 필터          | `question_visibility_conditions` + `category.selected` 조건 | category 조건이 있는 variant만 해당 카테고리 필터에 포함. 조건이 없으면 전체 또는 공통으로 표시 |
+| user_options 표시      | `question_variants.answers` + `questions.answer_values`    | 사용자 라벨을 기본 표시하고, 필요 시 내부 value를 보조 표시                                    |
+| 노출 조건 표시         | `screen`, `ui_section`, `question_visibility_conditions`    | `screen EQ context AND ui_section EQ category AND category.selected EQ sunscreen` 같은 문자열로 조립 |
+| 상태 필터              | `question_variants.is_active`                              | 전체 / active / inactive 필터                                                                 |
+
+#### 7.2.4 다음 화면으로 전달 (Pass to Next)
+
+| 데이터     | 전달 방식 | 다음 화면 |
+| ---------- | --------- | --------- |
+| 없음       | -         | MVP에서는 Question Check 단일 목록 화면으로 종료 |
+
+---
+
+## 8. 부록 A — 로그인 자동 병합 (cross-screen)
 
 로그인 이벤트가 발생하면 **현재 화면과 무관하게** 다음 트랜잭션을 단일 단위로 실행한다 ([db_modeling.md:85](db_modeling.md#L85), [backend/CLAUDE.md](../../backend/CLAUDE.md) 트랜잭션 가이드).
 
@@ -388,48 +487,49 @@ UPDATE product_matrix_filter_states  SET user_id = :user_id WHERE device_id = :d
 
 ---
 
-## 8. 부록 B — 테이블별 read/write 발생 화면 매트릭스
+## 9. 부록 B — 테이블별 read/write 발생 화면 매트릭스
 
-| 테이블                              | S01 | S02 | S03~S05 | S06 | S08 |
-| ----------------------------------- | --- | --- | ------- | --- | --- |
-| `users`                             | —   | —   | —       | —   | —   |
-| `devices`                           | W   | W   | W       | W   | W   |
-| `user_sessions`                     | W   | W   | W       | W   | W   |
-| `session_events`                    | W   | W   | W       | W   | W   |
-| `questions`                         | —   | R   | R       | —   | —   |
-| `question_variants`                 | —   | R   | R       | —   | —   |
-| `question_visibility_conditions`    | —   | R   | R       | —   | —   |
-| `user_responses`                    | W   | R/W | R/W     | R   | —   |
-| `priority_rules`                    | —   | R   | —       | —   | —   |
-| `priority_rule_conditions`          | —   | R   | —       | —   | —   |
-| `decision_runs`                     | —   | W   | W       | W   | W   |
-| `product_categories`                | R   | R   | R       | R   | R   |
-| `brands`                            | —   | —   | —       | R   | R   |
-| `category_attribute_definitions`    | —   | —   | R       | R   | —   |
-| `products`                          | —   | —   | R       | R   | R   |
-| `product_filter_definitions`        | —   | —   | R       | R   | —   |
-| `product_matrix_filter_definitions` | —   | —   | R       | R   | —   |
-| `question_filter_mappings`          | —   | —   | R       | R   | —   |
-| `product_matrix_filter_states`      | —   | —   | —       | R/W | (W) |
-| `ingredients`                       | —   | —   | —       | R   | R   |
-| `product_ingredients`               | —   | —   | (R)     | R   | R   |
-| `ingredient_groups`                 | —   | —   | —       | (R) | R   |
-| `ingredient_group_members`          | —   | —   | (R)     | R   | R   |
-| `reaction_reports`                  | —   | —   | —       | —   | W   |
-| `reaction_report_products`          | —   | —   | —       | —   | W   |
-| `suspected_causes`                  | —   | —   | —       | —   | W   |
-| `avoidance_rules`                   | —   | —   | R       | R   | R/W |
+| 테이블                              | S01 | S02 | S03~S05 | S06 | S08 | Admin Rule | Admin Question |
+| ----------------------------------- | --- | --- | ------- | --- | --- | ---------- | -------------- |
+| `users`                             | —   | —   | —       | —   | —   | —          | —              |
+| `devices`                           | W   | W   | W       | W   | W   | —          | —              |
+| `user_sessions`                     | W   | W   | W       | W   | W   | —          | —              |
+| `session_events`                    | W   | W   | W       | W   | W   | —          | —              |
+| `questions`                         | —   | R   | R       | —   | —   | R          | R              |
+| `question_variants`                 | —   | R   | R       | —   | —   | (R)        | R/W            |
+| `question_visibility_conditions`    | —   | R   | R       | —   | —   | —          | R              |
+| `user_responses`                    | W   | R/W | R/W     | R   | —   | —          | —              |
+| `priority_rules`                    | —   | R   | —       | —   | —   | R/W        | —              |
+| `priority_rule_conditions`          | —   | R   | —       | —   | —   | R          | —              |
+| `decision_runs`                     | —   | W   | W       | W   | W   | —          | —              |
+| `product_categories`                | R   | R   | R       | R   | R   | R          | R              |
+| `brands`                            | —   | —   | —       | R   | R   | —          | —              |
+| `category_attribute_definitions`    | —   | —   | R       | R   | —   | —          | —              |
+| `products`                          | —   | —   | R       | R   | R   | —          | —              |
+| `product_filter_definitions`        | —   | —   | R       | R   | —   | —          | —              |
+| `product_matrix_filter_definitions` | —   | —   | R       | R   | —   | —          | —              |
+| `question_filter_mappings`          | —   | —   | R       | R   | —   | —          | —              |
+| `product_matrix_filter_states`      | —   | —   | —       | R/W | (W) | —          | —              |
+| `ingredients`                       | —   | —   | —       | R   | R   | —          | —              |
+| `product_ingredients`               | —   | —   | (R)     | R   | R   | —          | —              |
+| `ingredient_groups`                 | —   | —   | —       | (R) | R   | —          | —              |
+| `ingredient_group_members`          | —   | —   | (R)     | R   | R   | —          | —              |
+| `reaction_reports`                  | —   | —   | —       | —   | W   | —          | —              |
+| `reaction_report_products`          | —   | —   | —       | —   | W   | —          | —              |
+| `suspected_causes`                  | —   | —   | —       | —   | W   | —          | —              |
+| `avoidance_rules`                   | —   | —   | R       | R   | R/W | —          | —              |
 
-> 괄호 `(R)`는 회피 규칙 적용 시 등 **부수적 조회**. `W` 옆 괄호 표시는 다른 화면 동작의 부수 효과로 갱신되는 경우.
+> 괄호 `(R)`는 회피 규칙 적용, 관리자 보조 표시 등 **부수적 조회**. `W` 옆 괄호 표시는 다른 화면 동작의 부수 효과로 갱신되는 경우.
 
 ---
 
-## 9. 변경 / 확장 시 갱신할 곳
+## 10. 변경 / 확장 시 갱신할 곳
 
 | 변화                    | 동기화 대상                                                                                                                                                                          |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | 신규 기준 질문 도입     | `questions` 시드(key 포함) + 화면별 `question_variants.answers` + 본 문서 §2/§3 Read 표 + 관련 visibility 조건                                                                       |
 | 신규 카테고리 추가      | `product_categories`, `category_attribute_definitions`, `product_filter_definitions`, `product_matrix_filter_definitions`, `question_filter_mappings`, `product_attribute_schema.md` |
 | 신규 Priority Rule 추가 | `priority_rules`/`priority_rule_conditions` 시드 + 본 문서 §2.4 결과 분기                                                                                                            |
+| 관리자 Rule/Question 화면 변경 | 본 문서 §7 + [wireframe_summary.md](../ContentSpec/wireframe_summary.md#관리자-화면) + 필요 시 `backend_api_list.md` admin API 초안                                                |
 | 신규 화면 추가          | 본 문서에 새 §, [wireframe_summary.md](../ContentSpec/wireframe_summary.md), [page_content_specification.md](../ContentSpec/page_content_specification.md)                           |
 | FE 라우팅 변경          | 본 문서의 "다음 화면으로 전달" 표                                                                                                                                                    |
