@@ -1,11 +1,18 @@
 import { Controller, Get, Patch } from '@nestjs/common';
 import {
+  updateAdminRuleAdminNoteBodySchema,
+  updateAdminRulePrioritiesBodySchema,
   adminRuleParamSchema,
   adminRulesQuerySchema,
   updateAdminRuleStatusBodySchema,
+  type AdminRuleDetail,
   type AdminRuleParam,
   type AdminRulesQuery,
   type AdminRulesResponse,
+  type UpdateAdminRuleAdminNoteBody,
+  type UpdateAdminRuleAdminNoteResponse,
+  type UpdateAdminRulePrioritiesBody,
+  type UpdateAdminRulePrioritiesResponse,
   type UpdateAdminRuleStatusBody,
   type UpdateAdminRuleStatusResponse,
 } from '@skincare-decision/shared/schemas';
@@ -23,11 +30,31 @@ export class AdminRulesController {
     return this.service.findRules(query);
   }
 
+  @Get(':ruleId')
+  findRule(@ZodParam(adminRuleParamSchema) params: AdminRuleParam): Promise<AdminRuleDetail> {
+    return this.service.findRule(params.ruleId);
+  }
+
+  @Patch('priorities')
+  updatePriorities(
+    @ZodBody(updateAdminRulePrioritiesBodySchema) body: UpdateAdminRulePrioritiesBody,
+  ): Promise<UpdateAdminRulePrioritiesResponse> {
+    return this.service.updatePriorities(body);
+  }
+
   @Patch(':ruleId/status')
   updateStatus(
     @ZodParam(adminRuleParamSchema) params: AdminRuleParam,
     @ZodBody(updateAdminRuleStatusBodySchema) body: UpdateAdminRuleStatusBody,
   ): Promise<UpdateAdminRuleStatusResponse> {
     return this.service.updateStatus(params.ruleId, body);
+  }
+
+  @Patch(':ruleId/admin-note')
+  updateAdminNote(
+    @ZodParam(adminRuleParamSchema) params: AdminRuleParam,
+    @ZodBody(updateAdminRuleAdminNoteBodySchema) body: UpdateAdminRuleAdminNoteBody,
+  ): Promise<UpdateAdminRuleAdminNoteResponse> {
+    return this.service.updateAdminNote(params.ruleId, body);
   }
 }

@@ -1,14 +1,22 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import {
+  adminRuleDetailSchema,
   adminRulesResponseSchema,
+  updateAdminRuleAdminNoteResponseSchema,
+  updateAdminRulePrioritiesResponseSchema,
   updateAdminRuleStatusResponseSchema,
+  type AdminRuleCondition,
+  type AdminRuleDetail,
   type AdminRulesQuery,
   type AdminRulesResponse,
   type AdminRuleTableRow,
+  type UpdateAdminRuleAdminNoteBody,
+  type UpdateAdminRuleAdminNoteResponse,
+  type UpdateAdminRulePrioritiesBody,
+  type UpdateAdminRulePrioritiesResponse,
   type UpdateAdminRuleStatusBody,
   type UpdateAdminRuleStatusResponse,
 } from '@skincare-decision/shared/schemas';
-import { ConditionState, QuestionAnswerType } from '../../generated/prisma/enums';
 import {
   AdminRulesRepository,
   type AdminRuleConditionRecord,
@@ -54,68 +62,121 @@ export class AdminRulesService {
     return updateAdminRuleStatusResponseSchema.parse(this.toTableRow(record));
   }
 
-  private toTableRow(record: AdminRuleRecord): AdminRuleTableRow {
-    const questions = this.unique(record.conditions.map((condition) => condition.question.key));
+  async findRule(ruleId: string): Promise<AdminRuleDetail> {
+    const record = await this.repository.findRuleById(ruleId);
 
+    if (!record) {
+      throw this.createNotFoundException();
+    }
+
+    return adminRuleDetailSchema.parse(this.toDetail(record));
+  }
+
+  async updateAdminNote(
+    ruleId: string,
+    body: UpdateAdminRuleAdminNoteBody,
+  ): Promise<UpdateAdminRuleAdminNoteResponse> {
+    const record = await this.repository.updateRuleAdminNote(
+      ruleId,
+      this.normalizeAdminNote(body.adminNote),
+    );
+
+    if (!record) {
+      throw this.createNotFoundException();
+    }
+
+    return updateAdminRuleAdminNoteResponseSchema.parse(this.toTableRow(record));
+  }
+
+  async updatePriorities(
+    body: UpdateAdminRulePrioritiesBody,
+  ): Promise<UpdateAdminRulePrioritiesResponse> {
+    const records = await this.repository.updateRulePriorities(body.items);
+
+    if (!records) {
+      throw this.createNotFoundException();
+    }
+
+    return updateAdminRulePrioritiesResponseSchema.parse({
+      items: records.map((record) => this.toTableRow(record)),
+    });
+  }
+
+  private toTableRow(record: AdminRuleRecord): AdminRuleTableRow {
     return {
       id: record.id,
+      priority: record.priority,
       ruleName: record.name,
-      questions,
-      conditionText: this.formatConditions(record.conditions),
+      conditions: record.conditions.map((condition) => this.toCondition(condition)),
       conclusion: record.resultTitle,
       resultType: record.resultType,
       status: record.isActive ? 'active' : 'inactive',
-      memo: null,
+      adminNote: record.adminNote,
     };
   }
 
-  private formatConditions(conditions: AdminRuleConditionRecord[]): string {
-    if (conditions.length === 0) {
-      return 'fallback';
-    }
-
-    return conditions
-      .map((condition) => {
-        const expression = `${condition.question.key} ${condition.operator} ${this.formatValue(
-          condition,
-        )}`;
-
-        if (condition.state === ConditionState.EXCLUDED) {
-          return `NOT (${expression})`;
-        }
-
-        return expression;
-      })
-      .join(' AND ');
+  private toDetail(record: AdminRuleRecord): AdminRuleDetail {
+    return {
+      ...this.toTableRow(record),
+      resultDescription: record.resultDescription,
+      ctaLabel: record.ctaLabel,
+      ctaTarget: record.ctaTarget,
+      recommendCategory: record.recommendCategory,
+    };
   }
 
-  private formatValue(condition: AdminRuleConditionRecord): string {
-    const values = condition.value.map((value) =>
-      condition.question.answerType === QuestionAnswerType.BOOLEAN
-        ? this.formatBooleanValue(value)
-        : String(value),
+  private toCondition(condition: AdminRuleConditionRecord): AdminRuleCondition {
+    const variant = condition.question.variants[0];
+    const decisionValues = condition.value.map((value) => ({
+      label: this.resolveDecisionLabel(condition, value),
+      value,
+    }));
+
+    return {
+      id: condition.id,
+      questionId: condition.question.id,
+      questionTitle: variant?.title ?? condition.question.key,
+      operator: condition.operator,
+      decisionValues,
+      decisionValueText:
+        decisionValues.length > 0
+          ? decisionValues.map((decisionValue) => decisionValue.label).join(', ')
+          : '-',
+      state: condition.state,
+    };
+  }
+
+  private resolveDecisionLabel(condition: AdminRuleConditionRecord, value: number): string {
+    const variant = condition.question.variants[0];
+    const answerValueIndex = condition.question.answerValues.findIndex(
+      (answerValue) => answerValue === value,
     );
 
-    if (values.length === 1 && condition.operator !== 'IN') {
-      return values[0]!;
-    }
+    if (variant && answerValueIndex >= 0) {
+      const label = variant.answers[answerValueIndex];
 
-    return `[${values.join(', ')}]`;
-  }
-
-  private formatBooleanValue(value: number): string {
-    if (value === 1) {
-      return 'true';
-    }
-
-    if (value === 0) {
-      return 'false';
+      if (label) {
+        return label;
+      }
     }
 
     return String(value);
   }
 
-  private unique(values: string[]): string[] {
-    return [...new Set(values)];
+  private normalizeAdminNote(adminNote: string | null): string | null {
+    if (adminNote === null) {
+      return null;
+    }
+
+    const trimmedNote = adminNote.trim();
+
+    return trimmedNote.length > 0 ? trimmedNote : null;
+  }
+
+  private createNotFoundException(): NotFoundException {
+    return new NotFoundException({
+      code: 'ADMIN_RULE_NOT_FOUND',
+      message: 'Admin rule was not found',
+    });
   }
 }

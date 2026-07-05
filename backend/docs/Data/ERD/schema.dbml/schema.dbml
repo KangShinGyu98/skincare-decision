@@ -123,6 +123,7 @@ Table priority_rules {
   resultType PriorityRuleResultType [not null]
   resultTitle String [not null]
   resultDescription String [not null]
+  adminNote String
   holdCategories Json
   recommendCategoryId String
   ctaLabel String

@@ -304,6 +304,7 @@ model PriorityRule {
   resultType          PriorityRuleResultType  @map("result_type")
   resultTitle         String                  @map("result_title") @db.Text
   resultDescription   String                  @map("result_description") @db.Text
+  adminNote           String?                 @map("admin_note") @db.Text
   holdCategories      Json?                   @map("hold_categories")
   recommendCategoryId String?                 @map("recommend_category_id") @db.Uuid
   ctaLabel            String?                 @map("cta_label") @db.VarChar(100)
