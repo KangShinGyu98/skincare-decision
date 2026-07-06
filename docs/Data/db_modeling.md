@@ -533,34 +533,31 @@ WHERE user_id IS NOT NULL;
 
 Priority Gate 결과를 만드는 Rule.
 
-| 컬럼                  | 타입                                                  | 설명                                               |
-| --------------------- | ----------------------------------------------------- | -------------------------------------------------- |
-| id                    | UUID PK                                               | Rule ID                                            |
-| name                  | VARCHAR(200)                                          | Rule 이름                                          |
-| priority              | INTEGER                                               | 우선순위                                           |
-| is_active             | BOOLEAN DEFAULT true                                  | 활성 여부                                          |
-| result_type           | ENUM('STOP','HOLD','CAUTION','PASS','ROUTE_CATEGORY') | 결과 타입                                          |
-| result_title          | TEXT                                                  | 결과 제목                                          |
-| result_description    | TEXT                                                  | 결과 설명                                          |
-| hold_categories       | JSONB NULLABLE                                        | 보류 제품군 (배열 객체: `[{category_id, reason}]`) |
-| recommend_category_id | UUID FK → product_categories.id NULLABLE              | 추천 제품군                                        |
-| cta_label             | VARCHAR(100) NULLABLE                                 | CTA 문구                                           |
-| cta_target            | VARCHAR(255) NULLABLE                                 | CTA 이동 경로                                      |
-| created_at            | TIMESTAMPTZ                                           | 생성일                                             |
-| updated_at            | TIMESTAMPTZ                                           | 수정일                                             |
+| 컬럼               | 타입                                                  | 설명                                                        |
+| ------------------ | ----------------------------------------------------- | ----------------------------------------------------------- |
+| id                 | UUID PK                                               | Rule ID                                                     |
+| name               | VARCHAR(200)                                          | Rule 이름                                                   |
+| sort_order         | INTEGER                                               | 평가 순서                                                   |
+| is_active          | BOOLEAN DEFAULT true                                  | 활성 여부                                                   |
+| result_type        | ENUM('STOP','HOLD','CAUTION','PASS','ROUTE_CATEGORY') | 결과 UI 상태/색상 구분                                      |
+| result_title       | TEXT                                                  | 결과 제목                                                   |
+| result_description | TEXT                                                  | 결과 설명                                                   |
+| cta_label          | VARCHAR(100) NULLABLE                                 | CTA 문구. 값이 있으면 CTA 버튼 노출                         |
+| cta_target         | VARCHAR(255) NULLABLE                                 | CTA 이동 경로. 카테고리 이동은 `category` enum query로 표현 |
+| created_at         | TIMESTAMPTZ                                           | 생성일                                                      |
+| updated_at         | TIMESTAMPTZ                                           | 수정일                                                      |
 
 예시:
 
 ```json
 {
   "name": "최근 자극 반복 → 새 제품 보류",
-  "priority": 1,
+  "sort_order": 1,
   "result_type": "HOLD",
   "result_title": "지금은 새 제품보다 피부 반응 안정화가 먼저예요.",
-  "hold_categories": [
-    { "category_id": "<uuid of serum>", "reason": "기능성 제품은 자극 안정화 이후" },
-    { "category_id": "<uuid of toner>", "reason": "새 제품 추가 전 루틴 단순화 필요" }
-  ]
+  "result_description": "최근 자극이 있다면 제품 추천보다 회복과 원인 분리가 먼저입니다.",
+  "cta_label": "루틴 점검하기",
+  "cta_target": "/decision/traceback"
 }
 ```
 

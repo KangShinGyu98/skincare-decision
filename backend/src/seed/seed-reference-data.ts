@@ -46,7 +46,7 @@ export async function seedReferenceData(prisma: PrismaClient): Promise<Reference
   const questions = await seedQuestions(prisma);
 
   await seedQuestionVariants(prisma, questions);
-  await seedPriorityRules(prisma, questions, categories);
+  await seedPriorityRules(prisma, questions);
 
   const productFilters = await seedProductFilters(prisma, attributes);
   const matrixFilters = await seedProductMatrixFilters(
@@ -299,22 +299,15 @@ export async function seedQuestionVariants(
 export async function seedPriorityRules(
   prisma: PrismaClient,
   questions: QuestionMap,
-  categories: CategoryMap,
 ): Promise<void> {
   for (const seed of PRIORITY_RULE_SEEDS) {
-    const recommendCategoryId = seed.recommendCategoryKey
-      ? requireCategory(categories, seed.recommendCategoryKey).id
-      : null;
-    const holdCategories = seed.holdCategories ? [...seed.holdCategories] : undefined;
     const data = {
       name: seed.name,
-      priority: seed.priority,
+      sortOrder: seed.sortOrder,
       isActive: true,
       resultType: seed.resultType,
       resultTitle: seed.resultTitle,
       resultDescription: seed.resultDescription,
-      holdCategories: nullableJson(holdCategories),
-      recommendCategoryId,
       ctaLabel: seed.ctaLabel ?? null,
       ctaTarget: seed.ctaTarget ?? null,
       deletedAt: null,
@@ -322,7 +315,7 @@ export async function seedPriorityRules(
     const existingRule = await prisma.priorityRule.findFirst({
       where: {
         name: seed.name,
-        priority: seed.priority,
+        sortOrder: seed.sortOrder,
       },
     });
     const rule = existingRule

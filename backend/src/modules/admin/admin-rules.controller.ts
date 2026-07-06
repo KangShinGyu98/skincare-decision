@@ -1,33 +1,50 @@
-import { Controller, Get, Patch } from '@nestjs/common';
+import { Controller, Delete, Get, Patch, Post, Put } from '@nestjs/common';
 import {
-  updateAdminRuleAdminNoteBodySchema,
-  updateAdminRulePrioritiesBodySchema,
-  adminRuleParamSchema,
-  adminRulesQuerySchema,
-  updateAdminRuleStatusBodySchema,
   type AdminRuleDetail,
   type AdminRuleParam,
-  type AdminRulesQuery,
+  adminRuleParamSchema,
+  type AdminRuleQuestionSearchQuery,
+  adminRuleQuestionSearchQuerySchema,
+  type AdminRuleQuestionSearchResponse,
   type AdminRulesResponse,
-  type UpdateAdminRuleAdminNoteBody,
-  type UpdateAdminRuleAdminNoteResponse,
-  type UpdateAdminRulePrioritiesBody,
-  type UpdateAdminRulePrioritiesResponse,
+  type CreateAdminRuleBody,
+  createAdminRuleBodySchema,
+  type CreateAdminRuleResponse,
+  type DeleteAdminRuleResponse,
+  type UpdateAdminRuleBody,
+  updateAdminRuleBodySchema,
+  type UpdateAdminRuleResponse,
+  type UpdateAdminRuleSortOrderBody,
+  updateAdminRuleSortOrderBodySchema,
+  type UpdateAdminRuleSortOrderResponse,
   type UpdateAdminRuleStatusBody,
+  updateAdminRuleStatusBodySchema,
   type UpdateAdminRuleStatusResponse,
 } from '@skincare-decision/shared/schemas';
-import { Permissions } from '../../common/decorators/auth.decorator';
 import { ZodBody, ZodParam, ZodQuery } from '../../common/decorators/zod-body.decorator';
 import { AdminRulesService } from './admin-rules.service';
 
-@Permissions('priority_rules:manage:any')
 @Controller('/admin/rules')
 export class AdminRulesController {
   constructor(private readonly service: AdminRulesService) {}
 
   @Get()
-  findRules(@ZodQuery(adminRulesQuerySchema) query: AdminRulesQuery): Promise<AdminRulesResponse> {
-    return this.service.findRules(query);
+  findRules(): Promise<AdminRulesResponse> {
+    return this.service.findRules();
+  }
+
+  @Get('questions')
+  searchQuestions(
+    @ZodQuery(adminRuleQuestionSearchQuerySchema) query: AdminRuleQuestionSearchQuery,
+  ): Promise<AdminRuleQuestionSearchResponse> {
+    return this.service.searchQuestions(query);
+  }
+
+  @Post()
+  createRule(
+    @ZodBody(createAdminRuleBodySchema) body: CreateAdminRuleBody,
+  ): Promise<CreateAdminRuleResponse> {
+    return this.service.createRule(body);
   }
 
   @Get(':ruleId')
@@ -35,11 +52,11 @@ export class AdminRulesController {
     return this.service.findRule(params.ruleId);
   }
 
-  @Patch('priorities')
-  updatePriorities(
-    @ZodBody(updateAdminRulePrioritiesBodySchema) body: UpdateAdminRulePrioritiesBody,
-  ): Promise<UpdateAdminRulePrioritiesResponse> {
-    return this.service.updatePriorities(body);
+  @Patch('sort_order')
+  updateSortOrder(
+    @ZodBody(updateAdminRuleSortOrderBodySchema) body: UpdateAdminRuleSortOrderBody,
+  ): Promise<UpdateAdminRuleSortOrderResponse> {
+    return this.service.updateSortOrder(body);
   }
 
   @Patch(':ruleId/status')
@@ -50,11 +67,18 @@ export class AdminRulesController {
     return this.service.updateStatus(params.ruleId, body);
   }
 
-  @Patch(':ruleId/admin-note')
-  updateAdminNote(
+  @Put(':ruleId')
+  updateRule(
     @ZodParam(adminRuleParamSchema) params: AdminRuleParam,
-    @ZodBody(updateAdminRuleAdminNoteBodySchema) body: UpdateAdminRuleAdminNoteBody,
-  ): Promise<UpdateAdminRuleAdminNoteResponse> {
-    return this.service.updateAdminNote(params.ruleId, body);
+    @ZodBody(updateAdminRuleBodySchema) body: UpdateAdminRuleBody,
+  ): Promise<UpdateAdminRuleResponse> {
+    return this.service.updateRule(params.ruleId, body);
+  }
+
+  @Delete(':ruleId')
+  deleteRule(
+    @ZodParam(adminRuleParamSchema) params: AdminRuleParam,
+  ): Promise<DeleteAdminRuleResponse> {
+    return this.service.deleteRule(params.ruleId);
   }
 }

@@ -108,7 +108,7 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 
 | 항목     | 규칙                                                                 |
 | -------- | -------------------------------------------------------------------- |
-| 정렬     | `priority` 오름차순                                                  |
+| 정렬     | `sort_order` 오름차순                                                |
 | 채택     | 첫 번째로 모든 REQUIRED 조건이 충족되는 Rule                         |
 | 제외     | EXCLUDED 조건이 하나라도 충족되면 해당 Rule skip                     |
 | fallback | 아무 Rule도 매칭되지 않으면 PASS Rule 적용                           |
@@ -116,21 +116,21 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 
 ## 3.2 Priority Rule Seed
 
-| rule_key                  | priority | result_type    | result_title                                                   | cta_label             | cta_target                                |
-| ------------------------- | -------: | -------------- | -------------------------------------------------------------- | --------------------- | ----------------------------------------- |
-| `recent_irritation_hold`  |        1 | HOLD           | 지금은 새 제품보다 피부 반응 안정화가 먼저예요.                | 현재 루틴 점검하기    | `/routine-check`                          |
-| `active_overload_hold`    |        2 | HOLD           | 자극 가능성이 높아 새 세럼이나 필링 제품은 보류하는 게 좋아요. | 병행 성분 정리하기    | `/routine-check?focus=active`             |
-| `functional_overlap_hold` |        3 | HOLD           | 새 기능성 제품은 잠시 보류하고 루틴을 단순화하는 게 좋아요.    | 기능성 제품 정리하기  | `/routine-check?focus=functional`         |
-| `cleansing_route`         |        4 | ROUTE_CATEGORY | 메이크업이나 선크림 제거 방식부터 점검하는 게 좋아요.          | 클렌저 보기           | `/category-decision?category=cleanser`    |
-| `outdoor_sunscreen_route` |        5 | ROUTE_CATEGORY | 세럼보다 선크림 루틴이 먼저예요.                               | 선크림 보기           | `/category-decision?category=sunscreen`   |
-| `sunscreen_daily_route`   |        6 | ROUTE_CATEGORY | 외출할 때 바를 수 있는 선크림을 먼저 찾아야 해요.              | 선크림 보기           | `/category-decision?category=sunscreen`   |
-| `dry_barrier_route`       |        7 | ROUTE_CATEGORY | 기능성 제품보다 보습 루틴 고정이 먼저예요.                     | 로션/크림 보기        | `/category-decision?category=moisturizer` |
-| `eye_irritation_caution`  |        8 | CAUTION        | 눈가 자극이 잦다면 저자극 세안/선크림 기준을 먼저 봐야 해요.   | 눈 자극 기준으로 보기 | `/category-decision?category=cleanser`    |
-| `makeup_compat_caution`   |        9 | CAUTION        | 선크림, 보습제, 베이스 궁합을 같이 봐야 해요.                  | 궁합 기준으로 보기    | `/category-decision?category=sunscreen`   |
-| `tool_hygiene_caution`    |       10 | CAUTION        | 브러시와 퍼프 위생도 같이 점검해보세요.                        | 도구 위생 점검하기    | `/routine-check?focus=tool-hygiene`       |
-| `night_hygiene_caution`   |       11 | CAUTION        | 밤 루틴과 침구 위생도 같이 점검해보세요.                       | 밤 루틴 점검하기      | `/routine-check?focus=night-routine`      |
-| `duplicate_role_caution`  |       12 | CAUTION        | 새로 사기보다 기존 제품을 먼저 정리해요.                       | 보유 제품 정리하기    | `/routine-check?focus=duplicate`          |
-| `priority_pass`           |       13 | PASS           | 지금은 기능성 제품군을 봐도 괜찮아요.                          | 제품군 고르기         | `/category-decision`                      |
+| rule_key                  | sort_order | result_type    | result_title                                                   | cta_label             | cta_target                                |
+| ------------------------- | ---------: | -------------- | -------------------------------------------------------------- | --------------------- | ----------------------------------------- |
+| `recent_irritation_hold`  |          1 | HOLD           | 지금은 새 제품보다 피부 반응 안정화가 먼저예요.                | 현재 루틴 점검하기    | `/routine-check`                          |
+| `active_overload_hold`    |          2 | HOLD           | 자극 가능성이 높아 새 세럼이나 필링 제품은 보류하는 게 좋아요. | 병행 성분 정리하기    | `/routine-check?focus=active`             |
+| `functional_overlap_hold` |          3 | HOLD           | 새 기능성 제품은 잠시 보류하고 루틴을 단순화하는 게 좋아요.    | 기능성 제품 정리하기  | `/routine-check?focus=functional`         |
+| `cleansing_route`         |          4 | ROUTE_CATEGORY | 메이크업이나 선크림 제거 방식부터 점검하는 게 좋아요.          | 클렌저 보기           | `/category-decision?category=cleanser`    |
+| `outdoor_sunscreen_route` |          5 | ROUTE_CATEGORY | 세럼보다 선크림 루틴이 먼저예요.                               | 선크림 보기           | `/category-decision?category=sunscreen`   |
+| `sunscreen_daily_route`   |          6 | ROUTE_CATEGORY | 외출할 때 바를 수 있는 선크림을 먼저 찾아야 해요.              | 선크림 보기           | `/category-decision?category=sunscreen`   |
+| `dry_barrier_route`       |          7 | ROUTE_CATEGORY | 기능성 제품보다 보습 루틴 고정이 먼저예요.                     | 로션/크림 보기        | `/category-decision?category=moisturizer` |
+| `eye_irritation_caution`  |          8 | CAUTION        | 눈가 자극이 잦다면 저자극 세안/선크림 기준을 먼저 봐야 해요.   | 눈 자극 기준으로 보기 | `/category-decision?category=cleanser`    |
+| `makeup_compat_caution`   |          9 | CAUTION        | 선크림, 보습제, 베이스 궁합을 같이 봐야 해요.                  | 궁합 기준으로 보기    | `/category-decision?category=sunscreen`   |
+| `tool_hygiene_caution`    |         10 | CAUTION        | 브러시와 퍼프 위생도 같이 점검해보세요.                        | 도구 위생 점검하기    | `/routine-check?focus=tool-hygiene`       |
+| `night_hygiene_caution`   |         11 | CAUTION        | 밤 루틴과 침구 위생도 같이 점검해보세요.                       | 밤 루틴 점검하기      | `/routine-check?focus=night-routine`      |
+| `duplicate_role_caution`  |         12 | CAUTION        | 새로 사기보다 기존 제품을 먼저 정리해요.                       | 보유 제품 정리하기    | `/routine-check?focus=duplicate`          |
+| `priority_pass`           |         13 | PASS           | 지금은 기능성 제품군을 봐도 괜찮아요.                          | 제품군 고르기         | `/category-decision`                      |
 
 ## 3.3 Priority Rule Conditions
 
@@ -152,12 +152,15 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 
 ## 3.4 Priority Rule Result Side Effects
 
-| result_type    | side effect                                                              |
-| -------------- | ------------------------------------------------------------------------ |
-| HOLD           | Category Decision 진입 전 경고. 새 제품 추천 CTA보다 루틴 점검 CTA 우선  |
-| CAUTION        | Category Decision 진입 가능. Product Matrix에서 주의 필터 기본 포함 가능 |
-| ROUTE_CATEGORY | `category.selected`를 추천 카테고리로 저장                               |
-| PASS           | 사용자가 직접 카테고리 선택                                              |
+| result_type    | UI 의미                         | 다음 행동 기준                       |
+| -------------- | ------------------------------- | ------------------------------------ |
+| STOP           | 중단/위험 색상                  | `cta_target`                         |
+| HOLD           | 보류 색상                       | `cta_target`                         |
+| CAUTION        | 주의 색상                       | `cta_target`                         |
+| PASS           | 통과 색상                       | `cta_target`                         |
+| ROUTE_CATEGORY | 특정 제품군 추천/이동 강조 색상 | `cta_target`의 `category` enum query |
+
+> `result_type`은 UI 색상/상태 표현 기준이다. 결과 제목과 설명은 `result_title`, `result_description`을 필수로 사용한다. CTA 버튼은 `cta_label`이 있을 때만 노출하고, 이동 대상은 `cta_target`만 사용한다. 카테고리 이동은 `/category-decision?category={category_key}` 형태로 표현하며 `category_key`는 `toner`, `sunscreen`, `serum`, `lipcare`, `moisturizer`, `cleanser` enum 중 하나다.
 
 ---
 
@@ -211,38 +214,38 @@ HARD_FILTER에서 `fragrance = false`를 적용하면 `fragrance = null`인 제�
 | 2    | `session_events`에 `concern_clicked` 저장                                                                                                                             |
 | 3    | `flow.concern` 저장                                                                                                                                                   |
 | 4    | `preset_facts`를 `source = concern` 초기 선택 상태로 저장하거나 프론트 상태에 유지                                                                                    |
-| 4    | Concern 선택 후 항상 `/priority-gate`로 이동하고 관련 질문을 우선 노출 |
-| 5    | `suggested_category`는 이후 Category Decision 단계에서 참고하며, Concern 클릭 직후에는 `/category-decision`으로 이동하지 않음 |
+| 4    | Concern 선택 후 항상 `/priority-gate`로 이동하고 관련 질문을 우선 노출                                                                                                |
+| 5    | `suggested_category`는 이후 Category Decision 단계에서 참고하며, Concern 클릭 직후에는 `/category-decision`으로 이동하지 않음                                         |
 | 7    | `suggested_filters`는 즉시 Product Matrix를 만들지 않고, 최종 category가 `suggested_category`와 일치할 때만 `product_matrix_filter_definitions.key`로 resolve 해 합성 |
 
 ## 5.2 Concern Mapping Seed
 
-| concern         | flow.concern           | entry_screen        | preset_facts                                                                | suggested_category | suggested_filters                                         |
-| --------------- | ---------------------- | ------------------- | --------------------------------------------------------------------------- | ------------------ | --------------------------------------------------------- |
-| 뾰루지          | `acne_spot`            | `priority_gate`     | `flow.concern = acne_spot`                                                  | `serum`            | `low_irritation`, `acne_fit`                              |
-| 여드름          | `acne`                 | `priority_gate`     | `flow.concern = acne`                                                       | `cleanser`         | `mild_ph`, `low_sls`, `non_comedogenic`                   |
-| 붉어짐          | `redness`              | `priority_gate`     | `flow.concern = redness`, `life.recent_irritation = true 후보`              | `toner`            | `low_irritation`, `mild_ph`, `no_fragrance`               |
-| 뒤집힘          | `breakout_reaction`    | `priority_gate`     | `flow.concern = breakout_reaction`, `life.recent_irritation = true 후보`    | `moisturizer`      | `barrier_ingredients`, `low_irritation`, `no_fragrance`   |
-| 트러블 반복     | `recurring_trouble`    | `priority_gate`     | `flow.concern = recurring_trouble`                                          | `cleanser`         | `mild_ph`, `low_sls`, `non_comedogenic`                   |
-| 민감 반응       | `sensitivity_reaction` | `priority_gate`     | `flow.concern = sensitivity_reaction`, `life.recent_irritation = true 후보` | `moisturizer`      | `barrier_ingredients`, `low_irritation`, `no_fragrance`   |
-| 건조            | `dryness`              | `priority_gate`     | `flow.concern = dryness`, `routine.recent_dry_tight = true 후보`            | `moisturizer`      | `triple_moisture`, `barrier_ingredients`                  |
-| 당김            | `tightness`            | `priority_gate`     | `flow.concern = tightness`, `routine.recent_dry_tight = true 후보`          | `moisturizer`      | `triple_moisture`, `barrier_ingredients`                  |
-| 각질            | `flaky_texture`        | `priority_gate`     | `flow.concern = flaky_texture`, `routine.recent_dry_tight = true 후보`      | `toner`            | `low_irritation`, `mild_ph`, `gentle_exfoliation`         |
-| 번들거림        | `oiliness`             | `priority_gate`     | `flow.concern = oiliness`                                                   | `toner`            | `oil_control`, `low_irritation`, `mild_ph`                |
-| 눈가 건조       | `eye_area_dryness`     | `priority_gate`     | `flow.concern = eye_area_dryness`, `routine.recent_dry_tight = true 후보`   | `moisturizer`      | `high_hydration`, `barrier_ingredients`, `low_irritation` |
-| 입술 트임       | `lip_chapped`          | `priority_gate`     | `flow.concern = lip_chapped`, `context.lip_severity = true 후보`            | `lipcare`          | `high_moisture`, `no_menthol`                             |
-| 화장 뜸         | `makeup_floating`      | `priority_gate`     | `flow.concern = makeup_floating`, `context.makeup_use = true 후보`          | `moisturizer`      | `makeup_compat_good`, `low_sticky`                        |
-| 밀림            | `pilling`              | `priority_gate`     | `flow.concern = pilling`, `context.makeup_use = true 후보`                  | `sunscreen`        | `makeup_compat_good`, `low_sticky`                        |
-| 쿠션 추천       | `cushion_help`         | `priority_gate`     | `flow.concern = cushion_help`, `context.makeup_use = true 후보`             | `moisturizer`      | `makeup_compat_good`, `low_sticky`, `high_hydration`      |
-| 파운데이션 고민 | `foundation_help`      | `priority_gate`     | `flow.concern = foundation_help`, `context.makeup_use = true 후보`          | `moisturizer`      | `makeup_compat_good`, `low_sticky`, `high_hydration`      |
-| 선크림 추천     | `sunscreen_need`       | `priority_gate`     | `flow.concern = sunscreen_need`                                             | `sunscreen`        | `spf_50_plus`, `pa_4_plus`                                |
-| 립 제품         | `lipcare_need`         | `priority_gate`     | `flow.concern = lipcare_need`                                               | `lipcare`          | `high_moisture`, `balanced_moisture`                      |
-| 잡티            | `pigmentation`         | `priority_gate`     | `flow.concern = pigmentation`                                               | `serum`            | `effective_dose`, `clear_purpose`, `morning_use`          |
-| 다크서클        | `dark_circle`          | `priority_gate`     | `flow.concern = dark_circle`                                                | `serum`            | `low_irritation`, `clear_purpose`, `effective_dose`       |
-| 홍조            | `redness_chronic`      | `priority_gate`     | `flow.concern = redness_chronic`, `life.recent_irritation = true 후보`      | `serum`            | `low_irritation`, `no_fragrance`, `calming_fit`           |
-| 모공            | `pore`                 | `priority_gate`     | `flow.concern = pore`                                                       | `serum`            | `clear_purpose`, `pore_fit`, `low_irritation`             |
-| 피부톤          | `tone`                 | `priority_gate`     | `flow.concern = tone`                                                       | `serum`            | `effective_dose`, `clear_purpose`, `morning_use`          |
-| 탄력            | `elasticity`           | `priority_gate`     | `flow.concern = elasticity`                                                 | `serum`            | `effective_dose`, `clear_purpose`, `night_use`            |
+| concern         | flow.concern           | entry_screen    | preset_facts                                                                | suggested_category | suggested_filters                                         |
+| --------------- | ---------------------- | --------------- | --------------------------------------------------------------------------- | ------------------ | --------------------------------------------------------- |
+| 뾰루지          | `acne_spot`            | `priority_gate` | `flow.concern = acne_spot`                                                  | `serum`            | `low_irritation`, `acne_fit`                              |
+| 여드름          | `acne`                 | `priority_gate` | `flow.concern = acne`                                                       | `cleanser`         | `mild_ph`, `low_sls`, `non_comedogenic`                   |
+| 붉어짐          | `redness`              | `priority_gate` | `flow.concern = redness`, `life.recent_irritation = true 후보`              | `toner`            | `low_irritation`, `mild_ph`, `no_fragrance`               |
+| 뒤집힘          | `breakout_reaction`    | `priority_gate` | `flow.concern = breakout_reaction`, `life.recent_irritation = true 후보`    | `moisturizer`      | `barrier_ingredients`, `low_irritation`, `no_fragrance`   |
+| 트러블 반복     | `recurring_trouble`    | `priority_gate` | `flow.concern = recurring_trouble`                                          | `cleanser`         | `mild_ph`, `low_sls`, `non_comedogenic`                   |
+| 민감 반응       | `sensitivity_reaction` | `priority_gate` | `flow.concern = sensitivity_reaction`, `life.recent_irritation = true 후보` | `moisturizer`      | `barrier_ingredients`, `low_irritation`, `no_fragrance`   |
+| 건조            | `dryness`              | `priority_gate` | `flow.concern = dryness`, `routine.recent_dry_tight = true 후보`            | `moisturizer`      | `triple_moisture`, `barrier_ingredients`                  |
+| 당김            | `tightness`            | `priority_gate` | `flow.concern = tightness`, `routine.recent_dry_tight = true 후보`          | `moisturizer`      | `triple_moisture`, `barrier_ingredients`                  |
+| 각질            | `flaky_texture`        | `priority_gate` | `flow.concern = flaky_texture`, `routine.recent_dry_tight = true 후보`      | `toner`            | `low_irritation`, `mild_ph`, `gentle_exfoliation`         |
+| 번들거림        | `oiliness`             | `priority_gate` | `flow.concern = oiliness`                                                   | `toner`            | `oil_control`, `low_irritation`, `mild_ph`                |
+| 눈가 건조       | `eye_area_dryness`     | `priority_gate` | `flow.concern = eye_area_dryness`, `routine.recent_dry_tight = true 후보`   | `moisturizer`      | `high_hydration`, `barrier_ingredients`, `low_irritation` |
+| 입술 트임       | `lip_chapped`          | `priority_gate` | `flow.concern = lip_chapped`, `context.lip_severity = true 후보`            | `lipcare`          | `high_moisture`, `no_menthol`                             |
+| 화장 뜸         | `makeup_floating`      | `priority_gate` | `flow.concern = makeup_floating`, `context.makeup_use = true 후보`          | `moisturizer`      | `makeup_compat_good`, `low_sticky`                        |
+| 밀림            | `pilling`              | `priority_gate` | `flow.concern = pilling`, `context.makeup_use = true 후보`                  | `sunscreen`        | `makeup_compat_good`, `low_sticky`                        |
+| 쿠션 추천       | `cushion_help`         | `priority_gate` | `flow.concern = cushion_help`, `context.makeup_use = true 후보`             | `moisturizer`      | `makeup_compat_good`, `low_sticky`, `high_hydration`      |
+| 파운데이션 고민 | `foundation_help`      | `priority_gate` | `flow.concern = foundation_help`, `context.makeup_use = true 후보`          | `moisturizer`      | `makeup_compat_good`, `low_sticky`, `high_hydration`      |
+| 선크림 추천     | `sunscreen_need`       | `priority_gate` | `flow.concern = sunscreen_need`                                             | `sunscreen`        | `spf_50_plus`, `pa_4_plus`                                |
+| 립 제품         | `lipcare_need`         | `priority_gate` | `flow.concern = lipcare_need`                                               | `lipcare`          | `high_moisture`, `balanced_moisture`                      |
+| 잡티            | `pigmentation`         | `priority_gate` | `flow.concern = pigmentation`                                               | `serum`            | `effective_dose`, `clear_purpose`, `morning_use`          |
+| 다크서클        | `dark_circle`          | `priority_gate` | `flow.concern = dark_circle`                                                | `serum`            | `low_irritation`, `clear_purpose`, `effective_dose`       |
+| 홍조            | `redness_chronic`      | `priority_gate` | `flow.concern = redness_chronic`, `life.recent_irritation = true 후보`      | `serum`            | `low_irritation`, `no_fragrance`, `calming_fit`           |
+| 모공            | `pore`                 | `priority_gate` | `flow.concern = pore`                                                       | `serum`            | `clear_purpose`, `pore_fit`, `low_irritation`             |
+| 피부톤          | `tone`                 | `priority_gate` | `flow.concern = tone`                                                       | `serum`            | `effective_dose`, `clear_purpose`, `morning_use`          |
+| 탄력            | `elasticity`           | `priority_gate` | `flow.concern = elasticity`                                                 | `serum`            | `effective_dose`, `clear_purpose`, `night_use`            |
 
 `preset_facts`는 확정 답변이 아니라 초기 선택 상태와 질문 우선순위 힌트다. 이후 사용자가 직접 입력한 Priority Gate / Context 답변이 있으면 그 값이 우선한다.
 

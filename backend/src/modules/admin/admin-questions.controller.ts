@@ -9,11 +9,9 @@ import {
   type UpdateAdminQuestionStatusBody,
   type UpdateAdminQuestionStatusResponse,
 } from '@skincare-decision/shared/schemas';
-import { Permissions } from '../../common/decorators/auth.decorator';
 import { ZodBody, ZodParam, ZodQuery } from '../../common/decorators/zod-body.decorator';
 import { AdminQuestionsService } from './admin-questions.service';
 
-@Permissions('questions:manage:any')
 @Controller('/admin/questions')
 export class AdminQuestionsController {
   constructor(private readonly service: AdminQuestionsService) {}

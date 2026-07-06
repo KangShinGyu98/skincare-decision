@@ -46,7 +46,7 @@ export type PriorityRuleConditionRecord = {
 
 export type PriorityRuleRecord = {
   id: string;
-  priority: number;
+  sortOrder: number;
   resultType: PriorityRuleResultType;
   resultTitle: string;
   resultDescription: string;
@@ -151,7 +151,7 @@ export class PriorityGateRepository {
       },
       select: {
         id: true,
-        priority: true,
+        sortOrder: true,
         resultType: true,
         resultTitle: true,
         resultDescription: true,
@@ -176,7 +176,7 @@ export class PriorityGateRepository {
           },
         },
       },
-      orderBy: [{ priority: 'asc' }, { createdAt: 'asc' }],
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
     });
   }
 

@@ -2,6 +2,7 @@
 
 import type { CategoryDecisionUiSection } from '@skincare-decision/shared/schemas';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useEffect } from 'react';
 import { CategoryDecisionResultCard } from '@/components/CategoryDecisionResultCard';
 import { PriorityGateQuestionItem } from '@/components/PriorityGateQuestionItem';
 import { SectionResetButton } from '@/components/SectionResetButton';
@@ -30,16 +31,28 @@ const CATEGORY_SELECT_ITEMS = [
   { id: 'cleanser', key: 'cleanser', name: '클렌저' },
 ] as const;
 
+const DEFAULT_CATEGORY_KEY = 'toner';
+
 function getCategoryParam(searchParams: { get: (name: string) => string | null }) {
   const category = searchParams.get('category')?.trim();
 
   return category && category.length > 0 ? category : undefined;
 }
 
-export default function CategoryDecisionPageContent() {
+export default function CategoryDecisionPage() {
+  return (
+    <Suspense fallback={<CategoryDecisionPageFallback />}>
+      <CategoryDecisionPageContent />
+    </Suspense>
+  );
+}
+
+function CategoryDecisionPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const category = getCategoryParam(searchParams);
+  const searchParamsString = searchParams.toString();
+  const categoryParam = getCategoryParam(searchParams);
+  const category = categoryParam ?? DEFAULT_CATEGORY_KEY;
   const { data, error, isError, isLoading } = useCategoryDecision(category);
   const {
     error: responseError,
@@ -71,6 +84,16 @@ export default function CategoryDecisionPageContent() {
     nextSearchParams.set('category', nextCategory);
     router.push(`/category-decision?${nextSearchParams.toString()}`);
   };
+
+  useEffect(() => {
+    if (categoryParam) {
+      return;
+    }
+
+    const nextSearchParams = new URLSearchParams(searchParamsString);
+    nextSearchParams.set('category', DEFAULT_CATEGORY_KEY);
+    router.replace(`/category-decision?${nextSearchParams.toString()}`);
+  }, [categoryParam, router, searchParamsString]);
 
   return (
     <main
@@ -221,6 +244,14 @@ export default function CategoryDecisionPageContent() {
           {error instanceof Error ? error.message : '카테고리 질문 데이터를 불러오지 못했습니다.'}
         </p>
       ) : null}
+    </main>
+  );
+}
+
+function CategoryDecisionPageFallback() {
+  return (
+    <main className="flex min-h-screen w-full items-center justify-center bg-[var(--color-bg-page)] p-10">
+      <Spinner className="size-7 text-[var(--color-primary)]" />
     </main>
   );
 }

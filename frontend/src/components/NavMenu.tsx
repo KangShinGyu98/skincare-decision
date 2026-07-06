@@ -19,7 +19,7 @@ export const menuItems: MenuItem[] = [
   {
     id: 'category-decision',
     label: '구매 체크리스트',
-    link: '/category-decision',
+    link: '/category-decision?category=toner',
     children: [
       {
         id: 'toner',
@@ -50,6 +50,18 @@ export const menuItems: MenuItem[] = [
         id: 'cleanser',
         label: '클렌저',
         link: '/category-decision?category=cleanser',
+      },
+    ],
+  },
+  {
+    id: 'admin',
+    label: '관리자',
+    link: '/admin/rules',
+    children: [
+      {
+        id: 'admin-rules',
+        label: 'Rule Check',
+        link: '/admin/rules',
       },
     ],
   },

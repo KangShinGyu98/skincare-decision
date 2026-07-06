@@ -1,4 +1,8 @@
 import {
+  type AdminRuleDetail,
+  adminRuleDetailSchema,
+  type AdminRulesResponse,
+  adminRulesResponseSchema,
   type CategoryDecisionResponse,
   categoryDecisionResponseSchema,
   type PriorityGateResponseDto,
@@ -11,6 +15,18 @@ import {
   resetPriorityGateResponsesRequestSchema,
   type ResetPriorityGateResponsesResponse,
   resetPriorityGateResponsesResponseSchema,
+  type UpdateAdminRuleAdminNoteBody,
+  updateAdminRuleAdminNoteBodySchema,
+  type UpdateAdminRuleAdminNoteResponse,
+  updateAdminRuleAdminNoteResponseSchema,
+  type UpdateAdminRuleSortOrderBody,
+  updateAdminRuleSortOrderBodySchema,
+  type UpdateAdminRuleSortOrderResponse,
+  updateAdminRuleSortOrderResponseSchema,
+  type UpdateAdminRuleStatusBody,
+  updateAdminRuleStatusBodySchema,
+  type UpdateAdminRuleStatusResponse,
+  updateAdminRuleStatusResponseSchema,
   type UpsertCategoryDecisionResponsesRequest,
   upsertCategoryDecisionResponsesRequestSchema,
   type UpsertCategoryDecisionResponsesResponse,
@@ -62,6 +78,10 @@ function getPriorityGateUrl(path = '') {
 
 function getCategoryDecisionUrl(path = '') {
   return `${getApiBaseUrl()}/category-decision${path}`;
+}
+
+function getAdminRulesUrl(path = '') {
+  return `${getApiBaseUrl()}/admin/rules${path}`;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -139,7 +159,7 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export const priorityGateApi = {
   getQuestions: async (): Promise<PriorityGateResponseDto> => {
-    await sleep(3000);
+    // await sleep(1500);
     const response = await fetch(getPriorityGateUrl(), {
       method: 'GET',
       credentials: 'include',
@@ -194,7 +214,7 @@ export const priorityGateApi = {
 
 export const categoryDecisionApi = {
   getCategoryDecision: async (category?: string): Promise<CategoryDecisionResponse> => {
-    await sleep(3000);
+    // await sleep(1500);
     const searchParams = category ? `?${new URLSearchParams({ category })}` : '';
     const response = await fetch(getCategoryDecisionUrl(searchParams), {
       method: 'GET',
@@ -247,5 +267,92 @@ export const categoryDecisionApi = {
     });
 
     return handleResponse(response, resetCategoryDecisionResponsesResponseSchema);
+  },
+};
+
+export const adminRulesApi = {
+  getRules: async (): Promise<AdminRulesResponse> => {
+    const response = await fetch(getAdminRulesUrl(), {
+      method: 'GET',
+      credentials: 'include',
+    });
+
+    return handleResponse(response, adminRulesResponseSchema);
+  },
+
+  getRule: async (ruleId: string): Promise<AdminRuleDetail> => {
+    const response = await fetch(getAdminRulesUrl(`/${ruleId}`), {
+      method: 'GET',
+      credentials: 'include',
+    });
+
+    return handleResponse(response, adminRuleDetailSchema);
+  },
+
+  updateStatus: async (
+    ruleId: string,
+    data: UpdateAdminRuleStatusBody,
+  ): Promise<UpdateAdminRuleStatusResponse> => {
+    const parsed = updateAdminRuleStatusBodySchema.safeParse(data);
+
+    if (!parsed.success) {
+      throw new ApiValidationError(`Invalid admin rule status request: ${parsed.error.message}`);
+    }
+
+    const response = await fetch(getAdminRulesUrl(`/${ruleId}/status`), {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify(parsed.data),
+    });
+
+    return handleResponse(response, updateAdminRuleStatusResponseSchema);
+  },
+
+  updateAdminNote: async (
+    ruleId: string,
+    data: UpdateAdminRuleAdminNoteBody,
+  ): Promise<UpdateAdminRuleAdminNoteResponse> => {
+    const parsed = updateAdminRuleAdminNoteBodySchema.safeParse(data);
+
+    if (!parsed.success) {
+      throw new ApiValidationError(`Invalid admin rule note request: ${parsed.error.message}`);
+    }
+
+    const response = await fetch(getAdminRulesUrl(`/${ruleId}/admin-note`), {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify(parsed.data),
+    });
+
+    return handleResponse(response, updateAdminRuleAdminNoteResponseSchema);
+  },
+
+  updateSortOrder: async (
+    data: UpdateAdminRuleSortOrderBody,
+  ): Promise<UpdateAdminRuleSortOrderResponse> => {
+    const parsed = updateAdminRuleSortOrderBodySchema.safeParse(data);
+
+    if (!parsed.success) {
+      throw new ApiValidationError(
+        `Invalid admin rule sort_order request: ${parsed.error.message}`,
+      );
+    }
+
+    const response = await fetch(getAdminRulesUrl('/sort_order'), {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify(parsed.data),
+    });
+
+    return handleResponse(response, updateAdminRuleSortOrderResponseSchema);
   },
 };

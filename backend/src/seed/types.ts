@@ -68,12 +68,10 @@ export interface PriorityRuleConditionSeed {
 export interface PriorityRuleSeed {
   key: string;
   name: string;
-  priority: number;
+  sortOrder: number;
   resultType: SeedPriorityRuleResultType;
   resultTitle: string;
   resultDescription: string;
-  holdCategories?: readonly SeedCategoryKey[];
-  recommendCategoryKey?: SeedCategoryKey;
   ctaLabel?: string;
   ctaTarget?: string;
   conditions: readonly PriorityRuleConditionSeed[];

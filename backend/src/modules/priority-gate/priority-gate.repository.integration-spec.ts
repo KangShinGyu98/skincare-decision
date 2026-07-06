@@ -184,7 +184,7 @@ describe('PriorityGateRepository', () => {
     expect(anonymousResponses.map((response) => response.value)).toEqual([[0]]);
   });
 
-  it('findPriorityRules는 active rule과 condition, 추천 카테고리를 priority 순서로 반환한다', async () => {
+  it('findPriorityRules는 active rule과 condition, 추천 카테고리를 sortOrder 순서로 반환한다', async () => {
     const sunscreenCategory = await createProductCategory({
       key: 'sunscreen',
       name: '선크림',
@@ -201,7 +201,7 @@ describe('PriorityGateRepository', () => {
       data: {
         id: randomUUID(),
         name: 'Inactive rule',
-        priority: 5,
+        sortOrder: 5,
         isActive: false,
         resultType: PriorityRuleResultType.STOP,
         resultTitle: 'Inactive',
@@ -212,7 +212,7 @@ describe('PriorityGateRepository', () => {
       data: {
         id: randomUUID(),
         name: 'Sunscreen route',
-        priority: 20,
+        sortOrder: 20,
         resultType: PriorityRuleResultType.ROUTE_CATEGORY,
         resultTitle: '선크림을 먼저 고르는 것이 좋습니다',
         resultDescription: '낮 사용 루틴에서는 자외선 차단이 우선입니다.',
@@ -237,7 +237,7 @@ describe('PriorityGateRepository', () => {
 
     expect(rule).toEqual(
       expect.objectContaining({
-        priority: 20,
+        sortOrder: 20,
         resultType: PriorityRuleResultType.ROUTE_CATEGORY,
         resultTitle: '선크림을 먼저 고르는 것이 좋습니다',
         ctaLabel: '선크림 보기',

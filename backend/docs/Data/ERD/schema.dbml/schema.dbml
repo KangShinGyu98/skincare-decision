@@ -118,7 +118,7 @@ Table user_responses {
 Table priority_rules {
   id String [pk]
   name String [not null]
-  priority Int [not null]
+  sortOrder Int [not null]
   isActive Boolean [not null, default: true]
   resultType PriorityRuleResultType [not null]
   resultTitle String [not null]

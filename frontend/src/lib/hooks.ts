@@ -1,18 +1,23 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
+  AdminRuleDetail,
+  AdminRulesResponse,
+  AdminRuleStatus,
+  AdminRuleTableRow,
   CategoryDecisionResponse,
   CategoryDecisionResponseValue,
   CategoryDecisionUiSection,
   PriorityGateResponseDto,
   PriorityGateResponseValue,
-  ResetCategoryDecisionResponsesRequest,
-  UpsertCategoryDecisionResponsesRequest,
-  ResetPriorityGateResponsesRequest,
   QuestionUiSectionDto,
+  ResetCategoryDecisionResponsesRequest,
+  ResetPriorityGateResponsesRequest,
+  UpdateAdminRuleSortOrderBody,
+  UpsertCategoryDecisionResponsesRequest,
   UpsertPriorityGateResponsesRequest,
 } from '@skincare-decision/shared/schemas';
-import { categoryDecisionApi, priorityGateApi } from './api';
+import { adminRulesApi, categoryDecisionApi, priorityGateApi } from './api';
 
 export const queryKeys = {
   priorityGate: {
@@ -22,6 +27,11 @@ export const queryKeys = {
   categoryDecision: {
     all: ['category-decision'] as const,
     detail: (category?: string) => ['category-decision', { category: category ?? null }] as const,
+  },
+  adminRules: {
+    all: ['admin', 'rules'] as const,
+    list: ['admin', 'rules', 'list'] as const,
+    detail: (ruleId: string) => ['admin', 'rules', 'detail', ruleId] as const,
   },
 };
 
@@ -383,4 +393,105 @@ export function useCategoryDecisionActions(category?: string) {
     resetCategoryDecisionSection,
     saveResponse: batch.saveResponse,
   };
+}
+
+function replaceAdminRuleRow(
+  previousData: AdminRulesResponse | undefined,
+  nextRow: AdminRuleTableRow,
+): AdminRulesResponse | undefined {
+  if (!previousData) {
+    return previousData;
+  }
+
+  return {
+    items: previousData.items.map((item) => (item.id === nextRow.id ? nextRow : item)),
+  };
+}
+
+function mergeAdminRuleDetail(
+  previousData: AdminRuleDetail | undefined,
+  nextRow: AdminRuleTableRow,
+): AdminRuleDetail | undefined {
+  if (!previousData) {
+    return previousData;
+  }
+
+  return {
+    ...previousData,
+    id: nextRow.id,
+    sort_order: nextRow.sort_order,
+    ruleName: nextRow.ruleName,
+    conclusion: nextRow.conclusion,
+    resultType: nextRow.resultType,
+    status: nextRow.status,
+    adminNote: nextRow.adminNote,
+  };
+}
+
+function makeError(): void {
+  throw new Error('대충 에러메시지');
+}
+export function useAdminRules() {
+  return useQuery({
+    queryKey: queryKeys.adminRules.list,
+    queryFn: adminRulesApi.getRules,
+    // queryFn: makeError,
+  });
+}
+
+export function useAdminRuleDetail(ruleId: string | null) {
+  return useQuery({
+    queryKey: ruleId ? queryKeys.adminRules.detail(ruleId) : ['admin', 'rules', 'detail', null],
+    queryFn: () => {
+      if (!ruleId) {
+        throw new Error('ruleId is required');
+      }
+
+      return adminRulesApi.getRule(ruleId);
+    },
+    enabled: Boolean(ruleId),
+  });
+}
+
+export function useUpdateAdminRuleStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ ruleId, status }: { ruleId: string; status: AdminRuleStatus }) =>
+      adminRulesApi.updateStatus(ruleId, { status }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.adminRules.all });
+    },
+  });
+}
+
+export function useUpdateAdminRuleAdminNote() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ ruleId, adminNote }: { ruleId: string; adminNote: string | null }) =>
+      adminRulesApi.updateAdminNote(ruleId, { adminNote }),
+    onSuccess: async (updatedRule) => {
+      queryClient.setQueryData<AdminRulesResponse>(queryKeys.adminRules.list, (previousData) =>
+        replaceAdminRuleRow(previousData, updatedRule),
+      );
+      queryClient.setQueryData<AdminRuleDetail>(
+        queryKeys.adminRules.detail(updatedRule.id),
+        (previousData) => mergeAdminRuleDetail(previousData, updatedRule),
+      );
+      await queryClient.invalidateQueries({ queryKey: queryKeys.adminRules.all });
+    },
+  });
+}
+
+export function useSaveAdminRuleSortOrder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: UpdateAdminRuleSortOrderBody) => adminRulesApi.updateSortOrder(data),
+    onSuccess: async (response) => {
+      queryClient.setQueryData<AdminRulesResponse>(queryKeys.adminRules.list, response);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.adminRules.all });
+    },
+  });
 }

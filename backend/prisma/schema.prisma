@@ -299,7 +299,7 @@ model UserResponse {
 model PriorityRule {
   id                  String                  @id(map: "pk_priority_rules") @db.Uuid
   name                String                  @db.VarChar(200)
-  priority            Int
+  sortOrder           Int                     @map("sort_order")
   isActive            Boolean                 @default(true) @map("is_active")
   resultType          PriorityRuleResultType  @map("result_type")
   resultTitle         String                  @map("result_title") @db.Text

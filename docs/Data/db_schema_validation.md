@@ -344,31 +344,29 @@ WHERE user_id IS NOT NULL;
 
 ### 3.1 `priority_rules`
 
-| 필드                    | Prisma 타입                                  | SQL 타입                          | 제약                                                      | 설명                                                             | 예시                                 |
-| ----------------------- | -------------------------------------------- | --------------------------------- | --------------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------ |
-| `id`                    | `String @id @db.Uuid`                        | `UUID`                            | PK, NOT NULL                                              | Rule ID                                                          | UUID                                 |
-| `name`                  | `String @db.VarChar(200)`                    | `VARCHAR(200)`                    | NOT NULL                                                  | 관리자용 Rule 이름                                               | `선크림 루틴 우선`                   |
-| `priority`              | `Int`                                        | `INTEGER`                         | NOT NULL                                                  | 평가 순서 (낮을수록 우선)                                        | `1`                                  |
-| `is_active`             | `Boolean @default(true)`                     | `BOOLEAN`                         | NOT NULL, DEFAULT `true`                                  | 평가 대상 여부                                                   | `true`                               |
-| `result_type`           | `priority_rules_result_type_enum`            | `priority_rules_result_type_enum` | NOT NULL                                                  | 결과 종류                                                        | `ROUTE_CATEGORY`                     |
-| `result_title`          | `String @db.Text`                            | `TEXT`                            | NOT NULL                                                  | 사용자에 보여줄 결과 제목                                        | `세럼보다 선크림이 먼저예요`         |
-| `result_description`    | `String @db.Text`                            | `TEXT`                            | NOT NULL                                                  | 결과 설명                                                        | (긴 문단)                            |
-| `hold_categories`       | `Json?`                                      | `JSONB`                           | NULLABLE                                                  | HOLD 결과 시 보류할 제품군 객체 배열 (`[{category_id, reason}]`) | `[{"category_id":"…","reason":"…"}]` |
-| `recommend_category_id` | `String? @db.Uuid`                           | `UUID`                            | NULLABLE, FK → `product_categories.id` ON DELETE RESTRICT | ROUTE_CATEGORY 시 추천 제품군                                    | UUID                                 |
-| `cta_label`             | `String? @db.VarChar(100)`                   | `VARCHAR(100)`                    | NULLABLE                                                  | CTA 버튼 문구                                                    | `선크림 보러가기`                    |
-| `cta_target`            | `String? @db.VarChar(255)`                   | `VARCHAR(255)`                    | NULLABLE                                                  | CTA 이동 경로                                                    | `/category/sunscreen`                |
-| `created_at`            | `DateTime @default(now()) @db.Timestamptz()` | `TIMESTAMPTZ`                     | NOT NULL, DEFAULT `CURRENT_TIMESTAMP`                     | 생성                                                             | 타임스탬프                           |
-| `updated_at`            | `DateTime? @updatedAt @db.Timestamptz()`     | `TIMESTAMPTZ`                     | NULLABLE                                                  | 갱신                                                             | 타임스탬프                           |
+| 필드                 | Prisma 타입                                  | SQL 타입                          | 제약                                  | 설명                                                      | 예시                                    |
+| -------------------- | -------------------------------------------- | --------------------------------- | ------------------------------------- | --------------------------------------------------------- | --------------------------------------- |
+| `id`                 | `String @id @db.Uuid`                        | `UUID`                            | PK, NOT NULL                          | Rule ID                                                   | UUID                                    |
+| `name`               | `String @db.VarChar(200)`                    | `VARCHAR(200)`                    | NOT NULL                              | 관리자용 Rule 이름                                        | `선크림 루틴 우선`                      |
+| `sort_order`         | `sortOrder Int @map("sort_order")`           | `INTEGER`                         | NOT NULL                              | 평가 순서 (낮을수록 우선)                                 | `1`                                     |
+| `is_active`          | `Boolean @default(true)`                     | `BOOLEAN`                         | NOT NULL, DEFAULT `true`              | 평가 대상 여부                                            | `true`                                  |
+| `result_type`        | `priority_rules_result_type_enum`            | `priority_rules_result_type_enum` | NOT NULL                              | 결과 UI 상태/색상 구분                                    | `ROUTE_CATEGORY`                        |
+| `result_title`       | `String @db.Text`                            | `TEXT`                            | NOT NULL                              | 사용자에 보여줄 결과 제목                                 | `세럼보다 선크림이 먼저예요`            |
+| `result_description` | `String @db.Text`                            | `TEXT`                            | NOT NULL                              | 결과 설명                                                 | (긴 문단)                               |
+| `cta_label`          | `String? @db.VarChar(100)`                   | `VARCHAR(100)`                    | NULLABLE                              | CTA 버튼 문구                                             | `선크림 보러가기`                       |
+| `cta_target`         | `String? @db.VarChar(255)`                   | `VARCHAR(255)`                    | NULLABLE                              | CTA 이동 경로. 카테고리 이동은 category enum query로 표현 | `/category-decision?category=sunscreen` |
+| `created_at`         | `DateTime @default(now()) @db.Timestamptz()` | `TIMESTAMPTZ`                     | NOT NULL, DEFAULT `CURRENT_TIMESTAMP` | 생성                                                      | 타임스탬프                              |
+| `updated_at`         | `DateTime? @updatedAt @db.Timestamptz()`     | `TIMESTAMPTZ`                     | NULLABLE                              | 갱신                                                      | 타임스탬프                              |
 
 **인덱스**
 
 - `pk_priority_rules` (PK)
 
-> 보조 인덱스(`priority+is_active`, `recommend_category_id`)는 두지 않는다. 활성 Rule 집합 자체가 작아 전수 스캔 + 메모리 정렬 비용이 무시할 수준이며, recommend_category_id 역검색은 발생하지 않는다.
+> 보조 인덱스(`sort_order+is_active`)는 두지 않는다. 활성 Rule 집합 자체가 작아 전수 스캔 + 메모리 정렬 비용이 무시할 수준이다.
 
 **설명**: Priority Gate 평가의 출력 정의. 조건은 자식 테이블 `priority_rule_conditions`에 분리.
 
-**JSONB 구조**: `hold_categories`는 `[{category_id, reason}]` 형태의 객체 배열. Service 레이어에서 Zod로 구조 검증.
+**결론 정책**: `result_type`은 UI 상태/색상 구분에 사용한다. 결과 본문은 `result_title`/`result_description`을 필수로 사용하고, CTA 버튼 노출 여부는 `cta_label` 존재 여부로 판단한다. 후속 이동 경로와 카테고리 진입은 `cta_target`에 고정하며, 제품군은 `category` query의 enum 값(`toner`, `sunscreen`, `serum`, `lipcare`, `moisturizer`, `cleanser`)으로 표현한다.
 
 ---
 
@@ -867,14 +865,14 @@ CREATE INDEX products_attr_eye_sting_idx ON products ((attributes->>'eye_sting')
 
 ## 부록 A. FK ON DELETE 정책 한눈에 보기
 
-| 패턴                                | ON DELETE  | 적용 예                                                                                                                                                                                                                                                                                                               |
-| ----------------------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 영속 마스터 → 사용자 활동           | `RESTRICT` | `devices.id` ← user_sessions, user_responses, decision_runs, reaction_reports, product_matrix_filter_states, avoidance_rules                                                                                                                                                                                          |
-| 영속 마스터 → 사용자 활동 (user 측) | `SET NULL` | `users.id` ← devices, user_sessions, user_responses, decision_runs, reaction_reports, product_matrix_filter_states, avoidance_rules                                                                                                                                                                                   |
-| 카탈로그 → 카탈로그                 | `RESTRICT` | `questions.id` ← user_responses / priority_rule_conditions / question_filter_mappings.trigger_question_id, `product_categories.id` ← product_matrix_filter_definitions.category_id / `priority_rules.recommend_category_id`, `category_attribute_definitions.id` ← product_filter_definitions.attribute_definition_id |
-| 카탈로그 → 카탈로그 (자식 cascade)  | `CASCADE`  | `questions.id` ← question_variants, `question_variants.id` ← question_visibility_conditions, `product_matrix_filter_definitions.id` ← question_filter_mappings.matrix_filter_definition_id, `priority_rules.id` ← priority_rule_conditions                                                                            |
-| 옵션 참조                           | `SET NULL` | `product_matrix_filter_definitions.product_filter_definition_id`                                                                                                                                                                                                                                                      |
-| 모든 UPDATE                         | `CASCADE`  | 전 테이블 (Prisma 기본값)                                                                                                                                                                                                                                                                                             |
+| 패턴                                | ON DELETE  | 적용 예                                                                                                                                                                                                                                                                      |
+| ----------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 영속 마스터 → 사용자 활동           | `RESTRICT` | `devices.id` ← user_sessions, user_responses, decision_runs, reaction_reports, product_matrix_filter_states, avoidance_rules                                                                                                                                                 |
+| 영속 마스터 → 사용자 활동 (user 측) | `SET NULL` | `users.id` ← devices, user_sessions, user_responses, decision_runs, reaction_reports, product_matrix_filter_states, avoidance_rules                                                                                                                                          |
+| 카탈로그 → 카탈로그                 | `RESTRICT` | `questions.id` ← user_responses / priority_rule_conditions / question_filter_mappings.trigger_question_id, `product_categories.id` ← product_matrix_filter_definitions.category_id, `category_attribute_definitions.id` ← product_filter_definitions.attribute_definition_id |
+| 카탈로그 → 카탈로그 (자식 cascade)  | `CASCADE`  | `questions.id` ← question_variants, `question_variants.id` ← question_visibility_conditions, `product_matrix_filter_definitions.id` ← question_filter_mappings.matrix_filter_definition_id, `priority_rules.id` ← priority_rule_conditions                                   |
+| 옵션 참조                           | `SET NULL` | `product_matrix_filter_definitions.product_filter_definition_id`                                                                                                                                                                                                             |
+| 모든 UPDATE                         | `CASCADE`  | 전 테이블 (Prisma 기본값)                                                                                                                                                                                                                                                    |
 
 > `decision_runs.category_id` / `.filter_state_id` 는 FK 를 두지 않는다 — append-only 스냅샷이라 reference 생명주기가 과거 기록을 건드리면 안 되고, 무결성의 단일 진실은 `applied_filters_snapshot` 등 JSONB 다. 카테고리/필터상태로 `decision_runs` 를 조회하는 화면도 없어 단일 인덱스(`idx_decision_runs_category_id`, `idx_decision_runs_filter_state_id`)까지 제거했다. (→ [ADR-0002](../../memory/ADR/ADR-0002-db-identity-and-fk-policy.md))
 
@@ -886,5 +884,5 @@ CREATE INDEX products_attr_eye_sting_idx ON products ((attributes->>'eye_sting')
 
 - `products.attributes` GIN/Expression 인덱스 추가 시점 (catalog 규모 임계치).
 - `user_sessions.segment` 컬럼 도입 여부 (A/B 테스트 도입 시 결정).
-- `priority_rules.hold_categories`, `decision_runs.*_snapshot`, `product_matrix_filter_states.filters` 등 JSONB 컬럼의 Zod 스키마 정의 위치.
+- `decision_runs.*_snapshot`, `product_matrix_filter_states.filters` 등 JSONB 컬럼의 Zod 스키마 정의 위치.
 - 소프트 삭제 cascading 정책 — 부모 row `deleted_at` 채워졌을 때 자식 row 처리 (예: `users.deleted_at` 발생 시 `devices`/`reaction_reports` 도 같이 마킹할지).

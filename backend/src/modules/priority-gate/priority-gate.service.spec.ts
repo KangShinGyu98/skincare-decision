@@ -486,7 +486,7 @@ describe('PriorityGateService', () => {
       [1, 2, 3, 4].map((index) =>
         createPriorityRuleRecord({
           id: `018f0000-0000-7000-8000-00000000040${index}`,
-          priority: index,
+          sortOrder: index,
           resultTitle: `matched rule ${index}`,
           conditions: [
             {
@@ -637,7 +637,7 @@ function createQuestionRecord(
 function createPriorityRuleRecord(overrides: Partial<PriorityRuleRecord> = {}): PriorityRuleRecord {
   return {
     id: overrides.id ?? '018f0000-0000-7000-8000-000000000401',
-    priority: overrides.priority ?? 10,
+    sortOrder: overrides.sortOrder ?? 10,
     resultType: overrides.resultType ?? PriorityRuleResultType.PASS,
     resultTitle: overrides.resultTitle ?? '현재 답변에서는 우선 확인할 신호가 없습니다',
     resultDescription:

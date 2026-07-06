@@ -675,7 +675,7 @@ category.selected EQ sunscreen AND context.eye_sting EQ true
 > **Priority Gate 룰이 어떤 질문/조건을 보고 어떤 단순 결론을 내는지 확인하는 화면**
 
 Rule Check는 `priority_rules`와 `priority_rule_conditions`를 사람이 읽기 쉬운 표로 보여준다.
-평가 순서(`priority`)는 기본 정렬에는 사용하지만 MVP 테이블 컬럼으로 노출하지 않는다. 순서 조정, 상세 조건 편집, CTA 상세 관리는 후속 모달에서 다룬다.
+DB의 평가 순서 컬럼과 Admin API/화면 필드는 모두 `sort_order` 명칭을 사용한다. 행 drag로 순서를 조정하고 저장할 수 있으며, 상세 조건 편집과 CTA 상세 관리는 후속 모달에서 다룬다.
 
 #### 화면 구조
 
@@ -683,6 +683,7 @@ Rule Check는 `priority_rules`와 `priority_rule_conditions`를 사람이 읽기
 [상단 필터]
 result_type: 전체 / HOLD / CAUTION / PASS / ROUTE_CATEGORY
 status: 전체 / active / inactive
+순서 저장
 
 [Rule Check Table]
 룰 이름 | 질문 | 조건 | 결론 | 상태 | 메모
@@ -690,28 +691,27 @@ status: 전체 / active / inactive
 
 #### 컬럼 정의
 
-| 컬럼    | 표시 내용                                                       | 데이터 기준                                      |
-| ------- | --------------------------------------------------------------- | ------------------------------------------------ |
-| 룰 이름 | 관리자용 룰 이름. 가능하면 rule key도 함께 보조 표시            | `priority_rules.name`                            |
-| 질문    | 조건이 참조하는 기준 질문 key 목록                              | `priority_rule_conditions.question_id → questions.key` |
-| 조건    | `fact_key OP value` 형식. OR/AND가 있으면 한 줄 또는 줄바꿈 표시 | `priority_rule_conditions.operator/value/state`  |
-| 결론    | 현재는 단순 결과 메시지 1줄만 표시                              | `priority_rules.result_title`                    |
-| 상태    | `active` / `inactive` 라디오                                    | `priority_rules.is_active`                       |
-| 메모    | 근거, 보류 이유, 추후 수정 필요점                               | MVP 저장 방식 미정. 후속 `admin_note` 또는 `admin_notes` 검토 |
+| 컬럼    | 표시 내용                                                        | 데이터 기준                                                   |
+| ------- | ---------------------------------------------------------------- | ------------------------------------------------------------- |
+| 룰 이름 | 관리자용 룰 이름. 가능하면 rule key도 함께 보조 표시             | `priority_rules.name`                                         |
+| 질문    | 조건이 참조하는 기준 질문 key 목록                               | `priority_rule_conditions.question_id → questions.key`        |
+| 조건    | `fact_key OP value` 형식. OR/AND가 있으면 한 줄 또는 줄바꿈 표시 | `priority_rule_conditions.operator/value/state`               |
+| 결론    | 현재는 단순 결과 메시지 1줄만 표시                               | `priority_rules.result_title`                                 |
+| 상태    | `active` / `inactive` 라디오                                     | `priority_rules.is_active`                                    |
+| 메모    | 근거, 보류 이유, 추후 수정 필요점                                | MVP 저장 방식 미정. 후속 `admin_note` 또는 `admin_notes` 검토 |
 
 #### 행 예시
 
-| 룰 이름                 | 질문                                      | 조건                                                                 | 결론                                                   | 상태   | 메모                                |
-| ----------------------- | ----------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------ | ------ | ----------------------------------- |
-| 최근 자극 보류          | `life.recent_irritation`                  | `life.recent_irritation EQ true`                                     | 지금은 새 제품보다 피부 반응 안정화가 먼저예요.        | active | 모든 제품군 추천보다 우선            |
-| 기능성 과다 보류        | `product.owned_categories`                | `product.active_overload EQ true`                                    | 자극 가능성이 높아 새 세럼이나 필링 제품은 보류해요.   | active | 레티놀/비타민C/AHA/BHA 병행 주의     |
-| 클렌징 루틴 우선        | `routine.cleansing_stable`, `routine.foam_enough` | `routine.cleansing_stable EQ false OR routine.foam_enough EQ false` | 메이크업이나 선크림 제거 방식부터 점검하는 게 좋아요. | active | 클렌저 카테고리 연결                 |
-| 선크림 루틴 우선        | `life.outdoor_activity`, `routine.sunscreen_frequency` | `life.outdoor_activity IN [1_3h, over_3h] AND routine.sunscreen_use EQ false` | 세럼보다 선크림 루틴이 먼저예요.                      | active | 잡티/탄력 고민이어도 선크림 우선     |
-| 기본 통과               | -                                         | `fallback`                                                           | 지금은 기능성 제품군을 봐도 괜찮아요.                  | active | 매칭 룰이 없을 때 마지막으로 적용    |
+| 룰 이름          | 질문                                                   | 조건                                                                          | 결론                                                  | 상태   | 메모                              |
+| ---------------- | ------------------------------------------------------ | ----------------------------------------------------------------------------- | ----------------------------------------------------- | ------ | --------------------------------- |
+| 최근 자극 보류   | `life.recent_irritation`                               | `life.recent_irritation EQ true`                                              | 지금은 새 제품보다 피부 반응 안정화가 먼저예요.       | active | 모든 제품군 추천보다 우선         |
+| 기능성 과다 보류 | `product.owned_categories`                             | `product.active_overload EQ true`                                             | 자극 가능성이 높아 새 세럼이나 필링 제품은 보류해요.  | active | 레티놀/비타민C/AHA/BHA 병행 주의  |
+| 클렌징 루틴 우선 | `routine.cleansing_stable`, `routine.foam_enough`      | `routine.cleansing_stable EQ false OR routine.foam_enough EQ false`           | 메이크업이나 선크림 제거 방식부터 점검하는 게 좋아요. | active | 클렌저 카테고리 연결              |
+| 선크림 루틴 우선 | `life.outdoor_activity`, `routine.sunscreen_frequency` | `life.outdoor_activity IN [1_3h, over_3h] AND routine.sunscreen_use EQ false` | 세럼보다 선크림 루틴이 먼저예요.                      | active | 잡티/탄력 고민이어도 선크림 우선  |
+| 기본 통과        | -                                                      | `fallback`                                                                    | 지금은 기능성 제품군을 봐도 괜찮아요.                 | active | 매칭 룰이 없을 때 마지막으로 적용 |
 
 #### MVP 제외
 
-- drag & drop 우선순위 변경
 - Rule 조건 직접 편집
 - CTA 상세 편집
 - result description 전체 편집
@@ -741,34 +741,34 @@ question | question_variant | answer_type | user_options | 노출 조건 | 상�
 
 #### 컬럼 정의
 
-| 컬럼             | 표시 내용                                                            | 데이터 기준                                           |
-| ---------------- | -------------------------------------------------------------------- | ----------------------------------------------------- |
-| question         | 내부 기준 질문 key                                                   | `questions.key`                                       |
-| question_variant | 사용자에게 실제로 보이는 질문 문구                                   | `question_variants.title`                             |
-| answer_type      | 답변 형식                                                            | `questions.answer_type`                               |
-| user_options     | 사용자에게 보이는 선택지. 내부값은 필요 시 보조 표시                 | `question_variants.answers` + `questions.answer_values` |
-| 노출 조건        | `screen/ui_section/category.selected/visibility condition` 조합       | `question_variants.screen/ui_section` + `question_visibility_conditions` |
-| 상태             | `active` / `inactive` 라디오. 화면 질문 단위로 제어                  | `question_variants.is_active`                         |
-| 메모             | 문구 수정 의도, 룰 연결, 제품 선택 기준 근거                         | MVP 저장 방식 미정. 후속 `admin_note` 또는 `admin_notes` 검토 |
+| 컬럼             | 표시 내용                                                       | 데이터 기준                                                              |
+| ---------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| question         | 내부 기준 질문 key                                              | `questions.key`                                                          |
+| question_variant | 사용자에게 실제로 보이는 질문 문구                              | `question_variants.title`                                                |
+| answer_type      | 답변 형식                                                       | `questions.answer_type`                                                  |
+| user_options     | 사용자에게 보이는 선택지. 내부값은 필요 시 보조 표시            | `question_variants.answers` + `questions.answer_values`                  |
+| 노출 조건        | `screen/ui_section/category.selected/visibility condition` 조합 | `question_variants.screen/ui_section` + `question_visibility_conditions` |
+| 상태             | `active` / `inactive` 라디오. 화면 질문 단위로 제어             | `question_variants.is_active`                                            |
+| 메모             | 문구 수정 의도, 룰 연결, 제품 선택 기준 근거                    | MVP 저장 방식 미정. 후속 `admin_note` 또는 `admin_notes` 검토            |
 
 #### ui_section 필터 의미
 
-| ui_section       | 의미                         | 주요 화면 |
-| ---------------- | ---------------------------- | --------- |
-| `life_routine`   | 최근 자극, 선크림, 세안, 위생, 밤 루틴 질문 | Priority Gate |
-| `owned_products` | 보유 중인 스킨케어 제품 체크 | Priority Gate |
-| `basic`          | 제품군 공통 사용 맥락 질문   | Category Decision Box 1 |
-| `category`       | 제품군별 핵심 기준 질문      | Category Decision Box 2 |
+| ui_section       | 의미                                        | 주요 화면               |
+| ---------------- | ------------------------------------------- | ----------------------- |
+| `life_routine`   | 최근 자극, 선크림, 세안, 위생, 밤 루틴 질문 | Priority Gate           |
+| `owned_products` | 보유 중인 스킨케어 제품 체크                | Priority Gate           |
+| `basic`          | 제품군 공통 사용 맥락 질문                  | Category Decision Box 1 |
+| `category`       | 제품군별 핵심 기준 질문                     | Category Decision Box 2 |
 
 #### 행 예시
 
-| question                         | question_variant                                      | answer_type   | user_options                              | 노출 조건                                               | 상태   | 메모                               |
-| -------------------------------- | ----------------------------------------------------- | ------------- | ----------------------------------------- | ------------------------------------------------------- | ------ | ---------------------------------- |
-| `life.recent_irritation`         | 최근 따가움, 붉어짐, 가려움 같은 문제가 있나요?       | BOOLEAN       | 예 / 아니오                               | `screen EQ priority_gate AND ui_section EQ life_routine` | active | 최상위 HOLD 룰과 연결              |
-| `routine.sunscreen_frequency`    | 외출할 때 선크림을 바르나요?                          | SINGLE_SELECT | `daily` / `sometimes` / `rarely` / `never` | `screen EQ priority_gate` 또는 `category.selected EQ serum` | active | 선크림 우선 룰, 세럼 사용 주의와 연결 |
-| `context.skin_type`              | 피부 타입에 가장 가까운 것은 무엇인가요?              | SINGLE_SELECT | dry / oily / combination / sensitive 등    | `category.selected IN [toner, sunscreen, serum, moisturizer, cleanser]` | active | 립케어에는 노출하지 않음            |
-| `context.eye_sting`              | 선크림을 바르면 눈이 시린 편인가요?                   | BOOLEAN       | 예 / 아니오                               | `category.selected EQ sunscreen`                         | active | 선크림 눈시림 낮음 필터와 연결      |
-| `preference.menthol_sensitive`   | 화한 립밤을 쓰면 불편한가요?                          | BOOLEAN       | 예 / 아니오                               | `category.selected EQ lipcare`                           | active | 립케어 멘톨 회피 기준               |
+| question                       | question_variant                                | answer_type   | user_options                               | 노출 조건                                                               | 상태   | 메모                                  |
+| ------------------------------ | ----------------------------------------------- | ------------- | ------------------------------------------ | ----------------------------------------------------------------------- | ------ | ------------------------------------- |
+| `life.recent_irritation`       | 최근 따가움, 붉어짐, 가려움 같은 문제가 있나요? | BOOLEAN       | 예 / 아니오                                | `screen EQ priority_gate AND ui_section EQ life_routine`                | active | 최상위 HOLD 룰과 연결                 |
+| `routine.sunscreen_frequency`  | 외출할 때 선크림을 바르나요?                    | SINGLE_SELECT | `daily` / `sometimes` / `rarely` / `never` | `screen EQ priority_gate` 또는 `category.selected EQ serum`             | active | 선크림 우선 룰, 세럼 사용 주의와 연결 |
+| `context.skin_type`            | 피부 타입에 가장 가까운 것은 무엇인가요?        | SINGLE_SELECT | dry / oily / combination / sensitive 등    | `category.selected IN [toner, sunscreen, serum, moisturizer, cleanser]` | active | 립케어에는 노출하지 않음              |
+| `context.eye_sting`            | 선크림을 바르면 눈이 시린 편인가요?             | BOOLEAN       | 예 / 아니오                                | `category.selected EQ sunscreen`                                        | active | 선크림 눈시림 낮음 필터와 연결        |
+| `preference.menthol_sensitive` | 화한 립밤을 쓰면 불편한가요?                    | BOOLEAN       | 예 / 아니오                                | `category.selected EQ lipcare`                                          | active | 립케어 멘톨 회피 기준                 |
 
 #### MVP 제외
 
@@ -784,26 +784,26 @@ question | question_variant | answer_type | user_options | 노출 조건 | 상�
 
 아래 화면은 Rule Check / Question Check 안정화 후 확장한다.
 
-| 화면                         | 역할                                      |
-| ---------------------------- | ----------------------------------------- |
-| Product Filter Mapping 관리  | 사용자 답변이 어떤 Matrix 필터를 자동으로 켜는지 관리 |
-| Product DB 관리              | 제품 기본 정보, 카테고리 attribute, 성분, 이미지, 구매 링크 관리 |
-| Rule Test                    | 가상 사용자 입력으로 룰/질문/필터/제품 후보 연결을 검증 |
-| Concern Preset 관리          | Concern 태그의 preset facts, suggested category/filter 검수 |
+| 화면                        | 역할                                                             |
+| --------------------------- | ---------------------------------------------------------------- |
+| Product Filter Mapping 관리 | 사용자 답변이 어떤 Matrix 필터를 자동으로 켜는지 관리            |
+| Product DB 관리             | 제품 기본 정보, 카테고리 attribute, 성분, 이미지, 구매 링크 관리 |
+| Rule Test                   | 가상 사용자 입력으로 룰/질문/필터/제품 후보 연결을 검증          |
+| Concern Preset 관리         | Concern 태그의 preset facts, suggested category/filter 검수      |
 
 ---
 
 ## 코어 화면 (MVP)
 
-| #   | 화면                         | 핵심 역할                                           |
-| --- | ---------------------------- | --------------------------------------------------- |
-| S01 | Landing / Intent Entry       | 서비스 가치 + Fast Lane 진입 + 고민별 진입 CTA      |
-| S02 | Priority Gate                | Life / 루틴 + 제품 체크리스트로 구매 적합 여부 판단 |
-| S03 | Category Decision — Box 1    | 기본 사용 맥락 확인 (예산, 장소, 시간, 사용감)      |
-| S04 | Category Decision — Box 2    | 제품군별 핵심 기준 확인 (선크림 / 세럼 / 립케어 등) |
-| S05 | Category Decision — Box 3    | 조건 기반 제품 후보 + CTA 노출                      |
+| #   | 화면                         | 핵심 역할                                            |
+| --- | ---------------------------- | ---------------------------------------------------- |
+| S01 | Landing / Intent Entry       | 서비스 가치 + Fast Lane 진입 + 고민별 진입 CTA       |
+| S02 | Priority Gate                | Life / 루틴 + 제품 체크리스트로 구매 적합 여부 판단  |
+| S03 | Category Decision — Box 1    | 기본 사용 맥락 확인 (예산, 장소, 시간, 사용감)       |
+| S04 | Category Decision — Box 2    | 제품군별 핵심 기준 확인 (선크림 / 세럼 / 립케어 등)  |
+| S05 | Category Decision — Box 3    | 조건 기반 제품 후보 + CTA 노출                       |
 | S06 | Product Matrix + 상세뷰      | 가격대별 제품 후보 비교 + 제품 상세 정보 모달/드로어 |
-| S08 | Reaction Traceback / Tracker | 실패 원인 추적 + 결과를 다음 선택에 반영            |
+| S08 | Reaction Traceback / Tracker | 실패 원인 추적 + 결과를 다음 선택에 반영             |
 
 ---
 

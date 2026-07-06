@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { priorityGateResultTypeSchema } from './priority-gate.schema.js';
+import { priorityGateResultTypeSchema, questionAnswerTypeSchema } from './priority-gate.schema.js';
 
 export const adminRuleStatusSchema = z.enum(['active', 'inactive']);
 
@@ -53,45 +53,74 @@ export const updateAdminRuleAdminNoteBodySchema = z
 
 export type UpdateAdminRuleAdminNoteBody = z.infer<typeof updateAdminRuleAdminNoteBodySchema>;
 
-export const updateAdminRulePriorityItemSchema = z
+export const updateAdminRuleSortOrderBodySchema = z
   .object({
-    ruleId: z.uuid(),
-    priority: z.number().int().nonnegative(),
+    ruleIds: z.array(z.uuid()).min(1),
   })
   .strict();
 
-export const updateAdminRulePrioritiesBodySchema = z
+export type UpdateAdminRuleSortOrderBody = z.infer<typeof updateAdminRuleSortOrderBodySchema>;
+
+const nullableNonEmptyString = (maxLength: number) =>
+  z.preprocess(
+    (value) => (typeof value === 'string' && value.trim().length === 0 ? null : value),
+    z.string().trim().min(1).max(maxLength).nullable().default(null),
+  );
+
+const optionalSearchStringSchema = z.preprocess(
+  (value) => (typeof value === 'string' && value.trim().length === 0 ? undefined : value),
+  z.string().trim().min(1).max(100).optional(),
+);
+
+export const adminRuleConditionInputSchema = z
   .object({
-    items: z.array(updateAdminRulePriorityItemSchema).min(1),
+    questionId: z.uuid(),
+    operator: adminRuleConditionOperatorSchema,
+    value: z.array(z.number().int()).min(1),
+    state: adminRuleConditionStateSchema,
+  })
+  .strict();
+
+export type AdminRuleConditionInput = z.infer<typeof adminRuleConditionInputSchema>;
+
+export const adminRuleMutationBodySchema = z
+  .object({
+    name: z.string().trim().min(1).max(200),
+    status: adminRuleStatusSchema,
+    resultType: priorityGateResultTypeSchema,
+    resultTitle: z.string().trim().min(1),
+    resultDescription: z.string().trim().min(1),
+    ctaLabel: nullableNonEmptyString(100),
+    ctaTarget: nullableNonEmptyString(255),
+    conditions: z.array(adminRuleConditionInputSchema).default([]),
   })
   .strict()
   .superRefine((body, context) => {
-    const ruleIds = new Set<string>();
-    const priorities = new Set<number>();
-
-    for (const item of body.items) {
-      if (ruleIds.has(item.ruleId)) {
-        context.addIssue({
-          code: 'custom',
-          message: `Duplicate ruleId: ${item.ruleId}`,
-          path: ['items'],
-        });
-      }
-
-      if (priorities.has(item.priority)) {
-        context.addIssue({
-          code: 'custom',
-          message: `Duplicate priority: ${item.priority}`,
-          path: ['items'],
-        });
-      }
-
-      ruleIds.add(item.ruleId);
-      priorities.add(item.priority);
+    if (body.ctaLabel && !body.ctaTarget) {
+      context.addIssue({
+        code: 'custom',
+        message: 'ctaTarget is required when ctaLabel is provided',
+        path: ['ctaTarget'],
+      });
     }
   });
 
-export type UpdateAdminRulePrioritiesBody = z.infer<typeof updateAdminRulePrioritiesBodySchema>;
+export const createAdminRuleBodySchema = adminRuleMutationBodySchema;
+
+export type CreateAdminRuleBody = z.infer<typeof createAdminRuleBodySchema>;
+
+export const updateAdminRuleBodySchema = adminRuleMutationBodySchema;
+
+export type UpdateAdminRuleBody = z.infer<typeof updateAdminRuleBodySchema>;
+
+export const adminRuleQuestionSearchQuerySchema = z
+  .object({
+    q: optionalSearchStringSchema,
+    limit: z.coerce.number().int().min(1).max(50).default(20),
+  })
+  .strict();
+
+export type AdminRuleQuestionSearchQuery = z.infer<typeof adminRuleQuestionSearchQuerySchema>;
 
 export const adminRuleDecisionValueSchema = z
   .object({
@@ -106,7 +135,7 @@ export const adminRuleConditionSchema = z
   .object({
     id: z.uuid(),
     questionId: z.uuid(),
-    questionTitle: z.string().min(1),
+    questionTitle: z.string(),
     operator: adminRuleConditionOperatorSchema,
     decisionValues: z.array(adminRuleDecisionValueSchema),
     decisionValueText: z.string().min(1),
@@ -116,10 +145,48 @@ export const adminRuleConditionSchema = z
 
 export type AdminRuleCondition = z.infer<typeof adminRuleConditionSchema>;
 
+export const adminRuleDetailQuestionVariantSchema = z
+  .object({
+    id: z.uuid(),
+    title: z.string().min(1),
+    answers: z.array(z.string()),
+  })
+  .strict();
+
+export type AdminRuleDetailQuestionVariant = z.infer<typeof adminRuleDetailQuestionVariantSchema>;
+
+export const adminRuleDetailConditionSchema = adminRuleConditionSchema.extend({
+  questionKey: z.string().min(1),
+  questionVariant: adminRuleDetailQuestionVariantSchema.nullable(),
+  value: z.array(z.number().int()),
+});
+
+export type AdminRuleDetailCondition = z.infer<typeof adminRuleDetailConditionSchema>;
+
+export const adminRuleQuestionSearchItemSchema = z
+  .object({
+    questionId: z.uuid(),
+    questionKey: z.string().min(1),
+    answerType: questionAnswerTypeSchema,
+    answerValues: z.array(z.number().int()),
+    questionVariant: adminRuleDetailQuestionVariantSchema.nullable(),
+  })
+  .strict();
+
+export type AdminRuleQuestionSearchItem = z.infer<typeof adminRuleQuestionSearchItemSchema>;
+
+export const adminRuleQuestionSearchResponseSchema = z
+  .object({
+    items: z.array(adminRuleQuestionSearchItemSchema),
+  })
+  .strict();
+
+export type AdminRuleQuestionSearchResponse = z.infer<typeof adminRuleQuestionSearchResponseSchema>;
+
 export const adminRuleTableRowSchema = z
   .object({
     id: z.uuid(),
-    priority: z.number().int(),
+    sort_order: z.number().int(),
     ruleName: z.string().min(1),
     conditions: z.array(adminRuleConditionSchema),
     conclusion: z.string().min(1),
@@ -143,18 +210,34 @@ export const updateAdminRuleStatusResponseSchema = adminRuleTableRowSchema;
 
 export type UpdateAdminRuleStatusResponse = z.infer<typeof updateAdminRuleStatusResponseSchema>;
 
-export const adminRuleDetailSchema = adminRuleTableRowSchema.extend({
-  resultDescription: z.string().min(1),
-  ctaLabel: z.string().nullable(),
-  ctaTarget: z.string().nullable(),
-  recommendCategory: z
-    .object({
-      id: z.uuid(),
-      key: z.string().min(1),
-      name: z.string().min(1),
-    })
-    .nullable(),
-});
+export const adminRuleCtaSchema = z
+  .object({
+    label: z.string().min(1),
+    target: z.string().min(1),
+  })
+  .strict();
+
+export type AdminRuleCta = z.infer<typeof adminRuleCtaSchema>;
+
+export const adminRuleDetailSchema = adminRuleTableRowSchema
+  .extend({
+    name: z.string().min(1),
+    resultTitle: z.string().min(1),
+    conditions: z.array(adminRuleDetailConditionSchema),
+    resultDescription: z.string().min(1),
+    ctaLabel: z.string().nullable(),
+    ctaTarget: z.string().nullable(),
+    cta: adminRuleCtaSchema.nullable(),
+  })
+  .superRefine((detail, context) => {
+    if (detail.ctaLabel && !detail.ctaTarget) {
+      context.addIssue({
+        code: 'custom',
+        message: 'ctaTarget is required when ctaLabel is provided',
+        path: ['ctaTarget'],
+      });
+    }
+  });
 
 export type AdminRuleDetail = z.infer<typeof adminRuleDetailSchema>;
 
@@ -164,12 +247,29 @@ export type UpdateAdminRuleAdminNoteResponse = z.infer<
   typeof updateAdminRuleAdminNoteResponseSchema
 >;
 
-export const updateAdminRulePrioritiesResponseSchema = z
+export const createAdminRuleResponseSchema = adminRuleDetailSchema;
+
+export type CreateAdminRuleResponse = z.infer<typeof createAdminRuleResponseSchema>;
+
+export const updateAdminRuleResponseSchema = adminRuleDetailSchema;
+
+export type UpdateAdminRuleResponse = z.infer<typeof updateAdminRuleResponseSchema>;
+
+export const deleteAdminRuleResponseSchema = z
+  .object({
+    id: z.uuid(),
+    deleted: z.literal(true),
+  })
+  .strict();
+
+export type DeleteAdminRuleResponse = z.infer<typeof deleteAdminRuleResponseSchema>;
+
+export const updateAdminRuleSortOrderResponseSchema = z
   .object({
     items: z.array(adminRuleTableRowSchema),
   })
   .strict();
 
-export type UpdateAdminRulePrioritiesResponse = z.infer<
-  typeof updateAdminRulePrioritiesResponseSchema
+export type UpdateAdminRuleSortOrderResponse = z.infer<
+  typeof updateAdminRuleSortOrderResponseSchema
 >;

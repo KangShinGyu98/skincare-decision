@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, type TestingModule } from '@nestjs/testing';
 import {
   ComparisonOperator,
@@ -6,7 +6,12 @@ import {
   PriorityRuleResultType,
   QuestionAnswerType,
 } from '../../generated/prisma/enums';
-import { AdminRulesRepository, type AdminRuleRecord } from './admin-rules.repository';
+import {
+  AdminRulesRepository,
+  InvalidAdminRuleConditionError,
+  InvalidAdminRuleSortOrderError,
+  type AdminRuleRecord,
+} from './admin-rules.repository';
 import { AdminRulesService } from './admin-rules.service';
 
 describe('AdminRulesService', () => {
@@ -16,9 +21,12 @@ describe('AdminRulesService', () => {
       AdminRulesRepository,
       | 'findRules'
       | 'findRuleById'
+      | 'searchQuestions'
+      | 'createRule'
+      | 'updateRule'
+      | 'deleteRule'
       | 'updateRuleStatus'
-      | 'updateRuleAdminNote'
-      | 'updateRulePriorities'
+      | 'updateRuleSortOrder'
     >
   >;
 
@@ -26,9 +34,12 @@ describe('AdminRulesService', () => {
     repositoryMock = {
       findRules: jest.fn(),
       findRuleById: jest.fn(),
+      searchQuestions: jest.fn(),
+      createRule: jest.fn(),
+      updateRule: jest.fn(),
+      deleteRule: jest.fn(),
       updateRuleStatus: jest.fn(),
-      updateRuleAdminNote: jest.fn(),
-      updateRulePriorities: jest.fn(),
+      updateRuleSortOrder: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -60,6 +71,7 @@ describe('AdminRulesService', () => {
               answerValues: [0, 1],
               variants: [
                 {
+                  id: '01935b8f-0000-7000-8000-000000000311',
                   title: '최근 제품 사용 후 따가움, 붉어짐, 가려움이 있었나요?',
                   answers: ['아니요', '예'],
                 },
@@ -78,6 +90,7 @@ describe('AdminRulesService', () => {
               answerValues: [1, 2, 3],
               variants: [
                 {
+                  id: '01935b8f-0000-7000-8000-000000000312',
                   title: '하루 야외 활동 시간은 어느 정도인가요?',
                   answers: ['1시간 미만', '1-3시간', '3시간 이상'],
                 },
@@ -88,19 +101,13 @@ describe('AdminRulesService', () => {
       }),
     ]);
 
-    const result = await service.findRules({
-      resultType: 'HOLD',
-      status: 'active',
-    });
+    const result = await service.findRules();
 
-    expect(repositoryMock.findRules).toHaveBeenCalledWith({
-      resultType: 'HOLD',
-      status: 'active',
-    });
+    expect(repositoryMock.findRules).toHaveBeenCalledWith();
     expect(result.items).toEqual([
       {
         id: '01935b8f-0000-7000-8000-000000000101',
-        priority: 10,
+        sort_order: 10,
         ruleName: '최근 자극 보류',
         conditions: [
           {
@@ -141,7 +148,7 @@ describe('AdminRulesService', () => {
       }),
     ]);
 
-    const result = await service.findRules({});
+    const result = await service.findRules();
 
     expect(result.items[0]).toEqual(
       expect.objectContaining({
@@ -156,11 +163,6 @@ describe('AdminRulesService', () => {
       createRuleRecord({
         ctaLabel: '선크림 보러가기',
         ctaTarget: '/category-decision?category=sunscreen',
-        recommendCategory: {
-          id: '01935b8f-0000-7000-8000-000000000501',
-          key: 'sunscreen',
-          name: '선크림',
-        },
       }),
     );
 
@@ -171,13 +173,29 @@ describe('AdminRulesService', () => {
     );
     expect(result).toEqual(
       expect.objectContaining({
+        name: '최근 자극 보류',
+        ruleName: '최근 자극 보류',
+        status: 'active',
+        resultType: 'HOLD',
+        resultTitle: '지금은 새 제품보다 피부 반응 안정화가 먼저예요.',
         resultDescription: '최근 자극이 있으면 새 제품 도입보다 안정화가 우선입니다.',
         ctaLabel: '선크림 보러가기',
         ctaTarget: '/category-decision?category=sunscreen',
-        recommendCategory: {
-          id: '01935b8f-0000-7000-8000-000000000501',
-          key: 'sunscreen',
-          name: '선크림',
+        cta: {
+          label: '선크림 보러가기',
+          target: '/category-decision?category=sunscreen',
+        },
+      }),
+    );
+    expect(result.conditions[0]).toEqual(
+      expect.objectContaining({
+        questionKey: 'life.recent_irritation',
+        operator: 'EQ',
+        value: [1],
+        questionVariant: {
+          id: '01935b8f-0000-7000-8000-000000000311',
+          title: '최근 제품 사용 후 따가움, 붉어짐, 가려움이 있었나요?',
+          answers: ['아니요', '예'],
         },
       }),
     );
@@ -201,53 +219,141 @@ describe('AdminRulesService', () => {
     expect(result.status).toBe('inactive');
   });
 
-  it('updateAdminNote는 공백 note를 null로 정규화해 저장한다', async () => {
-    repositoryMock.updateRuleAdminNote.mockResolvedValue(
-      createRuleRecord({
-        adminNote: null,
-      }),
-    );
+  it('searchQuestions는 rule condition에 연결할 question 후보를 반환한다', async () => {
+    repositoryMock.searchQuestions.mockResolvedValue([
+      {
+        id: '01935b8f-0000-7000-8000-000000000301',
+        key: 'life.recent_irritation',
+        answerType: QuestionAnswerType.BOOLEAN,
+        answerValues: [0, 1],
+        variants: [
+          {
+            id: '01935b8f-0000-7000-8000-000000000311',
+            title: '최근 제품 사용 후 따가움, 붉어짐, 가려움이 있었나요?',
+            answers: ['아니요', '예'],
+          },
+        ],
+      },
+    ]);
 
-    const result = await service.updateAdminNote('01935b8f-0000-7000-8000-000000000101', {
-      adminNote: '   ',
+    const result = await service.searchQuestions({
+      q: 'irritation',
+      limit: 20,
     });
 
-    expect(repositoryMock.updateRuleAdminNote).toHaveBeenCalledWith(
-      '01935b8f-0000-7000-8000-000000000101',
-      null,
-    );
-    expect(result.adminNote).toBeNull();
+    expect(repositoryMock.searchQuestions).toHaveBeenCalledWith({
+      q: 'irritation',
+      limit: 20,
+    });
+    expect(result.items).toEqual([
+      {
+        questionId: '01935b8f-0000-7000-8000-000000000301',
+        questionKey: 'life.recent_irritation',
+        answerType: 'BOOLEAN',
+        answerValues: [0, 1],
+        questionVariant: {
+          id: '01935b8f-0000-7000-8000-000000000311',
+          title: '최근 제품 사용 후 따가움, 붉어짐, 가려움이 있었나요?',
+          answers: ['아니요', '예'],
+        },
+      },
+    ]);
   });
 
-  it('updatePriorities는 저장된 priority 순서의 table row 목록을 반환한다', async () => {
-    repositoryMock.updateRulePriorities.mockResolvedValue([
+  it('createRule은 rule과 condition 입력을 저장하고 상세 데이터를 반환한다', async () => {
+    repositoryMock.createRule.mockResolvedValue(createRuleRecord());
+
+    const result = await service.createRule(createRuleMutationBody());
+
+    expect(repositoryMock.createRule).toHaveBeenCalledWith({
+      name: '최근 자극 보류',
+      isActive: true,
+      resultType: 'HOLD',
+      resultTitle: '지금은 새 제품보다 피부 반응 안정화가 먼저예요.',
+      resultDescription: '최근 자극이 있으면 새 제품 도입보다 안정화가 우선입니다.',
+      ctaLabel: null,
+      ctaTarget: null,
+      conditions: [
+        {
+          questionId: '01935b8f-0000-7000-8000-000000000301',
+          operator: 'EQ',
+          value: [1],
+          state: 'REQUIRED',
+        },
+      ],
+    });
+    expect(result.id).toBe('01935b8f-0000-7000-8000-000000000101');
+    expect(result.conditions[0]?.questionKey).toBe('life.recent_irritation');
+  });
+
+  it('updateRule은 대상 rule이 없으면 NotFoundException을 던진다', async () => {
+    repositoryMock.updateRule.mockResolvedValue(null);
+
+    await expect(
+      service.updateRule('01935b8f-0000-7000-8000-000000000999', createRuleMutationBody()),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('createRule은 invalid condition을 BadRequestException으로 변환한다', async () => {
+    repositoryMock.createRule.mockRejectedValue(
+      new InvalidAdminRuleConditionError('Unknown question id'),
+    );
+
+    await expect(service.createRule(createRuleMutationBody())).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+  });
+
+  it('deleteRule은 rule을 삭제하고 삭제 응답을 반환한다', async () => {
+    repositoryMock.deleteRule.mockResolvedValue(true);
+
+    const result = await service.deleteRule('01935b8f-0000-7000-8000-000000000101');
+
+    expect(repositoryMock.deleteRule).toHaveBeenCalledWith('01935b8f-0000-7000-8000-000000000101');
+    expect(result).toEqual({
+      id: '01935b8f-0000-7000-8000-000000000101',
+      deleted: true,
+    });
+  });
+
+  it('updateSortOrder는 정렬된 rule id 목록으로 sort_order를 저장하고 table row 목록을 반환한다', async () => {
+    repositoryMock.updateRuleSortOrder.mockResolvedValue([
       createRuleRecord({
         id: '01935b8f-0000-7000-8000-000000000102',
-        priority: 10,
+        sortOrder: 10,
         name: '기본 통과',
         resultType: PriorityRuleResultType.PASS,
       }),
       createRuleRecord({
         id: '01935b8f-0000-7000-8000-000000000101',
-        priority: 20,
+        sortOrder: 20,
       }),
     ]);
 
-    const result = await service.updatePriorities({
-      items: [
-        { ruleId: '01935b8f-0000-7000-8000-000000000102', priority: 10 },
-        { ruleId: '01935b8f-0000-7000-8000-000000000101', priority: 20 },
-      ],
+    const result = await service.updateSortOrder({
+      ruleIds: ['01935b8f-0000-7000-8000-000000000102', '01935b8f-0000-7000-8000-000000000101'],
     });
 
-    expect(repositoryMock.updateRulePriorities).toHaveBeenCalledWith([
-      { ruleId: '01935b8f-0000-7000-8000-000000000102', priority: 10 },
-      { ruleId: '01935b8f-0000-7000-8000-000000000101', priority: 20 },
-    ]);
-    expect(result.items.map((item) => item.id)).toEqual([
+    expect(repositoryMock.updateRuleSortOrder).toHaveBeenCalledWith([
       '01935b8f-0000-7000-8000-000000000102',
       '01935b8f-0000-7000-8000-000000000101',
     ]);
+    expect(result.items.map((item) => ({ id: item.id, sort_order: item.sort_order }))).toEqual([
+      { id: '01935b8f-0000-7000-8000-000000000102', sort_order: 10 },
+      { id: '01935b8f-0000-7000-8000-000000000101', sort_order: 20 },
+    ]);
+  });
+
+  it('updateSortOrder는 invalid sort_order list를 BadRequestException으로 변환한다', async () => {
+    repositoryMock.updateRuleSortOrder.mockRejectedValue(
+      new InvalidAdminRuleSortOrderError('Invalid sort_order list'),
+    );
+
+    await expect(
+      service.updateSortOrder({
+        ruleIds: ['01935b8f-0000-7000-8000-000000000102'],
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 
   it('updateStatus는 대상 rule이 없으면 NotFoundException을 던진다', async () => {
@@ -265,7 +371,7 @@ function createRuleRecord(overrides: Partial<AdminRuleRecord> = {}): AdminRuleRe
   return {
     id: '01935b8f-0000-7000-8000-000000000101',
     name: '최근 자극 보류',
-    priority: 10,
+    sortOrder: 10,
     isActive: true,
     resultType: PriorityRuleResultType.HOLD,
     resultTitle: '지금은 새 제품보다 피부 반응 안정화가 먼저예요.',
@@ -273,7 +379,6 @@ function createRuleRecord(overrides: Partial<AdminRuleRecord> = {}): AdminRuleRe
     adminNote: '모든 제품군 추천보다 우선',
     ctaLabel: null,
     ctaTarget: null,
-    recommendCategory: null,
     conditions: [
       {
         id: '01935b8f-0000-7000-8000-000000000401',
@@ -287,6 +392,7 @@ function createRuleRecord(overrides: Partial<AdminRuleRecord> = {}): AdminRuleRe
           answerValues: [0, 1],
           variants: [
             {
+              id: '01935b8f-0000-7000-8000-000000000311',
               title: '최근 제품 사용 후 따가움, 붉어짐, 가려움이 있었나요?',
               answers: ['아니요', '예'],
             },
@@ -295,5 +401,25 @@ function createRuleRecord(overrides: Partial<AdminRuleRecord> = {}): AdminRuleRe
       },
     ],
     ...overrides,
+  };
+}
+
+function createRuleMutationBody() {
+  return {
+    name: '최근 자극 보류',
+    status: 'active' as const,
+    resultType: 'HOLD' as const,
+    resultTitle: '지금은 새 제품보다 피부 반응 안정화가 먼저예요.',
+    resultDescription: '최근 자극이 있으면 새 제품 도입보다 안정화가 우선입니다.',
+    ctaLabel: null,
+    ctaTarget: null,
+    conditions: [
+      {
+        questionId: '01935b8f-0000-7000-8000-000000000301',
+        operator: 'EQ' as const,
+        value: [1],
+        state: 'REQUIRED' as const,
+      },
+    ],
   };
 }

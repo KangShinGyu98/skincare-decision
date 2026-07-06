@@ -37,11 +37,11 @@
 
 ### 0.2 항상 발생하는 쓰기
 
-| 테이블           | 이벤트                                             | 비고                                                        |
-| ---------------- | -------------------------------------------------- | ----------------------------------------------------------- |
-| `devices`        | INSERT / 존재 보장                                 | cookie 의 `device_id` 가 없거나 DB row 가 없을 때만 생성    |
-| `user_sessions`  | INSERT only (`user_id`, `logged_in_at` 승격 예외)  | 비로그인 session UUID 생성, 로그인 시 인증 세션으로 승격    |
-| `session_events` | INSERT `{event_name: '<screen>_viewed'}`           | 화면 진입 시 기본 이벤트                                    |
+| 테이블           | 이벤트                                            | 비고                                                     |
+| ---------------- | ------------------------------------------------- | -------------------------------------------------------- |
+| `devices`        | INSERT / 존재 보장                                | cookie 의 `device_id` 가 없거나 DB row 가 없을 때만 생성 |
+| `user_sessions`  | INSERT only (`user_id`, `logged_in_at` 승격 예외) | 비로그인 session UUID 생성, 로그인 시 인증 세션으로 승격 |
+| `session_events` | INSERT `{event_name: '<screen>_viewed'}`          | 화면 진입 시 기본 이벤트                                 |
 
 ### 0.3 `decision_runs` 저장 정책
 
@@ -85,10 +85,10 @@ S08 Reaction Traceback
 
 ### 1.1 읽기 데이터 (Read)
 
-| 데이터                     | 소스 테이블 / 출처                                                                                                                                                       | 용도                                                                                            |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
-| Fast Lane 카테고리 칩 후보 | `product_categories`                                                                                                                                                     | "이미 찾는 제품군 있음" 세그먼트 칩 노출                                                        |
-| Concern 태그 목록 / 매핑   | **프론트엔드 코드 상수**                                                                                                                                                 | DB 비저장 — `concern_key → {preset_facts, suggested_category, suggested_filters}` |
+| 데이터                     | 소스 테이블 / 출처       | 용도                                                                              |
+| -------------------------- | ------------------------ | --------------------------------------------------------------------------------- |
+| Fast Lane 카테고리 칩 후보 | `product_categories`     | "이미 찾는 제품군 있음" 세그먼트 칩 노출                                          |
+| Concern 태그 목록 / 매핑   | **프론트엔드 코드 상수** | DB 비저장 — `concern_key → {preset_facts, suggested_category, suggested_filters}` |
 
 ### 1.2 쓰기 데이터 (Write)
 
@@ -103,17 +103,17 @@ S08 Reaction Traceback
 
 ### 1.3 계산 데이터 (Computed)
 
-| 계산 항목             | 입력                                   | 로직                                                                    |
-| --------------------- | -------------------------------------- | ----------------------------------------------------------------------- |
-| Concern 다음 화면        | 클릭한 `concern_key`                  | Concern 선택 후 항상 `priority_gate`로 이동                                     |
-| 진입 경로 메타        | `window.location`, `document.referrer` | `entry_path`, `referrer` 컬럼에 저장                                    |
+| 계산 항목         | 입력                                   | 로직                                        |
+| ----------------- | -------------------------------------- | ------------------------------------------- |
+| Concern 다음 화면 | 클릭한 `concern_key`                   | Concern 선택 후 항상 `priority_gate`로 이동 |
+| 진입 경로 메타    | `window.location`, `document.referrer` | `entry_path`, `referrer` 컬럼에 저장        |
 
 ### 1.4 다음 화면으로 전달 (Pass to Next)
 
-| 데이터                  | 전달 방식             | 다음 화면 (세그먼트별)                                         |
-| ----------------------- | --------------------- | -------------------------------------------------------------- |
-| `flow.concern` + preset | `user_responses` 저장 | S02 Priority Gate (concern 진입 시) |
-| 라우팅 대상 카테고리    | URL 쿼리              | S03 (Fast Lane 칩 → 해당 category로 점프)                      |
+| 데이터                  | 전달 방식             | 다음 화면 (세그먼트별)                    |
+| ----------------------- | --------------------- | ----------------------------------------- |
+| `flow.concern` + preset | `user_responses` 저장 | S02 Priority Gate (concern 진입 시)       |
+| 라우팅 대상 카테고리    | URL 쿼리              | S03 (Fast Lane 칩 → 해당 category로 점프) |
 
 세그먼트별 다음 화면:
 
@@ -139,9 +139,8 @@ S08 Reaction Traceback
 | 기준 질문 정의      | `questions` (위 variant의 `question_id`)                                                            | `answer_type`, `answer_values`, `answer_count` 조회 |
 | 화면 답변 라벨      | `question_variants.answers`                                                                         | 사용자에게 보여줄 라벨. 내부값은 index로 매칭       |
 | 기존 답변 복원      | `user_responses WHERE question_id IN (...)` 현재 row                                                | canonical question 기준으로 재진입 선택값 복원      |
-| Priority Rule 목록  | `priority_rules WHERE is_active=true ORDER BY priority ASC`                                         | 평가 후보                                           |
+| Priority Rule 목록  | `priority_rules WHERE is_active=true ORDER BY sort_order ASC`                                       | 평가 후보                                           |
 | Rule 조건           | `priority_rule_conditions WHERE rule_id IN (...)`                                                   | 각 Rule의 REQUIRED/EXCLUDED 조건                    |
-| 추천 카테고리 해석  | `product_categories` (`recommend_category_id`)                                                      | ROUTE_CATEGORY 결과 시 카테고리명·key 노출          |
 
 ### 2.2 쓰기 데이터 (Write)
 
@@ -154,30 +153,29 @@ S08 Reaction Traceback
 
 ### 2.3 계산 데이터 (Computed)
 
-| 계산 항목        | 입력                                                     | 로직                                                                                                         |
-| ---------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| 질문 노출 결정   | 현재 `user_responses` + `question_visibility_conditions` | REQUIRED는 AND, EXCLUDED는 OR-NOT. 조건 없으면 항상 노출.                                                    |
-| Rule 매칭        | 현재 `user_responses` + `priority_rule_conditions`       | priority ASC 순회. 모든 REQUIRED 충족 AND 모든 EXCLUDED 불충족인 첫 Rule 발동.                               |
-| 결과 페이로드    | 매칭된 `priority_rules` row                              | `result_type`, `result_title`, `result_description`, `hold_categories`/`recommend_category_id`, `cta_*` 추출 |
-| `input_snapshot` | 평가에 사용된 user_responses 묶음                        | JSONB로 보존 (Rule 변경 후 재현용)                                                                           |
+| 계산 항목        | 입력                                                     | 로직                                                                                                                           |
+| ---------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| 질문 노출 결정   | 현재 `user_responses` + `question_visibility_conditions` | REQUIRED는 AND, EXCLUDED는 OR-NOT. 조건 없으면 항상 노출.                                                                      |
+| Rule 매칭        | 현재 `user_responses` + `priority_rule_conditions`       | sort_order ASC 순회. 모든 REQUIRED 충족 AND 모든 EXCLUDED 불충족인 첫 Rule 발동.                                               |
+| 결과 페이로드    | 매칭된 `priority_rules` row                              | `result_type`, `result_title`, `result_description`, `cta_*` 추출. 카테고리 이동은 `cta_target`의 `category` enum query로 표현 |
+| `input_snapshot` | 평가에 사용된 user_responses 묶음                        | JSONB로 보존 (Rule 변경 후 재현용)                                                                                             |
 
 ### 2.4 다음 화면으로 전달 (Pass to Next)
 
-| 데이터                     | 전달 방식          | 다음 화면 (`result_type`별) |
-| -------------------------- | ------------------ | --------------------------- |
-| `decision_run.id`          | URL / state        | 결과 화면 (이력 추적)       |
-| `result_type` / `result_*` | 응답 페이로드      | 결과 카드 렌더링            |
-| `recommend_category_id`    | 응답 페이로드      | S03 (ROUTE_CATEGORY 시)     |
-| `hold_categories[]`        | 응답 페이로드      | 보류 안내 화면 (HOLD 시)    |
-| 현재 `user_responses`      | 다음 화면이 재조회 | S03 visibility 평가에 사용  |
+| 데이터                     | 전달 방식          | 다음 화면 (`result_type`별)                                  |
+| -------------------------- | ------------------ | ------------------------------------------------------------ |
+| `decision_run.id`          | URL / state        | 결과 화면 (이력 추적)                                        |
+| `result_type` / `result_*` | 응답 페이로드      | 결과 카드 렌더링                                             |
+| `cta_label` / `cta_target` | 응답 페이로드      | CTA 버튼 렌더링 및 후속 이동. `cta_label` 없으면 버튼 미노출 |
+| 현재 `user_responses`      | 다음 화면이 재조회 | S03 visibility 평가에 사용                                   |
 
-| `result_type`    | 다음 행동                                      |
-| ---------------- | ---------------------------------------------- |
-| `STOP`           | 진단형 안내 화면 (제품 추천 없음)              |
-| `HOLD`           | 보류 안내 (제품군 추천 보류)                   |
-| `CAUTION`        | △ 주의 후 S03                                  |
-| `PASS`           | S03 Category Decision (사용자가 카테고리 선택) |
-| `ROUTE_CATEGORY` | S03 (`recommend_category_id`로 점프)           |
+| `result_type`    | UI 의미                         | 다음 행동 기준                       |
+| ---------------- | ------------------------------- | ------------------------------------ |
+| `STOP`           | 중단/위험 색상                  | `cta_target`                         |
+| `HOLD`           | 보류 색상                       | `cta_target`                         |
+| `CAUTION`        | 주의 색상                       | `cta_target`                         |
+| `PASS`           | 통과 색상                       | `cta_target`                         |
+| `ROUTE_CATEGORY` | 특정 제품군 추천/이동 강조 색상 | `cta_target`의 `category` enum query |
 
 ---
 
@@ -203,12 +201,12 @@ S08 Reaction Traceback
 
 ### 3.2 쓰기 데이터 (Write)
 
-| 데이터                       | 대상 테이블                    | 트리거                                                                                |
-| ---------------------------- | ------------------------------ | ------------------------------------------------------------------------------------- |
-| context 답변                 | `user_responses`               | Box 1/Box 2 응답 시 question별 current row UPSERT (`source='context'`)                |
-| `category.selected` 답변 row | `user_responses`               | 카테고리 진입 시 current row UPSERT (Fast Lane / ROUTE_CATEGORY로 들어온 경우 포함)   |
-| 질문/카테고리 이벤트         | `session_events`               | `context_question_answered`, `category_box_advanced`, `category_decision_cta_clicked` |
-| 결과 snapshot                | `decision_runs`                | Box 3 "제품 보러가기" CTA 클릭 또는 S06 진입 시 (`decision_type='CATEGORY_DECISION'`) |
+| 데이터                       | 대상 테이블      | 트리거                                                                                |
+| ---------------------------- | ---------------- | ------------------------------------------------------------------------------------- |
+| context 답변                 | `user_responses` | Box 1/Box 2 응답 시 question별 current row UPSERT (`source='context'`)                |
+| `category.selected` 답변 row | `user_responses` | 카테고리 진입 시 current row UPSERT (Fast Lane / ROUTE_CATEGORY로 들어온 경우 포함)   |
+| 질문/카테고리 이벤트         | `session_events` | `context_question_answered`, `category_box_advanced`, `category_decision_cta_clicked` |
+| 결과 snapshot                | `decision_runs`  | Box 3 "제품 보러가기" CTA 클릭 또는 S06 진입 시 (`decision_type='CATEGORY_DECISION'`) |
 
 ### 3.3 계산 데이터 (Computed)
 
@@ -223,12 +221,12 @@ S08 Reaction Traceback
 
 ### 3.4 다음 화면으로 전달 (Pass to Next)
 
-| 데이터                | 전달 방식                            | 다음 화면              |
-| --------------------- | ------------------------------------ | ---------------------- |
-| `category_id`         | URL                                  | S06                    |
+| 데이터                | 전달 방식                             | 다음 화면              |
+| --------------------- | ------------------------------------- | ---------------------- |
+| `category_id`         | URL                                   | S06                    |
 | `source`              | URL / state (`CATEGORY_DECISION_CTA`) | S06                    |
-| `decision_run.id`     | 이력 표시 / 분석                     | (소비처 다양)          |
-| 현재 `user_responses` | DB에 이미 저장됨, 다음 화면이 재조회 | S06에서 필터 재구성 시 |
+| `decision_run.id`     | 이력 표시 / 분석                      | (소비처 다양)          |
+| 현재 `user_responses` | DB에 이미 저장됨, 다음 화면이 재조회  | S06에서 필터 재구성 시 |
 
 ---
 
@@ -238,26 +236,26 @@ S08 Reaction Traceback
 
 ### 4.1 읽기 데이터 (Read)
 
-| 데이터            | 소스 테이블                                                                                                        | 용도                                                                                                |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| 데이터                     | 소스 테이블                                                                                                        | 용도                                                                                                |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
 | 활성/초기화된 filter_state | `product_matrix_filter_states WHERE (user_id=? OR device_id=?) AND category_id=? ORDER BY updated_at DESC LIMIT 1` | 직접 진입 시 기존 상태 복원. Category Decision CTA 진입이면 S06 초기화 단계에서 새 row 생성 후 사용 |
-| 카테고리 메타     | `product_categories`                                                                                               | 페이지 헤더 + Select                                                                                |
-| 필터 추가 후보    | `product_matrix_filter_definitions WHERE category_id=? AND is_manual_selectable=true AND is_active=true`           | "필터 추가" 버튼 드롭다운                                                                           |
-| 필터 라벨 변환    | `product_matrix_filter_definitions` + `product_filter_definitions`                                                 | matrix_filter_definition_id → label / input_type / options 해석 (state 에 중복 저장 X)              |
-| 제품 후보         | `products WHERE category_id=? AND is_active=true AND <dynamic attribute WHERE>`                                    | filter_state.filters 기반 동적 조회                                                                 |
-| 브랜드 정보       | `brands`                                                                                                           | 제품 카드 브랜드명                                                                                  |
-| 회피 규칙         | `avoidance_rules WHERE (user_id=? OR device_id=?) AND is_active=true`                                              | AVOID/CAUTION 적용                                                                                  |
-| 회피 → 제품 매핑  | `ingredient_group_members JOIN product_ingredients` (`ingredient_group_id` IN avoidance 목록)                      | 어떤 product_id가 회피 대상인지 산출                                                                |
+| 카테고리 메타              | `product_categories`                                                                                               | 페이지 헤더 + Select                                                                                |
+| 필터 추가 후보             | `product_matrix_filter_definitions WHERE category_id=? AND is_manual_selectable=true AND is_active=true`           | "필터 추가" 버튼 드롭다운                                                                           |
+| 필터 라벨 변환             | `product_matrix_filter_definitions` + `product_filter_definitions`                                                 | matrix_filter_definition_id → label / input_type / options 해석 (state 에 중복 저장 X)              |
+| 제품 후보                  | `products WHERE category_id=? AND is_active=true AND <dynamic attribute WHERE>`                                    | filter_state.filters 기반 동적 조회                                                                 |
+| 브랜드 정보                | `brands`                                                                                                           | 제품 카드 브랜드명                                                                                  |
+| 회피 규칙                  | `avoidance_rules WHERE (user_id=? OR device_id=?) AND is_active=true`                                              | AVOID/CAUTION 적용                                                                                  |
+| 회피 → 제품 매핑           | `ingredient_group_members JOIN product_ingredients` (`ingredient_group_id` IN avoidance 목록)                      | 어떤 product_id가 회피 대상인지 산출                                                                |
 
 ### 4.2 쓰기 데이터 (Write)
 
-| 데이터                            | 대상 테이블                    | 트리거                                                                   |
-| --------------------------------- | ------------------------------ | ------------------------------------------------------------------------ |
+| 데이터                            | 대상 테이블                    | 트리거                                                                                 |
+| --------------------------------- | ------------------------------ | -------------------------------------------------------------------------------------- |
 | 신규 filter_state                 | `product_matrix_filter_states` | Product Matrix 진입 시 필요하면 생성 (`source='CATEGORY_DECISION_CTA'`, filters JSONB) |
-| filter_state.filters 갱신         | `product_matrix_filter_states` | 사용자가 필터 추가/제거 시 UPDATE (`source='MANUAL'`, `updated_at` 갱신) |
-| `filter_added` / `filter_removed` | `session_events`               | 필터 편집                                                                |
-| `product_card_clicked`            | `session_events`               | 제품 카드 클릭                                                           |
-| 결과 snapshot                     | `decision_runs`                | 페이지 로드/필터 변경 시 (`decision_type='PRODUCT_MATRIX'`)              |
+| filter_state.filters 갱신         | `product_matrix_filter_states` | 사용자가 필터 추가/제거 시 UPDATE (`source='MANUAL'`, `updated_at` 갱신)               |
+| `filter_added` / `filter_removed` | `session_events`               | 필터 편집                                                                              |
+| `product_card_clicked`            | `session_events`               | 제품 카드 클릭                                                                         |
+| 결과 snapshot                     | `decision_runs`                | 페이지 로드/필터 변경 시 (`decision_type='PRODUCT_MATRIX'`)                            |
 
 ### 4.3 계산 데이터 (Computed)
 
@@ -272,9 +270,9 @@ S08 Reaction Traceback
 
 ### 4.4 다음 화면으로 전달 (Pass to Next)
 
-| 데이터            | 전달 방식       | 다음 뷰                         |
-| ----------------- | --------------- | ------------------------------- |
-| `product_id`      | component state | S06 제품 상세뷰 (모달/드로어)   |
+| 데이터            | 전달 방식       | 다음 뷰                          |
+| ----------------- | --------------- | -------------------------------- |
+| `product_id`      | component state | S06 제품 상세뷰 (모달/드로어)    |
 | `filter_state_id` | component state | S06 제품 상세뷰 적합도 사유 계산 |
 
 ---
@@ -363,7 +361,7 @@ S08 Reaction Traceback
 
 | 데이터                     | 전달 방식                                         | 다음 화면 / 효과                                                                  |
 | -------------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------- |
-| 신규 `avoidance_rules` row | DB 영속 → 모든 후속 S06 조회/상세뷰에 자동 반영  | S06 Product Matrix (AVOID 제외 / CAUTION 태그)                                    |
+| 신규 `avoidance_rules` row | DB 영속 → 모든 후속 S06 조회/상세뷰에 자동 반영   | S06 Product Matrix (AVOID 제외 / CAUTION 태그)                                    |
 | Traceback 적용 상태        | `avoidance_rules` 기준으로 service 가 항상 후처리 | `product_matrix_filter_states.filters` 에 traceback 전용 source_type 을 넣지 않음 |
 | `report.id`                | URL / 사용자 이력 화면                            | 리포트 재조회                                                                     |
 
@@ -386,43 +384,44 @@ category.selected EQ sunscreen AND context.eye_sting EQ true
 
 ### 7.1 Admin Rule Check
 
-> `priority_rules`와 `priority_rule_conditions`를 검수하는 화면. 평가 순서(`priority`)는 기본 정렬에는 사용하지만 MVP 테이블 컬럼에는 노출하지 않는다.
+> `priority_rules`와 `priority_rule_conditions`를 검수하는 화면. DB의 평가 순서 컬럼과 Admin API/화면 계약은 모두 `sort_order` 명칭을 사용한다.
 
 #### 7.1.1 읽기 데이터 (Read)
 
-| 데이터                  | 소스 테이블 / 출처                                                                 | 용도                                                        |
-| ----------------------- | ---------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| Rule 목록               | `priority_rules ORDER BY priority ASC`                                             | 룰 이름, 결과 타입, 결론 메시지, 활성 상태 표시             |
-| Rule 조건               | `priority_rule_conditions WHERE rule_id IN (...)`                                  | 조건식을 `fact_key OP value` 형식으로 표시                  |
-| 기준 질문 key           | `questions` (`priority_rule_conditions.question_id`)                               | 조건의 좌변 fact key 표시                                   |
-| 질문 표시명 후보        | `question_variants` (동일 `question_id`의 활성 variant)                            | "질문" 컬럼에 보조 표시. 없으면 `questions.key`만 표시      |
-| 추천 카테고리           | `product_categories` (`priority_rules.recommend_category_id`)                      | ROUTE_CATEGORY 룰의 추천 카테고리 보조 표시                 |
-| 룰/질문 근거 문서       | `docs/ContentSpec/skincare_product_selection_rule.md`                              | 메모 작성 시 제품 선택 기준/성분 근거 확인                  |
+| 데이터            | 소스 테이블 / 출처                                      | 용도                                                               |
+| ----------------- | ------------------------------------------------------- | ------------------------------------------------------------------ |
+| Rule 목록         | `priority_rules ORDER BY sort_order ASC`                | 룰 이름, 결과 타입, 결론 메시지, 활성 상태, `sort_order` 표시/관리 |
+| Rule 조건         | `priority_rule_conditions WHERE rule_id IN (...)`       | 조건식을 `fact_key OP value` 형식으로 표시                         |
+| 기준 질문 key     | `questions` (`priority_rule_conditions.question_id`)    | 조건의 좌변 fact key 표시                                          |
+| 질문 표시명 후보  | `question_variants` (동일 `question_id`의 활성 variant) | "질문" 컬럼에 보조 표시. 없으면 `questions.key`만 표시             |
+| 룰/질문 근거 문서 | `docs/ContentSpec/skincare_product_selection_rule.md`   | 메모 작성 시 제품 선택 기준/성분 근거 확인                         |
 
 #### 7.1.2 쓰기 데이터 (Write)
 
-| 데이터                  | 대상 테이블 / 저장 위치              | 트리거 / 조건                                                                 |
-| ----------------------- | ------------------------------------ | ----------------------------------------------------------------------------- |
-| Rule 활성 상태          | `priority_rules.is_active`           | Rule Check 행의 active/inactive 라디오 변경                                   |
-| Rule 갱신 시각          | `priority_rules.updated_at`          | `is_active` 변경 시 application 이 갱신                                       |
-| Rule 메모               | **미정**                             | MVP 화면 컬럼으로는 노출하되, 영속 저장은 `admin_note` 컬럼 또는 `admin_notes` 테이블 결정 후 추가 |
+| 데이터         | 대상 테이블 / 저장 위치     | 트리거 / 조건                                                                                      |
+| -------------- | --------------------------- | -------------------------------------------------------------------------------------------------- |
+| Rule 활성 상태 | `priority_rules.is_active`  | Rule Check 행의 active/inactive 라디오 변경                                                        |
+| Rule 갱신 시각 | `priority_rules.updated_at` | `is_active` 변경 시 application 이 갱신                                                            |
+| Rule 표시 순서 | `priority_rules.sort_order` | 정렬된 `ruleIds` 전체 배열을 받아 DB 목록과 동일 집합인지 검증 후 1부터 재생성                     |
+| Rule 메모      | **미정**                    | MVP 화면 컬럼으로는 노출하되, 영속 저장은 `admin_note` 컬럼 또는 `admin_notes` 테이블 결정 후 추가 |
 
-> MVP에서 Rule Check는 조건 자체를 편집하지 않는다. `priority`, `result_type`, `result_title`, `result_description`, `cta_*`, `priority_rule_conditions` 직접 편집은 후속 상세 모달 범위다.
+> MVP에서 Rule Check는 조건 자체를 편집하지 않는다. `result_type`, `result_title`, `result_description`, `cta_*`, `priority_rule_conditions` 직접 편집은 후속 상세 모달 범위다.
 
 #### 7.1.3 계산 데이터 (Computed)
 
-| 계산 항목              | 입력                                              | 로직                                                                                 |
-| ---------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| 조건식 표시            | `priority_rule_conditions` + `questions.key`      | `question.key operator value` 문자열로 조립. REQUIRED/EXCLUDED 상태는 조건 그룹에 반영 |
-| 질문 컬럼              | 조건의 `question_id` 목록                         | 중복 제거 후 `questions.key`를 기본 표시하고, 필요 시 활성 variant title을 보조 표시 |
-| 결론 표시              | `priority_rules.result_title`                     | MVP에서는 한 줄 결론만 표시. CTA/description은 후속 모달로 이동                     |
-| 상태 필터              | `priority_rules.is_active`                        | 전체 / active / inactive 필터                                                        |
+| 계산 항목   | 입력                                                    | 로직                                                                                   |
+| ----------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| 조건식 표시 | `priority_rule_conditions` + `questions.key`            | `question.key operator value` 문자열로 조립. REQUIRED/EXCLUDED 상태는 조건 그룹에 반영 |
+| 질문 컬럼   | 조건의 `question_id` 목록                               | 중복 제거 후 `questions.key`를 기본 표시하고, 필요 시 활성 variant title을 보조 표시   |
+| 결론 표시   | `priority_rules.result_title`                           | MVP에서는 한 줄 결론만 표시. CTA/description은 후속 모달로 이동                        |
+| 상태 필터   | `priority_rules.is_active`                              | 전체 / active / inactive 필터                                                          |
+| 순서 저장   | 정렬된 `ruleIds` 배열 + DB의 전체 non-deleted Rule 목록 | 길이, 중복, unknown id, missing id 검증 후 `sort_order = index + 1`로 bulk update      |
 
 #### 7.1.4 다음 화면으로 전달 (Pass to Next)
 
-| 데이터     | 전달 방식 | 다음 화면 |
-| ---------- | --------- | --------- |
-| 없음       | -         | MVP에서는 Rule Check 단일 목록 화면으로 종료 |
+| 데이터 | 전달 방식 | 다음 화면                                    |
+| ------ | --------- | -------------------------------------------- |
+| 없음   | -         | MVP에서는 Rule Check 단일 목록 화면으로 종료 |
 
 ---
 
@@ -432,39 +431,39 @@ category.selected EQ sunscreen AND context.eye_sting EQ true
 
 #### 7.2.1 읽기 데이터 (Read)
 
-| 데이터              | 소스 테이블 / 출처                                                                 | 용도                                                     |
-| ------------------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| 화면 질문 목록      | `question_variants ORDER BY screen, ui_section, sort_order`                        | 질문 문구, 화면, 섹션, 활성 상태 표시                    |
-| 기준 질문 정의      | `questions` (`question_variants.question_id`)                                      | `question` key, `answer_type`, 내부 `answer_values` 표시 |
-| 질문 노출 조건      | `question_visibility_conditions WHERE question_variant_id IN (...)`                | 노출 조건을 `fact_key OP value` 형식으로 표시             |
-| 카테고리 메타       | `product_categories`                                                               | `category.selected` 조건을 카테고리 key/label로 해석      |
-| 룰/질문 근거 문서   | `docs/ContentSpec/skincare_product_selection_rule.md`                              | 질문 메모 작성 시 제품군별 선택 기준/성분 근거 확인      |
+| 데이터            | 소스 테이블 / 출처                                                  | 용도                                                     |
+| ----------------- | ------------------------------------------------------------------- | -------------------------------------------------------- |
+| 화면 질문 목록    | `question_variants ORDER BY screen, ui_section, sort_order`         | 질문 문구, 화면, 섹션, 활성 상태 표시                    |
+| 기준 질문 정의    | `questions` (`question_variants.question_id`)                       | `question` key, `answer_type`, 내부 `answer_values` 표시 |
+| 질문 노출 조건    | `question_visibility_conditions WHERE question_variant_id IN (...)` | 노출 조건을 `fact_key OP value` 형식으로 표시            |
+| 카테고리 메타     | `product_categories`                                                | `category.selected` 조건을 카테고리 key/label로 해석     |
+| 룰/질문 근거 문서 | `docs/ContentSpec/skincare_product_selection_rule.md`               | 질문 메모 작성 시 제품군별 선택 기준/성분 근거 확인      |
 
 #### 7.2.2 쓰기 데이터 (Write)
 
-| 데이터                  | 대상 테이블 / 저장 위치              | 트리거 / 조건                                                                  |
-| ----------------------- | ------------------------------------ | ------------------------------------------------------------------------------ |
-| 화면 질문 활성 상태     | `question_variants.is_active`        | Question Check 행의 active/inactive 라디오 변경                                |
-| 화면 질문 갱신 시각     | `question_variants.updated_at`       | `is_active` 변경 시 application 이 갱신                                        |
-| 질문 메모               | **미정**                             | MVP 화면 컬럼으로는 노출하되, 영속 저장은 `admin_note` 컬럼 또는 `admin_notes` 테이블 결정 후 추가 |
+| 데이터              | 대상 테이블 / 저장 위치        | 트리거 / 조건                                                                                      |
+| ------------------- | ------------------------------ | -------------------------------------------------------------------------------------------------- |
+| 화면 질문 활성 상태 | `question_variants.is_active`  | Question Check 행의 active/inactive 라디오 변경                                                    |
+| 화면 질문 갱신 시각 | `question_variants.updated_at` | `is_active` 변경 시 application 이 갱신                                                            |
+| 질문 메모           | **미정**                       | MVP 화면 컬럼으로는 노출하되, 영속 저장은 `admin_note` 컬럼 또는 `admin_notes` 테이블 결정 후 추가 |
 
 > MVP에서 Question Check는 질문 문구, 답변 선택지, answer type, visibility condition을 직접 편집하지 않는다. canonical `questions.is_active`도 이 화면에서 변경하지 않는다.
 
 #### 7.2.3 계산 데이터 (Computed)
 
-| 계산 항목              | 입력                                                       | 로직                                                                                          |
-| ---------------------- | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| ui_section 필터        | `question_variants.ui_section`                             | life_routine / owned_products / basic / category 단위 select 필터                              |
-| category 필터          | `question_visibility_conditions` + `category.selected` 조건 | category 조건이 있는 variant만 해당 카테고리 필터에 포함. 조건이 없으면 전체 또는 공통으로 표시 |
-| user_options 표시      | `question_variants.answers` + `questions.answer_values`    | 사용자 라벨을 기본 표시하고, 필요 시 내부 value를 보조 표시                                    |
-| 노출 조건 표시         | `screen`, `ui_section`, `question_visibility_conditions`    | `screen EQ context AND ui_section EQ category AND category.selected EQ sunscreen` 같은 문자열로 조립 |
-| 상태 필터              | `question_variants.is_active`                              | 전체 / active / inactive 필터                                                                 |
+| 계산 항목         | 입력                                                        | 로직                                                                                                 |
+| ----------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| ui_section 필터   | `question_variants.ui_section`                              | life_routine / owned_products / basic / category 단위 select 필터                                    |
+| category 필터     | `question_visibility_conditions` + `category.selected` 조건 | category 조건이 있는 variant만 해당 카테고리 필터에 포함. 조건이 없으면 전체 또는 공통으로 표시      |
+| user_options 표시 | `question_variants.answers` + `questions.answer_values`     | 사용자 라벨을 기본 표시하고, 필요 시 내부 value를 보조 표시                                          |
+| 노출 조건 표시    | `screen`, `ui_section`, `question_visibility_conditions`    | `screen EQ context AND ui_section EQ category AND category.selected EQ sunscreen` 같은 문자열로 조립 |
+| 상태 필터         | `question_variants.is_active`                               | 전체 / active / inactive 필터                                                                        |
 
 #### 7.2.4 다음 화면으로 전달 (Pass to Next)
 
-| 데이터     | 전달 방식 | 다음 화면 |
-| ---------- | --------- | --------- |
-| 없음       | -         | MVP에서는 Question Check 단일 목록 화면으로 종료 |
+| 데이터 | 전달 방식 | 다음 화면                                        |
+| ------ | --------- | ------------------------------------------------ |
+| 없음   | -         | MVP에서는 Question Check 단일 목록 화면으로 종료 |
 
 ---
 
@@ -525,11 +524,11 @@ UPDATE product_matrix_filter_states  SET user_id = :user_id WHERE device_id = :d
 
 ## 10. 변경 / 확장 시 갱신할 곳
 
-| 변화                    | 동기화 대상                                                                                                                                                                          |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 신규 기준 질문 도입     | `questions` 시드(key 포함) + 화면별 `question_variants.answers` + 본 문서 §2/§3 Read 표 + 관련 visibility 조건                                                                       |
-| 신규 카테고리 추가      | `product_categories`, `category_attribute_definitions`, `product_filter_definitions`, `product_matrix_filter_definitions`, `question_filter_mappings`, `product_attribute_schema.md` |
-| 신규 Priority Rule 추가 | `priority_rules`/`priority_rule_conditions` 시드 + 본 문서 §2.4 결과 분기                                                                                                            |
-| 관리자 Rule/Question 화면 변경 | 본 문서 §7 + [wireframe_summary.md](../ContentSpec/wireframe_summary.md#관리자-화면) + 필요 시 `backend_api_list.md` admin API 초안                                                |
-| 신규 화면 추가          | 본 문서에 새 §, [wireframe_summary.md](../ContentSpec/wireframe_summary.md), [page_content_specification.md](../ContentSpec/page_content_specification.md)                           |
-| FE 라우팅 변경          | 본 문서의 "다음 화면으로 전달" 표                                                                                                                                                    |
+| 변화                           | 동기화 대상                                                                                                                                                                          |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 신규 기준 질문 도입            | `questions` 시드(key 포함) + 화면별 `question_variants.answers` + 본 문서 §2/§3 Read 표 + 관련 visibility 조건                                                                       |
+| 신규 카테고리 추가             | `product_categories`, `category_attribute_definitions`, `product_filter_definitions`, `product_matrix_filter_definitions`, `question_filter_mappings`, `product_attribute_schema.md` |
+| 신규 Priority Rule 추가        | `priority_rules`/`priority_rule_conditions` 시드 + 본 문서 §2.4 결과 분기                                                                                                            |
+| 관리자 Rule/Question 화면 변경 | 본 문서 §7 + [wireframe_summary.md](../ContentSpec/wireframe_summary.md#관리자-화면) + 필요 시 `backend_api_list.md` admin API 초안                                                  |
+| 신규 화면 추가                 | 본 문서에 새 §, [wireframe_summary.md](../ContentSpec/wireframe_summary.md), [page_content_specification.md](../ContentSpec/page_content_specification.md)                           |
+| FE 라우팅 변경                 | 본 문서의 "다음 화면으로 전달" 표                                                                                                                                                    |
