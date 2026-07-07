@@ -1,4 +1,8 @@
 import { z } from 'zod';
+import {
+  adminRuleConditionOperatorSchema,
+  adminRuleConditionStateSchema,
+} from './admin-rule.schema.js';
 import { questionAnswerSchema, questionAnswerTypeSchema } from './priority-gate.schema.js';
 
 export const adminQuestionStatusSchema = z.enum(['active', 'inactive']);
@@ -42,7 +46,7 @@ export type AdminQuestionsQuery = z.infer<typeof adminQuestionsQuerySchema>;
 
 export const adminQuestionParamSchema = z
   .object({
-    questionVariantId: z.uuid(),
+    questionId: z.uuid(),
   })
   .strict();
 
@@ -56,10 +60,56 @@ export const updateAdminQuestionStatusBodySchema = z
 
 export type UpdateAdminQuestionStatusBody = z.infer<typeof updateAdminQuestionStatusBodySchema>;
 
+export const adminQuestionVisibilityConditionInputSchema = z
+  .object({
+    operator: adminRuleConditionOperatorSchema,
+    value: z.number().int(),
+    state: adminRuleConditionStateSchema,
+  })
+  .strict();
+
+export type AdminQuestionVisibilityConditionInput = z.infer<
+  typeof adminQuestionVisibilityConditionInputSchema
+>;
+
+export const adminQuestionVariantMutationSchema = z
+  .object({
+    id: z.uuid().optional(),
+    title: z.string().trim().min(1),
+    answers: z.array(z.string().trim().min(1)).min(1),
+    screen: adminQuestionScreenSchema,
+    uiSection: adminQuestionUiSectionSchema,
+    sort_order: z.number().int().nonnegative().default(0),
+    status: adminQuestionStatusSchema,
+    visibilityConditions: z.array(adminQuestionVisibilityConditionInputSchema).default([]),
+  })
+  .strict();
+
+export type AdminQuestionVariantMutation = z.infer<typeof adminQuestionVariantMutationSchema>;
+
+export const adminQuestionMutationBodySchema = z
+  .object({
+    question: z.string().trim().min(1).max(100),
+    answerType: questionAnswerTypeSchema,
+    answerValues: z.array(z.number().int()).min(1),
+    status: adminQuestionStatusSchema,
+    variants: z.array(adminQuestionVariantMutationSchema).min(1),
+  })
+  .strict();
+
+export const createAdminQuestionBodySchema = adminQuestionMutationBodySchema;
+
+export type CreateAdminQuestionBody = z.infer<typeof createAdminQuestionBodySchema>;
+
+export const updateAdminQuestionBodySchema = adminQuestionMutationBodySchema;
+
+export type UpdateAdminQuestionBody = z.infer<typeof updateAdminQuestionBodySchema>;
+
 export const adminQuestionTableRowSchema = z
   .object({
     id: z.uuid(),
     questionId: z.uuid(),
+    questionVariantId: z.uuid(),
     question: z.string().min(1),
     questionVariant: z.string().min(1),
     answerType: questionAnswerTypeSchema,
@@ -67,6 +117,7 @@ export const adminQuestionTableRowSchema = z
     visibilityConditionText: z.string().min(1),
     screen: adminQuestionScreenSchema,
     uiSection: adminQuestionUiSectionSchema,
+    category: z.array(adminQuestionCategorySchema),
     status: adminQuestionStatusSchema,
     memo: z.string().nullable(),
   })
@@ -87,3 +138,51 @@ export const updateAdminQuestionStatusResponseSchema = adminQuestionTableRowSche
 export type UpdateAdminQuestionStatusResponse = z.infer<
   typeof updateAdminQuestionStatusResponseSchema
 >;
+
+export const adminQuestionVariantDetailSchema = z
+  .object({
+    id: z.uuid(),
+    title: z.string().min(1),
+    answers: z.array(z.string()),
+    screen: adminQuestionScreenSchema,
+    uiSection: adminQuestionUiSectionSchema,
+    sort_order: z.number().int(),
+    status: adminQuestionStatusSchema,
+    visibilityConditionText: z.string().min(1),
+    visibilityConditions: z.array(adminQuestionVisibilityConditionInputSchema),
+    category: z.array(adminQuestionCategorySchema),
+  })
+  .strict();
+
+export type AdminQuestionVariantDetail = z.infer<typeof adminQuestionVariantDetailSchema>;
+
+export const adminQuestionDetailSchema = z
+  .object({
+    id: z.uuid(),
+    questionId: z.uuid(),
+    question: z.string().min(1),
+    answerType: questionAnswerTypeSchema,
+    answerValues: z.array(z.number().int()),
+    status: adminQuestionStatusSchema,
+    variants: z.array(adminQuestionVariantDetailSchema),
+  })
+  .strict();
+
+export type AdminQuestionDetail = z.infer<typeof adminQuestionDetailSchema>;
+
+export const createAdminQuestionResponseSchema = adminQuestionDetailSchema;
+
+export type CreateAdminQuestionResponse = z.infer<typeof createAdminQuestionResponseSchema>;
+
+export const updateAdminQuestionResponseSchema = adminQuestionDetailSchema;
+
+export type UpdateAdminQuestionResponse = z.infer<typeof updateAdminQuestionResponseSchema>;
+
+export const deleteAdminQuestionResponseSchema = z
+  .object({
+    id: z.uuid(),
+    deleted: z.literal(true),
+  })
+  .strict();
+
+export type DeleteAdminQuestionResponse = z.infer<typeof deleteAdminQuestionResponseSchema>;

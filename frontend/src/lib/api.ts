@@ -272,6 +272,7 @@ export const categoryDecisionApi = {
 
 export const adminRulesApi = {
   getRules: async (): Promise<AdminRulesResponse> => {
+    await sleep(2000);
     const response = await fetch(getAdminRulesUrl(), {
       method: 'GET',
       credentials: 'include',

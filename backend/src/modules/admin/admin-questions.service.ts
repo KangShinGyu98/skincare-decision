@@ -1,21 +1,33 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import {
+  adminQuestionDetailSchema,
   adminQuestionsResponseSchema,
-  updateAdminQuestionStatusResponseSchema,
   type AdminQuestionCategory,
+  type AdminQuestionDetail,
+  type AdminQuestionVariantDetail,
+  type CreateAdminQuestionBody,
+  type CreateAdminQuestionResponse,
+  createAdminQuestionResponseSchema,
+  type DeleteAdminQuestionResponse,
+  deleteAdminQuestionResponseSchema,
   type AdminQuestionsQuery,
   type AdminQuestionsResponse,
   type AdminQuestionTableRow,
   type QuestionAnswerDto,
-  type UpdateAdminQuestionStatusBody,
-  type UpdateAdminQuestionStatusResponse,
+  type UpdateAdminQuestionBody,
+  type UpdateAdminQuestionResponse,
+  updateAdminQuestionResponseSchema,
 } from '@skincare-decision/shared/schemas';
 import { ConditionState } from '../../generated/prisma/enums';
 import {
+  type AdminQuestionDetailRecord,
   AdminQuestionsRepository,
   type AdminQuestionRecord,
+  type AdminQuestionVariantRecord,
   type AdminQuestionVisibilityConditionRecord,
   type FindAdminQuestionsInput,
+  InvalidAdminQuestionVariantError,
+  type SaveAdminQuestionInput,
 } from './admin-questions.repository';
 
 const CATEGORY_SELECTED_VALUES = {
@@ -26,6 +38,13 @@ const CATEGORY_SELECTED_VALUES = {
   moisturizer: 5,
   cleanser: 6,
 } as const satisfies Record<AdminQuestionCategory, number>;
+
+const CATEGORY_BY_SELECTED_VALUE = new Map<number, AdminQuestionCategory>(
+  Object.entries(CATEGORY_SELECTED_VALUES).map(([category, value]) => [
+    value,
+    category as AdminQuestionCategory,
+  ]),
+);
 
 @Injectable()
 export class AdminQuestionsService {
@@ -56,51 +75,145 @@ export class AdminQuestionsService {
     });
   }
 
-  async updateStatus(
-    questionVariantId: string,
-    body: UpdateAdminQuestionStatusBody,
-  ): Promise<UpdateAdminQuestionStatusResponse> {
-    const record = await this.repository.updateQuestionStatus(
-      questionVariantId,
-      body.status === 'active',
-    );
+  async findQuestion(questionId: string): Promise<AdminQuestionDetail> {
+    const record = await this.repository.findQuestionById(questionId);
 
     if (!record) {
       throw new NotFoundException({
         code: 'ADMIN_QUESTION_NOT_FOUND',
-        message: 'Admin question variant was not found',
+        message: 'Admin question was not found',
       });
     }
 
-    return updateAdminQuestionStatusResponseSchema.parse(this.toTableRow(record));
+    return adminQuestionDetailSchema.parse(this.toDetail(record));
+  }
+
+  async createQuestion(body: CreateAdminQuestionBody): Promise<CreateAdminQuestionResponse> {
+    try {
+      const record = await this.repository.createQuestion(this.toSaveQuestionInput(body));
+
+      return createAdminQuestionResponseSchema.parse(this.toDetail(record));
+    } catch (error) {
+      if (error instanceof InvalidAdminQuestionVariantError) {
+        throw new BadRequestException({
+          code: 'ADMIN_QUESTION_VARIANT_INVALID',
+          message: error.message,
+        });
+      }
+
+      throw error;
+    }
+  }
+
+  async updateQuestion(
+    questionId: string,
+    body: UpdateAdminQuestionBody,
+  ): Promise<UpdateAdminQuestionResponse> {
+    try {
+      const record = await this.repository.updateQuestion(
+        questionId,
+        this.toSaveQuestionInput(body),
+      );
+
+      if (!record) {
+        throw new NotFoundException({
+          code: 'ADMIN_QUESTION_NOT_FOUND',
+          message: 'Admin question was not found',
+        });
+      }
+
+      return updateAdminQuestionResponseSchema.parse(this.toDetail(record));
+    } catch (error) {
+      if (error instanceof InvalidAdminQuestionVariantError) {
+        throw new BadRequestException({
+          code: 'ADMIN_QUESTION_VARIANT_INVALID',
+          message: error.message,
+        });
+      }
+
+      throw error;
+    }
+  }
+
+  async deleteQuestion(questionId: string): Promise<DeleteAdminQuestionResponse> {
+    const deleted = await this.repository.deleteQuestion(questionId);
+
+    if (!deleted) {
+      throw new NotFoundException({
+        code: 'ADMIN_QUESTION_NOT_FOUND',
+        message: 'Admin question was not found',
+      });
+    }
+
+    return deleteAdminQuestionResponseSchema.parse({
+      id: questionId,
+      deleted: true,
+    });
   }
 
   private toTableRow(record: AdminQuestionRecord): AdminQuestionTableRow {
     return {
-      id: record.id,
+      id: record.questionId,
       questionId: record.questionId,
+      questionVariantId: record.id,
       question: record.question.key,
       questionVariant: record.title,
       answerType: record.question.answerType,
-      userOptions: this.toUserOptions(record),
+      userOptions: this.toUserOptions(
+        record.question.answerValues,
+        record.answers,
+        record.question.key,
+      ),
       visibilityConditionText: this.formatVisibilityConditions(record),
       screen: record.screen,
       uiSection: record.uiSection,
+      category: this.toCategories(record.visibilityConditions),
       status: record.isActive ? 'active' : 'inactive',
       memo: null,
     };
   }
 
-  private toUserOptions(record: AdminQuestionRecord): QuestionAnswerDto[] {
-    if (record.answers.length !== record.question.answerValues.length) {
-      throw new Error(`Question answer count mismatch: ${record.question.key}`);
+  private toDetail(record: AdminQuestionDetailRecord): AdminQuestionDetail {
+    return {
+      id: record.id,
+      questionId: record.id,
+      question: record.key,
+      answerType: record.answerType,
+      answerValues: record.answerValues,
+      status: record.isActive ? 'active' : 'inactive',
+      variants: record.variants.map((variant) => this.toVariantDetail(variant)),
+    };
+  }
+
+  private toVariantDetail(variant: AdminQuestionVariantRecord): AdminQuestionVariantDetail {
+    return {
+      id: variant.id,
+      title: variant.title,
+      answers: variant.answers,
+      screen: variant.screen,
+      uiSection: variant.uiSection,
+      sort_order: variant.sortOrder,
+      status: variant.isActive ? 'active' : 'inactive',
+      visibilityConditionText: this.formatVisibilityConditions(variant),
+      visibilityConditions: variant.visibilityConditions,
+      category: this.toCategories(variant.visibilityConditions),
+    };
+  }
+
+  private toUserOptions(
+    answerValues: number[],
+    answers: string[],
+    questionKey: string,
+  ): QuestionAnswerDto[] {
+    if (answers.length !== answerValues.length) {
+      throw new Error(`Question answer count mismatch: ${questionKey}`);
     }
 
-    return record.question.answerValues.map((value, index) => {
-      const label = record.answers[index];
+    return answerValues.map((value, index) => {
+      const label = answers[index];
 
       if (label === undefined) {
-        throw new Error(`Missing answer label: ${record.question.key}`);
+        throw new Error(`Missing answer label: ${questionKey}`);
       }
 
       return {
@@ -110,7 +223,12 @@ export class AdminQuestionsService {
     });
   }
 
-  private formatVisibilityConditions(record: AdminQuestionRecord): string {
+  private formatVisibilityConditions(
+    record: Pick<
+      AdminQuestionRecord | AdminQuestionVariantRecord,
+      'screen' | 'uiSection' | 'visibilityConditions'
+    >,
+  ): string {
     const baseConditions = [`screen EQ ${record.screen}`, `ui_section EQ ${record.uiSection}`];
 
     if (record.visibilityConditions.length === 0) {
@@ -141,6 +259,53 @@ export class AdminQuestionsService {
     }
 
     return String(condition.value);
+  }
+
+  private toCategories(
+    visibilityConditions: AdminQuestionVisibilityConditionRecord[],
+  ): AdminQuestionCategory[] {
+    const categories = new Set<AdminQuestionCategory>();
+
+    for (const condition of visibilityConditions) {
+      const category = CATEGORY_BY_SELECTED_VALUE.get(condition.value);
+
+      if (category) {
+        categories.add(category);
+      }
+    }
+
+    return [...categories];
+  }
+
+  private toSaveQuestionInput(
+    body: CreateAdminQuestionBody | UpdateAdminQuestionBody,
+  ): SaveAdminQuestionInput {
+    for (const [variantIndex, variant] of body.variants.entries()) {
+      if (variant.answers.length !== body.answerValues.length) {
+        throw new BadRequestException({
+          code: 'ADMIN_QUESTION_ANSWER_COUNT_MISMATCH',
+          message: 'answers length must match answerValues length',
+          path: ['variants', variantIndex, 'answers'],
+        });
+      }
+    }
+
+    return {
+      key: body.question,
+      answerType: body.answerType,
+      answerValues: body.answerValues,
+      isActive: body.status === 'active',
+      variants: body.variants.map((variant) => ({
+        id: variant.id,
+        title: variant.title,
+        answers: variant.answers,
+        screen: variant.screen,
+        uiSection: variant.uiSection,
+        sortOrder: variant.sort_order,
+        isActive: variant.status === 'active',
+        visibilityConditions: variant.visibilityConditions,
+      })),
+    };
   }
 
   private matchesCategoryFilter(
