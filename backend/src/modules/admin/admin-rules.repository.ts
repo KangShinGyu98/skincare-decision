@@ -368,13 +368,15 @@ export class AdminRulesRepository {
 
       this.validateRuleSortOrder(ruleIds, existingRules);
 
-      const sortOrderRows = ruleIds.map((ruleId, index) => Prisma.sql`(${ruleId}, ${index + 1})`);
+      const sortOrderRows = ruleIds.map(
+        (ruleId, index) => Prisma.sql`(${ruleId}::uuid, ${index + 1}::integer)`,
+      );
 
       await transaction.$executeRaw`
         UPDATE priority_rules AS target_rule
         SET sort_order = sorted_rules.sort_order
         FROM (VALUES ${Prisma.join(sortOrderRows)}) AS sorted_rules(id, sort_order)
-        WHERE target_rule.id = sorted_rules.id::uuid
+        WHERE target_rule.id = sorted_rules.id
           AND target_rule.deleted_at IS NULL
       `;
 

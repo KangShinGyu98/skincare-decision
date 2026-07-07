@@ -3,9 +3,20 @@
 import type { AdminRuleStatus, AdminRuleTableRow } from '@skincare-decision/shared/schemas';
 import { RefreshCwIcon, SaveIcon } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import { AdminRuleDetailDialog } from '@/components/admin/rules/AdminRuleDetailDialog';
-import { AdminRulesDataTable } from '@/components/admin/rules/AdminRulesDataTable';
+import { createAdminRuleColumns } from '@/components/admin/rules/createAdminRuleColumns';
+import { SortableDataTable } from '@/components/common/data-table/SortableDataTable';
 import { Button } from '@/components/shadcn/button';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/shadcn/Table';
+import { Skeleton } from '@/components/shadcn/skeleton';
 import { Spinner } from '@/components/shadcn/spinner';
 import { useAdminRules, useSaveAdminRuleSortOrder, useUpdateAdminRuleStatus } from '@/lib/hooks';
 
@@ -19,6 +30,9 @@ export default function AdminRulesPage() {
   const [selectedRuleId, setSelectedRuleId] = useState<string | null>(null);
   const serverRows = data?.items ?? EMPTY_ADMIN_RULE_ROWS;
   const isSortOrderDirty = orderedRuleIds !== null;
+  const pendingStatusRuleId = updateStatus.isPending
+    ? (updateStatus.variables?.ruleId ?? null)
+    : null;
 
   const rows = useMemo(() => {
     if (!orderedRuleIds) {
@@ -49,8 +63,27 @@ export default function AdminRulesPage() {
     [updateStatus],
   );
 
+  const columns = useMemo(
+    () =>
+      createAdminRuleColumns({
+        isStatusMutationPending: updateStatus.isPending,
+        pendingStatusRuleId,
+        onStatusChange: handleStatusChange,
+      }),
+    [handleStatusChange, pendingStatusRuleId, updateStatus.isPending],
+  );
+
+  const handleRowClick = useCallback((row: AdminRuleTableRow) => {
+    setSelectedRuleId(row.id);
+  }, []);
+
   const handleSaveSortOrder = () => {
-    if (!isSortOrderDirty || saveSortOrder.isPending) {
+    if (saveSortOrder.isPending) {
+      return;
+    }
+
+    if (!isSortOrderDirty) {
+      toast.info('변경 사항이 없습니다.');
       return;
     }
 
@@ -104,7 +137,7 @@ export default function AdminRulesPage() {
                 <Button
                   type="button"
                   onClick={handleSaveSortOrder}
-                  disabled={!isSortOrderDirty || saveSortOrder.isPending}
+                  disabled={saveSortOrder.isPending}
                 >
                   {saveSortOrder.isPending ? <Spinner /> : <SaveIcon />}
                   순서 저장
@@ -130,17 +163,18 @@ export default function AdminRulesPage() {
           />
         ) : null}
 
-        <AdminRulesDataTable
-          rows={rows}
-          isLoading={isLoading}
-          isStatusMutationPending={updateStatus.isPending}
-          pendingStatusRuleId={
-            updateStatus.isPending ? (updateStatus.variables?.ruleId ?? null) : null
-          }
-          onRowsReorder={handleRowsReorder}
-          onRowClick={setSelectedRuleId}
-          onStatusChange={handleStatusChange}
-        />
+        {isLoading ? (
+          <AdminRulesTableSkeleton />
+        ) : (
+          <SortableDataTable
+            data={rows}
+            columns={columns}
+            onRowsReorder={handleRowsReorder}
+            onRowClick={handleRowClick}
+            emptyMessage="표시할 룰이 없습니다."
+            tableClassName="min-w-[1220px]"
+          />
+        )}
       </div>
 
       <AdminRuleDetailDialog
@@ -160,6 +194,41 @@ function ErrorPanel({ message }: { message: string }) {
   return (
     <section className="rounded-lg border border-[var(--red-3)] bg-[var(--red-1)] px-4 py-3 text-sm text-[var(--red-7)]">
       {message}
+    </section>
+  );
+}
+
+function AdminRulesTableSkeleton() {
+  const columnWidths = [44, 220, 320, 120, 180, 340, 110, 220];
+
+  return (
+    <section className="overflow-hidden rounded-lg border border-[var(--color-border-light)] bg-[var(--color-bg-white)] shadow-sm">
+      <Table className="min-w-[1220px] table-fixed">
+        <TableHeader className="bg-[var(--gray-3)]">
+          <TableRow>
+            {columnWidths.map((width, index) => (
+              <TableHead
+                key={`${width}-${index}`}
+                style={{ width }}
+                className="text-xs uppercase text-[var(--color-text-tertiary)]"
+              >
+                <Skeleton className="h-4 w-2/3" />
+              </TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {Array.from({ length: 6 }, (_, rowIndex) => (
+            <TableRow key={rowIndex}>
+              {columnWidths.map((width, columnIndex) => (
+                <TableCell key={`${rowIndex}-${width}-${columnIndex}`}>
+                  <Skeleton className="h-5 w-full" />
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </section>
   );
 }

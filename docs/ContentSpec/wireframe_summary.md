@@ -204,7 +204,8 @@ Concern Mapper는 제품군 라우터가 아니라 **Priority Gate preset**으�
 태그 클릭 시 흐름:
 
 1. `session_events`에 `concern_clicked` 이벤트 저장
-2. `user_responses`에 `flow.concern` 저장 (`question_id=<flow.concern>`, `source: "concern"`). 사용자가 본 화면 variant 추적은 `session_events.value_change` payload 로 분리
+2. `user_responses`에 `flow.concern` 저장 (`question_id=<flow.concern>`, `source: "concern"`). 사용자가 본 화면 variant 추적은
+   `session_events.value_change` payload 로 분리
 3. 관련 preset responses를 초기 선택 상태로 저장하거나 프론트 상태에 유지
 4. Concern 선택 후 항상 S02 Priority Gate로 이동하고 관련 Life / 루틴 질문을 우선 노출
 5. `suggested_category`는 이후 Category Decision 단계에서 참고하며, Concern 클릭 직후에는 S03로 이동하지 않는다.
@@ -471,7 +472,8 @@ Category Decision Matrix는 **3개의 공통 박스 구조**로 구성된다.
 
 > **선택한 제품군 안에서 제품 후보를 가격대별 Tier List 형태로 비교하는 필터 기반 제품 표**
 
-Product Matrix는 사용자가 선택한 제품군에서 **좋은 제품의 기본 조건**과 **개인화 필터**를 적용한 뒤, 제품 후보를 가격대별로 한 번에 비교할 수 있게 보여준다. 사용자는 필터를 추가·삭제 할 수 있다.
+Product Matrix는 사용자가 선택한 제품군에서 **좋은 제품의 기본 조건**과 **개인화 필터**를 적용한 뒤, 제품 후보를 가격대별로 한 번에 비교할 수 있게 보여준다. 사용자는 필터를 추가·삭제 할 수
+있다.
 
 ---
 
@@ -530,7 +532,9 @@ Product Matrix는 사용자가 선택한 제품군에서 **좋은 제품의 기�
 #### 3. 개인화 필터 (PERSONALIZED)
 
 사용자의 피부 상태와 사용 상황에 따라 제품 후보를 좁히는 필터.  
-사용자 답변(`user_responses`)이 `question_filter_mappings.trigger_*`와 매칭되면 해당 `matrix_filter_definition_id`가 자동 선택된다. 룰 자체는 `question_filter_mappings`, Matrix 노출 정의는 `product_matrix_filter_definitions`, attribute 조건은 필요 시 `product_filter_definitions` 에 보관된다.
+사용자 답변(`user_responses`)이 `question_filter_mappings.trigger_*`와 매칭되면 해당 `matrix_filter_definition_id`가 자동 선택된다. 룰 자체는
+`question_filter_mappings`, Matrix 노출 정의는 `product_matrix_filter_definitions`, attribute 조건은 필요 시
+`product_filter_definitions` 에 보관된다.
 
 `[민감성 피부] [건성] [지성] [휴대성] [메이크업 전 사용] [야외 활동] [향료 회피] [눈시림 경험]`
 
@@ -666,7 +670,8 @@ routine.cleansing_stable EQ false OR routine.foam_enough EQ false
 category.selected EQ sunscreen AND context.eye_sting EQ true
 ```
 
-`skincare_product_selection_rule.md`는 룰/질문 행의 메모 근거로만 참조한다. 예를 들어 민감 피부의 알코올/향료 회피, 토너의 저자극/약산성 기준, 선크림의 눈시림/백탁 기준처럼 "왜 이 질문이나 조건이 필요한지"를 메모에 남길 때 사용한다.
+`skincare_product_selection_rule.md`는 룰/질문 행의 메모 근거로만 참조한다. 예를 들어 민감 피부의 알코올/향료 회피, 토너의 저자극/약산성 기준, 선크림의 눈시림/백탁 기준처럼 "왜
+이 질문이나 조건이 필요한지"를 메모에 남길 때 사용한다.
 
 ---
 
@@ -675,7 +680,7 @@ category.selected EQ sunscreen AND context.eye_sting EQ true
 > **Priority Gate 룰이 어떤 질문/조건을 보고 어떤 단순 결론을 내는지 확인하는 화면**
 
 Rule Check는 `priority_rules`와 `priority_rule_conditions`를 사람이 읽기 쉬운 표로 보여준다.
-DB의 평가 순서 컬럼과 Admin API/화면 필드는 모두 `sort_order` 명칭을 사용한다. 행 drag로 순서를 조정하고 저장할 수 있으며, 상세 조건 편집과 CTA 상세 관리는 후속 모달에서 다룬다.
+DB의 평가 순서 컬럼과 Admin API/화면 필드는 모두 `sort_order` 명칭을 사용한다. 행 drag로 순서를 조정하고 저장할 수 있으며, row 클릭 dialog에서 Rule 조건, CTA 상세, `result_description` 전체를 직접 편집한다.
 
 #### 화면 구조
 
@@ -712,9 +717,6 @@ status: 전체 / active / inactive
 
 #### MVP 제외
 
-- Rule 조건 직접 편집
-- CTA 상세 편집
-- result description 전체 편집
 - 룰 발동 테스트 / 제품 후보 미리보기
 
 ---
@@ -723,8 +725,8 @@ status: 전체 / active / inactive
 
 > **사용자에게 보이는 질문 문구, 답변 타입, 선택지, 노출 조건, 활성 상태를 확인하는 화면**
 
-Question Check는 `questions`와 `question_variants`를 같이 보여준다.
-관리자가 주로 검수하는 대상은 canonical question이 아니라 실제 화면 질문인 `question_variants`다.
+Question Check는 canonical `questions`와 그 하위 `question_variants`를 같이 보여준다.
+테이블은 화면에 노출되는 variant를 기준으로 스캔할 수 있게 보여주되, row 클릭 dialog와 저장 API는 모두 `questionId` 기준으로 동작한다. dialog에서는 하나의 canonical question 아래에 여러 `question_variants`를 추가, 수정, 삭제할 수 있고, 새 질문 생성 버튼으로 canonical question과 초기 variant를 함께 만들 수 있다.
 
 #### 화면 구조
 
@@ -736,20 +738,32 @@ category: 전체 / toner / sunscreen / serum / lipcare / moisturizer / cleanser
 status: 전체 / active / inactive
 
 [Question Check Table]
-question | question_variant | answer_type | user_options | 노출 조건 | 상태 | 메모
+question | question_variant | answer_type | user_options | 노출 조건 | 상태 | 메모 | screen | ui_section | category
 ```
 
 #### 컬럼 정의
 
-| 컬럼             | 표시 내용                                                       | 데이터 기준                                                              |
-| ---------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| question         | 내부 기준 질문 key                                              | `questions.key`                                                          |
-| question_variant | 사용자에게 실제로 보이는 질문 문구                              | `question_variants.title`                                                |
-| answer_type      | 답변 형식                                                       | `questions.answer_type`                                                  |
-| user_options     | 사용자에게 보이는 선택지. 내부값은 필요 시 보조 표시            | `question_variants.answers` + `questions.answer_values`                  |
-| 노출 조건        | `screen/ui_section/category.selected/visibility condition` 조합 | `question_variants.screen/ui_section` + `question_visibility_conditions` |
-| 상태             | `active` / `inactive` 라디오. 화면 질문 단위로 제어             | `question_variants.is_active`                                            |
-| 메모             | 문구 수정 의도, 룰 연결, 제품 선택 기준 근거                    | MVP 저장 방식 미정. 후속 `admin_note` 또는 `admin_notes` 검토            |
+| 컬럼             | 표시 내용                                                             | 데이터 기준                                                              |
+| ---------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| question         | 내부 기준 질문 key. row 클릭 시 이 `questionId` 기준 dialog를 연다    | `questions.key`, `questions.id`                                          |
+| question_variant | 사용자에게 실제로 보이는 질문 문구                                    | `question_variants.title`                                                |
+| answer_type      | 답변 형식                                                             | `questions.answer_type`                                                  |
+| user_options     | 사용자에게 보이는 선택지. 내부값은 필요 시 보조 표시                  | `question_variants.answers` + `questions.answer_values`                  |
+| 노출 조건        | `screen/ui_section/category.selected/visibility condition` 조합       | `question_variants.screen/ui_section` + `question_visibility_conditions` |
+| 상태             | `active` / `inactive`. variant 단위 표시, dialog 저장은 question 단위 | `question_variants.is_active`                                            |
+| 메모             | 문구 수정 의도, 룰 연결, 제품 선택 기준 근거                          | MVP 저장 방식 미정. 후속 `admin_note` 또는 `admin_notes` 검토            |
+| screen           | variant가 노출되는 화면                                               | `question_variants.screen`                                               |
+| ui_section       | variant가 노출되는 화면 섹션                                          | `question_variants.ui_section`                                           |
+| category         | category 조건 요약. 조건이 없으면 전체                                | `question_visibility_conditions` 중 `category.selected`로 해석되는 값    |
+
+#### Dialog 동작
+
+- row 클릭 시 `GET /admin/questions/:questionId`로 canonical question과 모든 active/inactive variant를 조회한다.
+- dialog에서 canonical question의 `key`, `answer_type`, `answer_values`, 상태를 수정할 수 있다.
+- dialog에서 `question_variants`를 여러 개 추가, 수정, 삭제할 수 있다.
+- variant별로 `title`, `answers`, `screen`, `ui_section`, `sort_order`, 상태, 노출 조건을 수정한다.
+- 저장은 question 단위 `PUT /admin/questions/:questionId`로 canonical question과 variants 전체 배열을 함께 보낸다.
+- 새 질문 생성 버튼은 `POST /admin/questions`로 canonical question과 초기 variants를 함께 만든다.
 
 #### ui_section 필터 의미
 
@@ -762,20 +776,26 @@ question | question_variant | answer_type | user_options | 노출 조건 | 상�
 
 #### 행 예시
 
-| question                       | question_variant                                | answer_type   | user_options                               | 노출 조건                                                               | 상태   | 메모                                  |
-| ------------------------------ | ----------------------------------------------- | ------------- | ------------------------------------------ | ----------------------------------------------------------------------- | ------ | ------------------------------------- |
-| `life.recent_irritation`       | 최근 따가움, 붉어짐, 가려움 같은 문제가 있나요? | BOOLEAN       | 예 / 아니오                                | `screen EQ priority_gate AND ui_section EQ life_routine`                | active | 최상위 HOLD 룰과 연결                 |
-| `routine.sunscreen_frequency`  | 외출할 때 선크림을 바르나요?                    | SINGLE_SELECT | `daily` / `sometimes` / `rarely` / `never` | `screen EQ priority_gate` 또는 `category.selected EQ serum`             | active | 선크림 우선 룰, 세럼 사용 주의와 연결 |
-| `context.skin_type`            | 피부 타입에 가장 가까운 것은 무엇인가요?        | SINGLE_SELECT | dry / oily / combination / sensitive 등    | `category.selected IN [toner, sunscreen, serum, moisturizer, cleanser]` | active | 립케어에는 노출하지 않음              |
-| `context.eye_sting`            | 선크림을 바르면 눈이 시린 편인가요?             | BOOLEAN       | 예 / 아니오                                | `category.selected EQ sunscreen`                                        | active | 선크림 눈시림 낮음 필터와 연결        |
-| `preference.menthol_sensitive` | 화한 립밤을 쓰면 불편한가요?                    | BOOLEAN       | 예 / 아니오                                | `category.selected EQ lipcare`                                          | active | 립케어 멘톨 회피 기준                 |
+| question                       | question_variant                                | answer_type   | user_options                               | 노출 조건                                                               | 상태   | 메모                                  | screen        | ui_section   | category                                       |
+| ------------------------------ | ----------------------------------------------- | ------------- | ------------------------------------------ | ----------------------------------------------------------------------- | ------ | ------------------------------------- | ------------- | ------------ | ---------------------------------------------- |
+| `life.recent_irritation`       | 최근 따가움, 붉어짐, 가려움 같은 문제가 있나요? | BOOLEAN       | 예 / 아니오                                | `screen EQ priority_gate AND ui_section EQ life_routine`                | active | 최상위 HOLD 룰과 연결                 | priority_gate | life_routine | 전체                                           |
+| `routine.sunscreen_frequency`  | 외출할 때 선크림을 바르나요?                    | SINGLE_SELECT | `daily` / `sometimes` / `rarely` / `never` | `screen EQ priority_gate` 또는 `category.selected EQ serum`             | active | 선크림 우선 룰, 세럼 사용 주의와 연결 | priority_gate | life_routine | serum                                          |
+| `context.skin_type`            | 피부 타입에 가장 가까운 것은 무엇인가요?        | SINGLE_SELECT | dry / oily / combination / sensitive 등    | `category.selected IN [toner, sunscreen, serum, moisturizer, cleanser]` | active | 립케어에는 노출하지 않음              | context       | basic        | toner, sunscreen, serum, moisturizer, cleanser |
+| `context.eye_sting`            | 선크림을 바르면 눈이 시린 편인가요?             | BOOLEAN       | 예 / 아니오                                | `category.selected EQ sunscreen`                                        | active | 선크림 눈시림 낮음 필터와 연결        | context       | category     | sunscreen                                      |
+| `preference.menthol_sensitive` | 화한 립밤을 쓰면 불편한가요?                    | BOOLEAN       | 예 / 아니오                                | `category.selected EQ lipcare`                                          | active | 립케어 멘톨 회피 기준                 | context       | category     | lipcare                                        |
+
+#### API 초안
+
+| 동작             | Method | Path                           | 기준 ID      | 설명                                           |
+| ---------------- | ------ | ------------------------------ | ------------ | ---------------------------------------------- |
+| 테이블 조회      | GET    | `/admin/questions`             | -            | 필터에 맞는 question/variant 행 목록 조회      |
+| dialog 단건 조회 | GET    | `/admin/questions/:questionId` | `questionId` | canonical question과 모든 variants 조회        |
+| 새 질문 생성     | POST   | `/admin/questions`             | -            | canonical question과 초기 variants 생성        |
+| row 저장/수정    | PUT    | `/admin/questions/:questionId` | `questionId` | canonical question과 variants 전체 배열 저장   |
+| row 삭제         | DELETE | `/admin/questions/:questionId` | `questionId` | canonical question과 하위 variants soft delete |
 
 #### MVP 제외
 
-- 질문 신규 생성
-- answer option 편집
-- canonical question 비활성화
-- visibility condition 직접 편집
 - Product Matrix 필터 매핑 편집
 
 ---
@@ -829,7 +849,8 @@ Priority Gate를 거쳐 지금 제품을 사야 하는 상태인지 먼저 판�
 S01 → S02 (Priority Gate) → S03 → S04 → S05 → S06(+상세뷰)
 ```
 
-고민 유형을 선택하면 concern preset이 먼저 저장되고, 기본적으로 Priority Gate를 거쳐 루틴 안정 여부를 먼저 판단한다. 이후 Category Decision → Product Matrix 순서로 진행한다. 입술 트임, 선크림 추천, 립 제품, 메이크업 궁합 계열처럼 제품군이 비교적 명확한 일부 고민은 Category Decision부터 시작할 수 있다.
+고민 유형을 선택하면 concern preset이 먼저 저장되고, 기본적으로 Priority Gate를 거쳐 루틴 안정 여부를 먼저 판단한다. 이후 Category Decision → Product Matrix
+순서로 진행한다. 입술 트임, 선크림 추천, 립 제품, 메이크업 궁합 계열처럼 제품군이 비교적 명확한 일부 고민은 Category Decision부터 시작할 수 있다.
 
 ---
 
@@ -853,7 +874,8 @@ Landing에서 제품군 칩을 바로 선택해 Priority Gate를 건너뛰고 Ca
 S01 → S02 (Priority Gate) → S08 (Traceback) → S06
 ```
 
-Priority Gate를 거쳐 현재 루틴 안정 여부를 확인한 뒤, Reaction Traceback에서 문제 상품과 괜찮은 상품을 비교 등록한다. 원인 후보 성분이 도출되면 Product Matrix에 필터로 반영된다.
+Priority Gate를 거쳐 현재 루틴 안정 여부를 확인한 뒤, Reaction Traceback에서 문제 상품과 괜찮은 상품을 비교 등록한다. 원인 후보 성분이 도출되면 Product Matrix에 필터로
+반영된다.
 
 ---
 
