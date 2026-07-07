@@ -273,6 +273,7 @@ describe('AdminRulesService', () => {
       resultDescription: '최근 자극이 있으면 새 제품 도입보다 안정화가 우선입니다.',
       ctaLabel: null,
       ctaTarget: null,
+      adminNote: null,
       conditions: [
         {
           questionId: '01935b8f-0000-7000-8000-000000000301',
@@ -413,6 +414,7 @@ function createRuleMutationBody() {
     resultDescription: '최근 자극이 있으면 새 제품 도입보다 안정화가 우선입니다.',
     ctaLabel: null,
     ctaTarget: null,
+    adminNote: null,
     conditions: [
       {
         questionId: '01935b8f-0000-7000-8000-000000000301',

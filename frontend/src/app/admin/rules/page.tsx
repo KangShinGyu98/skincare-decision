@@ -1,7 +1,7 @@
 'use client';
 
 import type { AdminRuleStatus, AdminRuleTableRow } from '@skincare-decision/shared/schemas';
-import { RefreshCwIcon, SaveIcon } from 'lucide-react';
+import { PlusIcon, RefreshCwIcon, SaveIcon } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { AdminRuleDetailDialog } from '@/components/admin/rules/AdminRuleDetailDialog';
@@ -20,7 +20,13 @@ export default function AdminRulesPage() {
   const updateStatus = useUpdateAdminRuleStatus();
   const saveSortOrder = useSaveAdminRuleSortOrder();
   const [orderedRuleIds, setOrderedRuleIds] = useState<string[] | null>(null);
-  const [selectedRuleId, setSelectedRuleId] = useState<string | null>(null);
+  const [ruleDialogState, setRuleDialogState] = useState<{
+    open: boolean;
+    ruleId: string | null;
+  }>({
+    open: false,
+    ruleId: null,
+  });
   const serverRows = data?.items ?? EMPTY_ADMIN_RULE_ROWS;
   const isSortOrderDirty = orderedRuleIds !== null;
   const pendingStatusRuleId = updateStatus.isPending
@@ -67,7 +73,17 @@ export default function AdminRulesPage() {
   );
 
   const handleRowClick = useCallback((row: AdminRuleTableRow) => {
-    setSelectedRuleId(row.id);
+    setRuleDialogState({
+      open: true,
+      ruleId: row.id,
+    });
+  }, []);
+
+  const handleCreateRule = useCallback(() => {
+    setRuleDialogState({
+      open: true,
+      ruleId: null,
+    });
   }, []);
 
   const handleSaveSortOrder = () => {
@@ -129,6 +145,14 @@ export default function AdminRulesPage() {
                 </Button>
                 <Button
                   type="button"
+                  variant="outline"
+                  onClick={handleCreateRule}
+                  disabled={saveSortOrder.isPending || isLoading}
+                >
+                  <PlusIcon />룰 생성
+                </Button>
+                <Button
+                  type="button"
                   onClick={handleSaveSortOrder}
                   disabled={saveSortOrder.isPending || isLoading}
                 >
@@ -171,12 +195,13 @@ export default function AdminRulesPage() {
       </div>
 
       <AdminRuleDetailDialog
-        ruleId={selectedRuleId}
-        open={selectedRuleId !== null}
+        ruleId={ruleDialogState.ruleId}
+        open={ruleDialogState.open}
         onOpenChange={(open) => {
-          if (!open) {
-            setSelectedRuleId(null);
-          }
+          setRuleDialogState((previousState) => ({
+            open,
+            ruleId: open ? previousState.ruleId : null,
+          }));
         }}
       />
     </main>

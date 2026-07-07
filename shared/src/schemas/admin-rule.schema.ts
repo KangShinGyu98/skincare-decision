@@ -45,14 +45,6 @@ export const updateAdminRuleStatusBodySchema = z
 
 export type UpdateAdminRuleStatusBody = z.infer<typeof updateAdminRuleStatusBodySchema>;
 
-export const updateAdminRuleAdminNoteBodySchema = z
-  .object({
-    adminNote: z.string().max(2000).nullable(),
-  })
-  .strict();
-
-export type UpdateAdminRuleAdminNoteBody = z.infer<typeof updateAdminRuleAdminNoteBodySchema>;
-
 export const updateAdminRuleSortOrderBodySchema = z
   .object({
     ruleIds: z.array(z.uuid()).min(1),
@@ -65,6 +57,12 @@ const nullableNonEmptyString = (maxLength: number) =>
   z.preprocess(
     (value) => (typeof value === 'string' && value.trim().length === 0 ? null : value),
     z.string().trim().min(1).max(maxLength).nullable().default(null),
+  );
+
+const nullableString = (maxLength: number) =>
+  z.preprocess(
+    (value) => (typeof value === 'string' && value.trim().length === 0 ? null : value),
+    z.string().trim().max(maxLength).nullable().default(null),
   );
 
 const optionalSearchStringSchema = z.preprocess(
@@ -92,6 +90,7 @@ export const adminRuleMutationBodySchema = z
     resultDescription: z.string().trim().min(1),
     ctaLabel: nullableNonEmptyString(100),
     ctaTarget: nullableNonEmptyString(255),
+    adminNote: nullableString(2000),
     conditions: z.array(adminRuleConditionInputSchema).default([]),
   })
   .strict()
@@ -240,12 +239,6 @@ export const adminRuleDetailSchema = adminRuleTableRowSchema
   });
 
 export type AdminRuleDetail = z.infer<typeof adminRuleDetailSchema>;
-
-export const updateAdminRuleAdminNoteResponseSchema = adminRuleTableRowSchema;
-
-export type UpdateAdminRuleAdminNoteResponse = z.infer<
-  typeof updateAdminRuleAdminNoteResponseSchema
->;
 
 export const createAdminRuleResponseSchema = adminRuleDetailSchema;
 

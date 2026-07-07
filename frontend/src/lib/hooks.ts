@@ -2,17 +2,20 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   AdminRuleDetail,
+  AdminRuleQuestionSearchResponse,
   AdminRulesResponse,
   AdminRuleStatus,
   AdminRuleTableRow,
   CategoryDecisionResponse,
   CategoryDecisionResponseValue,
+  CreateAdminRuleBody,
   CategoryDecisionUiSection,
   PriorityGateResponseDto,
   PriorityGateResponseValue,
   QuestionUiSectionDto,
   ResetCategoryDecisionResponsesRequest,
   ResetPriorityGateResponsesRequest,
+  UpdateAdminRuleBody,
   UpdateAdminRuleSortOrderBody,
   UpsertCategoryDecisionResponsesRequest,
   UpsertPriorityGateResponsesRequest,
@@ -32,6 +35,7 @@ export const queryKeys = {
     all: ['admin', 'rules'] as const,
     list: ['admin', 'rules', 'list'] as const,
     detail: (ruleId: string) => ['admin', 'rules', 'detail', ruleId] as const,
+    questions: (q: string, limit: number) => ['admin', 'rules', 'questions', { q, limit }] as const,
   },
 };
 
@@ -408,23 +412,34 @@ function replaceAdminRuleRow(
   };
 }
 
-function mergeAdminRuleDetail(
-  previousData: AdminRuleDetail | undefined,
+function appendAdminRuleRow(
+  previousData: AdminRulesResponse | undefined,
   nextRow: AdminRuleTableRow,
-): AdminRuleDetail | undefined {
+): AdminRulesResponse | undefined {
+  if (!previousData) {
+    return previousData;
+  }
+
+  const hasExistingRow = previousData.items.some((item) => item.id === nextRow.id);
+  const items = hasExistingRow
+    ? previousData.items.map((item) => (item.id === nextRow.id ? nextRow : item))
+    : [...previousData.items, nextRow];
+
+  return {
+    items: [...items].sort((first, second) => first.sort_order - second.sort_order),
+  };
+}
+
+function removeAdminRuleRow(
+  previousData: AdminRulesResponse | undefined,
+  ruleId: string,
+): AdminRulesResponse | undefined {
   if (!previousData) {
     return previousData;
   }
 
   return {
-    ...previousData,
-    id: nextRow.id,
-    sort_order: nextRow.sort_order,
-    ruleName: nextRow.ruleName,
-    conclusion: nextRow.conclusion,
-    resultType: nextRow.resultType,
-    status: nextRow.status,
-    adminNote: nextRow.adminNote,
+    items: previousData.items.filter((item) => item.id !== ruleId),
   };
 }
 
@@ -453,6 +468,75 @@ export function useAdminRuleDetail(ruleId: string | null) {
   });
 }
 
+export function useAdminRuleQuestionSearch(
+  query: { q?: string; limit?: number; enabled?: boolean } = {},
+) {
+  const q = query.q?.trim() ?? '';
+  const limit = query.limit ?? 50;
+
+  return useQuery<AdminRuleQuestionSearchResponse>({
+    queryKey: queryKeys.adminRules.questions(q, limit),
+    queryFn: () =>
+      adminRulesApi.searchQuestions({
+        q: q.length > 0 ? q : undefined,
+        limit,
+      }),
+    enabled: query.enabled ?? true,
+  });
+}
+
+export function useCreateAdminRule() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateAdminRuleBody) => adminRulesApi.createRule(data),
+    onSuccess: async (createdRule) => {
+      queryClient.setQueryData<AdminRulesResponse>(queryKeys.adminRules.list, (previousData) =>
+        appendAdminRuleRow(previousData, createdRule),
+      );
+      queryClient.setQueryData<AdminRuleDetail>(
+        queryKeys.adminRules.detail(createdRule.id),
+        createdRule,
+      );
+      await queryClient.invalidateQueries({ queryKey: queryKeys.adminRules.all });
+    },
+  });
+}
+
+export function useUpdateAdminRule() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ ruleId, data }: { ruleId: string; data: UpdateAdminRuleBody }) =>
+      adminRulesApi.updateRule(ruleId, data),
+    onSuccess: async (updatedRule) => {
+      queryClient.setQueryData<AdminRulesResponse>(queryKeys.adminRules.list, (previousData) =>
+        replaceAdminRuleRow(previousData, updatedRule),
+      );
+      queryClient.setQueryData<AdminRuleDetail>(
+        queryKeys.adminRules.detail(updatedRule.id),
+        updatedRule,
+      );
+      await queryClient.invalidateQueries({ queryKey: queryKeys.adminRules.all });
+    },
+  });
+}
+
+export function useDeleteAdminRule() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (ruleId: string) => adminRulesApi.deleteRule(ruleId),
+    onSuccess: async (response) => {
+      queryClient.setQueryData<AdminRulesResponse>(queryKeys.adminRules.list, (previousData) =>
+        removeAdminRuleRow(previousData, response.id),
+      );
+      queryClient.removeQueries({ queryKey: queryKeys.adminRules.detail(response.id) });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.adminRules.all });
+    },
+  });
+}
+
 export function useUpdateAdminRuleStatus() {
   const queryClient = useQueryClient();
 
@@ -460,25 +544,6 @@ export function useUpdateAdminRuleStatus() {
     mutationFn: ({ ruleId, status }: { ruleId: string; status: AdminRuleStatus }) =>
       adminRulesApi.updateStatus(ruleId, { status }),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.adminRules.all });
-    },
-  });
-}
-
-export function useUpdateAdminRuleAdminNote() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ ruleId, adminNote }: { ruleId: string; adminNote: string | null }) =>
-      adminRulesApi.updateAdminNote(ruleId, { adminNote }),
-    onSuccess: async (updatedRule) => {
-      queryClient.setQueryData<AdminRulesResponse>(queryKeys.adminRules.list, (previousData) =>
-        replaceAdminRuleRow(previousData, updatedRule),
-      );
-      queryClient.setQueryData<AdminRuleDetail>(
-        queryKeys.adminRules.detail(updatedRule.id),
-        (previousData) => mergeAdminRuleDetail(previousData, updatedRule),
-      );
       await queryClient.invalidateQueries({ queryKey: queryKeys.adminRules.all });
     },
   });

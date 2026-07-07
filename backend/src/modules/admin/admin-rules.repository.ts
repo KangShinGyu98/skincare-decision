@@ -126,6 +126,7 @@ export type SaveAdminRuleInput = {
   resultDescription: string;
   ctaLabel: string | null;
   ctaTarget: string | null;
+  adminNote: string | null;
   conditions: SaveAdminRuleConditionInput[];
 };
 
@@ -244,6 +245,7 @@ export class AdminRulesRepository {
           resultDescription: input.resultDescription,
           ctaLabel: input.ctaLabel,
           ctaTarget: input.ctaTarget,
+          adminNote: input.adminNote,
         },
         select: {
           id: true,
@@ -294,6 +296,7 @@ export class AdminRulesRepository {
           resultDescription: input.resultDescription,
           ctaLabel: input.ctaLabel,
           ctaTarget: input.ctaTarget,
+          adminNote: input.adminNote,
         },
         select: {
           id: true,

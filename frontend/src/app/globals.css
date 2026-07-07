@@ -1,6 +1,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap');
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
 
 @theme inline {
   --color-background: var(--background);
@@ -25,7 +34,6 @@
 }
 
 :root {
-
   /* Daybreak Blue (Brand Primary) */
   --blue-1: #e6f7ff;
   --blue-2: #bae7ff;
@@ -389,8 +397,6 @@ small {
   font-size: var(--font-size-xs);
   color: var(--color-text-tertiary);
 }
-
-
 
 code,
 pre {

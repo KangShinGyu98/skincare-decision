@@ -1,10 +1,18 @@
 import {
   type AdminRuleDetail,
   adminRuleDetailSchema,
+  type AdminRuleQuestionSearchResponse,
+  adminRuleQuestionSearchResponseSchema,
   type AdminRulesResponse,
   adminRulesResponseSchema,
   type CategoryDecisionResponse,
   categoryDecisionResponseSchema,
+  type CreateAdminRuleBody,
+  createAdminRuleBodySchema,
+  type CreateAdminRuleResponse,
+  createAdminRuleResponseSchema,
+  type DeleteAdminRuleResponse,
+  deleteAdminRuleResponseSchema,
   type PriorityGateResponseDto,
   priorityGateResponseSchema,
   type ResetCategoryDecisionResponsesRequest,
@@ -15,10 +23,10 @@ import {
   resetPriorityGateResponsesRequestSchema,
   type ResetPriorityGateResponsesResponse,
   resetPriorityGateResponsesResponseSchema,
-  type UpdateAdminRuleAdminNoteBody,
-  updateAdminRuleAdminNoteBodySchema,
-  type UpdateAdminRuleAdminNoteResponse,
-  updateAdminRuleAdminNoteResponseSchema,
+  type UpdateAdminRuleBody,
+  updateAdminRuleBodySchema,
+  type UpdateAdminRuleResponse,
+  updateAdminRuleResponseSchema,
   type UpdateAdminRuleSortOrderBody,
   updateAdminRuleSortOrderBodySchema,
   type UpdateAdminRuleSortOrderResponse,
@@ -290,6 +298,78 @@ export const adminRulesApi = {
     return handleResponse(response, adminRuleDetailSchema);
   },
 
+  searchQuestions: async (
+    query: { q?: string; limit?: number } = {},
+  ): Promise<AdminRuleQuestionSearchResponse> => {
+    const searchParams = new URLSearchParams();
+
+    if (query.q) {
+      searchParams.set('q', query.q);
+    }
+
+    if (query.limit) {
+      searchParams.set('limit', String(query.limit));
+    }
+
+    const search = searchParams.toString();
+    const response = await fetch(getAdminRulesUrl(`/questions${search ? `?${search}` : ''}`), {
+      method: 'GET',
+      credentials: 'include',
+    });
+
+    return handleResponse(response, adminRuleQuestionSearchResponseSchema);
+  },
+
+  createRule: async (data: CreateAdminRuleBody): Promise<CreateAdminRuleResponse> => {
+    const parsed = createAdminRuleBodySchema.safeParse(data);
+
+    if (!parsed.success) {
+      throw new ApiValidationError(`Invalid admin rule create request: ${parsed.error.message}`);
+    }
+
+    const response = await fetch(getAdminRulesUrl(), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify(parsed.data),
+    });
+
+    return handleResponse(response, createAdminRuleResponseSchema);
+  },
+
+  updateRule: async (
+    ruleId: string,
+    data: UpdateAdminRuleBody,
+  ): Promise<UpdateAdminRuleResponse> => {
+    const parsed = updateAdminRuleBodySchema.safeParse(data);
+
+    if (!parsed.success) {
+      throw new ApiValidationError(`Invalid admin rule update request: ${parsed.error.message}`);
+    }
+
+    const response = await fetch(getAdminRulesUrl(`/${ruleId}`), {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify(parsed.data),
+    });
+
+    return handleResponse(response, updateAdminRuleResponseSchema);
+  },
+
+  deleteRule: async (ruleId: string): Promise<DeleteAdminRuleResponse> => {
+    const response = await fetch(getAdminRulesUrl(`/${ruleId}`), {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+
+    return handleResponse(response, deleteAdminRuleResponseSchema);
+  },
+
   updateStatus: async (
     ruleId: string,
     data: UpdateAdminRuleStatusBody,
@@ -310,28 +390,6 @@ export const adminRulesApi = {
     });
 
     return handleResponse(response, updateAdminRuleStatusResponseSchema);
-  },
-
-  updateAdminNote: async (
-    ruleId: string,
-    data: UpdateAdminRuleAdminNoteBody,
-  ): Promise<UpdateAdminRuleAdminNoteResponse> => {
-    const parsed = updateAdminRuleAdminNoteBodySchema.safeParse(data);
-
-    if (!parsed.success) {
-      throw new ApiValidationError(`Invalid admin rule note request: ${parsed.error.message}`);
-    }
-
-    const response = await fetch(getAdminRulesUrl(`/${ruleId}/admin-note`), {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-      body: JSON.stringify(parsed.data),
-    });
-
-    return handleResponse(response, updateAdminRuleAdminNoteResponseSchema);
   },
 
   updateSortOrder: async (

@@ -202,6 +202,7 @@ export class AdminRulesService {
       resultDescription: body.resultDescription,
       ctaLabel: body.ctaLabel,
       ctaTarget: body.ctaTarget,
+      adminNote: body.adminNote,
       conditions: body.conditions,
     };
   }
