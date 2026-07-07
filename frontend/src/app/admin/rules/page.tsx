@@ -7,15 +7,8 @@ import { toast } from 'sonner';
 import { AdminRuleDetailDialog } from '@/components/admin/rules/AdminRuleDetailDialog';
 import { createAdminRuleColumns } from '@/components/admin/rules/createAdminRuleColumns';
 import { SortableDataTable } from '@/components/common/data-table/SortableDataTable';
+import { ErrorPanel } from '@/components/common/ErrorPanel';
 import { Button } from '@/components/shadcn/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/shadcn/Table';
 import { Skeleton } from '@/components/shadcn/skeleton';
 import { Spinner } from '@/components/shadcn/spinner';
 import { useAdminRules, useSaveAdminRuleSortOrder, useUpdateAdminRuleStatus } from '@/lib/hooks';
@@ -129,7 +122,7 @@ export default function AdminRulesPage() {
                   type="button"
                   variant="outline"
                   onClick={handleRefresh}
-                  disabled={saveSortOrder.isPending}
+                  disabled={saveSortOrder.isPending || isLoading}
                 >
                   <RefreshCwIcon />
                   새로고침
@@ -137,7 +130,7 @@ export default function AdminRulesPage() {
                 <Button
                   type="button"
                   onClick={handleSaveSortOrder}
-                  disabled={saveSortOrder.isPending}
+                  disabled={saveSortOrder.isPending || isLoading}
                 >
                   {saveSortOrder.isPending ? <Spinner /> : <SaveIcon />}
                   순서 저장
@@ -190,45 +183,16 @@ export default function AdminRulesPage() {
   );
 }
 
-function ErrorPanel({ message }: { message: string }) {
-  return (
-    <section className="rounded-lg border border-[var(--red-3)] bg-[var(--red-1)] px-4 py-3 text-sm text-[var(--red-7)]">
-      {message}
-    </section>
-  );
-}
-
 function AdminRulesTableSkeleton() {
-  const columnWidths = [44, 220, 320, 120, 180, 340, 110, 220];
-
   return (
-    <section className="overflow-hidden rounded-lg border border-[var(--color-border-light)] bg-[var(--color-bg-white)] shadow-sm">
-      <Table className="min-w-[1220px] table-fixed">
-        <TableHeader className="bg-[var(--gray-3)]">
-          <TableRow>
-            {columnWidths.map((width, index) => (
-              <TableHead
-                key={`${width}-${index}`}
-                style={{ width }}
-                className="text-xs uppercase text-[var(--color-text-tertiary)]"
-              >
-                <Skeleton className="h-4 w-2/3" />
-              </TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {Array.from({ length: 6 }, (_, rowIndex) => (
-            <TableRow key={rowIndex}>
-              {columnWidths.map((width, columnIndex) => (
-                <TableCell key={`${rowIndex}-${width}-${columnIndex}`}>
-                  <Skeleton className="h-5 w-full" />
-                </TableCell>
-              ))}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </section>
+    <div className="flex w-full max-w-sm flex-col gap-2">
+      {Array.from({ length: 5 }).map((_, index) => (
+        <div className="flex gap-4" key={index}>
+          <Skeleton className="h-4 flex-1" />
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-4 w-20" />
+        </div>
+      ))}
+    </div>
   );
 }
