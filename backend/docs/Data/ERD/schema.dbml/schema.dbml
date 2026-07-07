@@ -428,10 +428,6 @@ Enum UserRole {
 }
 
 Enum QuestionAnswerType {
-  BOOLEAN
-  THREE_CHOICE
-  FOUR_CHOICE
-  FIVE_CHOICE
   SINGLE_CHOICE
   MULTI_CHOICE
 }

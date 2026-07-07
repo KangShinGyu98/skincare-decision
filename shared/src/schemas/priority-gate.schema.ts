@@ -1,14 +1,7 @@
 import { z } from 'zod';
 import { productCategoryItemSchema } from './product-category.schema.js';
 
-export const questionAnswerTypeSchema = z.enum([
-  'BOOLEAN',
-  'THREE_CHOICE',
-  'FOUR_CHOICE',
-  'FIVE_CHOICE',
-  'SINGLE_CHOICE',
-  'MULTI_CHOICE',
-]);
+export const questionAnswerTypeSchema = z.enum(['SINGLE_CHOICE', 'MULTI_CHOICE']);
 
 export type QuestionAnswerTypeDto = z.infer<typeof questionAnswerTypeSchema>;
 
@@ -100,7 +93,7 @@ export const priorityGateResponseExample = {
           questionVariantId: '018f0000-0000-7000-8000-000000000101',
           key: 'life.recent_irritation',
           title: 'Recent irritation',
-          answerType: 'BOOLEAN',
+          answerType: 'SINGLE_CHOICE',
           uiSection: 'life_routine',
           sortOrder: 10,
           answers: [

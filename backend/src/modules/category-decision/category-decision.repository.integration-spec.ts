@@ -188,7 +188,7 @@ describe('CategoryDecisionRepository', () => {
       data: {
         id: questionId,
         key: input.questionKey,
-        answerType: input.answerType ?? QuestionAnswerType.BOOLEAN,
+        answerType: input.answerType ?? QuestionAnswerType.SINGLE_CHOICE,
         answerValues: input.answerValues ?? [0, 1],
       },
     });

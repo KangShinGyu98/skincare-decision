@@ -12,13 +12,7 @@ export type SeedComparisonOperator = 'EQ' | 'IN' | 'CONTAINS' | 'GTE' | 'LTE' | 
 
 export type SeedInputType = 'NUMBER' | 'SELECT' | 'MULTI_SELECT' | 'BOOLEAN';
 
-export type SeedQuestionAnswerType =
-  | 'BOOLEAN'
-  | 'THREE_CHOICE'
-  | 'FOUR_CHOICE'
-  | 'FIVE_CHOICE'
-  | 'SINGLE_CHOICE'
-  | 'MULTI_CHOICE';
+export type SeedQuestionAnswerType = 'SINGLE_CHOICE' | 'MULTI_CHOICE';
 
 export type SeedQuestionVariantScreen = 'priority_gate' | 'context';
 

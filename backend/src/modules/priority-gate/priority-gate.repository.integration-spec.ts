@@ -105,7 +105,7 @@ describe('PriorityGateRepository', () => {
     await createQuestionVariant({
       questionKey: 'life.outdoor_activity',
       title: 'Outdoor activity time',
-      answerType: QuestionAnswerType.THREE_CHOICE,
+      answerType: QuestionAnswerType.SINGLE_CHOICE,
       answerValues: [1, 2, 3],
       answers: ['Under 1 hour', '1-3 hours', 'Over 3 hours'],
       screen: Screen.priority_gate,
@@ -124,7 +124,7 @@ describe('PriorityGateRepository', () => {
 
     expect(question.question).toEqual({
       key: 'life.outdoor_activity',
-      answerType: QuestionAnswerType.THREE_CHOICE,
+      answerType: QuestionAnswerType.SINGLE_CHOICE,
       answerValues: [1, 2, 3],
     });
   });
@@ -383,7 +383,7 @@ describe('PriorityGateRepository', () => {
       data: {
         id: questionId,
         key: input.questionKey,
-        answerType: input.answerType ?? QuestionAnswerType.BOOLEAN,
+        answerType: input.answerType ?? QuestionAnswerType.SINGLE_CHOICE,
         answerValues: input.answerValues ?? [0, 1],
       },
     });

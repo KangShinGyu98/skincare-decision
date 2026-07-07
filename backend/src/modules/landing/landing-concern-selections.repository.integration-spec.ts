@@ -68,7 +68,7 @@ describe('LandingConcernSelectionsRepository', () => {
         {
           id: '01935b8f-0000-7000-8000-000000000102',
           key: 'life.recent_irritation',
-          answerType: QuestionAnswerType.BOOLEAN,
+          answerType: QuestionAnswerType.SINGLE_CHOICE,
           answerValues: [0, 1],
         },
       ],
@@ -99,7 +99,7 @@ describe('LandingConcernSelectionsRepository', () => {
         {
           id: '01935b8f-0000-7000-8000-000000000102',
           key: 'life.recent_irritation',
-          answerType: QuestionAnswerType.BOOLEAN,
+          answerType: QuestionAnswerType.SINGLE_CHOICE,
           answerValues: [0, 1],
           deletedAt: new Date('2026-06-19T00:00:00.000Z'),
         },

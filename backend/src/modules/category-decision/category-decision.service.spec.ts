@@ -313,7 +313,7 @@ function createQuestionRecord(
     sortOrder: overrides.sortOrder ?? 10,
     question: {
       key: overrides.key ?? 'context.skin_type',
-      answerType: overrides.answerType ?? QuestionAnswerType.BOOLEAN,
+      answerType: overrides.answerType ?? QuestionAnswerType.SINGLE_CHOICE,
       answerValues: overrides.answerValues ?? [0, 1],
     },
   };

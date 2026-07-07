@@ -2,6 +2,8 @@
 
 import type { QuestionAnswerDto, QuestionAnswerTypeDto } from '@skincare-decision/shared/schemas';
 import { useState } from 'react';
+import { Checkbox } from '@/components/shadcn/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/shadcn/radio-group';
 import { cn } from '@/lib/utils';
 
 type ChoiceQuestion = {
@@ -20,15 +22,6 @@ type PriorityGateQuestionItemProps = {
   disabled?: boolean;
   onValueChange?: (value: number[]) => void;
 };
-
-const ANSWER_INPUT_TYPE = {
-  BOOLEAN: 'radio',
-  THREE_CHOICE: 'radio',
-  FOUR_CHOICE: 'radio',
-  FIVE_CHOICE: 'radio',
-  SINGLE_CHOICE: 'radio',
-  MULTI_CHOICE: 'checkbox',
-} satisfies Record<QuestionAnswerTypeDto, 'checkbox' | 'radio'>;
 
 function getNextValue(question: ChoiceQuestion, selectedValues: number[], answerValue: number) {
   if (question.answerType !== 'MULTI_CHOICE') {
@@ -51,8 +44,8 @@ export function PriorityGateQuestionItem({
   const isControlled = value !== undefined;
   const [internalValue, setInternalValue] = useState<number[]>(question.currentResponse ?? []);
   const selectedValues = isControlled ? value : internalValue;
-  const inputType = ANSWER_INPUT_TYPE[question.answerType];
   const canChange = !disabled && (!isControlled || onValueChange !== undefined);
+  const isMultiChoice = question.answerType === 'MULTI_CHOICE';
 
   const handleValueChange = (nextValue: number[]) => {
     if (!canChange) {
@@ -76,50 +69,102 @@ export function PriorityGateQuestionItem({
       <legend className="px-1 text-sm font-medium leading-relaxed text-[var(--color-text-primary)]">
         {question.title}
       </legend>
-      <div
-        className={cn(
-          'mt-3 grid gap-2',
-          question.answers.length <= 2 ? 'grid-cols-2' : 'grid-cols-1',
-          question.answerType === 'MULTI_CHOICE' ? 'sm:grid-cols-2' : null,
-        )}
-      >
-        {question.answers.map((answer) => {
-          const inputId = `${question.questionVariantId}-${answer.value}`;
-          const isSelected = selectedValues.includes(answer.value);
 
-          return (
-            <label
-              key={answer.value}
-              htmlFor={inputId}
-              className={cn(
-                'flex min-h-10 cursor-pointer items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-component)] px-3 py-2 text-sm text-[var(--color-text-secondary)]',
-                isSelected
-                  ? 'border-[var(--color-primary-border)] bg-[var(--color-primary-light)] text-[var(--color-primary-active)]'
-                  : null,
-                disabled ? 'cursor-not-allowed opacity-60' : null,
-                !canChange ? 'cursor-default' : null,
-              )}
-            >
-              <input
-                id={inputId}
-                type={inputType}
-                name={question.questionVariantId}
-                value={answer.value}
-                checked={isSelected}
-                disabled={disabled}
-                readOnly={!canChange}
-                onChange={
-                  canChange
-                    ? () => handleValueChange(getNextValue(question, selectedValues, answer.value))
-                    : undefined
-                }
-                className="size-4 shrink-0 accent-[var(--color-primary)]"
-              />
-              <span>{answer.label}</span>
-            </label>
-          );
-        })}
-      </div>
+      {isMultiChoice ? (
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          {question.answers.map((answer) => {
+            const inputId = `${question.questionVariantId}-${answer.value}`;
+            const isSelected = selectedValues.includes(answer.value);
+
+            return (
+              <label
+                key={answer.value}
+                htmlFor={inputId}
+                className={getAnswerLabelClassName({
+                  canChange,
+                  disabled,
+                  isSelected,
+                })}
+              >
+                <Checkbox
+                  id={inputId}
+                  name={question.questionVariantId}
+                  value={String(answer.value)}
+                  checked={isSelected}
+                  disabled={disabled}
+                  onCheckedChange={
+                    canChange
+                      ? () =>
+                          handleValueChange(getNextValue(question, selectedValues, answer.value))
+                      : undefined
+                  }
+                  className="border-[var(--color-border)] data-checked:border-[var(--color-primary)] data-checked:bg-[var(--color-primary)]"
+                />
+                <span>{answer.label}</span>
+              </label>
+            );
+          })}
+        </div>
+      ) : (
+        <RadioGroup
+          value={selectedValues[0] !== undefined ? String(selectedValues[0]) : undefined}
+          onValueChange={
+            canChange ? (nextValue) => handleValueChange([Number(nextValue)]) : undefined
+          }
+          disabled={disabled}
+          readOnly={!canChange}
+          name={question.questionVariantId}
+          className={cn(
+            'mt-3 grid gap-2',
+            question.answers.length <= 2 ? 'grid-cols-2' : 'grid-cols-1',
+          )}
+        >
+          {question.answers.map((answer) => {
+            const inputId = `${question.questionVariantId}-${answer.value}`;
+            const isSelected = selectedValues.includes(answer.value);
+
+            return (
+              <label
+                key={answer.value}
+                htmlFor={inputId}
+                className={getAnswerLabelClassName({
+                  canChange,
+                  disabled,
+                  isSelected,
+                })}
+              >
+                <RadioGroupItem
+                  id={inputId}
+                  value={String(answer.value)}
+                  disabled={disabled}
+                  readOnly={!canChange}
+                  className="border-[var(--color-border)] data-checked:border-[var(--color-primary)] data-checked:bg-[var(--color-primary)]"
+                />
+                <span>{answer.label}</span>
+              </label>
+            );
+          })}
+        </RadioGroup>
+      )}
     </fieldset>
+  );
+}
+
+function getAnswerLabelClassName({
+  canChange,
+  disabled,
+  isSelected,
+}: {
+  canChange: boolean;
+  disabled: boolean;
+  isSelected: boolean;
+}) {
+  return cn(
+    'flex min-h-10 cursor-pointer items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-component)] px-3 py-2 text-sm text-[var(--color-text-secondary)]',
+    isSelected
+      ? 'border-[var(--color-primary-border)] bg-[var(--color-primary-light)] text-[var(--color-primary-active)]'
+      : null,
+    disabled ? 'cursor-not-allowed opacity-60' : null,
+    !canChange ? 'cursor-default' : null,
   );
 }

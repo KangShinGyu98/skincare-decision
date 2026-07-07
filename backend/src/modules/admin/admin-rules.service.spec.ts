@@ -67,7 +67,7 @@ describe('AdminRulesService', () => {
             question: {
               id: '01935b8f-0000-7000-8000-000000000301',
               key: 'life.recent_irritation',
-              answerType: QuestionAnswerType.BOOLEAN,
+              answerType: QuestionAnswerType.SINGLE_CHOICE,
               answerValues: [0, 1],
               variants: [
                 {
@@ -86,7 +86,7 @@ describe('AdminRulesService', () => {
             question: {
               id: '01935b8f-0000-7000-8000-000000000302',
               key: 'life.outdoor_activity',
-              answerType: QuestionAnswerType.THREE_CHOICE,
+              answerType: QuestionAnswerType.SINGLE_CHOICE,
               answerValues: [1, 2, 3],
               variants: [
                 {
@@ -224,7 +224,7 @@ describe('AdminRulesService', () => {
       {
         id: '01935b8f-0000-7000-8000-000000000301',
         key: 'life.recent_irritation',
-        answerType: QuestionAnswerType.BOOLEAN,
+        answerType: QuestionAnswerType.SINGLE_CHOICE,
         answerValues: [0, 1],
         variants: [
           {
@@ -249,7 +249,7 @@ describe('AdminRulesService', () => {
       {
         questionId: '01935b8f-0000-7000-8000-000000000301',
         questionKey: 'life.recent_irritation',
-        answerType: 'BOOLEAN',
+        answerType: 'SINGLE_CHOICE',
         answerValues: [0, 1],
         questionVariant: {
           id: '01935b8f-0000-7000-8000-000000000311',
@@ -388,7 +388,7 @@ function createRuleRecord(overrides: Partial<AdminRuleRecord> = {}): AdminRuleRe
         question: {
           id: '01935b8f-0000-7000-8000-000000000301',
           key: 'life.recent_irritation',
-          answerType: QuestionAnswerType.BOOLEAN,
+          answerType: QuestionAnswerType.SINGLE_CHOICE,
           answerValues: [0, 1],
           variants: [
             {

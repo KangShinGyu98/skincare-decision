@@ -9,7 +9,6 @@ generator dbml {
   output   = "../docs/Data/ERD/schema.dbml"
 }
 
-
 datasource db {
   provider = "postgresql"
 }
@@ -22,10 +21,6 @@ enum UserRole {
 }
 
 enum QuestionAnswerType {
-  BOOLEAN
-  THREE_CHOICE
-  FOUR_CHOICE
-  FIVE_CHOICE
   SINGLE_CHOICE
   MULTI_CHOICE
 
@@ -250,7 +245,7 @@ model QuestionVariant {
   answers              String[]
   answerCount          Int                           @map("answer_count") @ignore
   screen               Screen
-  uiSection            UiSection      @map("ui_section")
+  uiSection            UiSection                     @map("ui_section")
   sortOrder            Int                           @default(0) @map("sort_order")
   isActive             Boolean                       @default(true) @map("is_active")
   createdAt            DateTime                      @default(now()) @map("created_at") @db.Timestamptz()
