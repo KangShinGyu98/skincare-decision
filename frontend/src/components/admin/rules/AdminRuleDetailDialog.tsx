@@ -22,7 +22,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/shadcn/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from '@/components/shadcn/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/shadcn/select';
 import { Skeleton } from '@/components/shadcn/skeleton';
 import { Spinner } from '@/components/shadcn/spinner';
 import { Switch } from '@/components/shadcn/switch';
