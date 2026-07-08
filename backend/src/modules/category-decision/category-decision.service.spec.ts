@@ -182,6 +182,73 @@ describe('CategoryDecisionService', () => {
     });
   });
 
+  it('getCategoryDecision returns common questions and selected category questions only', async () => {
+    const categoryQuestion = createQuestionRecord({
+      questionId: '018f0000-0000-7000-8000-000000000201',
+      key: 'category.selected',
+      answerType: QuestionAnswerType.SINGLE_CHOICE,
+      answers: ['Toner', 'Sunscreen', 'Serum', 'Lipcare', 'Moisturizer', 'Cleanser'],
+      answerValues: [1, 2, 3, 4, 5, 6],
+      uiSection: UiSection.category,
+      sortOrder: 10,
+      category: null,
+    });
+    const sunscreenQuestion = createQuestionRecord({
+      id: '018f0000-0000-7000-8000-000000000102',
+      questionId: '018f0000-0000-7000-8000-000000000202',
+      key: 'context.eye_sting',
+      title: 'Eye sting',
+      uiSection: UiSection.category,
+      category: 'sunscreen',
+      sortOrder: 20,
+    });
+    const lipcareQuestion = createQuestionRecord({
+      id: '018f0000-0000-7000-8000-000000000103',
+      questionId: '018f0000-0000-7000-8000-000000000203',
+      key: 'preference.menthol_sensitive',
+      title: 'Menthol sensitive',
+      uiSection: UiSection.category,
+      category: 'lipcare',
+      sortOrder: 30,
+    });
+    const category = {
+      id: '018f0000-0000-7000-8000-000000000301',
+      key: 'sunscreen',
+      name: 'Sunscreen',
+      description: null,
+      sortOrder: 20,
+    };
+
+    repositoryMock.findProductCategoryByKey.mockResolvedValue(category);
+    repositoryMock.findQuestionByKey.mockResolvedValue({ id: categoryQuestion.questionId });
+    repositoryMock.findCategoryDecisionQuestions.mockResolvedValue([
+      categoryQuestion,
+      sunscreenQuestion,
+      lipcareQuestion,
+    ]);
+    repositoryMock.findCurrentResponses.mockResolvedValue([
+      {
+        questionId: categoryQuestion.questionId,
+        value: [2],
+      },
+    ]);
+
+    const result = await service.getCategoryDecision({
+      deviceId: '018f0000-0000-7000-8000-000000000001',
+      category: 'sunscreen',
+    });
+
+    expect(
+      result.sections.flatMap((section) => section.questions.map((question) => question.key)),
+    ).toEqual(['category.selected', 'context.eye_sting']);
+    expect(result.previewResults[0]).toEqual(
+      expect.objectContaining({
+        answeredQuestionCount: 1,
+        totalQuestionCount: 2,
+      }),
+    );
+  });
+
   it('getCategoryDecision returns empty previewResults when no answer is saved', async () => {
     const categoryQuestion = createQuestionRecord({
       questionId: '018f0000-0000-7000-8000-000000000201',
@@ -301,6 +368,7 @@ function createQuestionRecord(
     answers: string[];
     answerValues: number[];
     uiSection: UiSection;
+    category: string | null;
     sortOrder: number;
   }> = {},
 ): CategoryDecisionQuestionRecord {
@@ -310,6 +378,7 @@ function createQuestionRecord(
     title: overrides.title ?? 'Question',
     answers: overrides.answers ?? ['No', 'Yes'],
     uiSection: overrides.uiSection ?? UiSection.basic,
+    category: overrides.category ?? null,
     sortOrder: overrides.sortOrder ?? 10,
     question: {
       key: overrides.key ?? 'context.skin_type',

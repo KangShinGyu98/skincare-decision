@@ -743,25 +743,25 @@ question | question_variant | answer_type | user_options | 노출 조건 | 상�
 
 #### 컬럼 정의
 
-| 컬럼             | 표시 내용                                                             | 데이터 기준                                                              |
-| ---------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| question         | 내부 기준 질문 key. row 클릭 시 이 `questionId` 기준 dialog를 연다    | `questions.key`, `questions.id`                                          |
-| question_variant | 사용자에게 실제로 보이는 질문 문구                                    | `question_variants.title`                                                |
-| answer_type      | 답변 형식                                                             | `questions.answer_type`                                                  |
-| user_options     | 사용자에게 보이는 선택지. 내부값은 필요 시 보조 표시                  | `question_variants.answers` + `questions.answer_values`                  |
-| 노출 조건        | `screen/ui_section/category.selected/visibility condition` 조합       | `question_variants.screen/ui_section` + `question_visibility_conditions` |
-| 상태             | `active` / `inactive`. variant 단위 표시, dialog 저장은 question 단위 | `question_variants.is_active`                                            |
-| 메모             | 문구 수정 의도, 룰 연결, 제품 선택 기준 근거                          | MVP 저장 방식 미정. 후속 `admin_note` 또는 `admin_notes` 검토            |
-| screen           | variant가 노출되는 화면                                               | `question_variants.screen`                                               |
-| ui_section       | variant가 노출되는 화면 섹션                                          | `question_variants.ui_section`                                           |
-| category         | category 조건 요약. 조건이 없으면 전체                                | `question_visibility_conditions` 중 `category.selected`로 해석되는 값    |
+| 컬럼             | 표시 내용                                                             | 데이터 기준                                                                       |
+| ---------------- | --------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| question         | 내부 기준 질문 key. row 클릭 시 이 `questionId` 기준 dialog를 연다    | `questions.key`, `questions.id`                                                   |
+| question_variant | 사용자에게 실제로 보이는 질문 문구                                    | `question_variants.title`                                                         |
+| answer_type      | 답변 형식                                                             | `questions.answer_type`                                                           |
+| user_options     | 사용자에게 보이는 선택지. 내부값은 필요 시 보조 표시                  | `question_variants.answers` + `questions.answer_values`                           |
+| 노출 조건        | `screen/ui_section/category/visibility condition` 조합                | `question_variants.screen/ui_section/category` + `question_visibility_conditions` |
+| 상태             | `active` / `inactive`. variant 단위 표시, dialog 저장은 question 단위 | `question_variants.is_active`                                                     |
+| 메모             | 문구 수정 의도, 룰 연결, 제품 선택 기준 근거                          | MVP 저장 방식 미정. 후속 `admin_note` 또는 `admin_notes` 검토                     |
+| screen           | variant가 노출되는 화면                                               | `question_variants.screen`                                                        |
+| ui_section       | variant가 노출되는 화면 섹션                                          | `question_variants.ui_section`                                                    |
+| category         | 카테고리별 노출 제한. 값이 없으면 전체                                | `question_variants.category`                                                      |
 
 #### Dialog 동작
 
 - row 클릭 시 `GET /admin/questions/:questionId`로 canonical question과 모든 active/inactive variant를 조회한다.
 - dialog에서 canonical question의 `key`, `answer_type`, `answer_values`, 상태를 수정할 수 있다.
 - dialog에서 `question_variants`를 여러 개 추가, 수정, 삭제할 수 있다.
-- variant별로 `title`, `answers`, `screen`, `ui_section`, `sort_order`, 상태, 노출 조건을 수정한다.
+- variant별로 `title`, `answers`, `screen`, `ui_section`, `category`, `sort_order`, 상태, 노출 조건을 수정한다.
 - 저장은 question 단위 `PUT /admin/questions/:questionId`로 canonical question과 variants 전체 배열을 함께 보낸다.
 - 새 질문 생성 버튼은 `POST /admin/questions`로 canonical question과 초기 variants를 함께 만든다.
 
@@ -776,13 +776,13 @@ question | question_variant | answer_type | user_options | 노출 조건 | 상�
 
 #### 행 예시
 
-| question                       | question_variant                                | answer_type   | user_options                               | 노출 조건                                                               | 상태   | 메모                                  | screen        | ui_section   | category                                       |
-| ------------------------------ | ----------------------------------------------- | ------------- | ------------------------------------------ | ----------------------------------------------------------------------- | ------ | ------------------------------------- | ------------- | ------------ | ---------------------------------------------- |
-| `life.recent_irritation`       | 최근 따가움, 붉어짐, 가려움 같은 문제가 있나요? | SINGLE_CHOICE | 예 / 아니오                                | `screen EQ priority_gate AND ui_section EQ life_routine`                | active | 최상위 HOLD 룰과 연결                 | priority_gate | life_routine | 전체                                           |
-| `routine.sunscreen_frequency`  | 외출할 때 선크림을 바르나요?                    | SINGLE_CHOICE | `daily` / `sometimes` / `rarely` / `never` | `screen EQ priority_gate` 또는 `category.selected EQ serum`             | active | 선크림 우선 룰, 세럼 사용 주의와 연결 | priority_gate | life_routine | serum                                          |
-| `context.skin_type`            | 피부 타입에 가장 가까운 것은 무엇인가요?        | SINGLE_CHOICE | dry / oily / combination / sensitive 등    | `category.selected IN [toner, sunscreen, serum, moisturizer, cleanser]` | active | 립케어에는 노출하지 않음              | context       | basic        | toner, sunscreen, serum, moisturizer, cleanser |
-| `context.eye_sting`            | 선크림을 바르면 눈이 시린 편인가요?             | SINGLE_CHOICE | 예 / 아니오                                | `category.selected EQ sunscreen`                                        | active | 선크림 눈시림 낮음 필터와 연결        | context       | category     | sunscreen                                      |
-| `preference.menthol_sensitive` | 화한 립밤을 쓰면 불편한가요?                    | SINGLE_CHOICE | 예 / 아니오                                | `category.selected EQ lipcare`                                          | active | 립케어 멘톨 회피 기준                 | context       | category     | lipcare                                        |
+| question                       | question_variant                                | answer_type   | user_options                               | 노출 조건                                                                | 상태   | 메모                                  | screen        | ui_section   | category  |
+| ------------------------------ | ----------------------------------------------- | ------------- | ------------------------------------------ | ------------------------------------------------------------------------ | ------ | ------------------------------------- | ------------- | ------------ | --------- |
+| `life.recent_irritation`       | 최근 따가움, 붉어짐, 가려움 같은 문제가 있나요? | SINGLE_CHOICE | 예 / 아니오                                | `screen EQ priority_gate AND ui_section EQ life_routine`                 | active | 최상위 HOLD 룰과 연결                 | priority_gate | life_routine | 전체      |
+| `routine.sunscreen_frequency`  | 외출할 때 선크림을 바르나요?                    | SINGLE_CHOICE | `daily` / `sometimes` / `rarely` / `never` | `screen EQ priority_gate AND ui_section EQ life_routine`                 | active | 선크림 우선 룰, 세럼 사용 주의와 연결 | priority_gate | life_routine | 전체      |
+| `context.skin_type`            | 피부 타입에 가장 가까운 것은 무엇인가요?        | SINGLE_CHOICE | dry / oily / combination / sensitive 등    | `screen EQ context AND ui_section EQ basic AND category EQ all`          | active | 공통 피부 타입 질문                   | context       | basic        | 전체      |
+| `context.eye_sting`            | 선크림을 바르면 눈이 시린 편인가요?             | SINGLE_CHOICE | 예 / 아니오                                | `screen EQ context AND ui_section EQ category AND category EQ sunscreen` | active | 선크림 눈시림 낮음 필터와 연결        | context       | category     | sunscreen |
+| `preference.menthol_sensitive` | 화한 립밤을 쓰면 불편한가요?                    | SINGLE_CHOICE | 예 / 아니오                                | `screen EQ context AND ui_section EQ category AND category EQ lipcare`   | active | 립케어 멘톨 회피 기준                 | context       | category     | lipcare   |
 
 #### API 초안
 

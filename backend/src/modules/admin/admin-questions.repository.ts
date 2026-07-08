@@ -4,6 +4,7 @@ import type {
   AdminQuestionScreen,
   AdminQuestionStatus,
   AdminQuestionUiSection,
+  AdminQuestionCategory,
 } from '@skincare-decision/shared/schemas';
 import {
   type ComparisonOperator,
@@ -22,6 +23,7 @@ const ADMIN_QUESTION_SELECT = {
   answers: true,
   screen: true,
   uiSection: true,
+  category: true,
   sortOrder: true,
   isActive: true,
   question: {
@@ -57,6 +59,7 @@ const ADMIN_QUESTION_DETAIL_SELECT = {
       answers: true,
       screen: true,
       uiSection: true,
+      category: true,
       sortOrder: true,
       isActive: true,
       visibilityConditions: {
@@ -75,6 +78,7 @@ const ADMIN_QUESTION_DETAIL_SELECT = {
 export type FindAdminQuestionsInput = {
   screen?: AdminQuestionScreen;
   uiSection?: AdminQuestionUiSection;
+  category?: AdminQuestionCategory;
   status?: AdminQuestionStatus;
 };
 
@@ -91,6 +95,7 @@ export type AdminQuestionRecord = {
   answers: string[];
   screen: Screen;
   uiSection: UiSection;
+  category: string | null;
   sortOrder: number;
   isActive: boolean;
   question: {
@@ -107,6 +112,7 @@ export type AdminQuestionVariantRecord = {
   answers: string[];
   screen: Screen;
   uiSection: UiSection;
+  category: string | null;
   sortOrder: number;
   isActive: boolean;
   visibilityConditions: AdminQuestionVisibilityConditionRecord[];
@@ -133,6 +139,7 @@ export type SaveAdminQuestionVariantInput = {
   answers: string[];
   screen: Screen;
   uiSection: UiSection;
+  category: AdminQuestionCategory | null;
   sortOrder: number;
   isActive: boolean;
   visibilityConditions: SaveAdminQuestionVisibilityConditionInput[];
@@ -166,6 +173,11 @@ export class AdminQuestionsRepository {
         },
         ...(input.screen ? { screen: input.screen } : {}),
         ...(input.uiSection ? { uiSection: input.uiSection } : {}),
+        ...(input.category
+          ? {
+              OR: [{ category: null }, { category: input.category }],
+            }
+          : {}),
         ...(input.status ? { isActive: input.status === 'active' } : {}),
       },
       select: ADMIN_QUESTION_SELECT,
@@ -367,6 +379,7 @@ export class AdminQuestionsRepository {
           answers: variant.answers,
           screen: variant.screen,
           uiSection: variant.uiSection,
+          category: variant.category,
           sortOrder: variant.sortOrder,
           isActive: variant.isActive,
         },
@@ -396,6 +409,7 @@ export class AdminQuestionsRepository {
             answers: variant.answers,
             screen: variant.screen,
             uiSection: variant.uiSection,
+            category: variant.category,
             sortOrder: variant.sortOrder,
             isActive: variant.isActive,
           },
@@ -412,6 +426,7 @@ export class AdminQuestionsRepository {
             answers: variant.answers,
             screen: variant.screen,
             uiSection: variant.uiSection,
+            category: variant.category,
             sortOrder: variant.sortOrder,
             isActive: variant.isActive,
           },

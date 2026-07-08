@@ -79,6 +79,7 @@ export const adminQuestionVariantMutationSchema = z
     answers: z.array(z.string().trim().min(1)).min(1),
     screen: adminQuestionScreenSchema,
     uiSection: adminQuestionUiSectionSchema,
+    category: adminQuestionCategorySchema.nullable().default(null),
     sort_order: z.number().int().nonnegative().default(0),
     status: adminQuestionStatusSchema,
     visibilityConditions: z.array(adminQuestionVisibilityConditionInputSchema).default([]),
@@ -117,7 +118,7 @@ export const adminQuestionTableRowSchema = z
     visibilityConditionText: z.string().min(1),
     screen: adminQuestionScreenSchema,
     uiSection: adminQuestionUiSectionSchema,
-    category: z.array(adminQuestionCategorySchema),
+    category: adminQuestionCategorySchema.nullable(),
     status: adminQuestionStatusSchema,
     memo: z.string().nullable(),
   })
@@ -150,7 +151,7 @@ export const adminQuestionVariantDetailSchema = z
     status: adminQuestionStatusSchema,
     visibilityConditionText: z.string().min(1),
     visibilityConditions: z.array(adminQuestionVisibilityConditionInputSchema),
-    category: z.array(adminQuestionCategorySchema),
+    category: adminQuestionCategorySchema.nullable(),
   })
   .strict();
 

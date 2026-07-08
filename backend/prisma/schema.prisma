@@ -246,6 +246,7 @@ model QuestionVariant {
   answerCount          Int                           @map("answer_count") @ignore
   screen               Screen
   uiSection            UiSection                     @map("ui_section")
+  category             String?                       @db.VarChar(50)
   sortOrder            Int                           @default(0) @map("sort_order")
   isActive             Boolean                       @default(true) @map("is_active")
   createdAt            DateTime                      @default(now()) @map("created_at") @db.Timestamptz()
@@ -256,6 +257,7 @@ model QuestionVariant {
 
   // answer_count generated column and question_id/answer_count composite FK require raw SQL migration.
   @@index([questionId], map: "idx_question_variants_question_id")
+  @@index([screen, uiSection, category, sortOrder], map: "idx_question_variants_screen_ui_section_category_sort_order")
   @@index([screen, uiSection, sortOrder], map: "idx_question_variants_screen_ui_section_sort_order")
   @@map("question_variants")
 }

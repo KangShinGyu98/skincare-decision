@@ -49,6 +49,7 @@ describe('AdminQuestionsService', () => {
   it('findQuestions는 question variant record를 Question Check table row로 변환한다', async () => {
     repositoryMock.findQuestions.mockResolvedValue([
       createQuestionRecord({
+        category: 'sunscreen',
         visibilityConditions: [
           {
             operator: ComparisonOperator.EQ,
@@ -69,6 +70,7 @@ describe('AdminQuestionsService', () => {
     expect(repositoryMock.findQuestions).toHaveBeenCalledWith({
       screen: 'context',
       uiSection: 'category',
+      category: 'sunscreen',
       status: 'active',
     });
     expect(result.items).toEqual([
@@ -88,50 +90,30 @@ describe('AdminQuestionsService', () => {
           { label: '클렌저', value: 6 },
         ],
         visibilityConditionText:
-          'screen EQ context AND ui_section EQ category AND visibility_condition EQ 2',
+          'screen EQ context AND ui_section EQ category AND category EQ sunscreen AND visibility_condition EQ 2',
         screen: 'context',
         uiSection: 'category',
-        category: ['sunscreen'],
+        category: 'sunscreen',
         status: 'active',
         memo: null,
       },
     ]);
   });
 
-  it('findQuestions는 category 필터에서 공통 질문과 해당 category 조건 질문만 남긴다', async () => {
+  it('findQuestions는 category 필터를 repository로 전달한다', async () => {
     repositoryMock.findQuestions.mockResolvedValue([
       createQuestionRecord({
         id: '01935b8f-0000-7000-8000-000000000201',
-        visibilityConditions: [],
-      }),
-      createQuestionRecord({
-        id: '01935b8f-0000-7000-8000-000000000202',
-        visibilityConditions: [
-          {
-            operator: ComparisonOperator.EQ,
-            value: 2,
-            state: ConditionState.REQUIRED,
-          },
-        ],
-      }),
-      createQuestionRecord({
-        id: '01935b8f-0000-7000-8000-000000000203',
-        visibilityConditions: [
-          {
-            operator: ComparisonOperator.EQ,
-            value: 4,
-            state: ConditionState.REQUIRED,
-          },
-        ],
+        category: null,
       }),
     ]);
 
     const result = await service.findQuestions({ category: 'sunscreen' });
 
-    expect(result.items.map((item) => item.questionVariantId)).toEqual([
-      '01935b8f-0000-7000-8000-000000000201',
-      '01935b8f-0000-7000-8000-000000000202',
-    ]);
+    expect(repositoryMock.findQuestions).toHaveBeenCalledWith({
+      category: 'sunscreen',
+    });
+    expect(result.items[0]?.category).toBeNull();
   });
 
   it('findQuestion은 questionId 기준 detail과 variants를 반환한다', async () => {
@@ -155,7 +137,7 @@ describe('AdminQuestionsService', () => {
         id: '01935b8f-0000-7000-8000-000000000201',
         title: '추천받을 제품군을 선택해 주세요.',
         sort_order: 10,
-        category: ['sunscreen'],
+        category: 'sunscreen',
       }),
     );
   });
@@ -232,6 +214,7 @@ function createQuestionRecord(overrides: Partial<AdminQuestionRecord> = {}): Adm
     answers: ['토너', '선크림', '세럼', '립케어', '로션/크림', '클렌저'],
     screen: Screen.context,
     uiSection: UiSection.category,
+    category: null,
     sortOrder: 10,
     isActive: true,
     question: {
@@ -260,6 +243,7 @@ function createQuestionDetailRecord(
         answers: ['토너', '선크림', '세럼', '립케어', '로션/크림', '클렌저'],
         screen: Screen.context,
         uiSection: UiSection.category,
+        category: 'sunscreen',
         sortOrder: 10,
         isActive: true,
         visibilityConditions: [
@@ -288,6 +272,7 @@ function createQuestionMutationBody() {
         answers: ['토너', '선크림', '세럼', '립케어', '로션/크림', '클렌저'],
         screen: 'context' as const,
         uiSection: 'category' as const,
+        category: 'sunscreen' as const,
         sort_order: 10,
         status: 'active' as const,
         visibilityConditions: [

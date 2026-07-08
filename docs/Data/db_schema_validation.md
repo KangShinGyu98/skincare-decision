@@ -252,6 +252,7 @@ UNIQUE (id, answer_count);
 | `answer_count` | `Int`                                        | `INTEGER GENERATED ALWAYS AS (cardinality(answers)) STORED` | NOT NULL                                        | 답변 라벨 개수. 복합 FK용 생성 컬럼                             | `3`                                     |
 | `screen`       | `question_variants_screen_enum`              | `question_variants_screen_enum`                             | NOT NULL                                        | 노출 화면 (priority_gate / context)                             | `priority_gate`                         |
 | `ui_section`   | `question_variants_ui_section_enum`          | `question_variants_ui_section_enum`                         | NOT NULL                                        | 화면 내 박스 (life_routine / owned_products / basic / category) | `life_routine`                          |
+| `category`     | `String? @db.VarChar(50)`                    | `VARCHAR(50)`                                               | NULLABLE                                        | Category Decision 카테고리별 노출 제한. NULL이면 전체 공통      | `sunscreen`                             |
 | `sort_order`   | `Int @default(0)`                            | `INTEGER`                                                   | NOT NULL, DEFAULT `0`                           | 노출 순서                                                       | `10`                                    |
 | `is_active`    | `Boolean @default(true)`                     | `BOOLEAN`                                                   | NOT NULL, DEFAULT `true`                        | 노출 여부                                                       | `true`                                  |
 | `created_at`   | `DateTime @default(now()) @db.Timestamptz()` | `TIMESTAMPTZ`                                               | NOT NULL, DEFAULT `CURRENT_TIMESTAMP`           | 생성                                                            | 타임스탬프                              |
@@ -261,10 +262,11 @@ UNIQUE (id, answer_count);
 
 - `pk_question_variants` (PK)
 - `idx_question_variants_question_id`
+- `idx_question_variants_screen_ui_section_category_sort_order`
 - `idx_question_variants_screen_ui_section_sort_order`
 - `fk_question_variants_question_answer_count` (FK on `question_id, answer_count` → `questions.id, answer_count`)
 
-**설명**: 사용자에게 실제로 노출되는 질문 정의. 같은 `question_id`를 여러 화면 질문이 공유할 수 있고, 화면별 `answers` 라벨은 달라도 index별 내부 `value`는 `questions.answer_values`가 결정한다.
+**설명**: 사용자에게 실제로 노출되는 질문 정의. 같은 `question_id`를 여러 화면 질문이 공유할 수 있고, 화면별 `answers` 라벨은 달라도 index별 내부 `value`는 `questions.answer_values`가 결정한다. `category`가 NULL이면 전체 카테고리 공통 질문이고, 값이 있으면 `/category-decision?category=<key>`의 선택 카테고리와 일치할 때만 노출한다.
 
 ```sql
 ALTER TABLE question_variants
@@ -296,7 +298,7 @@ REFERENCES questions (id, answer_count);
 - `pk_question_visibility_conditions` (PK)
 - `idx_question_visibility_conditions_question_variant_id`
 
-**설명**: 질문 노출 조건. canonical question 이 아닌 화면 variant 단위로 노출 여부가 결정되므로 FK 는 `question_variants.id` 만 둔다. 어떤 user_response 와 비교할지는 service 평가기가 결정한다 — DB 는 대상 variant + operator + value + state 만 보관한다.
+**설명**: 질문 노출 조건 확장 테이블. 현재 카테고리별 노출은 `question_variants.category`로 직접 처리한다. 이 테이블은 이후 특정 user response 값에 따른 질문 숨김/노출이 필요할 때 variant 단위 조건 저장소로 사용한다.
 
 ---
 

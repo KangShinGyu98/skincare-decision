@@ -81,6 +81,7 @@ Table question_variants {
   answers String[] [not null]
   screen Screen [not null]
   uiSection UiSection [not null]
+  category String
   sortOrder Int [not null, default: 0]
   isActive Boolean [not null, default: true]
   createdAt DateTime [default: `now()`, not null]

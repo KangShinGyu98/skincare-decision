@@ -8,6 +8,7 @@ export type CategoryDecisionQuestionRecord = {
   title: string;
   answers: string[];
   uiSection: UiSection;
+  category: string | null;
   sortOrder: number;
   question: {
     key: string;
@@ -57,6 +58,7 @@ export class CategoryDecisionRepository {
         title: true,
         answers: true,
         uiSection: true,
+        category: true,
         sortOrder: true,
         question: {
           select: {

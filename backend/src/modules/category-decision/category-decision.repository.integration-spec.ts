@@ -165,6 +165,7 @@ describe('CategoryDecisionRepository', () => {
       key: 'sunscreen',
       name: 'Sunscreen',
       description: null,
+      sortOrder: 0,
     });
     await expect(repository.findQuestionByKey('category.selected')).resolves.toEqual({
       id: '018f0000-0000-7000-8000-000000000201',
@@ -176,6 +177,7 @@ describe('CategoryDecisionRepository', () => {
     title: string;
     screen: Screen;
     uiSection: UiSection;
+    category?: string | null;
     sortOrder: number;
     answerType?: QuestionAnswerType;
     answerValues?: number[];
@@ -200,6 +202,7 @@ describe('CategoryDecisionRepository', () => {
         answers: input.answers ?? ['No', 'Yes'],
         screen: input.screen,
         uiSection: input.uiSection,
+        category: input.category ?? null,
         sortOrder: input.sortOrder,
       },
     });

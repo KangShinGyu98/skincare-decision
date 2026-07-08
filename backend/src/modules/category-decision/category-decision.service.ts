@@ -87,12 +87,17 @@ export class CategoryDecisionService {
       this.setSelectedCategoryResponse(questions, responseMap, selectedCategoryFromQuery);
     }
 
-    const questionsWithResponses = this.combineQuestionsWithResponses(questions, responseMap);
+    const visibleQuestions = this.filterQuestionsByCategory(questions, selectedCategory?.key);
+    const visibleQuestionIds = visibleQuestions.map((question) => question.questionId);
+    const questionsWithResponses = this.combineQuestionsWithResponses(
+      visibleQuestions,
+      responseMap,
+    );
     const sections = this.groupQuestionsBySections(questionsWithResponses);
     const previewResults = this.createPreviewResults({
       selectedCategory,
-      answeredQuestionCount: this.countAnsweredQuestions(questionIds, responseMap),
-      totalQuestionCount: questionIds.length,
+      answeredQuestionCount: this.countAnsweredQuestions(visibleQuestionIds, responseMap),
+      totalQuestionCount: visibleQuestionIds.length,
     });
 
     return categoryDecisionResponseSchema.parse({
@@ -265,11 +270,26 @@ export class CategoryDecisionService {
     const responseMap = this.toResponseMap(responseRecords);
 
     const selectedCategory = await this.findSelectedCategory(questions, responseMap);
+    const visibleQuestions = this.filterQuestionsByCategory(questions, selectedCategory?.key);
+    const visibleQuestionIds = visibleQuestions.map((question) => question.questionId);
 
     return this.createPreviewResults({
       selectedCategory,
-      answeredQuestionCount: this.countAnsweredQuestions(questionIds, responseMap),
-      totalQuestionCount: questionIds.length,
+      answeredQuestionCount: this.countAnsweredQuestions(visibleQuestionIds, responseMap),
+      totalQuestionCount: visibleQuestionIds.length,
+    });
+  }
+
+  private filterQuestionsByCategory(
+    questions: CategoryDecisionQuestionRecord[],
+    categoryKey: string | undefined,
+  ): CategoryDecisionQuestionRecord[] {
+    return questions.filter((question) => {
+      if (!question.category) {
+        return true;
+      }
+
+      return question.category === categoryKey;
     });
   }
 

@@ -49,6 +49,7 @@ export interface QuestionVariantSeed {
   answers: readonly string[];
   screen: SeedQuestionVariantScreen;
   uiSection: SeedQuestionVariantUiSection;
+  category?: SeedCategoryKey | null;
   sortOrder: number;
 }
 

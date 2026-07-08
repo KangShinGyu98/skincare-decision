@@ -5,6 +5,7 @@ import {
   type AdminQuestionCategory,
   type AdminQuestionDetail,
   type AdminQuestionVariantDetail,
+  adminQuestionCategorySchema,
   type CreateAdminQuestionBody,
   type CreateAdminQuestionResponse,
   createAdminQuestionResponseSchema,
@@ -30,22 +31,6 @@ import {
   type SaveAdminQuestionInput,
 } from './admin-questions.repository';
 
-const CATEGORY_SELECTED_VALUES = {
-  toner: 1,
-  sunscreen: 2,
-  serum: 3,
-  lipcare: 4,
-  moisturizer: 5,
-  cleanser: 6,
-} as const satisfies Record<AdminQuestionCategory, number>;
-
-const CATEGORY_BY_SELECTED_VALUE = new Map<number, AdminQuestionCategory>(
-  Object.entries(CATEGORY_SELECTED_VALUES).map(([category, value]) => [
-    value,
-    category as AdminQuestionCategory,
-  ]),
-);
-
 @Injectable()
 export class AdminQuestionsService {
   constructor(private readonly repository: AdminQuestionsRepository) {}
@@ -61,17 +46,18 @@ export class AdminQuestionsService {
       filters.uiSection = query.uiSection;
     }
 
+    if (query.category) {
+      filters.category = query.category;
+    }
+
     if (query.status) {
       filters.status = query.status;
     }
 
     const records = await this.repository.findQuestions(filters);
-    const filteredRecords = query.category
-      ? records.filter((record) => this.matchesCategoryFilter(record, query.category!))
-      : records;
 
     return adminQuestionsResponseSchema.parse({
-      items: filteredRecords.map((record) => this.toTableRow(record)),
+      items: records.map((record) => this.toTableRow(record)),
     });
   }
 
@@ -167,7 +153,7 @@ export class AdminQuestionsService {
       visibilityConditionText: this.formatVisibilityConditions(record),
       screen: record.screen,
       uiSection: record.uiSection,
-      category: this.toCategories(record.visibilityConditions),
+      category: this.toCategory(record.category),
       status: record.isActive ? 'active' : 'inactive',
       memo: null,
     };
@@ -196,7 +182,7 @@ export class AdminQuestionsService {
       status: variant.isActive ? 'active' : 'inactive',
       visibilityConditionText: this.formatVisibilityConditions(variant),
       visibilityConditions: variant.visibilityConditions,
-      category: this.toCategories(variant.visibilityConditions),
+      category: this.toCategory(variant.category),
     };
   }
 
@@ -226,10 +212,14 @@ export class AdminQuestionsService {
   private formatVisibilityConditions(
     record: Pick<
       AdminQuestionRecord | AdminQuestionVariantRecord,
-      'screen' | 'uiSection' | 'visibilityConditions'
+      'screen' | 'uiSection' | 'category' | 'visibilityConditions'
     >,
   ): string {
-    const baseConditions = [`screen EQ ${record.screen}`, `ui_section EQ ${record.uiSection}`];
+    const baseConditions = [
+      `screen EQ ${record.screen}`,
+      `ui_section EQ ${record.uiSection}`,
+      `category EQ ${record.category ?? 'all'}`,
+    ];
 
     if (record.visibilityConditions.length === 0) {
       return baseConditions.join(' AND ');
@@ -261,20 +251,8 @@ export class AdminQuestionsService {
     return String(condition.value);
   }
 
-  private toCategories(
-    visibilityConditions: AdminQuestionVisibilityConditionRecord[],
-  ): AdminQuestionCategory[] {
-    const categories = new Set<AdminQuestionCategory>();
-
-    for (const condition of visibilityConditions) {
-      const category = CATEGORY_BY_SELECTED_VALUE.get(condition.value);
-
-      if (category) {
-        categories.add(category);
-      }
-    }
-
-    return [...categories];
+  private toCategory(category: string | null): AdminQuestionCategory | null {
+    return adminQuestionCategorySchema.nullable().parse(category);
   }
 
   private toSaveQuestionInput(
@@ -301,64 +279,11 @@ export class AdminQuestionsService {
         answers: variant.answers,
         screen: variant.screen,
         uiSection: variant.uiSection,
+        category: variant.category,
         sortOrder: variant.sort_order,
         isActive: variant.status === 'active',
         visibilityConditions: variant.visibilityConditions,
       })),
     };
-  }
-
-  private matchesCategoryFilter(
-    record: AdminQuestionRecord,
-    category: AdminQuestionCategory,
-  ): boolean {
-    if (record.visibilityConditions.length === 0) {
-      return true;
-    }
-
-    const categoryValue = CATEGORY_SELECTED_VALUES[category];
-    const excludedConditions = record.visibilityConditions.filter(
-      (condition) => condition.state === ConditionState.EXCLUDED,
-    );
-
-    if (
-      excludedConditions.some((condition) =>
-        this.matchesCategoryCondition(condition, categoryValue),
-      )
-    ) {
-      return false;
-    }
-
-    const requiredConditions = record.visibilityConditions.filter(
-      (condition) => condition.state === ConditionState.REQUIRED,
-    );
-
-    if (requiredConditions.length === 0) {
-      return true;
-    }
-
-    return requiredConditions.some((condition) =>
-      this.matchesCategoryCondition(condition, categoryValue),
-    );
-  }
-
-  private matchesCategoryCondition(
-    condition: AdminQuestionVisibilityConditionRecord,
-    categoryValue: number,
-  ): boolean {
-    switch (condition.operator) {
-      case 'EQ':
-      case 'IN':
-      case 'CONTAINS':
-        return condition.value === categoryValue;
-      case 'NEQ':
-        return condition.value !== categoryValue;
-      case 'GTE':
-        return categoryValue >= condition.value;
-      case 'LTE':
-        return categoryValue <= condition.value;
-      default:
-        return false;
-    }
   }
 }

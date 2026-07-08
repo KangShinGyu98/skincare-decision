@@ -132,15 +132,15 @@ S08 Reaction Traceback
 
 ### 2.1 읽기 데이터 (Read)
 
-| 데이터              | 소스 테이블                                                                                         | 용도                                                |
-| ------------------- | --------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
-| 노출 후보 질문 목록 | `question_variants WHERE screen='priority_gate' AND is_active=true ORDER BY ui_section, sort_order` | 화면 박스에 그릴 질문 카드                          |
-| 질문 노출 조건      | `question_visibility_conditions WHERE question_id IN (...)`                                         | REQUIRED/EXCLUDED로 조건부 숨김 평가                |
-| 기준 질문 정의      | `questions` (위 variant의 `question_id`)                                                            | `answer_type`, `answer_values`, `answer_count` 조회 |
-| 화면 답변 라벨      | `question_variants.answers`                                                                         | 사용자에게 보여줄 라벨. 내부값은 index로 매칭       |
-| 기존 답변 복원      | `user_responses WHERE question_id IN (...)` 현재 row                                                | canonical question 기준으로 재진입 선택값 복원      |
-| Priority Rule 목록  | `priority_rules WHERE is_active=true ORDER BY sort_order ASC`                                       | 평가 후보                                           |
-| Rule 조건           | `priority_rule_conditions WHERE rule_id IN (...)`                                                   | 각 Rule의 REQUIRED/EXCLUDED 조건                    |
+| 데이터              | 소스 테이블                                                                                         | 용도                                                         |
+| ------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| 노출 후보 질문 목록 | `question_variants WHERE screen='priority_gate' AND is_active=true ORDER BY ui_section, sort_order` | 화면 박스에 그릴 질문 카드                                   |
+| 질문 노출 조건      | 후속 확장                                                                                           | 현재 Priority Gate에서는 답변 기반 질문 숨김을 평가하지 않음 |
+| 기준 질문 정의      | `questions` (위 variant의 `question_id`)                                                            | `answer_type`, `answer_values`, `answer_count` 조회          |
+| 화면 답변 라벨      | `question_variants.answers`                                                                         | 사용자에게 보여줄 라벨. 내부값은 index로 매칭                |
+| 기존 답변 복원      | `user_responses WHERE question_id IN (...)` 현재 row                                                | canonical question 기준으로 재진입 선택값 복원               |
+| Priority Rule 목록  | `priority_rules WHERE is_active=true ORDER BY sort_order ASC`                                       | 평가 후보                                                    |
+| Rule 조건           | `priority_rule_conditions WHERE rule_id IN (...)`                                                   | 각 Rule의 REQUIRED/EXCLUDED 조건                             |
 
 ### 2.2 쓰기 데이터 (Write)
 
@@ -185,19 +185,19 @@ S08 Reaction Traceback
 
 ### 3.1 읽기 데이터 (Read)
 
-| 데이터                   | 소스 테이블                                                                                        | 용도                                                        |
-| ------------------------ | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| 선택 카테고리 메타       | `product_categories WHERE id=?`                                                                    | 카테고리명, key 노출                                        |
-| context 질문 목록        | `question_variants WHERE screen='context' AND is_active=true ORDER BY ui_section, sort_order`      | Box 1 (공통) + Box 2 (카테고리별) 질문                      |
-| 질문 노출 조건           | `question_visibility_conditions WHERE question_id IN (...)`                                        | 카테고리 의존 / 다른 기준 질문 의존 노출 평가               |
-| 기준 질문 정의           | `questions`                                                                                        | `answer_type`, `answer_values`, `answer_count` 조회         |
-| 화면 답변 라벨           | `question_variants.answers`                                                                        | 같은 기준 질문이라도 화면별 문구를 다르게 노출              |
-| 현재 답변 복원           | `user_responses WHERE question_id IN (...)` 현재 row                                               | Priority Gate에서 답한 기준 질문 재사용 + 재진입 복원       |
-| 카테고리 attribute 정의  | `category_attribute_definitions WHERE category_id=?`                                               | Box 3 결과 카드 라벨 + attribute validation                 |
-| Filter 정의              | `product_matrix_filter_definitions` + `product_filter_definitions` + `question_filter_mappings`    | UI 카탈로그 + attribute/computed 조건 + 사용자 답변 trigger |
-| Box 3 미리보기 제품      | `products WHERE category_id=? AND is_active=true AND <attribute 조건> ORDER BY sort_order LIMIT N` | 동적 SQL로 상위 N개 후보                                    |
-| 회피 규칙                | `avoidance_rules WHERE device_id=?/user_id=? AND is_active=true`                                   | 미리보기에 AVOID 제외 / CAUTION 태그 적용                   |
-| Concern preset (있을 시) | `user_responses WHERE source='concern'` + 프론트 상수의 `suggested_filters`                        | 카테고리가 `suggested_category`와 일치하면 힌트 필터로 합성 |
+| 데이터                   | 소스 테이블                                                                                                                                         | 용도                                                           |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| 선택 카테고리 메타       | `product_categories WHERE id=?`                                                                                                                     | 카테고리명, key 노출                                           |
+| context 질문 목록        | `question_variants WHERE screen='context' AND is_active=true AND (category IS NULL OR category=:selected_category) ORDER BY ui_section, sort_order` | Box 1 (공통) + Box 2 (카테고리별) 질문                         |
+| 질문 노출 조건           | `question_variants.category`                                                                                                                        | NULL은 전체 공통, 값이 있으면 선택 카테고리와 일치할 때만 노출 |
+| 기준 질문 정의           | `questions`                                                                                                                                         | `answer_type`, `answer_values`, `answer_count` 조회            |
+| 화면 답변 라벨           | `question_variants.answers`                                                                                                                         | 같은 기준 질문이라도 화면별 문구를 다르게 노출                 |
+| 현재 답변 복원           | `user_responses WHERE question_id IN (...)` 현재 row                                                                                                | Priority Gate에서 답한 기준 질문 재사용 + 재진입 복원          |
+| 카테고리 attribute 정의  | `category_attribute_definitions WHERE category_id=?`                                                                                                | Box 3 결과 카드 라벨 + attribute validation                    |
+| Filter 정의              | `product_matrix_filter_definitions` + `product_filter_definitions` + `question_filter_mappings`                                                     | UI 카탈로그 + attribute/computed 조건 + 사용자 답변 trigger    |
+| Box 3 미리보기 제품      | `products WHERE category_id=? AND is_active=true AND <attribute 조건> ORDER BY sort_order LIMIT N`                                                  | 동적 SQL로 상위 N개 후보                                       |
+| 회피 규칙                | `avoidance_rules WHERE device_id=?/user_id=? AND is_active=true`                                                                                    | 미리보기에 AVOID 제외 / CAUTION 태그 적용                      |
+| Concern preset (있을 시) | `user_responses WHERE source='concern'` + 프론트 상수의 `suggested_filters`                                                                         | 카테고리가 `suggested_category`와 일치하면 힌트 필터로 합성    |
 
 ### 3.2 쓰기 데이터 (Write)
 
@@ -431,13 +431,13 @@ category.selected EQ sunscreen AND context.eye_sting EQ true
 
 #### 7.2.1 읽기 데이터 (Read)
 
-| 데이터            | 소스 테이블 / 출처                                                  | 용도                                                     |
-| ----------------- | ------------------------------------------------------------------- | -------------------------------------------------------- |
-| 화면 질문 목록    | `question_variants ORDER BY screen, ui_section, sort_order`         | 질문 문구, 화면, 섹션, 활성 상태 표시                    |
-| 기준 질문 정의    | `questions` (`question_variants.question_id`)                       | `question` key, `answer_type`, 내부 `answer_values` 표시 |
-| 질문 노출 조건    | `question_visibility_conditions WHERE question_variant_id IN (...)` | 노출 조건을 `fact_key OP value` 형식으로 표시            |
-| 카테고리 메타     | `product_categories`                                                | `category.selected` 조건을 카테고리 key/label로 해석     |
-| 룰/질문 근거 문서 | `docs/ContentSpec/skincare_product_selection_rule.md`               | 질문 메모 작성 시 제품군별 선택 기준/성분 근거 확인      |
+| 데이터            | 소스 테이블 / 출처                                                                | 용도                                                     |
+| ----------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| 화면 질문 목록    | `question_variants ORDER BY screen, ui_section, sort_order`                       | 질문 문구, 화면, 섹션, 활성 상태 표시                    |
+| 기준 질문 정의    | `questions` (`question_variants.question_id`)                                     | `question` key, `answer_type`, 내부 `answer_values` 표시 |
+| 질문 노출 조건    | `question_variants.screen/ui_section/category` + `question_visibility_conditions` | 현재 카테고리 노출은 `question_variants.category`로 표시 |
+| 카테고리 메타     | `product_categories`                                                              | `category.selected` 조건을 카테고리 key/label로 해석     |
+| 룰/질문 근거 문서 | `docs/ContentSpec/skincare_product_selection_rule.md`                             | 질문 메모 작성 시 제품군별 선택 기준/성분 근거 확인      |
 
 #### 7.2.2 쓰기 데이터 (Write)
 
@@ -451,13 +451,13 @@ category.selected EQ sunscreen AND context.eye_sting EQ true
 
 #### 7.2.3 계산 데이터 (Computed)
 
-| 계산 항목         | 입력                                                        | 로직                                                                                                 |
-| ----------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| ui_section 필터   | `question_variants.ui_section`                              | life_routine / owned_products / basic / category 단위 select 필터                                    |
-| category 필터     | `question_visibility_conditions` + `category.selected` 조건 | category 조건이 있는 variant만 해당 카테고리 필터에 포함. 조건이 없으면 전체 또는 공통으로 표시      |
-| user_options 표시 | `question_variants.answers` + `questions.answer_values`     | 사용자 라벨을 기본 표시하고, 필요 시 내부 value를 보조 표시                                          |
-| 노출 조건 표시    | `screen`, `ui_section`, `question_visibility_conditions`    | `screen EQ context AND ui_section EQ category AND category.selected EQ sunscreen` 같은 문자열로 조립 |
-| 상태 필터         | `question_variants.is_active`                               | 전체 / active / inactive 필터                                                                        |
+| 계산 항목         | 입력                                                                 | 로직                                                                                        |
+| ----------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| ui_section 필터   | `question_variants.ui_section`                                       | life_routine / owned_products / basic / category 단위 select 필터                           |
+| category 필터     | `question_variants.category`                                         | NULL이면 전체/공통, 값이 있으면 해당 카테고리 필터에 포함                                   |
+| user_options 표시 | `question_variants.answers` + `questions.answer_values`              | 사용자 라벨을 기본 표시하고, 필요 시 내부 value를 보조 표시                                 |
+| 노출 조건 표시    | `screen`, `ui_section`, `category`, `question_visibility_conditions` | `screen EQ context AND ui_section EQ category AND category EQ sunscreen` 같은 문자열로 조립 |
+| 상태 필터         | `question_variants.is_active`                                        | 전체 / active / inactive 필터                                                               |
 
 #### 7.2.4 다음 화면으로 전달 (Pass to Next)
 
