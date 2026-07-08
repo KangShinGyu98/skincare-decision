@@ -22,13 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/shadcn/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/shadcn/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from '@/components/shadcn/select';
 import { Skeleton } from '@/components/shadcn/skeleton';
 import { Spinner } from '@/components/shadcn/spinner';
 import { Switch } from '@/components/shadcn/switch';
@@ -439,7 +433,7 @@ export function AdminRuleDetailDialog({ ruleId, open, onOpenChange }: AdminRuleD
             {error instanceof Error ? error.message : '룰 상세를 불러오지 못했습니다.'}
           </p>
         ) : canRenderForm ? (
-          <div className="-mx-4 no-scrollbar max-h-[72vh] overflow-y-auto px-4">
+          <div className="-mx-4 no-scrollbar max-h-[68vh] overflow-y-auto px-4">
             <div className="grid gap-6">
               <section className="grid gap-2">
                 <label htmlFor="admin-rule-name" className={FIELD_LABEL_CLASS_NAME}>
