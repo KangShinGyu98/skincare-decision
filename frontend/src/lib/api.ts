@@ -280,7 +280,7 @@ export const categoryDecisionApi = {
 
 export const adminRulesApi = {
   getRules: async (): Promise<AdminRulesResponse> => {
-    await sleep(1000);
+    await sleep(2000);
     const response = await fetch(getAdminRulesUrl(), {
       method: 'GET',
       credentials: 'include',
@@ -375,7 +375,7 @@ export const adminRulesApi = {
     data: UpdateAdminRuleStatusBody,
   ): Promise<UpdateAdminRuleStatusResponse> => {
     const parsed = updateAdminRuleStatusBodySchema.safeParse(data);
-
+    await sleep(3000);
     if (!parsed.success) {
       throw new ApiValidationError(`Invalid admin rule status request: ${parsed.error.message}`);
     }

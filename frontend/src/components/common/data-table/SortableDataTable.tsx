@@ -26,18 +26,9 @@ import { cn } from '@/lib/utils';
 
 const DRAG_COLUMN_ID = '__drag';
 
-type SortableDataTableRowData = {
-  id: string;
-};
-
-function getDefaultRowId(row: SortableDataTableRowData): string {
-  return row.id;
-}
-
-export type SortableDataTableProps<TData extends SortableDataTableRowData> = {
+export type SortableDataTableProps<TData extends { id: string }> = {
   data: TData[];
   columns: ColumnDef<TData>[];
-  getRowId?: (row: TData) => string;
   onRowsReorder: (rows: TData[]) => void;
   onRowClick?: (row: TData) => void;
   emptyMessage?: string;
@@ -46,10 +37,9 @@ export type SortableDataTableProps<TData extends SortableDataTableRowData> = {
   tableClassName?: string;
 };
 
-export function SortableDataTable<TData extends SortableDataTableRowData>({
+export function SortableDataTable<TData extends { id: string }>({
   data,
   columns,
-  getRowId,
   onRowsReorder,
   onRowClick,
   emptyMessage = '표시할 항목이 없습니다.',
@@ -57,8 +47,7 @@ export function SortableDataTable<TData extends SortableDataTableRowData>({
   className,
   tableClassName,
 }: SortableDataTableProps<TData>) {
-  const resolveRowId: (row: TData) => string = getRowId ?? getDefaultRowId;
-  const rowIds = useMemo(() => data.map((row) => resolveRowId(row)), [data, resolveRowId]);
+  const rowIds = useMemo(() => data.map((row) => row.id), [data]);
   const tableColumns = useMemo<ColumnDef<TData>[]>(
     () => [
       {
@@ -75,7 +64,7 @@ export function SortableDataTable<TData extends SortableDataTableRowData>({
     data,
     columns: tableColumns,
     getCoreRowModel: getCoreRowModel(),
-    getRowId: resolveRowId,
+    getRowId: (row) => row.id,
   });
   const sensors = useSensors(
     useSensor(PointerSensor),

@@ -8,8 +8,8 @@ import type {
   AdminRuleTableRow,
   CategoryDecisionResponse,
   CategoryDecisionResponseValue,
-  CreateAdminRuleBody,
   CategoryDecisionUiSection,
+  CreateAdminRuleBody,
   PriorityGateResponseDto,
   PriorityGateResponseValue,
   QuestionUiSectionDto,
@@ -36,6 +36,12 @@ export const queryKeys = {
     list: ['admin', 'rules', 'list'] as const,
     detail: (ruleId: string) => ['admin', 'rules', 'detail', ruleId] as const,
     questions: (q: string, limit: number) => ['admin', 'rules', 'questions', { q, limit }] as const,
+  },
+};
+
+export const mutationKeys = {
+  adminRules: {
+    status: ['admin', 'rules', 'status'] as const,
   },
 };
 
@@ -443,14 +449,10 @@ function removeAdminRuleRow(
   };
 }
 
-function makeError(): void {
-  throw new Error('대충 에러메시지');
-}
 export function useAdminRules() {
   return useQuery({
     queryKey: queryKeys.adminRules.list,
     queryFn: adminRulesApi.getRules,
-    // queryFn: makeError,
   });
 }
 
@@ -537,13 +539,79 @@ export function useDeleteAdminRule() {
   });
 }
 
+export function useAdminRuleDialogActions({
+  ruleId,
+  onSuccess,
+}: {
+  ruleId: string | null;
+  onSuccess?: () => void;
+}) {
+  const createRule = useCreateAdminRule();
+  const updateRule = useUpdateAdminRule();
+  const deleteRule = useDeleteAdminRule();
+  const isMutatingRef = useRef(false);
+  const isPending = createRule.isPending || updateRule.isPending || deleteRule.isPending;
+  const error = createRule.error ?? updateRule.error ?? deleteRule.error;
+
+  const unlockMutation = useCallback(() => {
+    isMutatingRef.current = false;
+  }, []);
+
+  const reset = useCallback(() => {
+    isMutatingRef.current = false;
+    createRule.reset();
+    updateRule.reset();
+    deleteRule.reset();
+  }, [createRule, updateRule, deleteRule]);
+
+  const submitRule = useCallback(
+    (data: CreateAdminRuleBody) => {
+      if (isPending || isMutatingRef.current) {
+        return;
+      }
+
+      isMutatingRef.current = true;
+
+      if (ruleId === null) {
+        createRule.mutate(data, { onSettled: unlockMutation, onSuccess });
+        return;
+      }
+
+      updateRule.mutate({ ruleId, data }, { onSettled: unlockMutation, onSuccess });
+    },
+    [createRule, isPending, onSuccess, ruleId, unlockMutation, updateRule],
+  );
+
+  const deleteRuleById = useCallback(() => {
+    if (!ruleId || isPending || isMutatingRef.current) {
+      return;
+    }
+
+    isMutatingRef.current = true;
+
+    deleteRule.mutate(ruleId, { onSettled: unlockMutation, onSuccess });
+  }, [deleteRule, isPending, onSuccess, ruleId, unlockMutation]);
+
+  return {
+    deleteRule: deleteRuleById,
+    error,
+    isPending,
+    reset,
+    submitRule,
+  };
+}
+
 export function useUpdateAdminRuleStatus() {
   const queryClient = useQueryClient();
 
   return useMutation({
+    mutationKey: mutationKeys.adminRules.status,
     mutationFn: ({ ruleId, status }: { ruleId: string; status: AdminRuleStatus }) =>
       adminRulesApi.updateStatus(ruleId, { status }),
-    onSuccess: async () => {
+    onSuccess: async (updatedRule) => {
+      queryClient.setQueryData<AdminRulesResponse>(queryKeys.adminRules.list, (previousData) =>
+        replaceAdminRuleRow(previousData, updatedRule),
+      );
       await queryClient.invalidateQueries({ queryKey: queryKeys.adminRules.all });
     },
   });

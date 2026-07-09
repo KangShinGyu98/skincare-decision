@@ -1,33 +1,34 @@
 'use client';
 
 import type { AdminRuleStatus, AdminRuleTableRow } from '@skincare-decision/shared/schemas';
-import { PencilIcon, PlusIcon, RefreshCwIcon, SaveIcon } from 'lucide-react';
+import { useMutationState } from '@tanstack/react-query';
+import { PlusIcon, RefreshCwIcon, SaveIcon } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { AdminRuleDetailDialog } from '@/components/admin/rules/AdminRuleDetailDialog';
 import { AdminRuleDialogForm } from '@/components/admin/rules/AdminRuleDialogForm';
 import { createAdminRuleColumns } from '@/components/admin/rules/createAdminRuleColumns';
 import { SortableDataTable } from '@/components/common/data-table/SortableDataTable';
 import { ErrorPanel } from '@/components/common/ErrorPanel';
+import { AdminRulesPageSkeleton } from '@/components/common/skeleton/AdminRulesPageSkeleton';
 import { Button } from '@/components/shadcn/button';
-import { Skeleton } from '@/components/shadcn/skeleton';
 import { Spinner } from '@/components/shadcn/spinner';
-import { useAdminRules, useSaveAdminRuleSortOrder, useUpdateAdminRuleStatus } from '@/lib/hooks';
-
-const EMPTY_ADMIN_RULE_ROWS: AdminRuleTableRow[] = [];
+import { mutationKeys, useAdminRules, useSaveAdminRuleSortOrder, useUpdateAdminRuleStatus, } from '@/lib/hooks';
 
 export default function AdminRulesPage() {
   const { data, error, isError, isFetching, isLoading } = useAdminRules();
   const updateStatus = useUpdateAdminRuleStatus();
+  //status 에서 pending 인 애들만 배열로 저장
+  const pendingStatusRuleIds = useMutationState({
+    filters: {
+      mutationKey: mutationKeys.adminRules.status,
+      status: 'pending',
+    },
+    select: (mutation) => (mutation.state.variables as { ruleId: string } | undefined)?.ruleId,
+  }).filter((ruleId): ruleId is string => Boolean(ruleId));
+
   const saveSortOrder = useSaveAdminRuleSortOrder();
-  const [orderedRuleIds, setOrderedRuleIds] = useState<string[] | null>(null);
-  const [ruleDialogState, setRuleDialogState] = useState<{
-    open: boolean;
-    ruleId: string | null;
-  }>({
-    open: false,
-    ruleId: null,
-  });
+  const serverRows = data?.items ?? [];
+  const [draftRows, setDraftRows] = useState<AdminRuleTableRow[] | null>(null);
   const [ruleFormDialogState, setRuleFormDialogState] = useState<{
     open: boolean;
     ruleId: string | null;
@@ -35,84 +36,51 @@ export default function AdminRulesPage() {
     open: false,
     ruleId: null,
   });
-  const serverRows = data?.items ?? EMPTY_ADMIN_RULE_ROWS;
-  const isSortOrderDirty = orderedRuleIds !== null;
-  const pendingStatusRuleId = updateStatus.isPending
-    ? (updateStatus.variables?.ruleId ?? null)
-    : null;
-
-  const rows = useMemo(() => {
-    if (!orderedRuleIds) {
-      return serverRows;
-    }
-
-    const serverRowMap = new Map(serverRows.map((row) => [row.id, row]));
-    const orderedRows = orderedRuleIds
-      .map((ruleId) => serverRowMap.get(ruleId))
-      .filter((row): row is AdminRuleTableRow => Boolean(row));
-    const orderedRowIds = new Set(orderedRows.map((row) => row.id));
-    const appendedRows = serverRows.filter((row) => !orderedRowIds.has(row.id));
-
-    return [...orderedRows, ...appendedRows].map((row, index) => ({
-      ...row,
-      sort_order: index + 1,
-    }));
-  }, [orderedRuleIds, serverRows]);
-  const editExampleRuleId = rows[0]?.id ?? null;
+  const rows = draftRows ?? serverRows;
+  const isSortOrderDirty = draftRows !== null;
 
   const handleRowsReorder = useCallback((nextRows: AdminRuleTableRow[]) => {
-    setOrderedRuleIds(nextRows.map((row) => row.id));
+    setDraftRows(
+      nextRows.map((row, index) => ({
+        ...row,
+        sort_order: index + 1,
+      })),
+    );
   }, []);
 
   const handleStatusChange = useCallback(
     (ruleId: string, status: AdminRuleStatus) => {
+      if (pendingStatusRuleIds.includes(ruleId)) {
+        return;
+      }
+
       updateStatus.mutate({ ruleId, status });
     },
-    [updateStatus],
+    [pendingStatusRuleIds, updateStatus],
   );
 
   const columns = useMemo(
     () =>
       createAdminRuleColumns({
-        isStatusMutationPending: updateStatus.isPending,
-        pendingStatusRuleId,
+        isStatusPending: (ruleId) => pendingStatusRuleIds.includes(ruleId),
         onStatusChange: handleStatusChange,
       }),
-    [handleStatusChange, pendingStatusRuleId, updateStatus.isPending],
+    [handleStatusChange, pendingStatusRuleIds],
   );
 
   const handleRowClick = useCallback((row: AdminRuleTableRow) => {
-    setRuleDialogState({
+    setRuleFormDialogState({
       open: true,
       ruleId: row.id,
     });
   }, []);
 
   const handleCreateRule = useCallback(() => {
-    setRuleDialogState({
-      open: true,
-      ruleId: null,
-    });
-  }, []);
-
-  const handleOpenCreateExample = useCallback(() => {
     setRuleFormDialogState({
       open: true,
       ruleId: null,
     });
   }, []);
-
-  const handleOpenEditExample = useCallback(() => {
-    if (!editExampleRuleId) {
-      toast.info('수정 예시에 사용할 룰이 없습니다.');
-      return;
-    }
-
-    setRuleFormDialogState({
-      open: true,
-      ruleId: editExampleRuleId,
-    });
-  }, [editExampleRuleId]);
 
   const handleSaveSortOrder = () => {
     if (saveSortOrder.isPending) {
@@ -130,7 +98,8 @@ export default function AdminRulesPage() {
       },
       {
         onSuccess: () => {
-          setOrderedRuleIds(null);
+          toast.success('순서 저장에 성공했습니다.');
+          setDraftRows(null);
         },
       },
     );
@@ -142,11 +111,22 @@ export default function AdminRulesPage() {
 
   const actionError = updateStatus.error ?? saveSortOrder.error;
 
+  if (isError) {
+    return (
+      <ErrorPanel
+        message={error instanceof Error ? error.message : 'Rule 목록을 불러오지 못했습니다.'}
+      />
+    );
+  }
+  if (isLoading) {
+    return <AdminRulesPageSkeleton />;
+  }
+
   return (
     <main
       className="min-h-screen bg-[var(--color-bg-page)] px-6 pb-10 pt-24"
-      aria-busy={isLoading || isFetching || saveSortOrder.isPending}
-      data-fetch-state={isLoading ? 'loading' : isError ? 'error' : 'success'}
+      aria-busy={saveSortOrder.isPending}
+      data-fetch-state="success"
     >
       <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-5">
         <section className="flex flex-col gap-4 rounded-lg border border-[var(--color-border-light)] ">
@@ -156,8 +136,8 @@ export default function AdminRulesPage() {
                 룰 점검 화면
               </h1>
               <span className="mr-2 text-sm text-[var(--color-text-tertiary)]">
-                {isLoading ? '조회 중' : `총 ${rows.length}개`}
-                {isSortOrderDirty ? ' · 순서 변경됨' : ''}
+                `총 {rows.length}개`
+                {isSortOrderDirty ? '변경된 순서는 저장버튼을 통해 저장해야 반영됩니다.' : ''}
               </span>
             </div>
             <div className="flex flex-col justify-end">
@@ -166,7 +146,7 @@ export default function AdminRulesPage() {
                   type="button"
                   variant="outline"
                   onClick={handleRefresh}
-                  disabled={saveSortOrder.isPending || isLoading}
+                  disabled={saveSortOrder.isPending || isFetching}
                 >
                   <RefreshCwIcon />
                   새로고침
@@ -174,33 +154,15 @@ export default function AdminRulesPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={handleOpenCreateExample}
-                  disabled={saveSortOrder.isPending || isLoading}
-                >
-                  <PlusIcon />
-                  새 룰 생성 예시
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleOpenEditExample}
-                  disabled={saveSortOrder.isPending || isLoading || !editExampleRuleId}
-                >
-                  <PencilIcon />
-                  기존 룰 수정 예시
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
                   onClick={handleCreateRule}
-                  disabled={saveSortOrder.isPending || isLoading}
+                  disabled={saveSortOrder.isPending || isFetching}
                 >
                   <PlusIcon />룰 생성
                 </Button>
                 <Button
                   type="button"
                   onClick={handleSaveSortOrder}
-                  disabled={saveSortOrder.isPending || isLoading}
+                  disabled={saveSortOrder.isPending || isFetching || !isSortOrderDirty}
                 >
                   {saveSortOrder.isPending ? <Spinner /> : <SaveIcon />}
                   순서 저장
@@ -210,46 +172,22 @@ export default function AdminRulesPage() {
           </div>
         </section>
 
-        {isError ? (
-          <ErrorPanel
-            message={error instanceof Error ? error.message : 'Rule 목록을 불러오지 못했습니다.'}
-          />
-        ) : null}
-
         {actionError ? (
           <ErrorPanel
-            message={
-              actionError instanceof Error
-                ? actionError.message
-                : 'Rule 변경사항을 저장하지 못했습니다.'
-            }
+            message={actionError instanceof Error ? actionError.message : '오류가 발생했습니다.'}
           />
         ) : null}
 
-        {isLoading ? (
-          <AdminRulesTableSkeleton />
-        ) : (
-          <SortableDataTable
-            data={rows}
-            columns={columns}
-            onRowsReorder={handleRowsReorder}
-            onRowClick={handleRowClick}
-            emptyMessage="표시할 룰이 없습니다."
-            tableClassName="min-w-[1220px]"
-          />
-        )}
+        <SortableDataTable
+          data={rows}
+          columns={columns}
+          onRowsReorder={handleRowsReorder}
+          onRowClick={handleRowClick}
+          emptyMessage="표시할 룰이 없습니다."
+          tableClassName="min-w-[1220px]"
+        />
       </div>
 
-      <AdminRuleDetailDialog
-        ruleId={ruleDialogState.ruleId}
-        open={ruleDialogState.open}
-        onOpenChange={(open) => {
-          setRuleDialogState((previousState) => ({
-            open,
-            ruleId: open ? previousState.ruleId : null,
-          }));
-        }}
-      />
       <AdminRuleDialogForm
         ruleId={ruleFormDialogState.ruleId}
         open={ruleFormDialogState.open}
@@ -261,19 +199,5 @@ export default function AdminRulesPage() {
         }}
       />
     </main>
-  );
-}
-
-function AdminRulesTableSkeleton() {
-  return (
-    <div className="flex w-full max-w-sm flex-col gap-2">
-      {Array.from({ length: 5 }).map((_, index) => (
-        <div className="flex gap-4" key={index}>
-          <Skeleton className="h-4 flex-1" />
-          <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-4 w-20" />
-        </div>
-      ))}
-    </div>
   );
 }

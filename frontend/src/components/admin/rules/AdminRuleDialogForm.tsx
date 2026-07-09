@@ -5,20 +5,30 @@ import { CardSkeleton } from '@/components/common/skeleton/CardSkeleton';
 import { Button } from '@/components/shadcn/button';
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/shadcn/card';
 import { Checkbox } from '@/components/shadcn/checkbox';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, } from '@/components/shadcn/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/shadcn/dialog';
 import { Field, FieldContent, FieldError, FieldLabel } from '@/components/shadcn/field';
 import { Input } from '@/components/shadcn/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from '@/components/shadcn/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/shadcn/select';
 import { Separator } from '@/components/shadcn/seperator';
 import { Spinner } from '@/components/shadcn/spinner';
 import { Switch } from '@/components/shadcn/switch';
 import { Textarea } from '@/components/shadcn/textarea';
 import {
+  useAdminRuleDialogActions,
   useAdminRuleDetail,
   useAdminRuleQuestionSearch,
-  useCreateAdminRule,
-  useDeleteAdminRule,
-  useUpdateAdminRule,
 } from '@/lib/hooks';
 import { useForm } from '@tanstack/react-form';
 import {
@@ -33,7 +43,7 @@ import {
   priorityGateResultTypeSchema,
 } from '@skincare-decision/shared/schemas';
 import { PlusIcon, Trash2Icon } from 'lucide-react';
-import { useMemo } from 'react'; // 생성 요청일 때 만들 빈 form 초기값
+import { useMemo } from 'react';
 
 // 생성 요청일 때 만들 빈 form 초기값
 export const EMPTY_ADMIN_RULE_DIALOG_FORM_VALUES = {
@@ -78,6 +88,10 @@ function allowsMultipleValues(
   operator: CreateAdminRuleBody['conditions'][number]['operator'],
 ): boolean {
   return operator === 'IN' || operator === 'CONTAINS';
+}
+
+function getCtaTargetLabel(value: CreateAdminRuleBody['ctaTarget']) {
+  return adminRuleCtaTargetOptions.find((target) => target.value === value)?.label ?? '선택 안 함';
 }
 
 function useAdminRuleDialogForm(
@@ -132,12 +146,16 @@ type AdminRuleDialogFormProps = {
 export function AdminRuleDialogForm({ ruleId, open, onOpenChange }: AdminRuleDialogFormProps) {
   const isCreateMode = ruleId === null;
   const ruleDetailQuery = useAdminRuleDetail(open && ruleId ? ruleId : null);
-  const createRule = useCreateAdminRule();
-  const updateRule = useUpdateAdminRule();
-  const deleteRule = useDeleteAdminRule();
-  const isSavePending = createRule.isPending || updateRule.isPending;
-  const isMutationPending = isSavePending || deleteRule.isPending;
-  const mutationError = createRule.error ?? updateRule.error ?? deleteRule.error;
+  const {
+    deleteRule,
+    error: mutationError,
+    isPending: isMutationPending,
+    reset: resetMutation,
+    submitRule,
+  } = useAdminRuleDialogActions({
+    ruleId,
+    onSuccess: () => onOpenChange(false),
+  });
   const initialValues = useMemo(() => {
     if (isCreateMode) {
       return EMPTY_ADMIN_RULE_DIALOG_FORM_VALUES;
@@ -154,9 +172,7 @@ export function AdminRuleDialogForm({ ruleId, open, onOpenChange }: AdminRuleDia
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
-      createRule.reset();
-      updateRule.reset();
-      deleteRule.reset();
+      resetMutation();
     }
 
     onOpenChange(nextOpen);
@@ -165,30 +181,11 @@ export function AdminRuleDialogForm({ ruleId, open, onOpenChange }: AdminRuleDia
   const handleSubmit = (values: CreateAdminRuleBody) => {
     const payload = createAdminRuleBodySchema.parse(values);
 
-    if (isCreateMode) {
-      createRule.mutate(payload, {
-        onSuccess: () => handleOpenChange(false),
-      });
-      return;
-    }
-
-    if (!ruleId) {
-      return;
-    }
-
-    updateRule.mutate(
-      {
-        ruleId,
-        data: payload,
-      },
-      {
-        onSuccess: () => handleOpenChange(false),
-      },
-    );
+    submitRule(payload);
   };
 
   const handleDelete = () => {
-    if (!ruleId || deleteRule.isPending) {
+    if (!ruleId || isMutationPending) {
       return;
     }
 
@@ -196,9 +193,7 @@ export function AdminRuleDialogForm({ ruleId, open, onOpenChange }: AdminRuleDia
       return;
     }
 
-    deleteRule.mutate(ruleId, {
-      onSuccess: () => handleOpenChange(false),
-    });
+    deleteRule();
   };
 
   if (!isCreateMode && ruleDetailQuery.isError) {
@@ -220,9 +215,7 @@ export function AdminRuleDialogForm({ ruleId, open, onOpenChange }: AdminRuleDia
         initialValues={initialValues}
         isCreateMode={isCreateMode}
         isOpen={open}
-        isDeletePending={deleteRule.isPending}
         isMutationPending={isMutationPending}
-        isSavePending={isSavePending}
         mutationError={mutationError}
         onCancel={() => handleOpenChange(false)}
         onDelete={handleDelete}
@@ -252,9 +245,7 @@ type AdminRuleDialogFormContentProps = {
   initialValues: CreateAdminRuleBody;
   isCreateMode: boolean;
   isOpen: boolean;
-  isDeletePending: boolean;
   isMutationPending: boolean;
-  isSavePending: boolean;
   mutationError: Error | null;
   onCancel: () => void;
   onDelete: () => void;
@@ -265,9 +256,7 @@ function AdminRuleDialogFormContent({
   initialValues,
   isCreateMode,
   isOpen,
-  isDeletePending,
   isMutationPending,
-  isSavePending,
   mutationError,
   onCancel,
   onDelete,
@@ -291,13 +280,18 @@ function AdminRuleDialogFormContent({
   );
 
   const form = useAdminRuleDialogForm(initialValues, onSubmit);
+  const isFormDisabled = isMutationPending;
 
   return (
     <form
       className="min-h-0"
+      aria-busy={isFormDisabled}
       onSubmit={(event) => {
         event.preventDefault();
         event.stopPropagation();
+        if (isFormDisabled) {
+          return;
+        }
         void form.handleSubmit();
       }}
     >
@@ -315,6 +309,7 @@ function AdminRuleDialogFormContent({
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
+                  disabled={isFormDisabled}
                   aria-invalid={isInvalid}
                 />
                 {isInvalid && <FieldError errors={field.state.meta.errors} />}
@@ -327,6 +322,7 @@ function AdminRuleDialogFormContent({
           questionOptions={questionOptions}
           questionMap={questionMap}
           questionSearchError={questionSearchQuery.error}
+          disabled={isFormDisabled}
         />
         <Separator className="my-2" />
         <form.Field name="resultType">
@@ -348,7 +344,12 @@ function AdminRuleDialogFormContent({
                     }
                   }}
                 >
-                  <SelectTrigger id={field.name} aria-invalid={isInvalid} className="min-w-[280px]">
+                  <SelectTrigger
+                    id={field.name}
+                    aria-invalid={isInvalid}
+                    disabled={isFormDisabled}
+                    className="min-w-[280px]"
+                  >
                     <SelectValue placeholder="resultType" />
                   </SelectTrigger>
                   <SelectContent align="start" alignItemWithTrigger={false}>
@@ -376,6 +377,7 @@ function AdminRuleDialogFormContent({
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
+                  disabled={isFormDisabled}
                   aria-invalid={isInvalid}
                 />
                 {isInvalid && <FieldError errors={field.state.meta.errors} />}
@@ -396,6 +398,7 @@ function AdminRuleDialogFormContent({
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
+                  disabled={isFormDisabled}
                   aria-invalid={isInvalid}
                 />
                 {isInvalid && <FieldError errors={field.state.meta.errors} />}
@@ -403,56 +406,64 @@ function AdminRuleDialogFormContent({
             );
           }}
         </form.Field>
-        <form.Field name="ctaLabel">
-          {(field) => {
-            const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+        <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(280px,1fr)]">
+          <form.Field name="ctaLabel">
+            {(field) => {
+              const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
 
-            return (
-              <Field data-invalid={isInvalid}>
-                <FieldLabel htmlFor={field.name}>ctaLabel</FieldLabel>
-                <Input
-                  id={field.name}
-                  name={field.name}
-                  value={field.state.value}
-                  onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  aria-invalid={isInvalid}
-                />
-                {isInvalid && <FieldError errors={field.state.meta.errors} />}
-              </Field>
-            );
-          }}
-        </form.Field>
-        <form.Field name="ctaTarget">
-          {(field) => {
-            const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
-
-            return (
-              <Field orientation="responsive" data-invalid={isInvalid}>
-                <FieldContent>
-                  <FieldLabel htmlFor={field.name}>ctaTarget</FieldLabel>
+              return (
+                <Field data-invalid={isInvalid}>
+                  <FieldLabel htmlFor={field.name}>ctaLabel</FieldLabel>
+                  <Input
+                    id={field.name}
+                    name={field.name}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    disabled={isFormDisabled}
+                    aria-invalid={isInvalid}
+                  />
                   {isInvalid && <FieldError errors={field.state.meta.errors} />}
-                </FieldContent>
-                <Select
-                  name={field.name}
-                  value={field.state.value}
-                  onValueChange={(value) => field.handleChange(value ?? '')}
-                >
-                  <SelectTrigger id={field.name} aria-invalid={isInvalid} className="min-w-[280px]">
-                    <SelectValue placeholder="ctaTarget" />
-                  </SelectTrigger>
-                  <SelectContent align="start" alignItemWithTrigger={false}>
-                    {adminRuleCtaTargetOptions.map((target) => (
-                      <SelectItem key={target.value || 'empty'} value={target.value}>
-                        {target.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </Field>
-            );
-          }}
-        </form.Field>
+                </Field>
+              );
+            }}
+          </form.Field>
+          <form.Field name="ctaTarget">
+            {(field) => {
+              const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+
+              return (
+                <Field data-invalid={isInvalid}>
+                  <FieldLabel htmlFor={field.name}>ctaTarget</FieldLabel>
+                  <Select
+                    name={field.name}
+                    value={field.state.value}
+                    onValueChange={(value) => field.handleChange(value ?? '')}
+                  >
+                    <SelectTrigger
+                      id={field.name}
+                      aria-invalid={isInvalid}
+                      disabled={isFormDisabled}
+                      className="w-full"
+                    >
+                      <span className="flex min-w-0 flex-1 text-left">
+                        {getCtaTargetLabel(field.state.value)}
+                      </span>
+                    </SelectTrigger>
+                    <SelectContent align="start" alignItemWithTrigger={false}>
+                      {adminRuleCtaTargetOptions.map((target) => (
+                        <SelectItem key={target.value || 'empty'} value={target.value}>
+                          {target.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                </Field>
+              );
+            }}
+          </form.Field>
+        </div>
         <Separator className="my-2" />
         <form.Field name="adminNote">
           {(field) => {
@@ -467,6 +478,7 @@ function AdminRuleDialogFormContent({
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
+                  disabled={isFormDisabled}
                   aria-invalid={isInvalid}
                 />
                 {isInvalid && <FieldError errors={field.state.meta.errors} />}
@@ -493,6 +505,7 @@ function AdminRuleDialogFormContent({
                     onCheckedChange={(checked) =>
                       field.handleChange(checked ? 'active' : 'inactive')
                     }
+                    disabled={isFormDisabled}
                     aria-invalid={isInvalid}
                   />
                   <span className="text-sm text-muted-foreground">{field.state.value}</span>
@@ -512,7 +525,7 @@ function AdminRuleDialogFormContent({
               onClick={onDelete}
               disabled={isMutationPending}
             >
-              {isDeletePending ? <Spinner /> : <Trash2Icon />}
+              {isMutationPending ? <Spinner /> : <Trash2Icon />}
               삭제
             </Button>
           ) : null}
@@ -522,7 +535,7 @@ function AdminRuleDialogFormContent({
             취소
           </Button>
           <Button type="submit" disabled={isMutationPending}>
-            {isSavePending ? <Spinner /> : null}
+            {isMutationPending ? <Spinner /> : null}
             저장
           </Button>
         </div>
@@ -536,6 +549,7 @@ type AdminRuleConditionsFieldProps = {
   questionOptions: AdminRuleQuestionSearchItem[];
   questionMap: Map<string, AdminRuleQuestionSearchItem>;
   questionSearchError: Error | null;
+  disabled: boolean;
 };
 
 //array 를 감싸는 필드
@@ -544,6 +558,7 @@ function AdminRuleConditionsField({
   questionOptions,
   questionMap,
   questionSearchError,
+  disabled,
 }: AdminRuleConditionsFieldProps) {
   return (
     <form.Field name="conditions" mode="array">
@@ -558,6 +573,7 @@ function AdminRuleConditionsField({
                 type="button"
                 variant="outline"
                 onClick={() => field.pushValue(createEmptyAdminRuleCondition())}
+                disabled={disabled}
               >
                 <PlusIcon />
                 조건 추가
@@ -577,6 +593,7 @@ function AdminRuleConditionsField({
                     questionOptions={questionOptions}
                     questionMap={questionMap}
                     onRemove={() => field.removeValue(index)}
+                    disabled={disabled}
                   />
                 ))}
               </div>
@@ -598,6 +615,7 @@ type AdminRuleConditionCardProps = {
   questionOptions: AdminRuleQuestionSearchItem[];
   questionMap: Map<string, AdminRuleQuestionSearchItem>;
   onRemove: () => void;
+  disabled: boolean;
 };
 
 //array 내부에
@@ -607,6 +625,7 @@ function AdminRuleConditionCard({
   questionOptions,
   questionMap,
   onRemove,
+  disabled,
 }: AdminRuleConditionCardProps) {
   return (
     <Card size="sm">
@@ -618,6 +637,7 @@ function AdminRuleConditionCard({
             variant="ghost"
             size="icon-sm"
             onClick={onRemove}
+            disabled={disabled}
             aria-label="조건 삭제"
           >
             <Trash2Icon />
@@ -644,6 +664,7 @@ function AdminRuleConditionCard({
                   <SelectTrigger
                     id={questionField.name}
                     aria-invalid={questionFieldInvalid}
+                    disabled={disabled}
                     className="w-full"
                   >
                     <SelectValue placeholder="questionId">
@@ -701,6 +722,7 @@ function AdminRuleConditionCard({
                     <SelectTrigger
                       id={operatorField.name}
                       aria-invalid={operatorFieldInvalid}
+                      disabled={disabled}
                       className="w-full"
                     >
                       <SelectValue placeholder="operator" />
@@ -739,6 +761,7 @@ function AdminRuleConditionCard({
                     <SelectTrigger
                       id={stateField.name}
                       aria-invalid={stateFieldInvalid}
+                      disabled={disabled}
                       className="w-full"
                     >
                       <SelectValue placeholder="state" />
@@ -792,6 +815,7 @@ function AdminRuleConditionCard({
                             >
                               <Checkbox
                                 checked={valueField.state.value.includes(answer.value)}
+                                disabled={disabled}
                                 onCheckedChange={(checked) => {
                                   if (checked !== true) {
                                     valueField.handleChange(

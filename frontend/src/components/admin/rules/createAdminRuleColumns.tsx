@@ -8,14 +8,12 @@ import { Switch } from '@/components/shadcn/switch';
 import { cn } from '@/lib/utils';
 
 type CreateAdminRuleColumnsOptions = {
-  isStatusMutationPending: boolean;
-  pendingStatusRuleId: string | null;
+  isStatusPending: (ruleId: string) => boolean;
   onStatusChange: (ruleId: string, status: AdminRuleStatus) => void;
 };
 
 export function createAdminRuleColumns({
-  isStatusMutationPending,
-  pendingStatusRuleId,
+  isStatusPending,
   onStatusChange,
 }: CreateAdminRuleColumnsOptions): ColumnDef<AdminRuleTableRow>[] {
   return [
@@ -113,13 +111,13 @@ export function createAdminRuleColumns({
       header: '상태',
       size: 110,
       cell: ({ row }) => {
-        const isPending = pendingStatusRuleId === row.original.id;
+        const isPending = isStatusPending(row.original.id);
 
         return (
           <div className="flex items-center gap-2" onClick={(event) => event.stopPropagation()}>
             <Switch
               checked={row.original.status === 'active'}
-              disabled={isStatusMutationPending}
+              disabled={isPending}
               onCheckedChange={(checked) =>
                 onStatusChange(row.original.id, checked ? 'active' : 'inactive')
               }
