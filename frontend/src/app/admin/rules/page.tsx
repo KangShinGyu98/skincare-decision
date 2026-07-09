@@ -1,10 +1,11 @@
 'use client';
 
 import type { AdminRuleStatus, AdminRuleTableRow } from '@skincare-decision/shared/schemas';
-import { PlusIcon, RefreshCwIcon, SaveIcon } from 'lucide-react';
+import { PencilIcon, PlusIcon, RefreshCwIcon, SaveIcon } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { AdminRuleDetailDialog } from '@/components/admin/rules/AdminRuleDetailDialog';
+import { AdminRuleDialogForm } from '@/components/admin/rules/AdminRuleDialogForm';
 import { createAdminRuleColumns } from '@/components/admin/rules/createAdminRuleColumns';
 import { SortableDataTable } from '@/components/common/data-table/SortableDataTable';
 import { ErrorPanel } from '@/components/common/ErrorPanel';
@@ -21,6 +22,13 @@ export default function AdminRulesPage() {
   const saveSortOrder = useSaveAdminRuleSortOrder();
   const [orderedRuleIds, setOrderedRuleIds] = useState<string[] | null>(null);
   const [ruleDialogState, setRuleDialogState] = useState<{
+    open: boolean;
+    ruleId: string | null;
+  }>({
+    open: false,
+    ruleId: null,
+  });
+  const [ruleFormDialogState, setRuleFormDialogState] = useState<{
     open: boolean;
     ruleId: string | null;
   }>({
@@ -50,6 +58,7 @@ export default function AdminRulesPage() {
       sort_order: index + 1,
     }));
   }, [orderedRuleIds, serverRows]);
+  const editExampleRuleId = rows[0]?.id ?? null;
 
   const handleRowsReorder = useCallback((nextRows: AdminRuleTableRow[]) => {
     setOrderedRuleIds(nextRows.map((row) => row.id));
@@ -85,6 +94,25 @@ export default function AdminRulesPage() {
       ruleId: null,
     });
   }, []);
+
+  const handleOpenCreateExample = useCallback(() => {
+    setRuleFormDialogState({
+      open: true,
+      ruleId: null,
+    });
+  }, []);
+
+  const handleOpenEditExample = useCallback(() => {
+    if (!editExampleRuleId) {
+      toast.info('수정 예시에 사용할 룰이 없습니다.');
+      return;
+    }
+
+    setRuleFormDialogState({
+      open: true,
+      ruleId: editExampleRuleId,
+    });
+  }, [editExampleRuleId]);
 
   const handleSaveSortOrder = () => {
     if (saveSortOrder.isPending) {
@@ -146,6 +174,24 @@ export default function AdminRulesPage() {
                 <Button
                   type="button"
                   variant="outline"
+                  onClick={handleOpenCreateExample}
+                  disabled={saveSortOrder.isPending || isLoading}
+                >
+                  <PlusIcon />
+                  새 룰 생성 예시
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleOpenEditExample}
+                  disabled={saveSortOrder.isPending || isLoading || !editExampleRuleId}
+                >
+                  <PencilIcon />
+                  기존 룰 수정 예시
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
                   onClick={handleCreateRule}
                   disabled={saveSortOrder.isPending || isLoading}
                 >
@@ -199,6 +245,16 @@ export default function AdminRulesPage() {
         open={ruleDialogState.open}
         onOpenChange={(open) => {
           setRuleDialogState((previousState) => ({
+            open,
+            ruleId: open ? previousState.ruleId : null,
+          }));
+        }}
+      />
+      <AdminRuleDialogForm
+        ruleId={ruleFormDialogState.ruleId}
+        open={ruleFormDialogState.open}
+        onOpenChange={(open) => {
+          setRuleFormDialogState((previousState) => ({
             open,
             ruleId: open ? previousState.ruleId : null,
           }));

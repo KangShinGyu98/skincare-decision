@@ -8,6 +8,7 @@ import type {
   AdminRuleStatus,
   CreateAdminRuleBody,
 } from '@skincare-decision/shared/schemas';
+import { adminRuleCtaTargetSchema } from '@skincare-decision/shared/schemas';
 import { PlusIcon, Trash2Icon } from 'lucide-react';
 import { type SetStateAction, useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -158,12 +159,6 @@ function createFormStateFromDetail(detail: AdminRuleDetail): RuleFormState {
     ctaTarget: detail.ctaTarget ?? '',
     adminNote: detail.adminNote ?? '',
   };
-}
-
-function toNullableString(value: string): string | null {
-  const trimmedValue = value.trim();
-
-  return trimmedValue.length > 0 ? trimmedValue : null;
 }
 
 function getQuestionLabel(question: AdminRuleQuestionSearchItem): string {
@@ -336,10 +331,17 @@ export function AdminRuleDetailDialog({ ruleId, open, onOpenChange }: AdminRuleD
       return null;
     }
 
-    const ctaLabel = toNullableString(form.ctaLabel);
-    const ctaTarget = toNullableString(form.ctaTarget);
+    const ctaLabel = form.ctaLabel.trim();
+    const ctaTargetParseResult = adminRuleCtaTargetSchema.safeParse(form.ctaTarget.trim());
 
-    if (ctaLabel && !ctaTarget) {
+    if (!ctaTargetParseResult.success) {
+      toast.error('CTA target이 허용된 값이 아닙니다.');
+      return null;
+    }
+
+    const ctaTarget = ctaTargetParseResult.data;
+
+    if (ctaLabel.length > 0 && ctaTarget.length === 0) {
       toast.error('CTA label을 입력하면 target도 입력해야 합니다.');
       return null;
     }
@@ -352,7 +354,7 @@ export function AdminRuleDetailDialog({ ruleId, open, onOpenChange }: AdminRuleD
       resultDescription: form.resultDescription,
       ctaLabel,
       ctaTarget,
-      adminNote: toNullableString(form.adminNote),
+      adminNote: form.adminNote.trim(),
       conditions: form.conditions
         .filter((condition) => condition.questionId.length > 0)
         .map((condition) => ({

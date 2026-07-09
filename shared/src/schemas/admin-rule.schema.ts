@@ -20,6 +20,35 @@ export const adminRuleConditionStateSchema = z.enum(['REQUIRED', 'EXCLUDED']);
 
 export type AdminRuleConditionState = z.infer<typeof adminRuleConditionStateSchema>;
 
+export const adminRuleCtaTargetValues = [
+  '',
+  '/priority-gate',
+  '/category-decision?category=toner',
+  '/category-decision?category=sunscreen',
+  '/category-decision?category=serum',
+  '/category-decision?category=lipcare',
+  '/category-decision?category=moisturizer',
+  '/category-decision?category=cleanser',
+] as const;
+
+export const adminRuleCtaTargetOptions = [
+  { label: '선택 안 함', value: '' },
+  { label: '루틴 점검', value: '/priority-gate' },
+  { label: '구매 체크리스트 - 토너', value: '/category-decision?category=toner' },
+  { label: '구매 체크리스트 - 선크림', value: '/category-decision?category=sunscreen' },
+  { label: '구매 체크리스트 - 세럼', value: '/category-decision?category=serum' },
+  { label: '구매 체크리스트 - 립케어', value: '/category-decision?category=lipcare' },
+  { label: '구매 체크리스트 - 로션 / 크림', value: '/category-decision?category=moisturizer' },
+  { label: '구매 체크리스트 - 클렌저', value: '/category-decision?category=cleanser' },
+] as const satisfies ReadonlyArray<{
+  label: string;
+  value: (typeof adminRuleCtaTargetValues)[number];
+}>;
+
+export const adminRuleCtaTargetSchema = z.enum(adminRuleCtaTargetValues);
+
+export type AdminRuleCtaTarget = z.infer<typeof adminRuleCtaTargetSchema>;
+
 export const adminRulesQuerySchema = z
   .object({
     resultType: priorityGateResultTypeSchema.optional(),
@@ -53,17 +82,13 @@ export const updateAdminRuleSortOrderBodySchema = z
 
 export type UpdateAdminRuleSortOrderBody = z.infer<typeof updateAdminRuleSortOrderBodySchema>;
 
-const nullableNonEmptyString = (maxLength: number) =>
-  z.preprocess(
-    (value) => (typeof value === 'string' && value.trim().length === 0 ? null : value),
-    z.string().trim().min(1).max(maxLength).nullable().default(null),
-  );
-
-const nullableString = (maxLength: number) =>
-  z.preprocess(
-    (value) => (typeof value === 'string' && value.trim().length === 0 ? null : value),
-    z.string().trim().max(maxLength).nullable().default(null),
-  );
+const adminRuleQuestionIdInputSchema = z
+  .string()
+  .trim()
+  .min(1, '질문을 선택해 주세요.')
+  .refine((value) => z.uuid().safeParse(value).success, {
+    message: '질문 ID 형식이 올바르지 않습니다.',
+  });
 
 const optionalSearchStringSchema = z.preprocess(
   (value) => (typeof value === 'string' && value.trim().length === 0 ? undefined : value),
@@ -72,9 +97,9 @@ const optionalSearchStringSchema = z.preprocess(
 
 export const adminRuleConditionInputSchema = z
   .object({
-    questionId: z.uuid(),
+    questionId: adminRuleQuestionIdInputSchema,
     operator: adminRuleConditionOperatorSchema,
-    value: z.array(z.number().int()).min(1),
+    value: z.array(z.number().int()).min(1, '결정값을 1개 이상 선택해 주세요.'),
     state: adminRuleConditionStateSchema,
   })
   .strict();
@@ -83,22 +108,26 @@ export type AdminRuleConditionInput = z.infer<typeof adminRuleConditionInputSche
 
 export const adminRuleMutationBodySchema = z
   .object({
-    name: z.string().trim().min(1).max(200),
+    name: z
+      .string()
+      .trim()
+      .min(5, '룰 이름을 5자 이상 입력해 주세요.')
+      .max(50, '최대 50자까지 입력 가능합니다.'),
     status: adminRuleStatusSchema,
     resultType: priorityGateResultTypeSchema,
-    resultTitle: z.string().trim().min(1),
-    resultDescription: z.string().trim().min(1),
-    ctaLabel: nullableNonEmptyString(100),
-    ctaTarget: nullableNonEmptyString(255),
-    adminNote: nullableString(2000),
-    conditions: z.array(adminRuleConditionInputSchema).default([]),
+    resultTitle: z.string().trim().min(1, '결과 제목을 입력해 주세요.'),
+    resultDescription: z.string().trim().min(1, '결과 설명을 입력해 주세요.'),
+    ctaLabel: z.string().trim().max(100, '최대 100자까지 입력 가능합니다.'),
+    ctaTarget: adminRuleCtaTargetSchema,
+    adminNote: z.string().trim().max(2000, '최대 2000자까지 입력 가능합니다.'),
+    conditions: z.array(adminRuleConditionInputSchema).min(1, '조건을 1개 이상 추가해 주세요.'),
   })
   .strict()
   .superRefine((body, context) => {
-    if (body.ctaLabel && !body.ctaTarget) {
+    if (body.ctaLabel.length > 0 && body.ctaTarget.length === 0) {
       context.addIssue({
         code: 'custom',
-        message: 'ctaTarget is required when ctaLabel is provided',
+        message: 'CTA label을 입력하면 CTA target도 선택해야 합니다.',
         path: ['ctaTarget'],
       });
     }

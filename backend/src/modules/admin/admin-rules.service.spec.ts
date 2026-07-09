@@ -287,6 +287,25 @@ describe('AdminRulesService', () => {
     expect(result.conditions[0]?.questionKey).toBe('life.recent_irritation');
   });
 
+  it('createRule은 빈 문자열 optional text를 저장 직전에 null로 변환한다', async () => {
+    repositoryMock.createRule.mockResolvedValue(createRuleRecord());
+
+    await service.createRule({
+      ...createRuleMutationBody(),
+      ctaLabel: '',
+      ctaTarget: '',
+      adminNote: '   ',
+    });
+
+    expect(repositoryMock.createRule).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ctaLabel: null,
+        ctaTarget: null,
+        adminNote: null,
+      }),
+    );
+  });
+
   it('updateRule은 대상 rule이 없으면 NotFoundException을 던진다', async () => {
     repositoryMock.updateRule.mockResolvedValue(null);
 
@@ -412,9 +431,9 @@ function createRuleMutationBody() {
     resultType: 'HOLD' as const,
     resultTitle: '지금은 새 제품보다 피부 반응 안정화가 먼저예요.',
     resultDescription: '최근 자극이 있으면 새 제품 도입보다 안정화가 우선입니다.',
-    ctaLabel: null,
-    ctaTarget: null,
-    adminNote: null,
+    ctaLabel: '',
+    ctaTarget: '' as const,
+    adminNote: '',
     conditions: [
       {
         questionId: '01935b8f-0000-7000-8000-000000000301',

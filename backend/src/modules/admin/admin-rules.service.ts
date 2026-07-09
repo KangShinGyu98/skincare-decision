@@ -200,11 +200,21 @@ export class AdminRulesService {
       resultType: body.resultType,
       resultTitle: body.resultTitle,
       resultDescription: body.resultDescription,
-      ctaLabel: body.ctaLabel,
-      ctaTarget: body.ctaTarget,
-      adminNote: body.adminNote,
+      ctaLabel: this.toNullableText(body.ctaLabel),
+      ctaTarget: this.toNullableText(body.ctaTarget),
+      adminNote: this.toNullableText(body.adminNote),
       conditions: body.conditions,
     };
+  }
+
+  private toNullableText(value: string | null): string | null {
+    if (value === null) {
+      return null;
+    }
+
+    const trimmedValue = value.trim();
+
+    return trimmedValue.length > 0 ? trimmedValue : null;
   }
 
   private toCondition(condition: AdminRuleConditionRecord): AdminRuleCondition {
