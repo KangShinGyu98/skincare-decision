@@ -61,8 +61,12 @@ describe('AdminQuestionsService', () => {
         category: 'sunscreen',
         visibilityConditions: [
           {
+            conditionQuestion: {
+              id: '01935b8f-0000-7000-8000-000000000301',
+              key: 'category.selected',
+            },
             operator: ComparisonOperator.EQ,
-            value: 2,
+            value: 1,
             state: ConditionState.REQUIRED,
           },
         ],
@@ -70,17 +74,11 @@ describe('AdminQuestionsService', () => {
     ]);
 
     const result = await service.findQuestions({
-      screen: 'context',
       uiSection: 'category',
-      category: 'sunscreen',
-      status: 'active',
     });
 
     expect(repositoryMock.findQuestions).toHaveBeenCalledWith({
-      screen: 'context',
       uiSection: 'category',
-      category: 'sunscreen',
-      status: 'active',
     });
     expect(result.items).toEqual([
       {
@@ -92,17 +90,19 @@ describe('AdminQuestionsService', () => {
         questionVariant: '추천받을 제품군을 선택해 주세요.',
         answerType: 'SINGLE_CHOICE',
         userOptions: [
-          { label: '토너', value: 1 },
-          { label: '선크림', value: 2 },
-          { label: '세럼', value: 3 },
-          { label: '립케어', value: 4 },
-          { label: '로션/크림', value: 5 },
-          { label: '클렌저', value: 6 },
+          { label: '토너', value: 0 },
+          { label: '선크림', value: 1 },
+          { label: '세럼', value: 2 },
+          { label: '립케어', value: 3 },
+          { label: '로션/크림', value: 4 },
+          { label: '클렌저', value: 5 },
         ],
         visibilityConditions: [
           {
+            questionId: '01935b8f-0000-7000-8000-000000000301',
+            questionKey: 'category.selected',
             operator: 'EQ',
-            value: 2,
+            value: 1,
             state: 'REQUIRED',
           },
         ],
@@ -115,20 +115,20 @@ describe('AdminQuestionsService', () => {
     ]);
   });
 
-  it('findQuestions는 category 필터를 repository로 전달한다', async () => {
+  it('findQuestions는 uiSection 필터를 repository로 전달한다', async () => {
     repositoryMock.findQuestions.mockResolvedValue([
       createQuestionRecord({
         id: '01935b8f-0000-7000-8000-000000000201',
-        category: null,
+        uiSection: UiSection.owned_products,
       }),
     ]);
 
-    const result = await service.findQuestions({ category: 'sunscreen' });
+    const result = await service.findQuestions({ uiSection: 'owned_products' });
 
     expect(repositoryMock.findQuestions).toHaveBeenCalledWith({
-      category: 'sunscreen',
+      uiSection: 'owned_products',
     });
-    expect(result.items[0]?.category).toBeNull();
+    expect(result.items[0]?.uiSection).toBe('owned_products');
   });
 
   it('findQuestion은 questionId 기준 detail과 variants를 반환한다', async () => {
@@ -166,12 +166,13 @@ describe('AdminQuestionsService', () => {
       expect.objectContaining({
         key: 'category.selected',
         answerType: 'SINGLE_CHOICE',
-        answerValues: [1, 2, 3, 4, 5, 6],
+        answerValues: [0, 1, 2, 3, 4, 5],
         isActive: true,
         variants: [
           expect.objectContaining({
             title: '추천받을 제품군을 선택해 주세요.',
             sortOrder: 10,
+            sortAfterQuestionVariantId: '01935b8f-0000-7000-8000-000000000202',
             isActive: true,
           }),
         ],
@@ -180,7 +181,7 @@ describe('AdminQuestionsService', () => {
     expect(result.questionId).toBe('01935b8f-0000-7000-8000-000000000301');
   });
 
-  it('createQuestion은 answerValues와 variant answers 개수가 다르면 BadRequestException을 던진다', async () => {
+  it('createQuestion은 answerCount와 variant answers 개수가 다르면 BadRequestException을 던진다', async () => {
     const body = createQuestionMutationBody();
     body.variants[0]!.answers = ['토너'];
 
@@ -297,7 +298,7 @@ function createQuestionRecord(overrides: Partial<AdminQuestionRecord> = {}): Adm
     question: {
       key: 'category.selected',
       answerType: QuestionAnswerType.SINGLE_CHOICE,
-      answerValues: [1, 2, 3, 4, 5, 6],
+      answerValues: [0, 1, 2, 3, 4, 5],
     },
     visibilityConditions: [],
     ...overrides,
@@ -311,7 +312,7 @@ function createQuestionDetailRecord(
     id: '01935b8f-0000-7000-8000-000000000301',
     key: 'category.selected',
     answerType: QuestionAnswerType.SINGLE_CHOICE,
-    answerValues: [1, 2, 3, 4, 5, 6],
+    answerValues: [0, 1, 2, 3, 4, 5],
     isActive: true,
     variants: [
       {
@@ -325,8 +326,12 @@ function createQuestionDetailRecord(
         isActive: true,
         visibilityConditions: [
           {
+            conditionQuestion: {
+              id: '01935b8f-0000-7000-8000-000000000301',
+              key: 'category.selected',
+            },
             operator: ComparisonOperator.EQ,
-            value: 2,
+            value: 1,
             state: ConditionState.REQUIRED,
           },
         ],
@@ -340,7 +345,7 @@ function createQuestionMutationBody() {
   return {
     question: 'category.selected',
     answerType: 'SINGLE_CHOICE' as const,
-    answerValues: [1, 2, 3, 4, 5, 6],
+    answerCount: 6,
     status: 'active' as const,
     variants: [
       {
@@ -351,11 +356,13 @@ function createQuestionMutationBody() {
         uiSection: 'category' as const,
         category: 'sunscreen' as const,
         sort_order: 10,
+        sortAfterQuestionVariantId: '01935b8f-0000-7000-8000-000000000202',
         status: 'active' as const,
         visibilityConditions: [
           {
+            questionId: '01935b8f-0000-7000-8000-000000000301',
             operator: 'EQ' as const,
-            value: 2,
+            value: 1,
             state: 'REQUIRED' as const,
           },
         ],

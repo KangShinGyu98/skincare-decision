@@ -60,7 +60,7 @@ describe('CategoryDecisionRepository', () => {
       questionKey: 'category.selected',
       title: 'Choose category',
       answerType: QuestionAnswerType.SINGLE_CHOICE,
-      answerValues: [1, 2],
+      answerValues: [0, 1],
       answers: ['Toner', 'Sunscreen'],
       screen: Screen.context,
       uiSection: UiSection.category,
@@ -130,7 +130,7 @@ describe('CategoryDecisionRepository', () => {
         deviceId,
         userId,
         questionId,
-        value: [2],
+        value: [0],
         source: UserResponseSource.context,
         createdAt: new Date('2026-01-02T00:00:00.000Z'),
         updatedAt: new Date('2026-01-02T00:00:00.000Z'),
@@ -139,7 +139,7 @@ describe('CategoryDecisionRepository', () => {
 
     const result = await repository.findCurrentResponses(deviceId, [questionId], userId);
 
-    expect(result.map((response) => response.value)).toEqual([[2], [1]]);
+    expect(result.map((response) => response.value)).toEqual([[0], [1]]);
   });
 
   it('findProductCategoryByKey and findQuestionByKey return active records', async () => {
@@ -156,7 +156,7 @@ describe('CategoryDecisionRepository', () => {
         id: '018f0000-0000-7000-8000-000000000201',
         key: 'category.selected',
         answerType: QuestionAnswerType.SINGLE_CHOICE,
-        answerValues: [1, 2],
+        answerValues: [0, 1],
       },
     });
 

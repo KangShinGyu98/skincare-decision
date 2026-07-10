@@ -1,9 +1,6 @@
 'use client';
 
-import type {
-  AdminQuestionStatus,
-  AdminQuestionTableRow,
-} from '@skincare-decision/shared/schemas';
+import type { AdminQuestionStatus, AdminQuestionTableRow } from '@skincare-decision/shared/schemas';
 import type { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/shadcn/bedge';
 import { Spinner } from '@/components/shadcn/spinner';
@@ -118,7 +115,7 @@ export function createAdminQuestionColumns({
       size: 130,
       cell: ({ row }) => (
         <span className="text-sm text-[var(--color-text-secondary)]">
-          {row.original.category ?? 'common'}
+          {row.original.category ?? 'All'}
         </span>
       ),
     },
@@ -151,7 +148,7 @@ function VisibilityConditionsCell({
             {condition.state}
           </Badge>
           <span>
-            visibility_condition {condition.operator} {formatVisibilityConditionValue(condition)}
+            {condition.questionKey} {condition.operator} {formatVisibilityConditionValue(condition)}
           </span>
         </div>
       ))}

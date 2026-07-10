@@ -213,7 +213,7 @@
 | `id`            | `String @id @db.Uuid`                        | `UUID`                                                            | PK, NOT NULL                          | 내부 PK                                             | UUID                      |
 | `key`           | `String @db.VarChar(100)`                    | `VARCHAR(100)`                                                    | NOT NULL, UNIQUE                      | seed/admin/debug용 slug. FK 대상 아님               | `life.outdoor_activity`   |
 | `answer_type`   | `questions_answer_type_enum`                 | `questions_answer_type_enum`                                      | NOT NULL                              | 답변 선택 방식. 선택지 개수는 `answer_count`로 판단 | `SINGLE_CHOICE`           |
-| `answer_values` | `Int[]`                                      | `INTEGER[]`                                                       | NOT NULL                              | 내부 로직 비교값 배열                               | `[3,2,1]`                 |
+| `answer_values` | `Int[]`                                      | `INTEGER[]`                                                       | NOT NULL                              | 내부 로직 비교값 배열                               | `[0,1,2]`                 |
 | `answer_count`  | `Int`                                        | `INTEGER GENERATED ALWAYS AS (cardinality(answer_values)) STORED` | NOT NULL                              | 답변 개수. 복합 FK용 생성 컬럼                      | `3`                       |
 | `is_active`     | `Boolean @default(true)`                     | `BOOLEAN`                                                         | NOT NULL, DEFAULT `true`              | 비활성화 시 신규 질문/조건에서 제외                 | `true`                    |
 | `created_at`    | `DateTime @default(now()) @db.Timestamptz()` | `TIMESTAMPTZ`                                                     | NOT NULL, DEFAULT `CURRENT_TIMESTAMP` | 생성                                                | `2026-04-01T00:00:00.000` |
@@ -283,22 +283,24 @@ REFERENCES questions (id, answer_count);
 
 ### 2.3 `question_visibility_conditions`
 
-| 필드                  | Prisma 타입                                  | SQL 타입                   | 제약                                                    | 설명                                                         | 예시       |
-| --------------------- | -------------------------------------------- | -------------------------- | ------------------------------------------------------- | ------------------------------------------------------------ | ---------- |
-| `id`                  | `String @id @db.Uuid`                        | `UUID`                     | PK, NOT NULL                                            | 조건 ID                                                      | UUID       |
-| `question_variant_id` | `String @db.Uuid`                            | `UUID`                     | NOT NULL, FK → `question_variants.id` ON DELETE CASCADE | 대상 질문 variant (canonical 이 아닌 화면 variant 기준)      | UUID       |
-| `operator`            | `comparison_operator_enum`                   | `comparison_operator_enum` | NOT NULL                                                | 연산자                                                       | `EQ`       |
-| `value`               | `Int`                                        | `INTEGER`                  | NOT NULL                                                | 비교값                                                       | `1`        |
-| `state`               | `condition_state_enum`                       | `condition_state_enum`     | NOT NULL                                                | REQUIRED(모두 충족 시 노출) / EXCLUDED(하나라도 맞으면 숨김) | `REQUIRED` |
-| `created_at`          | `DateTime @default(now()) @db.Timestamptz()` | `TIMESTAMPTZ`              | NOT NULL, DEFAULT `CURRENT_TIMESTAMP`                   | 생성                                                         | 타임스탬프 |
-| `updated_at`          | `DateTime? @updatedAt @db.Timestamptz()`     | `TIMESTAMPTZ`              | NULLABLE                                                | 마지막 변경 시각                                             | 타임스탬프 |
+| 필드                    | Prisma 타입                                  | SQL 타입                   | 제약                                                    | 설명                                                         | 예시       |
+| ----------------------- | -------------------------------------------- | -------------------------- | ------------------------------------------------------- | ------------------------------------------------------------ | ---------- |
+| `id`                    | `String @id @db.Uuid`                        | `UUID`                     | PK, NOT NULL                                            | 조건 ID                                                      | UUID       |
+| `question_variant_id`   | `String @db.Uuid`                            | `UUID`                     | NOT NULL, FK → `question_variants.id` ON DELETE CASCADE | 대상 질문 variant (canonical 이 아닌 화면 variant 기준)      | UUID       |
+| `condition_question_id` | `String @db.Uuid`                            | `UUID`                     | NOT NULL, FK → `questions.id` ON DELETE RESTRICT        | 조건 평가 기준 질문                                          | UUID       |
+| `operator`              | `comparison_operator_enum`                   | `comparison_operator_enum` | NOT NULL                                                | 연산자                                                       | `EQ`       |
+| `value`                 | `Int`                                        | `INTEGER`                  | NOT NULL                                                | 비교값                                                       | `1`        |
+| `state`                 | `condition_state_enum`                       | `condition_state_enum`     | NOT NULL                                                | REQUIRED(모두 충족 시 노출) / EXCLUDED(하나라도 맞으면 숨김) | `REQUIRED` |
+| `created_at`            | `DateTime @default(now()) @db.Timestamptz()` | `TIMESTAMPTZ`              | NOT NULL, DEFAULT `CURRENT_TIMESTAMP`                   | 생성                                                         | 타임스탬프 |
+| `updated_at`            | `DateTime? @updatedAt @db.Timestamptz()`     | `TIMESTAMPTZ`              | NULLABLE                                                | 마지막 변경 시각                                             | 타임스탬프 |
 
 **인덱스**
 
 - `pk_question_visibility_conditions` (PK)
 - `idx_question_visibility_conditions_question_variant_id`
+- `idx_question_visibility_conditions_condition_question_id`
 
-**설명**: 질문 노출 조건 확장 테이블. 현재 카테고리별 노출은 `question_variants.category`로 직접 처리한다. 이 테이블은 이후 특정 user response 값에 따른 질문 숨김/노출이 필요할 때 variant 단위 조건 저장소로 사용한다.
+**설명**: 질문 노출 조건 확장 테이블. 현재 카테고리별 노출은 `question_variants.category`로 직접 처리한다. 이 테이블은 특정 base question의 user response 값에 따른 질문 숨김/노출이 필요할 때 variant 단위 조건 저장소로 사용한다.
 
 ---
 
@@ -867,14 +869,14 @@ CREATE INDEX products_attr_eye_sting_idx ON products ((attributes->>'eye_sting')
 
 ## 부록 A. FK ON DELETE 정책 한눈에 보기
 
-| 패턴                                | ON DELETE  | 적용 예                                                                                                                                                                                                                                                                      |
-| ----------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 영속 마스터 → 사용자 활동           | `RESTRICT` | `devices.id` ← user_sessions, user_responses, decision_runs, reaction_reports, product_matrix_filter_states, avoidance_rules                                                                                                                                                 |
-| 영속 마스터 → 사용자 활동 (user 측) | `SET NULL` | `users.id` ← devices, user_sessions, user_responses, decision_runs, reaction_reports, product_matrix_filter_states, avoidance_rules                                                                                                                                          |
-| 카탈로그 → 카탈로그                 | `RESTRICT` | `questions.id` ← user_responses / priority_rule_conditions / question_filter_mappings.trigger_question_id, `product_categories.id` ← product_matrix_filter_definitions.category_id, `category_attribute_definitions.id` ← product_filter_definitions.attribute_definition_id |
-| 카탈로그 → 카탈로그 (자식 cascade)  | `CASCADE`  | `questions.id` ← question_variants, `question_variants.id` ← question_visibility_conditions, `product_matrix_filter_definitions.id` ← question_filter_mappings.matrix_filter_definition_id, `priority_rules.id` ← priority_rule_conditions                                   |
-| 옵션 참조                           | `SET NULL` | `product_matrix_filter_definitions.product_filter_definition_id`                                                                                                                                                                                                             |
-| 모든 UPDATE                         | `CASCADE`  | 전 테이블 (Prisma 기본값)                                                                                                                                                                                                                                                    |
+| 패턴                                | ON DELETE  | 적용 예                                                                                                                                                                                                                                                                                                                             |
+| ----------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 영속 마스터 → 사용자 활동           | `RESTRICT` | `devices.id` ← user_sessions, user_responses, decision_runs, reaction_reports, product_matrix_filter_states, avoidance_rules                                                                                                                                                                                                        |
+| 영속 마스터 → 사용자 활동 (user 측) | `SET NULL` | `users.id` ← devices, user_sessions, user_responses, decision_runs, reaction_reports, product_matrix_filter_states, avoidance_rules                                                                                                                                                                                                 |
+| 카탈로그 → 카탈로그                 | `RESTRICT` | `questions.id` ← user_responses / priority_rule_conditions / question_filter_mappings.trigger_question_id / question_visibility_conditions.condition_question_id, `product_categories.id` ← product_matrix_filter_definitions.category_id, `category_attribute_definitions.id` ← product_filter_definitions.attribute_definition_id |
+| 카탈로그 → 카탈로그 (자식 cascade)  | `CASCADE`  | `questions.id` ← question_variants, `question_variants.id` ← question_visibility_conditions, `product_matrix_filter_definitions.id` ← question_filter_mappings.matrix_filter_definition_id, `priority_rules.id` ← priority_rule_conditions                                                                                          |
+| 옵션 참조                           | `SET NULL` | `product_matrix_filter_definitions.product_filter_definition_id`                                                                                                                                                                                                                                                                    |
+| 모든 UPDATE                         | `CASCADE`  | 전 테이블 (Prisma 기본값)                                                                                                                                                                                                                                                                                                           |
 
 > `decision_runs.category_id` / `.filter_state_id` 는 FK 를 두지 않는다 — append-only 스냅샷이라 reference 생명주기가 과거 기록을 건드리면 안 되고, 무결성의 단일 진실은 `applied_filters_snapshot` 등 JSONB 다. 카테고리/필터상태로 `decision_runs` 를 조회하는 화면도 없어 단일 인덱스(`idx_decision_runs_category_id`, `idx_decision_runs_filter_state_id`)까지 제거했다. (→ [ADR-0002](../../memory/ADR/ADR-0002-db-identity-and-fk-policy.md))
 

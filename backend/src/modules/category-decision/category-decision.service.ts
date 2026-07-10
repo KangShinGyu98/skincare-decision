@@ -26,12 +26,12 @@ import {
 } from './category-decision.repository';
 
 const CATEGORY_VALUE_BY_KEY: ReadonlyMap<string, number> = new Map([
-  ['toner', 1],
-  ['sunscreen', 2],
-  ['serum', 3],
-  ['lipcare', 4],
-  ['moisturizer', 5],
-  ['cleanser', 6],
+  ['toner', 0],
+  ['sunscreen', 1],
+  ['serum', 2],
+  ['lipcare', 3],
+  ['moisturizer', 4],
+  ['cleanser', 5],
 ]);
 
 const CATEGORY_KEY_BY_VALUE: ReadonlyMap<number, string> = new Map(

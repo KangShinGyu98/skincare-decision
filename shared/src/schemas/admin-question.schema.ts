@@ -33,19 +33,9 @@ export const adminQuestionCategorySchema = z.enum([
 
 export type AdminQuestionCategory = z.infer<typeof adminQuestionCategorySchema>;
 
-export const adminQuestionCategoryFilterSchema = z.union([
-  adminQuestionCategorySchema,
-  z.literal('common'),
-]);
-
-export type AdminQuestionCategoryFilter = z.infer<typeof adminQuestionCategoryFilterSchema>;
-
 export const adminQuestionsQuerySchema = z
   .object({
-    screen: adminQuestionScreenSchema.optional(),
-    uiSection: adminQuestionUiSectionSchema.optional(),
-    category: adminQuestionCategoryFilterSchema.optional(),
-    status: adminQuestionStatusSchema.optional(),
+    uiSection: adminQuestionUiSectionSchema,
   })
   .strict();
 
@@ -87,6 +77,7 @@ export type UpdateAdminQuestionSortOrderBody = z.infer<
 
 export const adminQuestionVisibilityConditionInputSchema = z
   .object({
+    questionId: z.uuid(),
     operator: adminRuleConditionOperatorSchema,
     value: z.number().int(),
     state: adminRuleConditionStateSchema,
@@ -97,6 +88,16 @@ export type AdminQuestionVisibilityConditionInput = z.infer<
   typeof adminQuestionVisibilityConditionInputSchema
 >;
 
+export const adminQuestionVisibilityConditionSchema = adminQuestionVisibilityConditionInputSchema
+  .extend({
+    questionKey: z.string().min(1),
+  })
+  .strict();
+
+export type AdminQuestionVisibilityCondition = z.infer<
+  typeof adminQuestionVisibilityConditionSchema
+>;
+
 export const adminQuestionVariantMutationSchema = z
   .object({
     id: z.uuid().optional(),
@@ -104,10 +105,11 @@ export const adminQuestionVariantMutationSchema = z
     answers: z.array(z.string().trim().min(1)).min(1),
     screen: adminQuestionScreenSchema,
     uiSection: adminQuestionUiSectionSchema,
-    category: adminQuestionCategorySchema.nullable().default(null),
-    sort_order: z.number().int().nonnegative().default(0),
+    category: adminQuestionCategorySchema.nullable(),
+    sort_order: z.number().int().nonnegative(),
+    sortAfterQuestionVariantId: z.uuid().nullable().optional(),
     status: adminQuestionStatusSchema,
-    visibilityConditions: z.array(adminQuestionVisibilityConditionInputSchema).default([]),
+    visibilityConditions: z.array(adminQuestionVisibilityConditionInputSchema),
   })
   .strict();
 
@@ -117,11 +119,22 @@ export const adminQuestionMutationBodySchema = z
   .object({
     question: z.string().trim().min(1).max(100),
     answerType: questionAnswerTypeSchema,
-    answerValues: z.array(z.number().int()).min(1),
+    answerCount: z.number().int().min(1),
     status: adminQuestionStatusSchema,
     variants: z.array(adminQuestionVariantMutationSchema).min(1),
   })
-  .strict();
+  .strict()
+  .superRefine((body, context) => {
+    body.variants.forEach((variant, variantIndex) => {
+      if (variant.answers.length !== body.answerCount) {
+        context.addIssue({
+          code: 'custom',
+          message: '답변 개수는 answerCount와 같아야 합니다.',
+          path: ['variants', variantIndex, 'answers'],
+        });
+      }
+    });
+  });
 
 export const createAdminQuestionBodySchema = adminQuestionMutationBodySchema;
 
@@ -141,7 +154,7 @@ export const adminQuestionTableRowSchema = z
     questionVariant: z.string().min(1),
     answerType: questionAnswerTypeSchema,
     userOptions: z.array(questionAnswerSchema),
-    visibilityConditions: z.array(adminQuestionVisibilityConditionInputSchema),
+    visibilityConditions: z.array(adminQuestionVisibilityConditionSchema),
     screen: adminQuestionScreenSchema,
     uiSection: adminQuestionUiSectionSchema,
     category: adminQuestionCategorySchema.nullable(),
@@ -181,7 +194,7 @@ export const adminQuestionVariantDetailSchema = z
     uiSection: adminQuestionUiSectionSchema,
     sort_order: z.number().int(),
     status: adminQuestionStatusSchema,
-    visibilityConditions: z.array(adminQuestionVisibilityConditionInputSchema),
+    visibilityConditions: z.array(adminQuestionVisibilityConditionSchema),
     category: adminQuestionCategorySchema.nullable(),
   })
   .strict();

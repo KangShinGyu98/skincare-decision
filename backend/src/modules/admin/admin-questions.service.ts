@@ -5,6 +5,7 @@ import {
   type AdminQuestionCategory,
   type AdminQuestionDetail,
   type AdminQuestionVariantDetail,
+  type AdminQuestionVisibilityCondition,
   adminQuestionCategorySchema,
   type CreateAdminQuestionBody,
   type CreateAdminQuestionResponse,
@@ -30,7 +31,7 @@ import {
   AdminQuestionsRepository,
   type AdminQuestionRecord,
   type AdminQuestionVariantRecord,
-  type FindAdminQuestionsInput,
+  type AdminQuestionVisibilityConditionRecord,
   InvalidAdminQuestionSortOrderError,
   InvalidAdminQuestionVariantError,
   type SaveAdminQuestionInput,
@@ -41,25 +42,9 @@ export class AdminQuestionsService {
   constructor(private readonly repository: AdminQuestionsRepository) {}
 
   async findQuestions(query: AdminQuestionsQuery): Promise<AdminQuestionsResponse> {
-    const filters: FindAdminQuestionsInput = {};
-
-    if (query.screen) {
-      filters.screen = query.screen;
-    }
-
-    if (query.uiSection) {
-      filters.uiSection = query.uiSection;
-    }
-
-    if (query.category) {
-      filters.category = query.category;
-    }
-
-    if (query.status) {
-      filters.status = query.status;
-    }
-
-    const records = await this.repository.findQuestions(filters);
+    const records = await this.repository.findQuestions({
+      uiSection: query.uiSection,
+    });
 
     return adminQuestionsResponseSchema.parse({
       items: records.map((record) => this.toTableRow(record)),
@@ -165,9 +150,7 @@ export class AdminQuestionsService {
     body: UpdateAdminQuestionSortOrderBody,
   ): Promise<UpdateAdminQuestionSortOrderResponse> {
     try {
-      const records = await this.repository.updateQuestionVariantSortOrder(
-        body.questionVariantIds,
-      );
+      const records = await this.repository.updateQuestionVariantSortOrder(body.questionVariantIds);
 
       return updateAdminQuestionSortOrderResponseSchema.parse({
         items: records.map((record) => this.toTableRow(record)),
@@ -198,7 +181,9 @@ export class AdminQuestionsService {
         record.answers,
         record.question.key,
       ),
-      visibilityConditions: record.visibilityConditions,
+      visibilityConditions: record.visibilityConditions.map((condition) =>
+        this.toVisibilityCondition(condition),
+      ),
       screen: record.screen,
       uiSection: record.uiSection,
       category: this.toCategory(record.category),
@@ -228,7 +213,9 @@ export class AdminQuestionsService {
       uiSection: variant.uiSection,
       sort_order: variant.sortOrder,
       status: variant.isActive ? 'active' : 'inactive',
-      visibilityConditions: variant.visibilityConditions,
+      visibilityConditions: variant.visibilityConditions.map((condition) =>
+        this.toVisibilityCondition(condition),
+      ),
       category: this.toCategory(variant.category),
     };
   }
@@ -256,6 +243,18 @@ export class AdminQuestionsService {
     });
   }
 
+  private toVisibilityCondition(
+    condition: AdminQuestionVisibilityConditionRecord,
+  ): AdminQuestionVisibilityCondition {
+    return {
+      questionId: condition.conditionQuestion.id,
+      questionKey: condition.conditionQuestion.key,
+      operator: condition.operator,
+      value: condition.value,
+      state: condition.state,
+    };
+  }
+
   private toCategory(category: string | null): AdminQuestionCategory | null {
     return adminQuestionCategorySchema.nullable().parse(category);
   }
@@ -264,10 +263,10 @@ export class AdminQuestionsService {
     body: CreateAdminQuestionBody | UpdateAdminQuestionBody,
   ): SaveAdminQuestionInput {
     for (const [variantIndex, variant] of body.variants.entries()) {
-      if (variant.answers.length !== body.answerValues.length) {
+      if (variant.answers.length !== body.answerCount) {
         throw new BadRequestException({
           code: 'ADMIN_QUESTION_ANSWER_COUNT_MISMATCH',
-          message: 'answers length must match answerValues length',
+          message: 'answers length must match answerCount',
           path: ['variants', variantIndex, 'answers'],
         });
       }
@@ -276,7 +275,7 @@ export class AdminQuestionsService {
     return {
       key: body.question,
       answerType: body.answerType,
-      answerValues: body.answerValues,
+      answerValues: Array.from({ length: body.answerCount }, (_, index) => index),
       isActive: body.status === 'active',
       variants: body.variants.map((variant) => ({
         id: variant.id,
@@ -286,6 +285,7 @@ export class AdminQuestionsService {
         uiSection: variant.uiSection,
         category: variant.category,
         sortOrder: variant.sort_order,
+        sortAfterQuestionVariantId: variant.sortAfterQuestionVariantId,
         isActive: variant.status === 'active',
         visibilityConditions: variant.visibilityConditions,
       })),

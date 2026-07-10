@@ -220,19 +220,20 @@ model SessionEvent {
 }
 
 model Question {
-  id                     String                  @id(map: "pk_questions") @db.Uuid
-  key                    String                  @unique(map: "uq_questions_key") @db.VarChar(100)
-  answerType             QuestionAnswerType      @map("answer_type")
-  answerValues           Int[]                   @map("answer_values")
-  answerCount            Int                     @map("answer_count") @ignore
-  isActive               Boolean                 @default(true) @map("is_active")
-  createdAt              DateTime                @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt              DateTime?               @updatedAt @map("updated_at") @db.Timestamptz()
-  deletedAt              DateTime?               @map("deleted_at") @db.Timestamptz()
-  variants               QuestionVariant[]
-  userResponses          UserResponse[]
-  priorityRuleConditions PriorityRuleCondition[]
-  questionFilterMappings QuestionFilterMapping[]
+  id                         String                        @id(map: "pk_questions") @db.Uuid
+  key                        String                        @unique(map: "uq_questions_key") @db.VarChar(100)
+  answerType                 QuestionAnswerType            @map("answer_type")
+  answerValues               Int[]                         @map("answer_values")
+  answerCount                Int                           @map("answer_count") @ignore
+  isActive                   Boolean                       @default(true) @map("is_active")
+  createdAt                  DateTime                      @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt                  DateTime?                     @updatedAt @map("updated_at") @db.Timestamptz()
+  deletedAt                  DateTime?                     @map("deleted_at") @db.Timestamptz()
+  variants                   QuestionVariant[]
+  visibilityConditionSources QuestionVisibilityCondition[] @relation("QuestionVisibilityConditionSourceQuestion")
+  userResponses              UserResponse[]
+  priorityRuleConditions     PriorityRuleCondition[]
+  questionFilterMappings     QuestionFilterMapping[]
 
   // answer_count generated column and uq_questions_id_answer_count require raw SQL migration.
   @@map("questions")
@@ -263,16 +264,19 @@ model QuestionVariant {
 }
 
 model QuestionVisibilityCondition {
-  id                String             @id(map: "pk_question_visibility_conditions") @db.Uuid
-  questionVariantId String             @map("question_variant_id") @db.Uuid
-  operator          ComparisonOperator
-  value             Int
-  state             ConditionState
-  createdAt         DateTime           @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt         DateTime?          @updatedAt @map("updated_at") @db.Timestamptz()
-  questionVariant   QuestionVariant    @relation(fields: [questionVariantId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "fk_question_visibility_conditions_question_variant_id")
+  id                  String             @id(map: "pk_question_visibility_conditions") @db.Uuid
+  questionVariantId   String             @map("question_variant_id") @db.Uuid
+  conditionQuestionId String             @map("condition_question_id") @db.Uuid
+  operator            ComparisonOperator
+  value               Int
+  state               ConditionState
+  createdAt           DateTime           @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt           DateTime?          @updatedAt @map("updated_at") @db.Timestamptz()
+  questionVariant     QuestionVariant    @relation(fields: [questionVariantId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "fk_question_visibility_conditions_question_variant_id")
+  conditionQuestion   Question           @relation("QuestionVisibilityConditionSourceQuestion", fields: [conditionQuestionId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "fk_question_visibility_conditions_condition_question_id")
 
   @@index([questionVariantId], map: "idx_question_visibility_conditions_question_variant_id")
+  @@index([conditionQuestionId], map: "idx_question_visibility_conditions_condition_question_id")
   @@map("question_visibility_conditions")
 }
 

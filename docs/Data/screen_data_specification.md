@@ -210,14 +210,14 @@ S08 Reaction Traceback
 
 ### 3.3 계산 데이터 (Computed)
 
-| 계산 항목                | 입력                                                                                                | 로직                                                                                                                 |
-| ------------------------ | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| 질문 노출 결정           | 현재 `user_responses` + `question_visibility_conditions`                                            | 동일 (REQUIRED AND / EXCLUDED OR-NOT). `category.selected EQ 1` 같은 내부 value 기반 조건이 많음                     |
-| 필터 후보 산출           | `user_responses` + `question_filter_mappings`                                                       | trigger 조건이 매칭되는 row 의 `matrix_filter_definition_id` 를 자동 선택                                            |
-| 기본 필터 시드           | `product_matrix_filter_definitions WHERE category_id=? AND is_default=true`                         | 카테고리 진입 시 자동 선택 (사용자 답변과 무관)                                                                      |
-| 개인화 필터 시드         | `question_filter_mappings` 의 trigger 매칭 결과                                                     | 사용자 답변이 trigger 조건을 만족하면 matrix_filter_definition_id 를 자동 선택                                       |
-| Concern preset 필터 합성 | `user_responses.source='concern'` + 프론트 상수 `suggested_filters` + `category.selected` 일치 여부 | 일치하면 matrix filter definition 으로 resolve 해 `[{matrix_filter_definition_id, operator, value}]` shape 으로 합성 |
-| Box 3 미리보기 제품      | category_id + attribute 조건들                                                                      | 동적 SQL: `WHERE category_id=? AND is_active=true AND (attributes->>'k')::T <op> ?`. avoidance_rules 후처리.         |
+| 계산 항목                | 입력                                                                                                | 로직                                                                                                                    |
+| ------------------------ | --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| 질문 노출 결정           | 현재 `user_responses` + `question_visibility_conditions`                                            | 동일 (REQUIRED AND / EXCLUDED OR-NOT). `category.selected EQ <0-based category value>` 같은 내부 value 기반 조건이 많음 |
+| 필터 후보 산출           | `user_responses` + `question_filter_mappings`                                                       | trigger 조건이 매칭되는 row 의 `matrix_filter_definition_id` 를 자동 선택                                               |
+| 기본 필터 시드           | `product_matrix_filter_definitions WHERE category_id=? AND is_default=true`                         | 카테고리 진입 시 자동 선택 (사용자 답변과 무관)                                                                         |
+| 개인화 필터 시드         | `question_filter_mappings` 의 trigger 매칭 결과                                                     | 사용자 답변이 trigger 조건을 만족하면 matrix_filter_definition_id 를 자동 선택                                          |
+| Concern preset 필터 합성 | `user_responses.source='concern'` + 프론트 상수 `suggested_filters` + `category.selected` 일치 여부 | 일치하면 matrix filter definition 으로 resolve 해 `[{matrix_filter_definition_id, operator, value}]` shape 으로 합성    |
+| Box 3 미리보기 제품      | category_id + attribute 조건들                                                                      | 동적 SQL: `WHERE category_id=? AND is_active=true AND (attributes->>'k')::T <op> ?`. avoidance_rules 후처리.            |
 
 ### 3.4 다음 화면으로 전달 (Pass to Next)
 

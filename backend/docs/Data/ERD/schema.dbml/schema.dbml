@@ -69,6 +69,7 @@ Table questions {
   updatedAt DateTime
   deletedAt DateTime
   variants question_variants [not null]
+  visibilityConditionSources question_visibility_conditions [not null]
   userResponses user_responses [not null]
   priorityRuleConditions priority_rule_conditions [not null]
   questionFilterMappings question_filter_mappings [not null]
@@ -94,12 +95,14 @@ Table question_variants {
 Table question_visibility_conditions {
   id String [pk]
   questionVariantId String [not null]
+  conditionQuestionId String [not null]
   operator ComparisonOperator [not null]
   value Int [not null]
   state ConditionState [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime
   questionVariant question_variants [not null]
+  conditionQuestion questions [not null]
 }
 
 Table user_responses {
@@ -541,6 +544,8 @@ Ref: session_events.sessionId > user_sessions.id [delete: Restrict]
 Ref: question_variants.questionId > questions.id [delete: Cascade]
 
 Ref: question_visibility_conditions.questionVariantId > question_variants.id [delete: Cascade]
+
+Ref: question_visibility_conditions.conditionQuestionId > questions.id [delete: Restrict]
 
 Ref: user_responses.deviceId > devices.id [delete: Restrict]
 

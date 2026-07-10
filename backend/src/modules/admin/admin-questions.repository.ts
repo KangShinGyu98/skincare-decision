@@ -2,9 +2,6 @@ import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import type {
   AdminQuestionCategory,
-  AdminQuestionCategoryFilter,
-  AdminQuestionScreen,
-  AdminQuestionStatus,
   AdminQuestionUiSection,
 } from '@skincare-decision/shared/schemas';
 import {
@@ -39,6 +36,12 @@ const ADMIN_QUESTION_SELECT = {
       operator: true,
       value: true,
       state: true,
+      conditionQuestion: {
+        select: {
+          id: true,
+          key: true,
+        },
+      },
     },
     orderBy: [{ createdAt: 'asc' }],
   },
@@ -68,6 +71,12 @@ const ADMIN_QUESTION_DETAIL_SELECT = {
           operator: true,
           value: true,
           state: true,
+          conditionQuestion: {
+            select: {
+              id: true,
+              key: true,
+            },
+          },
         },
         orderBy: [{ createdAt: 'asc' }],
       },
@@ -77,16 +86,17 @@ const ADMIN_QUESTION_DETAIL_SELECT = {
 } satisfies Prisma.QuestionSelect;
 
 export type FindAdminQuestionsInput = {
-  screen?: AdminQuestionScreen;
-  uiSection?: AdminQuestionUiSection;
-  category?: AdminQuestionCategoryFilter;
-  status?: AdminQuestionStatus;
+  uiSection: AdminQuestionUiSection;
 };
 
 export type AdminQuestionVisibilityConditionRecord = {
   operator: ComparisonOperator;
   value: number;
   state: ConditionState;
+  conditionQuestion: {
+    id: string;
+    key: string;
+  };
 };
 
 export type AdminQuestionRecord = {
@@ -129,6 +139,7 @@ export type AdminQuestionDetailRecord = {
 };
 
 export type SaveAdminQuestionVisibilityConditionInput = {
+  questionId: string;
   operator: ComparisonOperator;
   value: number;
   state: ConditionState;
@@ -142,6 +153,7 @@ export type SaveAdminQuestionVariantInput = {
   uiSection: UiSection;
   category: AdminQuestionCategory | null;
   sortOrder: number;
+  sortAfterQuestionVariantId?: string | null | undefined;
   isActive: boolean;
   visibilityConditions: SaveAdminQuestionVisibilityConditionInput[];
 };
@@ -173,6 +185,19 @@ type AdminQuestionVariantSortOrderRow = {
   uiSection: UiSection;
 };
 
+type AdminQuestionVariantPositionInput = {
+  id: string;
+  uiSection: UiSection;
+  previousUiSection?: UiSection | undefined;
+  sortAfterQuestionVariantId?: string | null | undefined;
+  shouldPosition: boolean;
+};
+
+type ExistingAdminQuestionVariantRow = {
+  id: string;
+  uiSection: UiSection;
+};
+
 function isRecordNotFoundError(error: unknown): boolean {
   return typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2025';
 }
@@ -181,21 +206,14 @@ function isRecordNotFoundError(error: unknown): boolean {
 export class AdminQuestionsRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findQuestions(input: FindAdminQuestionsInput = {}): Promise<AdminQuestionRecord[]> {
+  async findQuestions(input: FindAdminQuestionsInput): Promise<AdminQuestionRecord[]> {
     return this.prisma.questionVariant.findMany({
       where: {
         deletedAt: null,
         question: {
           deletedAt: null,
         },
-        ...(input.screen ? { screen: input.screen } : {}),
-        ...(input.uiSection ? { uiSection: input.uiSection } : {}),
-        ...(input.category === 'common'
-          ? { category: null }
-          : input.category
-            ? { category: input.category }
-            : {}),
-        ...(input.status ? { isActive: input.status === 'active' } : {}),
+        uiSection: input.uiSection,
       },
       select: ADMIN_QUESTION_SELECT,
       orderBy: [{ uiSection: 'asc' }, { sortOrder: 'asc' }, { createdAt: 'asc' }],
@@ -227,7 +245,12 @@ export class AdminQuestionsRepository {
         },
       });
 
-      await this.createQuestionVariants(transaction, question.id, input.variants);
+      const positionInputs = await this.createQuestionVariants(
+        transaction,
+        question.id,
+        input.variants,
+      );
+      await this.normalizeQuestionVariantPositions(transaction, positionInputs, []);
 
       return question.id;
     });
@@ -259,6 +282,7 @@ export class AdminQuestionsRepository {
             },
             select: {
               id: true,
+              uiSection: true,
             },
           },
         },
@@ -271,6 +295,9 @@ export class AdminQuestionsRepository {
       this.validateVariantIds(
         input.variants,
         existingQuestion.variants.map((variant) => variant.id),
+      );
+      const existingVariantMap = new Map(
+        existingQuestion.variants.map((variant) => [variant.id, variant]),
       );
 
       await transaction.question.update({
@@ -294,6 +321,11 @@ export class AdminQuestionsRepository {
       const deletedVariantIds = existingQuestion.variants
         .map((variant) => variant.id)
         .filter((variantId) => !retainedVariantIds.has(variantId));
+      const deletedVariants = deletedVariantIds.flatMap((variantId) => {
+        const variant = existingVariantMap.get(variantId);
+
+        return variant ? [variant] : [];
+      });
 
       if (deletedVariantIds.length > 0) {
         await transaction.questionVariant.updateMany({
@@ -310,7 +342,17 @@ export class AdminQuestionsRepository {
         });
       }
 
-      await this.upsertQuestionVariants(transaction, questionId, input.variants);
+      const positionInputs = await this.upsertQuestionVariants(
+        transaction,
+        questionId,
+        input.variants,
+        existingVariantMap,
+      );
+      await this.normalizeQuestionVariantPositions(
+        transaction,
+        positionInputs,
+        deletedVariants.map((variant) => variant.uiSection),
+      );
 
       return questionId;
     });
@@ -410,13 +452,7 @@ export class AdminQuestionsRepository {
           Prisma.sql`(${questionVariantId}::uuid, ${index + 1}::integer)`,
       );
 
-      await transaction.$executeRaw`
-        UPDATE question_variants AS target_variant
-        SET sort_order = sorted_variants.sort_order
-        FROM (VALUES ${Prisma.join(sortOrderRows)}) AS sorted_variants(id, sort_order)
-        WHERE target_variant.id = sorted_variants.id
-          AND target_variant.deleted_at IS NULL
-      `;
+      await this.applyQuestionVariantSortOrder(transaction, sortOrderRows);
 
       return transaction.questionVariant.findMany({
         where: {
@@ -505,7 +541,9 @@ export class AdminQuestionsRepository {
     transaction: Prisma.TransactionClient,
     questionId: string,
     variants: SaveAdminQuestionVariantInput[],
-  ): Promise<void> {
+  ): Promise<AdminQuestionVariantPositionInput[]> {
+    const positionInputs: AdminQuestionVariantPositionInput[] = [];
+
     for (const variant of variants) {
       const variantId = randomUUID();
 
@@ -518,7 +556,7 @@ export class AdminQuestionsRepository {
           screen: variant.screen,
           uiSection: variant.uiSection,
           category: variant.category,
-          sortOrder: variant.sortOrder,
+          sortOrder: 0,
           isActive: variant.isActive,
         },
         select: {
@@ -526,16 +564,28 @@ export class AdminQuestionsRepository {
         },
       });
       await this.replaceVisibilityConditions(transaction, variantId, variant.visibilityConditions);
+      positionInputs.push({
+        id: variantId,
+        uiSection: variant.uiSection,
+        sortAfterQuestionVariantId: variant.sortAfterQuestionVariantId,
+        shouldPosition: true,
+      });
     }
+
+    return positionInputs;
   }
 
   private async upsertQuestionVariants(
     transaction: Prisma.TransactionClient,
     questionId: string,
     variants: SaveAdminQuestionVariantInput[],
-  ): Promise<void> {
+    existingVariantMap: Map<string, ExistingAdminQuestionVariantRow>,
+  ): Promise<AdminQuestionVariantPositionInput[]> {
+    const positionInputs: AdminQuestionVariantPositionInput[] = [];
+
     for (const variant of variants) {
       const variantId = variant.id ?? randomUUID();
+      const existingVariant = variant.id ? existingVariantMap.get(variant.id) : undefined;
 
       if (variant.id) {
         await transaction.questionVariant.update({
@@ -548,7 +598,6 @@ export class AdminQuestionsRepository {
             screen: variant.screen,
             uiSection: variant.uiSection,
             category: variant.category,
-            sortOrder: variant.sortOrder,
             isActive: variant.isActive,
           },
           select: {
@@ -565,7 +614,7 @@ export class AdminQuestionsRepository {
             screen: variant.screen,
             uiSection: variant.uiSection,
             category: variant.category,
-            sortOrder: variant.sortOrder,
+            sortOrder: 0,
             isActive: variant.isActive,
           },
           select: {
@@ -575,7 +624,135 @@ export class AdminQuestionsRepository {
       }
 
       await this.replaceVisibilityConditions(transaction, variantId, variant.visibilityConditions);
+
+      positionInputs.push({
+        id: variantId,
+        uiSection: variant.uiSection,
+        previousUiSection: existingVariant?.uiSection,
+        sortAfterQuestionVariantId: variant.sortAfterQuestionVariantId,
+        shouldPosition:
+          !variant.id ||
+          variant.sortAfterQuestionVariantId !== undefined ||
+          existingVariant?.uiSection !== variant.uiSection,
+      });
     }
+
+    return positionInputs;
+  }
+
+  private async normalizeQuestionVariantPositions(
+    transaction: Prisma.TransactionClient,
+    positionInputs: AdminQuestionVariantPositionInput[],
+    affectedUiSections: UiSection[],
+  ): Promise<void> {
+    const uiSections = new Set([
+      ...affectedUiSections,
+      ...positionInputs.flatMap((positionInput) =>
+        positionInput.shouldPosition &&
+        positionInput.previousUiSection &&
+        positionInput.previousUiSection !== positionInput.uiSection
+          ? [positionInput.previousUiSection]
+          : [],
+      ),
+      ...positionInputs
+        .filter((positionInput) => positionInput.shouldPosition)
+        .map((positionInput) => positionInput.uiSection),
+    ]);
+
+    for (const uiSection of uiSections) {
+      const rows = await this.findLockedQuestionVariantIdsByUiSection(transaction, uiSection);
+      const rowIds = new Set(rows.map((row) => row.id));
+      const targetInputs = positionInputs.filter(
+        (positionInput) => positionInput.uiSection === uiSection && positionInput.shouldPosition,
+      );
+
+      let orderedIds = rows.map((row) => row.id);
+
+      for (const positionInput of targetInputs) {
+        if (!rowIds.has(positionInput.id)) {
+          throw new InvalidAdminQuestionVariantError(
+            `Unknown question variant id: ${positionInput.id}`,
+          );
+        }
+
+        orderedIds = orderedIds.filter(
+          (questionVariantId) => questionVariantId !== positionInput.id,
+        );
+
+        if (positionInput.sortAfterQuestionVariantId === null) {
+          orderedIds = [positionInput.id, ...orderedIds];
+          continue;
+        }
+
+        if (positionInput.sortAfterQuestionVariantId === undefined) {
+          orderedIds = [...orderedIds, positionInput.id];
+          continue;
+        }
+
+        if (positionInput.sortAfterQuestionVariantId === positionInput.id) {
+          throw new InvalidAdminQuestionVariantError(
+            'Question variant cannot be positioned after itself',
+          );
+        }
+
+        const anchorIndex = orderedIds.indexOf(positionInput.sortAfterQuestionVariantId);
+
+        if (anchorIndex < 0) {
+          throw new InvalidAdminQuestionVariantError(
+            'Sort position anchor must be in the same ui_section',
+          );
+        }
+
+        orderedIds = [
+          ...orderedIds.slice(0, anchorIndex + 1),
+          positionInput.id,
+          ...orderedIds.slice(anchorIndex + 1),
+        ];
+      }
+
+      const sortOrderRows = orderedIds.map(
+        (questionVariantId, index) =>
+          Prisma.sql`(${questionVariantId}::uuid, ${index + 1}::integer)`,
+      );
+
+      await this.applyQuestionVariantSortOrder(transaction, sortOrderRows);
+    }
+  }
+
+  private findLockedQuestionVariantIdsByUiSection(
+    transaction: Prisma.TransactionClient,
+    uiSection: UiSection,
+  ): Promise<AdminQuestionVariantSortOrderRow[]> {
+    return transaction.$queryRaw<AdminQuestionVariantSortOrderRow[]>`
+      SELECT
+        question_variant.id::text AS id,
+        question_variant.ui_section::text AS "uiSection"
+      FROM question_variants AS question_variant
+      INNER JOIN questions AS question
+        ON question.id = question_variant.question_id
+      WHERE question_variant.deleted_at IS NULL
+        AND question.deleted_at IS NULL
+        AND question_variant.ui_section = ${uiSection}::question_variants_ui_section_enum
+      ORDER BY question_variant.sort_order ASC, question_variant.created_at ASC
+      FOR UPDATE OF question_variant
+    `;
+  }
+
+  private async applyQuestionVariantSortOrder(
+    transaction: Prisma.TransactionClient,
+    sortOrderRows: Prisma.Sql[],
+  ): Promise<void> {
+    if (sortOrderRows.length === 0) {
+      return;
+    }
+
+    await transaction.$executeRaw`
+      UPDATE question_variants AS target_variant
+      SET sort_order = sorted_variants.sort_order
+      FROM (VALUES ${Prisma.join(sortOrderRows)}) AS sorted_variants(id, sort_order)
+      WHERE target_variant.id = sorted_variants.id
+        AND target_variant.deleted_at IS NULL
+    `;
   }
 
   private async replaceVisibilityConditions(
@@ -597,6 +774,7 @@ export class AdminQuestionsRepository {
       data: visibilityConditions.map((condition) => ({
         id: randomUUID(),
         questionVariantId,
+        conditionQuestionId: condition.questionId,
         operator: condition.operator,
         value: condition.value,
         state: condition.state,

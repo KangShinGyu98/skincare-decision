@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
+  AdminQuestionDetail,
   AdminQuestionsQuery,
   AdminQuestionsResponse,
   AdminQuestionStatus,
-  AdminQuestionTableRow,
   AdminRuleDetail,
   AdminRuleQuestionSearchResponse,
   AdminRulesResponse,
@@ -19,6 +19,7 @@ import type {
   QuestionUiSectionDto,
   ResetCategoryDecisionResponsesRequest,
   ResetPriorityGateResponsesRequest,
+  UpdateAdminQuestionBody,
   UpdateAdminQuestionSortOrderBody,
   UpdateAdminRuleBody,
   UpdateAdminRuleSortOrderBody,
@@ -45,6 +46,7 @@ export const queryKeys = {
   adminQuestions: {
     all: ['admin', 'questions'] as const,
     list: (query: AdminQuestionsQuery) => ['admin', 'questions', 'list', query] as const,
+    detail: (questionId: string) => ['admin', 'questions', 'detail', questionId] as const,
   },
 };
 
@@ -461,19 +463,6 @@ function removeAdminRuleRow(
   };
 }
 
-function replaceAdminQuestionRow(
-  previousData: AdminQuestionsResponse | undefined,
-  nextRow: AdminQuestionTableRow,
-): AdminQuestionsResponse | undefined {
-  if (!previousData) {
-    return previousData;
-  }
-
-  return {
-    items: previousData.items.map((item) => (item.id === nextRow.id ? nextRow : item)),
-  };
-}
-
 export function useAdminRules() {
   return useQuery({
     queryKey: queryKeys.adminRules.list,
@@ -481,10 +470,26 @@ export function useAdminRules() {
   });
 }
 
-export function useAdminQuestions(query: AdminQuestionsQuery = {}) {
+export function useAdminQuestions(query: AdminQuestionsQuery) {
   return useQuery<AdminQuestionsResponse>({
     queryKey: queryKeys.adminQuestions.list(query),
     queryFn: () => adminQuestionsApi.getQuestions(query),
+  });
+}
+
+export function useAdminQuestionDetail(questionId: string | null) {
+  return useQuery({
+    queryKey: questionId
+      ? queryKeys.adminQuestions.detail(questionId)
+      : ['admin', 'questions', 'detail', null],
+    queryFn: () => {
+      if (!questionId) {
+        throw new Error('questionId is required');
+      }
+
+      return adminQuestionsApi.getQuestion(questionId);
+    },
+    enabled: Boolean(questionId),
   });
 }
 
@@ -661,6 +666,63 @@ export function useSaveAdminRuleSortOrder() {
   });
 }
 
+export function useUpdateAdminQuestion() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ questionId, data }: { questionId: string; data: UpdateAdminQuestionBody }) =>
+      adminQuestionsApi.updateQuestion(questionId, data),
+    onSuccess: async (updatedQuestion) => {
+      queryClient.setQueryData<AdminQuestionDetail>(
+        queryKeys.adminQuestions.detail(updatedQuestion.id),
+        updatedQuestion,
+      );
+      await queryClient.invalidateQueries({ queryKey: queryKeys.adminQuestions.all });
+    },
+  });
+}
+
+export function useAdminQuestionDialogActions({
+  questionId,
+  onSuccess,
+}: {
+  questionId: string | null;
+  onSuccess?: () => void;
+}) {
+  const updateQuestion = useUpdateAdminQuestion();
+  const isMutatingRef = useRef(false);
+  const isPending = updateQuestion.isPending;
+  const error = updateQuestion.error;
+
+  const unlockMutation = useCallback(() => {
+    isMutatingRef.current = false;
+  }, []);
+
+  const reset = useCallback(() => {
+    isMutatingRef.current = false;
+    updateQuestion.reset();
+  }, [updateQuestion]);
+
+  const submitQuestion = useCallback(
+    (data: UpdateAdminQuestionBody) => {
+      if (!questionId || isPending || isMutatingRef.current) {
+        return;
+      }
+
+      isMutatingRef.current = true;
+      updateQuestion.mutate({ questionId, data }, { onSettled: unlockMutation, onSuccess });
+    },
+    [isPending, onSuccess, questionId, unlockMutation, updateQuestion],
+  );
+
+  return {
+    error,
+    isPending,
+    reset,
+    submitQuestion,
+  };
+}
+
 export function useUpdateAdminQuestionStatus() {
   const queryClient = useQueryClient();
 
@@ -673,11 +735,7 @@ export function useUpdateAdminQuestionStatus() {
       questionVariantId: string;
       status: AdminQuestionStatus;
     }) => adminQuestionsApi.updateStatus(questionVariantId, { status }),
-    onSuccess: async (updatedQuestion) => {
-      queryClient.setQueriesData<AdminQuestionsResponse>(
-        { queryKey: queryKeys.adminQuestions.all },
-        (previousData) => replaceAdminQuestionRow(previousData, updatedQuestion),
-      );
+    onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.adminQuestions.all });
     },
   });
@@ -687,8 +745,7 @@ export function useSaveAdminQuestionSortOrder() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: UpdateAdminQuestionSortOrderBody) =>
-      adminQuestionsApi.updateSortOrder(data),
+    mutationFn: (data: UpdateAdminQuestionSortOrderBody) => adminQuestionsApi.updateSortOrder(data),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.adminQuestions.all });
     },

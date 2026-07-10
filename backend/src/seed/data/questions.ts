@@ -1,5 +1,8 @@
 import { QuestionSeed, QuestionVariantSeed } from '../types';
 
+const answerValues = (count: number): number[] =>
+  Array.from({ length: count }, (_, index) => index);
+
 export const QUESTION_SEEDS = [
   { key: 'life.recent_irritation', answerType: 'SINGLE_CHOICE', answerValues: [0, 1] },
   { key: 'routine.sunscreen_reapply', answerType: 'SINGLE_CHOICE', answerValues: [0, 1] },
@@ -13,24 +16,24 @@ export const QUESTION_SEEDS = [
   {
     key: 'flow.concern',
     answerType: 'MULTI_CHOICE',
-    answerValues: Array.from({ length: 24 }, (_, index) => index + 1),
+    answerValues: answerValues(24),
   },
-  { key: 'life.outdoor_activity', answerType: 'SINGLE_CHOICE', answerValues: [1, 2, 3] },
+  { key: 'life.outdoor_activity', answerType: 'SINGLE_CHOICE', answerValues: answerValues(3) },
   {
     key: 'product.owned_categories',
     answerType: 'MULTI_CHOICE',
-    answerValues: Array.from({ length: 17 }, (_, index) => index + 1),
+    answerValues: answerValues(17),
   },
-  { key: 'product.owned_actives', answerType: 'MULTI_CHOICE', answerValues: [1, 2, 3, 4, 5] },
+  { key: 'product.owned_actives', answerType: 'MULTI_CHOICE', answerValues: answerValues(5) },
   { key: 'product.active_overload', answerType: 'SINGLE_CHOICE', answerValues: [0, 1] },
   { key: 'product.functional_overlap', answerType: 'SINGLE_CHOICE', answerValues: [0, 1] },
   { key: 'product.toner_overlap', answerType: 'SINGLE_CHOICE', answerValues: [0, 1] },
   { key: 'product.moisturizer_overlap', answerType: 'SINGLE_CHOICE', answerValues: [0, 1] },
-  { key: 'category.selected', answerType: 'SINGLE_CHOICE', answerValues: [1, 2, 3, 4, 5, 6] },
+  { key: 'category.selected', answerType: 'SINGLE_CHOICE', answerValues: answerValues(6) },
   {
     key: 'context.skin_type',
     answerType: 'SINGLE_CHOICE',
-    answerValues: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+    answerValues: answerValues(9),
   },
   { key: 'preference.fragrance_sensitive', answerType: 'SINGLE_CHOICE', answerValues: [0, 1] },
   { key: 'preference.alcohol_sensitive', answerType: 'SINGLE_CHOICE', answerValues: [0, 1] },
@@ -44,14 +47,14 @@ export const QUESTION_SEEDS = [
   { key: 'context.makeup_use', answerType: 'SINGLE_CHOICE', answerValues: [0, 1] },
   { key: 'context.touch_up', answerType: 'SINGLE_CHOICE', answerValues: [0, 1] },
   { key: 'context.water_sweat_exposure', answerType: 'SINGLE_CHOICE', answerValues: [0, 1] },
-  { key: 'context.usage_place', answerType: 'SINGLE_CHOICE', answerValues: [1, 2, 3] },
-  { key: 'context.usage_time', answerType: 'SINGLE_CHOICE', answerValues: [1, 2, 3] },
+  { key: 'context.usage_place', answerType: 'SINGLE_CHOICE', answerValues: answerValues(3) },
+  { key: 'context.usage_time', answerType: 'SINGLE_CHOICE', answerValues: answerValues(3) },
   {
     key: 'context.serum_purpose',
     answerType: 'SINGLE_CHOICE',
-    answerValues: [1, 2, 3, 4, 5, 6, 7],
+    answerValues: answerValues(7),
   },
-  { key: 'context.lip_severity', answerType: 'SINGLE_CHOICE', answerValues: [1, 2, 3] },
+  { key: 'context.lip_severity', answerType: 'SINGLE_CHOICE', answerValues: answerValues(3) },
   { key: 'context.lip_reapply', answerType: 'SINGLE_CHOICE', answerValues: [0, 1] },
   { key: 'context.lip_outdoor', answerType: 'SINGLE_CHOICE', answerValues: [0, 1] },
   { key: 'context.lip_night_care', answerType: 'SINGLE_CHOICE', answerValues: [0, 1] },

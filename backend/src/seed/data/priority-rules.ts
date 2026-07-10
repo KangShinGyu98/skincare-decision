@@ -38,7 +38,7 @@ export const PRIORITY_RULE_SEEDS: readonly PriorityRuleSeed[] = [
       {
         questionKey: 'life.outdoor_activity',
         operator: 'IN',
-        value: [2, 3],
+        value: [1, 2],
         state: 'REQUIRED',
       },
     ],

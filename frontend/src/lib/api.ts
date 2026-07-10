@@ -1,4 +1,6 @@
 import {
+  type AdminQuestionDetail,
+  adminQuestionDetailSchema,
   type AdminQuestionsQuery,
   type AdminQuestionsResponse,
   adminQuestionsResponseSchema,
@@ -26,6 +28,18 @@ import {
   resetPriorityGateResponsesRequestSchema,
   type ResetPriorityGateResponsesResponse,
   resetPriorityGateResponsesResponseSchema,
+  type UpdateAdminQuestionBody,
+  updateAdminQuestionBodySchema,
+  type UpdateAdminQuestionResponse,
+  updateAdminQuestionResponseSchema,
+  type UpdateAdminQuestionSortOrderBody,
+  updateAdminQuestionSortOrderBodySchema,
+  type UpdateAdminQuestionSortOrderResponse,
+  updateAdminQuestionSortOrderResponseSchema,
+  type UpdateAdminQuestionStatusBody,
+  updateAdminQuestionStatusBodySchema,
+  type UpdateAdminQuestionStatusResponse,
+  updateAdminQuestionStatusResponseSchema,
   type UpdateAdminRuleBody,
   updateAdminRuleBodySchema,
   type UpdateAdminRuleResponse,
@@ -38,14 +52,6 @@ import {
   updateAdminRuleStatusBodySchema,
   type UpdateAdminRuleStatusResponse,
   updateAdminRuleStatusResponseSchema,
-  type UpdateAdminQuestionSortOrderBody,
-  updateAdminQuestionSortOrderBodySchema,
-  type UpdateAdminQuestionSortOrderResponse,
-  updateAdminQuestionSortOrderResponseSchema,
-  type UpdateAdminQuestionStatusBody,
-  updateAdminQuestionStatusBodySchema,
-  type UpdateAdminQuestionStatusResponse,
-  updateAdminQuestionStatusResponseSchema,
   type UpsertCategoryDecisionResponsesRequest,
   upsertCategoryDecisionResponsesRequestSchema,
   type UpsertCategoryDecisionResponsesResponse,
@@ -432,24 +438,10 @@ export const adminRulesApi = {
 };
 
 export const adminQuestionsApi = {
-  getQuestions: async (query: AdminQuestionsQuery = {}): Promise<AdminQuestionsResponse> => {
+  getQuestions: async (query: AdminQuestionsQuery): Promise<AdminQuestionsResponse> => {
     const searchParams = new URLSearchParams();
 
-    if (query.screen) {
-      searchParams.set('screen', query.screen);
-    }
-
-    if (query.uiSection) {
-      searchParams.set('uiSection', query.uiSection);
-    }
-
-    if (query.category) {
-      searchParams.set('category', query.category);
-    }
-
-    if (query.status) {
-      searchParams.set('status', query.status);
-    }
+    searchParams.set('uiSection', query.uiSection);
 
     const search = searchParams.toString();
     const response = await fetch(getAdminQuestionsUrl(search ? `?${search}` : ''), {
@@ -460,12 +452,45 @@ export const adminQuestionsApi = {
     return handleResponse(response, adminQuestionsResponseSchema);
   },
 
+  getQuestion: async (questionId: string): Promise<AdminQuestionDetail> => {
+    const response = await fetch(getAdminQuestionsUrl(`/${questionId}`), {
+      method: 'GET',
+      credentials: 'include',
+    });
+
+    return handleResponse(response, adminQuestionDetailSchema);
+  },
+
+  updateQuestion: async (
+    questionId: string,
+    data: UpdateAdminQuestionBody,
+  ): Promise<UpdateAdminQuestionResponse> => {
+    const parsed = updateAdminQuestionBodySchema.safeParse(data);
+
+    if (!parsed.success) {
+      throw new ApiValidationError(
+        `Invalid admin question update request: ${parsed.error.message}`,
+      );
+    }
+
+    const response = await fetch(getAdminQuestionsUrl(`/${questionId}`), {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify(parsed.data),
+    });
+
+    return handleResponse(response, updateAdminQuestionResponseSchema);
+  },
+
   updateStatus: async (
     questionVariantId: string,
     data: UpdateAdminQuestionStatusBody,
   ): Promise<UpdateAdminQuestionStatusResponse> => {
     const parsed = updateAdminQuestionStatusBodySchema.safeParse(data);
-
+    await sleep(2000);
     if (!parsed.success) {
       throw new ApiValidationError(
         `Invalid admin question status request: ${parsed.error.message}`,

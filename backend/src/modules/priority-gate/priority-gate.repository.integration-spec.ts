@@ -106,7 +106,7 @@ describe('PriorityGateRepository', () => {
       questionKey: 'life.outdoor_activity',
       title: 'Outdoor activity time',
       answerType: QuestionAnswerType.SINGLE_CHOICE,
-      answerValues: [1, 2, 3],
+      answerValues: [0, 1, 2],
       answers: ['Under 1 hour', '1-3 hours', 'Over 3 hours'],
       screen: Screen.priority_gate,
       uiSection: UiSection.life_routine,
@@ -125,7 +125,7 @@ describe('PriorityGateRepository', () => {
     expect(question.question).toEqual({
       key: 'life.outdoor_activity',
       answerType: QuestionAnswerType.SINGLE_CHOICE,
-      answerValues: [1, 2, 3],
+      answerValues: [0, 1, 2],
     });
   });
 

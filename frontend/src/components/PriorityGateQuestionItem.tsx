@@ -46,6 +46,7 @@ export function PriorityGateQuestionItem({
   const selectedValues = isControlled ? value : internalValue;
   const canChange = !disabled && (!isControlled || onValueChange !== undefined);
   const isMultiChoice = question.answerType === 'MULTI_CHOICE';
+  const selectedRadioValue = selectedValues[0] !== undefined ? String(selectedValues[0]) : '';
 
   const handleValueChange = (nextValue: number[]) => {
     if (!canChange) {
@@ -107,7 +108,7 @@ export function PriorityGateQuestionItem({
         </div>
       ) : (
         <RadioGroup
-          value={selectedValues[0] !== undefined ? String(selectedValues[0]) : undefined}
+          value={selectedRadioValue}
           onValueChange={
             canChange ? (nextValue) => handleValueChange([Number(nextValue)]) : undefined
           }

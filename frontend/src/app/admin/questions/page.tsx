@@ -10,6 +10,7 @@ import { useMutationState } from '@tanstack/react-query';
 import { RefreshCwIcon, SaveIcon } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import { AdminQuestionDialogForm } from '@/components/admin/questions/AdminQuestionDialogForm';
 import { createAdminQuestionColumns } from '@/components/admin/questions/createAdminQuestionColumns';
 import { SortableDataTable } from '@/components/common/data-table/SortableDataTable';
 import { ErrorPanel } from '@/components/common/ErrorPanel';
@@ -53,6 +54,13 @@ function getFilterLabel<TValue extends string>(
 export default function AdminQuestionsPage() {
   const [uiSection, setUiSection] = useState<AdminQuestionUiSection>(DEFAULT_UI_SECTION);
   const [draftRows, setDraftRows] = useState<AdminQuestionTableRow[] | null>(null);
+  const [questionDialogState, setQuestionDialogState] = useState<{
+    open: boolean;
+    questionId: string | null;
+  }>({
+    open: false,
+    questionId: null,
+  });
 
   const query = useMemo<AdminQuestionsQuery>(() => {
     return {
@@ -119,6 +127,13 @@ export default function AdminQuestionsPage() {
   const handleRefresh = () => {
     void refetch();
   };
+
+  const handleRowClick = useCallback((row: AdminQuestionTableRow) => {
+    setQuestionDialogState({
+      open: true,
+      questionId: row.questionId,
+    });
+  }, []);
 
   const handleSaveSortOrder = () => {
     if (saveSortOrder.isPending) {
@@ -244,6 +259,7 @@ export default function AdminQuestionsPage() {
             columns={columns}
             disabled={isFetching || saveSortOrder.isPending}
             onRowsReorder={handleRowsReorder}
+            onRowClick={handleRowClick}
             emptyMessage="표시할 질문이 없습니다."
             tableClassName="min-w-[1860px]"
           />
@@ -254,6 +270,17 @@ export default function AdminQuestionsPage() {
           ) : null}
         </div>
       </div>
+
+      <AdminQuestionDialogForm
+        questionId={questionDialogState.questionId}
+        open={questionDialogState.open}
+        onOpenChange={(open) => {
+          setQuestionDialogState((previousState) => ({
+            open,
+            questionId: open ? previousState.questionId : null,
+          }));
+        }}
+      />
     </main>
   );
 }

@@ -71,7 +71,7 @@ describe('CategoryDecisionController', () => {
       responses: {
         '018f0000-0000-7000-8000-000000000101': {
           questionId: '018f0000-0000-7000-8000-000000000201',
-          value: [2],
+          value: [1],
         },
       },
     };

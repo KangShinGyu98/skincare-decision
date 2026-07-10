@@ -63,7 +63,7 @@ describe('LandingConcernSelectionsRepository', () => {
           id: '01935b8f-0000-7000-8000-000000000101',
           key: 'flow.concern',
           answerType: QuestionAnswerType.MULTI_CHOICE,
-          answerValues: [1, 2, 3],
+          answerValues: [0, 1, 2],
         },
         {
           id: '01935b8f-0000-7000-8000-000000000102',
@@ -94,7 +94,7 @@ describe('LandingConcernSelectionsRepository', () => {
           id: '01935b8f-0000-7000-8000-000000000101',
           key: 'flow.concern',
           answerType: QuestionAnswerType.MULTI_CHOICE,
-          answerValues: [1, 2, 3],
+          answerValues: [0, 1, 2],
         },
         {
           id: '01935b8f-0000-7000-8000-000000000102',

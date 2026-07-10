@@ -63,7 +63,7 @@ describe('CategoryDecisionService', () => {
       title: 'Choose category',
       answerType: QuestionAnswerType.SINGLE_CHOICE,
       answers: ['Toner', 'Sunscreen', 'Serum', 'Lipcare', 'Moisturizer', 'Cleanser'],
-      answerValues: [1, 2, 3, 4, 5, 6],
+      answerValues: [0, 1, 2, 3, 4, 5],
       uiSection: UiSection.category,
       sortOrder: 10,
     });
@@ -92,7 +92,7 @@ describe('CategoryDecisionService', () => {
     repositoryMock.findCurrentResponses.mockResolvedValue([
       {
         questionId: categoryQuestion.questionId,
-        value: [2],
+        value: [1],
       },
     ]);
 
@@ -106,7 +106,7 @@ describe('CategoryDecisionService', () => {
       deviceId: '018f0000-0000-7000-8000-000000000001',
       userId: '018f0000-0000-7000-8000-000000000002',
       questionId: categoryQuestion.questionId,
-      value: [2],
+      value: [1],
       source: UserResponseSource.context,
     });
     expect(result.selectedCategory).toEqual(category);
@@ -125,7 +125,7 @@ describe('CategoryDecisionService', () => {
         questions: [
           expect.objectContaining({
             key: 'category.selected',
-            currentResponse: [2],
+            currentResponse: [1],
           }),
         ],
       },
@@ -188,7 +188,7 @@ describe('CategoryDecisionService', () => {
       key: 'category.selected',
       answerType: QuestionAnswerType.SINGLE_CHOICE,
       answers: ['Toner', 'Sunscreen', 'Serum', 'Lipcare', 'Moisturizer', 'Cleanser'],
-      answerValues: [1, 2, 3, 4, 5, 6],
+      answerValues: [0, 1, 2, 3, 4, 5],
       uiSection: UiSection.category,
       sortOrder: 10,
       category: null,
@@ -229,7 +229,7 @@ describe('CategoryDecisionService', () => {
     repositoryMock.findCurrentResponses.mockResolvedValue([
       {
         questionId: categoryQuestion.questionId,
-        value: [2],
+        value: [1],
       },
     ]);
 
@@ -255,7 +255,7 @@ describe('CategoryDecisionService', () => {
       key: 'category.selected',
       answerType: QuestionAnswerType.SINGLE_CHOICE,
       answers: ['Toner', 'Sunscreen', 'Serum', 'Lipcare', 'Moisturizer', 'Cleanser'],
-      answerValues: [1, 2, 3, 4, 5, 6],
+      answerValues: [0, 1, 2, 3, 4, 5],
       uiSection: UiSection.category,
     });
     const skinQuestion = createQuestionRecord({
@@ -285,7 +285,7 @@ describe('CategoryDecisionService', () => {
       key: 'category.selected',
       answerType: QuestionAnswerType.SINGLE_CHOICE,
       answers: ['Toner', 'Sunscreen', 'Serum', 'Lipcare', 'Moisturizer', 'Cleanser'],
-      answerValues: [1, 2, 3, 4, 5, 6],
+      answerValues: [0, 1, 2, 3, 4, 5],
       uiSection: UiSection.category,
     });
     const skinQuestion = createQuestionRecord({
@@ -298,7 +298,7 @@ describe('CategoryDecisionService', () => {
       responses: {
         [categoryQuestion.id]: {
           questionId: categoryQuestion.questionId,
-          value: [2],
+          value: [1],
         },
       },
     };
@@ -310,7 +310,7 @@ describe('CategoryDecisionService', () => {
     repositoryMock.findCurrentResponses.mockResolvedValue([
       {
         questionId: categoryQuestion.questionId,
-        value: [2],
+        value: [1],
       },
     ]);
     repositoryMock.findProductCategoryByKey.mockResolvedValue({
@@ -330,7 +330,7 @@ describe('CategoryDecisionService', () => {
       {
         deviceId: '018f0000-0000-7000-8000-000000000001',
         questionId: categoryQuestion.questionId,
-        value: [2],
+        value: [1],
         source: UserResponseSource.context,
       },
     ]);

@@ -81,13 +81,13 @@ describe('AdminRulesService', () => {
           {
             id: '01935b8f-0000-7000-8000-000000000402',
             operator: ComparisonOperator.IN,
-            value: [2, 3],
+            value: [1, 2],
             state: ConditionState.REQUIRED,
             question: {
               id: '01935b8f-0000-7000-8000-000000000302',
               key: 'life.outdoor_activity',
               answerType: QuestionAnswerType.SINGLE_CHOICE,
-              answerValues: [1, 2, 3],
+              answerValues: [0, 1, 2],
               variants: [
                 {
                   id: '01935b8f-0000-7000-8000-000000000312',
@@ -125,8 +125,8 @@ describe('AdminRulesService', () => {
             questionTitle: '하루 야외 활동 시간은 어느 정도인가요?',
             operator: 'IN',
             decisionValues: [
-              { label: '1-3시간', value: 2 },
-              { label: '3시간 이상', value: 3 },
+              { label: '1-3시간', value: 1 },
+              { label: '3시간 이상', value: 2 },
             ],
             decisionValueText: '1-3시간, 3시간 이상',
             state: 'REQUIRED',

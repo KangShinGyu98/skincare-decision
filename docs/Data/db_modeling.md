@@ -418,17 +418,18 @@ REFERENCES questions (id, answer_count);
 
 질문 노출 조건.
 
-화면에 보여지는지 여부는 canonical `questions`가 아니라 실제 노출되는 `question_variants`를 기준으로 평가한다. 따라서 조건 row 는 대상 variant 만 FK 로 잡고, 어떤 user_response 와 매칭할지는 service 가 같은 variant 의 canonical question 답변을 기준으로 평가한다.
+화면에 보여지는지 여부는 canonical `questions`가 아니라 실제 노출되는 `question_variants`를 기준으로 평가한다. 조건 row 는 대상 variant와 조건을 평가할 base question을 함께 FK로 잡고, service는 `condition_question_id`에 해당하는 current `user_responses` 값과 `(operator, value)`를 비교한다.
 
-| 컬럼                | 타입                                         | 설명              |
-| ------------------- | -------------------------------------------- | ----------------- |
-| id                  | UUID PK                                      | 조건 ID           |
-| question_variant_id | UUID FK → question_variants.id               | 대상 질문 variant |
-| operator            | ENUM('EQ','IN','CONTAINS','GTE','LTE','NEQ') | 연산자            |
-| value               | INTEGER                                      | 비교값            |
-| state               | ENUM('REQUIRED','EXCLUDED')                  | 조건 상태         |
-| created_at          | TIMESTAMPTZ                                  | 생성일            |
-| updated_at          | TIMESTAMPTZ NULLABLE                         | 마지막 변경일     |
+| 컬럼                  | 타입                                         | 설명              |
+| --------------------- | -------------------------------------------- | ----------------- |
+| id                    | UUID PK                                      | 조건 ID           |
+| question_variant_id   | UUID FK → question_variants.id               | 대상 질문 variant |
+| condition_question_id | UUID FK → questions.id                       | 조건 기준 질문    |
+| operator              | ENUM('EQ','IN','CONTAINS','GTE','LTE','NEQ') | 연산자            |
+| value                 | INTEGER                                      | 비교값            |
+| state                 | ENUM('REQUIRED','EXCLUDED')                  | 조건 상태         |
+| created_at            | TIMESTAMPTZ                                  | 생성일            |
+| updated_at            | TIMESTAMPTZ NULLABLE                         | 마지막 변경일     |
 
 **노출 조건 판단 기준:**
 
@@ -438,7 +439,7 @@ REFERENCES questions (id, answer_count);
 
 **평가 흐름:**
 
-각 조건 row 는 대상 variant 만 FK 로 잡는다. 어떤 user_response 와 비교할지는 service 가 결정한다 — MVP 에서는 사용자의 현재 `user_responses` 묶음을 입력으로 받아, `(operator, value)` 페어를 카테고리/맥락 변수와 매칭하는 평가기를 service 가 책임진다. seed/admin UI 는 variant 별로 노출 조건을 등록한다.
+각 조건 row 는 대상 variant와 조건 기준 질문을 FK 로 잡는다. service 는 사용자의 현재 `user_responses` 묶음에서 `condition_question_id` 응답을 찾아 `(operator, value)` 페어를 평가한다. seed/admin UI 는 variant 별로 노출 조건을 등록한다.
 
 예시 (의도):
 
@@ -1118,35 +1119,35 @@ WHERE category_id = :category_id
 
 사용자 응답(`user_responses`)으로 저장 가능한 전체 기준 질문 목록. 실제 화면 라벨은 `question_variants.answers`가 가진다. `key`는 seed/admin/debug용 slug이며 DB 관계는 `questions.id`를 사용한다.
 
-| key                               | answer_type   | answer_values | 설명                                                         |
-| --------------------------------- | ------------- | ------------- | ------------------------------------------------------------ |
-| `flow.concern`                    | SINGLE_CHOICE | `[1..N]`      | Concern Mapper에서 선택한 고민. 값 의미는 프론트 상수와 매칭 |
-| `life.recent_irritation`          | BOOLEAN       | `[1,0]`       | 최근 따가움·붉어짐·가려움 같은 문제 여부                     |
-| `life.outdoor_activity`           | THREE_CHOICE  | `[3,2,1]`     | 낮 야외 활동 시간. 값이 클수록 야외 노출이 김                |
-| `routine.sunscreen_use`           | BOOLEAN       | `[1,0]`       | 외출 시 선크림 사용 여부 파생값                              |
-| `routine.sunscreen_frequency`     | FOUR_CHOICE   | `[4,3,2,1]`   | 외출 시 선크림 사용 빈도. 값이 클수록 자주 사용              |
-| `routine.sunscreen_reapply`       | BOOLEAN       | `[1,0]`       | 선크림을 들고 다니며 덧바르는지                              |
-| `routine.cleansing_stable`        | BOOLEAN       | `[1,0]`       | 1차 세안 제품(오일/밤/워터/패드)을 따로 쓰는지               |
-| `routine.foam_enough`             | BOOLEAN       | `[1,0]`       | 클렌징 폼 거품을 충분히 내서 쓰는지                          |
-| `routine.eye_irritation_history`  | BOOLEAN       | `[1,0]`       | 화장/세안 중 눈 자극 경험이 잦은지                           |
-| `routine.recent_dry_tight`        | BOOLEAN       | `[1,0]`       | 세안 후 당김·건조·따가움 같은 문제 여부                      |
-| `routine.makeup_frequent`         | BOOLEAN       | `[1,0]`       | 선크림 위에 베이스 메이크업을 자주 올리는지                  |
-| `routine.brush_wash_cycle`        | FOUR_CHOICE   | `[4,3,2,1]`   | 브러시 세척 주기. 값이 작을수록 오래 방치                    |
-| `routine.puff_age`                | FOUR_CHOICE   | `[4,3,2,1]`   | 퍼프 사용 기간. 값이 작을수록 오래 사용                      |
-| `routine.pillowcase_change_cycle` | FOUR_CHOICE   | `[4,3,2,1]`   | 배갯잎 교체 주기. 값이 작을수록 오래 미교체                  |
-| `routine.morning_face_condition`  | FOUR_CHOICE   | `[1,2,3,4]`   | 기상 직후 얼굴 상태. 화면 라벨이 value 의미를 정의           |
-| `routine.bedtime_routine`         | BOOLEAN       | `[1,0]`       | 취침 전 스킨케어 루틴 여부                                   |
-| `routine.cleansing_before_sleep`  | BOOLEAN       | `[1,0]`       | 취침 전 세안 여부                                            |
-| `product.owned_categories`        | MULTI_CHOICE  | `[1..17]`     | 현재 사용 중인 제품군 목록. 각 값은 화면 라벨 index에 매칭   |
-| `category.selected`               | SINGLE_CHOICE | `[1..6]`      | 선택한 제품군. 각 값은 MVP 6개 category label에 매칭         |
-| `context.usage_place`             | THREE_CHOICE  | `[1,2,3]`     | 사용 장소. 화면 라벨 예: 실내 / 야외 / 둘 다                 |
-| `context.usage_time`              | THREE_CHOICE  | `[1,2,3]`     | 사용 시간대. 화면 라벨 예: 아침 / 밤 / 둘 다                 |
-| `context.portable`                | BOOLEAN       | `[1,0]`       | 외출 시 휴대 필요 여부                                       |
-| `context.eye_sting`               | BOOLEAN       | `[1,0]`       | 선크림 사용 시 눈시림 경험 여부                              |
-| `context.white_cast_sensitive`    | BOOLEAN       | `[1,0]`       | 백탁에 민감한 여부                                           |
-| `context.makeup_use`              | BOOLEAN       | `[1,0]`       | 선크림 위에 베이스 메이크업 사용 여부                        |
-| `preference.fragrance_sensitive`  | BOOLEAN       | `[1,0]`       | 향료 민감 여부                                               |
-| `preference.menthol_sensitive`    | BOOLEAN       | `[1,0]`       | 멘톨·화한 사용감 불편 여부                                   |
+| key                               | answer_type   | answer_values | 설명                                                           |
+| --------------------------------- | ------------- | ------------- | -------------------------------------------------------------- |
+| `flow.concern`                    | SINGLE_CHOICE | `[0..N-1]`    | Concern Mapper에서 선택한 고민. 값 의미는 프론트 상수와 매칭   |
+| `life.recent_irritation`          | BOOLEAN       | `[0,1]`       | 최근 따가움·붉어짐·가려움 같은 문제 여부                       |
+| `life.outdoor_activity`           | THREE_CHOICE  | `[0,1,2]`     | 낮 야외 활동 시간. 값이 클수록 야외 노출이 김                  |
+| `routine.sunscreen_use`           | BOOLEAN       | `[0,1]`       | 외출 시 선크림 사용 여부 파생값                                |
+| `routine.sunscreen_frequency`     | FOUR_CHOICE   | `[0,1,2,3]`   | 외출 시 선크림 사용 빈도. 값이 클수록 자주 사용                |
+| `routine.sunscreen_reapply`       | BOOLEAN       | `[0,1]`       | 선크림을 들고 다니며 덧바르는지                                |
+| `routine.cleansing_stable`        | BOOLEAN       | `[0,1]`       | 1차 세안 제품(오일/밤/워터/패드)을 따로 쓰는지                 |
+| `routine.foam_enough`             | BOOLEAN       | `[0,1]`       | 클렌징 폼 거품을 충분히 내서 쓰는지                            |
+| `routine.eye_irritation_history`  | BOOLEAN       | `[0,1]`       | 화장/세안 중 눈 자극 경험이 잦은지                             |
+| `routine.recent_dry_tight`        | BOOLEAN       | `[0,1]`       | 세안 후 당김·건조·따가움 같은 문제 여부                        |
+| `routine.makeup_frequent`         | BOOLEAN       | `[0,1]`       | 선크림 위에 베이스 메이크업을 자주 올리는지                    |
+| `routine.brush_wash_cycle`        | FOUR_CHOICE   | `[0,1,2,3]`   | 브러시 세척 주기. 값이 작을수록 오래 방치                      |
+| `routine.puff_age`                | FOUR_CHOICE   | `[0,1,2,3]`   | 퍼프 사용 기간. 값이 작을수록 오래 사용                        |
+| `routine.pillowcase_change_cycle` | FOUR_CHOICE   | `[0,1,2,3]`   | 배갯잎 교체 주기. 값이 작을수록 오래 미교체                    |
+| `routine.morning_face_condition`  | FOUR_CHOICE   | `[0,1,2,3]`   | 기상 직후 얼굴 상태. 화면 라벨이 value 의미를 정의             |
+| `routine.bedtime_routine`         | BOOLEAN       | `[0,1]`       | 취침 전 스킨케어 루틴 여부                                     |
+| `routine.cleansing_before_sleep`  | BOOLEAN       | `[0,1]`       | 취침 전 세안 여부                                              |
+| `product.owned_categories`        | MULTI_CHOICE  | `[0..16]`     | 현재 사용 중인 제품군 목록. 각 값은 화면 라벨 index에 매칭     |
+| `category.selected`               | SINGLE_CHOICE | `[0..5]`      | 선택한 제품군. 각 값은 MVP 6개 category label에 0-based로 매칭 |
+| `context.usage_place`             | THREE_CHOICE  | `[0,1,2]`     | 사용 장소. 화면 라벨 예: 실내 / 야외 / 둘 다                   |
+| `context.usage_time`              | THREE_CHOICE  | `[0,1,2]`     | 사용 시간대. 화면 라벨 예: 아침 / 밤 / 둘 다                   |
+| `context.portable`                | BOOLEAN       | `[0,1]`       | 외출 시 휴대 필요 여부                                         |
+| `context.eye_sting`               | BOOLEAN       | `[0,1]`       | 선크림 사용 시 눈시림 경험 여부                                |
+| `context.white_cast_sensitive`    | BOOLEAN       | `[0,1]`       | 백탁에 민감한 여부                                             |
+| `context.makeup_use`              | BOOLEAN       | `[0,1]`       | 선크림 위에 베이스 메이크업 사용 여부                          |
+| `preference.fragrance_sensitive`  | BOOLEAN       | `[0,1]`       | 향료 민감 여부                                                 |
+| `preference.menthol_sensitive`    | BOOLEAN       | `[0,1]`       | 멘톨·화한 사용감 불편 여부                                     |
 
 ---
 
