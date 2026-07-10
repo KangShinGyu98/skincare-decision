@@ -31,6 +31,7 @@ export type SortableDataTableProps<TData extends { id: string }> = {
   columns: ColumnDef<TData>[];
   onRowsReorder: (rows: TData[]) => void;
   onRowClick?: (row: TData) => void;
+  disabled?: boolean;
   emptyMessage?: string;
   dragHandleLabel?: string;
   className?: string;
@@ -42,6 +43,7 @@ export function SortableDataTable<TData extends { id: string }>({
   columns,
   onRowsReorder,
   onRowClick,
+  disabled = false,
   emptyMessage = '표시할 항목이 없습니다.',
   dragHandleLabel = '순서 변경',
   className,
@@ -74,6 +76,10 @@ export function SortableDataTable<TData extends { id: string }>({
   );
 
   const handleDragEnd = (event: DragEndEvent) => {
+    if (disabled) {
+      return;
+    }
+
     const { active, over } = event;
 
     if (!over || active.id === over.id) {
@@ -123,6 +129,7 @@ export function SortableDataTable<TData extends { id: string }>({
                   <SortableDataTableRow
                     key={row.id}
                     row={row}
+                    disabled={disabled}
                     dragHandleLabel={dragHandleLabel}
                     onRowClick={onRowClick}
                   />
@@ -147,15 +154,18 @@ export function SortableDataTable<TData extends { id: string }>({
 
 function SortableDataTableRow<TData>({
   row,
+  disabled,
   dragHandleLabel,
   onRowClick,
 }: {
   row: Row<TData>;
+  disabled: boolean;
   dragHandleLabel: string;
   onRowClick?: (row: TData) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: row.id,
+    disabled,
   });
 
   return (
@@ -172,7 +182,12 @@ function SortableDataTableRow<TData>({
       {row.getVisibleCells().map((cell) => (
         <TableCell key={cell.id} className="min-h-14 whitespace-normal">
           {cell.column.id === DRAG_COLUMN_ID ? (
-            <DragHandle attributes={attributes} listeners={listeners} label={dragHandleLabel} />
+            <DragHandle
+              attributes={attributes}
+              disabled={disabled}
+              listeners={listeners}
+              label={dragHandleLabel}
+            />
           ) : (
             flexRender(cell.column.columnDef.cell, cell.getContext())
           )}
@@ -184,10 +199,12 @@ function SortableDataTableRow<TData>({
 
 function DragHandle({
   attributes,
+  disabled,
   listeners,
   label,
 }: {
   attributes: ReturnType<typeof useSortable>['attributes'];
+  disabled: boolean;
   listeners: ReturnType<typeof useSortable>['listeners'];
   label: string;
 }) {
@@ -198,7 +215,13 @@ function DragHandle({
           render={
             <button
               type="button"
-              className="inline-flex size-8 cursor-grab items-center justify-center rounded-md text-[var(--color-text-tertiary)] hover:bg-[var(--gray-3)] hover:text-[var(--color-text-primary)] active:cursor-grabbing"
+              className={cn(
+                'inline-flex size-8 items-center justify-center rounded-md text-[var(--color-text-tertiary)] hover:bg-[var(--gray-3)] hover:text-[var(--color-text-primary)]',
+                disabled
+                  ? 'cursor-not-allowed opacity-50'
+                  : 'cursor-grab active:cursor-grabbing',
+              )}
+              disabled={disabled}
               aria-label={label}
               onClick={(event) => event.stopPropagation()}
               {...attributes}

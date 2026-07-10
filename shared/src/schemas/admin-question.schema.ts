@@ -33,11 +33,18 @@ export const adminQuestionCategorySchema = z.enum([
 
 export type AdminQuestionCategory = z.infer<typeof adminQuestionCategorySchema>;
 
+export const adminQuestionCategoryFilterSchema = z.union([
+  adminQuestionCategorySchema,
+  z.literal('common'),
+]);
+
+export type AdminQuestionCategoryFilter = z.infer<typeof adminQuestionCategoryFilterSchema>;
+
 export const adminQuestionsQuerySchema = z
   .object({
     screen: adminQuestionScreenSchema.optional(),
     uiSection: adminQuestionUiSectionSchema.optional(),
-    category: adminQuestionCategorySchema.optional(),
+    category: adminQuestionCategoryFilterSchema.optional(),
     status: adminQuestionStatusSchema.optional(),
   })
   .strict();
@@ -52,6 +59,14 @@ export const adminQuestionParamSchema = z
 
 export type AdminQuestionParam = z.infer<typeof adminQuestionParamSchema>;
 
+export const adminQuestionVariantParamSchema = z
+  .object({
+    questionVariantId: z.uuid(),
+  })
+  .strict();
+
+export type AdminQuestionVariantParam = z.infer<typeof adminQuestionVariantParamSchema>;
+
 export const updateAdminQuestionStatusBodySchema = z
   .object({
     status: adminQuestionStatusSchema,
@@ -59,6 +74,16 @@ export const updateAdminQuestionStatusBodySchema = z
   .strict();
 
 export type UpdateAdminQuestionStatusBody = z.infer<typeof updateAdminQuestionStatusBodySchema>;
+
+export const updateAdminQuestionSortOrderBodySchema = z
+  .object({
+    questionVariantIds: z.array(z.uuid()).min(1),
+  })
+  .strict();
+
+export type UpdateAdminQuestionSortOrderBody = z.infer<
+  typeof updateAdminQuestionSortOrderBodySchema
+>;
 
 export const adminQuestionVisibilityConditionInputSchema = z
   .object({
@@ -111,11 +136,12 @@ export const adminQuestionTableRowSchema = z
     id: z.uuid(),
     questionId: z.uuid(),
     questionVariantId: z.uuid(),
+    sort_order: z.number().int(),
     question: z.string().min(1),
     questionVariant: z.string().min(1),
     answerType: questionAnswerTypeSchema,
     userOptions: z.array(questionAnswerSchema),
-    visibilityConditionText: z.string().min(1),
+    visibilityConditions: z.array(adminQuestionVisibilityConditionInputSchema),
     screen: adminQuestionScreenSchema,
     uiSection: adminQuestionUiSectionSchema,
     category: adminQuestionCategorySchema.nullable(),
@@ -140,6 +166,12 @@ export type UpdateAdminQuestionStatusResponse = z.infer<
   typeof updateAdminQuestionStatusResponseSchema
 >;
 
+export const updateAdminQuestionSortOrderResponseSchema = adminQuestionsResponseSchema;
+
+export type UpdateAdminQuestionSortOrderResponse = z.infer<
+  typeof updateAdminQuestionSortOrderResponseSchema
+>;
+
 export const adminQuestionVariantDetailSchema = z
   .object({
     id: z.uuid(),
@@ -149,7 +181,6 @@ export const adminQuestionVariantDetailSchema = z
     uiSection: adminQuestionUiSectionSchema,
     sort_order: z.number().int(),
     status: adminQuestionStatusSchema,
-    visibilityConditionText: z.string().min(1),
     visibilityConditions: z.array(adminQuestionVisibilityConditionInputSchema),
     category: adminQuestionCategorySchema.nullable(),
   })

@@ -1,10 +1,11 @@
 import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import type {
+  AdminQuestionCategory,
+  AdminQuestionCategoryFilter,
   AdminQuestionScreen,
   AdminQuestionStatus,
   AdminQuestionUiSection,
-  AdminQuestionCategory,
 } from '@skincare-decision/shared/schemas';
 import {
   type ComparisonOperator,
@@ -78,7 +79,7 @@ const ADMIN_QUESTION_DETAIL_SELECT = {
 export type FindAdminQuestionsInput = {
   screen?: AdminQuestionScreen;
   uiSection?: AdminQuestionUiSection;
-  category?: AdminQuestionCategory;
+  category?: AdminQuestionCategoryFilter;
   status?: AdminQuestionStatus;
 };
 
@@ -160,6 +161,22 @@ export class InvalidAdminQuestionVariantError extends Error {
   }
 }
 
+export class InvalidAdminQuestionSortOrderError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'InvalidAdminQuestionSortOrderError';
+  }
+}
+
+type AdminQuestionVariantSortOrderRow = {
+  id: string;
+  uiSection: UiSection;
+};
+
+function isRecordNotFoundError(error: unknown): boolean {
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2025';
+}
+
 @Injectable()
 export class AdminQuestionsRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -173,20 +190,15 @@ export class AdminQuestionsRepository {
         },
         ...(input.screen ? { screen: input.screen } : {}),
         ...(input.uiSection ? { uiSection: input.uiSection } : {}),
-        ...(input.category
-          ? {
-              OR: [{ category: null }, { category: input.category }],
-            }
-          : {}),
+        ...(input.category === 'common'
+          ? { category: null }
+          : input.category
+            ? { category: input.category }
+            : {}),
         ...(input.status ? { isActive: input.status === 'active' } : {}),
       },
       select: ADMIN_QUESTION_SELECT,
-      orderBy: [
-        { screen: 'asc' },
-        { uiSection: 'asc' },
-        { sortOrder: 'asc' },
-        { createdAt: 'asc' },
-      ],
+      orderBy: [{ uiSection: 'asc' }, { sortOrder: 'asc' }, { createdAt: 'asc' }],
     });
   }
 
@@ -344,6 +356,132 @@ export class AdminQuestionsRepository {
     return deleted;
   }
 
+  async updateQuestionVariantStatus(
+    questionVariantId: string,
+    isActive: boolean,
+  ): Promise<AdminQuestionRecord | null> {
+    try {
+      await this.prisma.questionVariant.update({
+        where: {
+          id: questionVariantId,
+          deletedAt: null,
+          question: {
+            deletedAt: null,
+          },
+        },
+        data: {
+          isActive,
+        },
+        select: {
+          id: true,
+        },
+      });
+    } catch (error) {
+      if (isRecordNotFoundError(error)) {
+        return null;
+      }
+
+      throw error;
+    }
+
+    return this.findQuestionVariantById(questionVariantId);
+  }
+
+  async updateQuestionVariantSortOrder(
+    questionVariantIds: string[],
+  ): Promise<AdminQuestionRecord[]> {
+    return this.prisma.$transaction(async (transaction) => {
+      const existingVariants = await transaction.$queryRaw<AdminQuestionVariantSortOrderRow[]>`
+        SELECT
+          question_variant.id::text AS id,
+          question_variant.ui_section::text AS "uiSection"
+        FROM question_variants AS question_variant
+        INNER JOIN questions AS question
+          ON question.id = question_variant.question_id
+        WHERE question_variant.deleted_at IS NULL
+          AND question.deleted_at IS NULL
+        FOR UPDATE OF question_variant
+      `;
+
+      this.validateQuestionVariantSortOrder(questionVariantIds, existingVariants);
+
+      const sortOrderRows = questionVariantIds.map(
+        (questionVariantId, index) =>
+          Prisma.sql`(${questionVariantId}::uuid, ${index + 1}::integer)`,
+      );
+
+      await transaction.$executeRaw`
+        UPDATE question_variants AS target_variant
+        SET sort_order = sorted_variants.sort_order
+        FROM (VALUES ${Prisma.join(sortOrderRows)}) AS sorted_variants(id, sort_order)
+        WHERE target_variant.id = sorted_variants.id
+          AND target_variant.deleted_at IS NULL
+      `;
+
+      return transaction.questionVariant.findMany({
+        where: {
+          deletedAt: null,
+          question: {
+            deletedAt: null,
+          },
+        },
+        select: ADMIN_QUESTION_SELECT,
+        orderBy: [{ uiSection: 'asc' }, { sortOrder: 'asc' }, { createdAt: 'asc' }],
+      });
+    });
+  }
+
+  private validateQuestionVariantSortOrder(
+    questionVariantIds: string[],
+    existingVariants: AdminQuestionVariantSortOrderRow[],
+  ): void {
+    const inputVariantIds = new Set(questionVariantIds);
+
+    if (inputVariantIds.size !== questionVariantIds.length) {
+      throw new InvalidAdminQuestionSortOrderError('Duplicated question variant id');
+    }
+
+    const existingVariantMap = new Map(existingVariants.map((variant) => [variant.id, variant]));
+    const sortedVariants = questionVariantIds.map((questionVariantId) => {
+      const variant = existingVariantMap.get(questionVariantId);
+
+      if (!variant) {
+        throw new InvalidAdminQuestionSortOrderError(
+          `Unknown question variant id: ${questionVariantId}`,
+        );
+      }
+
+      return variant;
+    });
+
+    const firstVariant = sortedVariants[0];
+
+    if (!firstVariant) {
+      throw new InvalidAdminQuestionSortOrderError('Invalid sort_order list');
+    }
+
+    const hasSameSortGroup = (variant: AdminQuestionVariantSortOrderRow) =>
+      variant.uiSection === firstVariant.uiSection;
+
+    for (const variant of sortedVariants) {
+      if (!hasSameSortGroup(variant)) {
+        throw new InvalidAdminQuestionSortOrderError('Question variants must have same ui_section');
+      }
+    }
+
+    const backendGroupVariants = existingVariants.filter(hasSameSortGroup);
+
+    if (backendGroupVariants.length !== questionVariantIds.length) {
+      throw new InvalidAdminQuestionSortOrderError('Invalid sort_order list');
+    }
+
+    for (const variant of backendGroupVariants) {
+      if (!inputVariantIds.has(variant.id)) {
+        throw new InvalidAdminQuestionSortOrderError(`Missing question variant id: ${variant.id}`);
+      }
+    }
+  }
+
   private validateVariantIds(
     variants: SaveAdminQuestionVariantInput[],
     existingVariantIds: string[],
@@ -463,6 +601,19 @@ export class AdminQuestionsRepository {
         value: condition.value,
         state: condition.state,
       })),
+    });
+  }
+
+  private findQuestionVariantById(questionVariantId: string): Promise<AdminQuestionRecord | null> {
+    return this.prisma.questionVariant.findFirst({
+      where: {
+        id: questionVariantId,
+        deletedAt: null,
+        question: {
+          deletedAt: null,
+        },
+      },
+      select: ADMIN_QUESTION_SELECT,
     });
   }
 }

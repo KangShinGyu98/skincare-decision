@@ -10,6 +10,7 @@ import {
 import {
   type AdminQuestionDetailRecord,
   AdminQuestionsRepository,
+  InvalidAdminQuestionSortOrderError,
   InvalidAdminQuestionVariantError,
   type AdminQuestionRecord,
 } from './admin-questions.repository';
@@ -20,7 +21,13 @@ describe('AdminQuestionsService', () => {
   let repositoryMock: jest.Mocked<
     Pick<
       AdminQuestionsRepository,
-      'findQuestions' | 'findQuestionById' | 'createQuestion' | 'updateQuestion' | 'deleteQuestion'
+      | 'findQuestions'
+      | 'findQuestionById'
+      | 'createQuestion'
+      | 'updateQuestion'
+      | 'deleteQuestion'
+      | 'updateQuestionVariantStatus'
+      | 'updateQuestionVariantSortOrder'
     >
   >;
 
@@ -31,6 +38,8 @@ describe('AdminQuestionsService', () => {
       createQuestion: jest.fn(),
       updateQuestion: jest.fn(),
       deleteQuestion: jest.fn(),
+      updateQuestionVariantStatus: jest.fn(),
+      updateQuestionVariantSortOrder: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -75,9 +84,10 @@ describe('AdminQuestionsService', () => {
     });
     expect(result.items).toEqual([
       {
-        id: '01935b8f-0000-7000-8000-000000000301',
+        id: '01935b8f-0000-7000-8000-000000000201',
         questionId: '01935b8f-0000-7000-8000-000000000301',
         questionVariantId: '01935b8f-0000-7000-8000-000000000201',
+        sort_order: 10,
         question: 'category.selected',
         questionVariant: '추천받을 제품군을 선택해 주세요.',
         answerType: 'SINGLE_CHOICE',
@@ -89,8 +99,13 @@ describe('AdminQuestionsService', () => {
           { label: '로션/크림', value: 5 },
           { label: '클렌저', value: 6 },
         ],
-        visibilityConditionText:
-          'screen EQ context AND ui_section EQ category AND category EQ sunscreen AND visibility_condition EQ 2',
+        visibilityConditions: [
+          {
+            operator: 'EQ',
+            value: 2,
+            state: 'REQUIRED',
+          },
+        ],
         screen: 'context',
         uiSection: 'category',
         category: 'sunscreen',
@@ -203,6 +218,68 @@ describe('AdminQuestionsService', () => {
       id: '01935b8f-0000-7000-8000-000000000301',
       deleted: true,
     });
+  });
+
+  it('updateStatus는 questionVariantId 기준 상태를 변경하고 table row를 반환한다', async () => {
+    repositoryMock.updateQuestionVariantStatus.mockResolvedValue(
+      createQuestionRecord({ isActive: false }),
+    );
+
+    const result = await service.updateStatus('01935b8f-0000-7000-8000-000000000201', {
+      status: 'inactive',
+    });
+
+    expect(repositoryMock.updateQuestionVariantStatus).toHaveBeenCalledWith(
+      '01935b8f-0000-7000-8000-000000000201',
+      false,
+    );
+    expect(result).toEqual(
+      expect.objectContaining({
+        id: '01935b8f-0000-7000-8000-000000000201',
+        questionVariantId: '01935b8f-0000-7000-8000-000000000201',
+        status: 'inactive',
+      }),
+    );
+  });
+
+  it('updateStatus는 대상 variant가 없으면 NotFoundException을 던진다', async () => {
+    repositoryMock.updateQuestionVariantStatus.mockResolvedValue(null);
+
+    await expect(
+      service.updateStatus('01935b8f-0000-7000-8000-000000000999', { status: 'active' }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('updateSortOrder는 question variant id 목록으로 순서를 저장한다', async () => {
+    repositoryMock.updateQuestionVariantSortOrder.mockResolvedValue([
+      createQuestionRecord({ sortOrder: 1 }),
+    ]);
+
+    const result = await service.updateSortOrder({
+      questionVariantIds: ['01935b8f-0000-7000-8000-000000000201'],
+    });
+
+    expect(repositoryMock.updateQuestionVariantSortOrder).toHaveBeenCalledWith([
+      '01935b8f-0000-7000-8000-000000000201',
+    ]);
+    expect(result.items[0]).toEqual(
+      expect.objectContaining({
+        id: '01935b8f-0000-7000-8000-000000000201',
+        sort_order: 1,
+      }),
+    );
+  });
+
+  it('updateSortOrder는 잘못된 목록을 BadRequestException으로 변환한다', async () => {
+    repositoryMock.updateQuestionVariantSortOrder.mockRejectedValue(
+      new InvalidAdminQuestionSortOrderError('Invalid sort_order list'),
+    );
+
+    await expect(
+      service.updateSortOrder({
+        questionVariantIds: ['01935b8f-0000-7000-8000-000000000201'],
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 });
 

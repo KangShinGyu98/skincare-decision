@@ -136,7 +136,7 @@ export default function AdminRulesPage() {
                 룰 점검 화면
               </h1>
               <span className="mr-2 text-sm text-[var(--color-text-tertiary)]">
-                `총 {rows.length}개`
+                총 {rows.length}개
                 {isSortOrderDirty ? '변경된 순서는 저장버튼을 통해 저장해야 반영됩니다.' : ''}
               </span>
             </div>

@@ -63,6 +63,11 @@ export const menuItems: MenuItem[] = [
         label: 'Rule Check',
         link: '/admin/rules',
       },
+      {
+        id: 'admin-questions',
+        label: 'Questions',
+        link: '/admin/questions',
+      },
     ],
   },
 ];

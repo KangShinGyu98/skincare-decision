@@ -1,9 +1,11 @@
-import { Controller, Delete, Get, Post, Put } from '@nestjs/common';
+import { Controller, Delete, Get, Patch, Post, Put } from '@nestjs/common';
 import {
   adminQuestionParamSchema,
+  adminQuestionVariantParamSchema,
   adminQuestionsQuerySchema,
   type AdminQuestionParam,
   type AdminQuestionDetail,
+  type AdminQuestionVariantParam,
   type CreateAdminQuestionBody,
   createAdminQuestionBodySchema,
   type CreateAdminQuestionResponse,
@@ -11,6 +13,12 @@ import {
   type AdminQuestionsQuery,
   type AdminQuestionsResponse,
   type UpdateAdminQuestionBody,
+  type UpdateAdminQuestionSortOrderBody,
+  updateAdminQuestionSortOrderBodySchema,
+  type UpdateAdminQuestionSortOrderResponse,
+  type UpdateAdminQuestionStatusBody,
+  updateAdminQuestionStatusBodySchema,
+  type UpdateAdminQuestionStatusResponse,
   updateAdminQuestionBodySchema,
   type UpdateAdminQuestionResponse,
 } from '@skincare-decision/shared/schemas';
@@ -35,11 +43,26 @@ export class AdminQuestionsController {
     return this.service.createQuestion(body);
   }
 
+  @Patch('sort_order')
+  updateSortOrder(
+    @ZodBody(updateAdminQuestionSortOrderBodySchema) body: UpdateAdminQuestionSortOrderBody,
+  ): Promise<UpdateAdminQuestionSortOrderResponse> {
+    return this.service.updateSortOrder(body);
+  }
+
   @Get(':questionId')
   findQuestion(
     @ZodParam(adminQuestionParamSchema) params: AdminQuestionParam,
   ): Promise<AdminQuestionDetail> {
     return this.service.findQuestion(params.questionId);
+  }
+
+  @Patch(':questionVariantId/status')
+  updateStatus(
+    @ZodParam(adminQuestionVariantParamSchema) params: AdminQuestionVariantParam,
+    @ZodBody(updateAdminQuestionStatusBodySchema) body: UpdateAdminQuestionStatusBody,
+  ): Promise<UpdateAdminQuestionStatusResponse> {
+    return this.service.updateStatus(params.questionVariantId, body);
   }
 
   @Put(':questionId')

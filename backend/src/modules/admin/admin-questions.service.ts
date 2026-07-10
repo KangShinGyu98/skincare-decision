@@ -18,15 +18,20 @@ import {
   type UpdateAdminQuestionBody,
   type UpdateAdminQuestionResponse,
   updateAdminQuestionResponseSchema,
+  type UpdateAdminQuestionSortOrderBody,
+  type UpdateAdminQuestionSortOrderResponse,
+  updateAdminQuestionSortOrderResponseSchema,
+  type UpdateAdminQuestionStatusBody,
+  type UpdateAdminQuestionStatusResponse,
+  updateAdminQuestionStatusResponseSchema,
 } from '@skincare-decision/shared/schemas';
-import { ConditionState } from '../../generated/prisma/enums';
 import {
   type AdminQuestionDetailRecord,
   AdminQuestionsRepository,
   type AdminQuestionRecord,
   type AdminQuestionVariantRecord,
-  type AdminQuestionVisibilityConditionRecord,
   type FindAdminQuestionsInput,
+  InvalidAdminQuestionSortOrderError,
   InvalidAdminQuestionVariantError,
   type SaveAdminQuestionInput,
 } from './admin-questions.repository';
@@ -137,11 +142,54 @@ export class AdminQuestionsService {
     });
   }
 
+  async updateStatus(
+    questionVariantId: string,
+    body: UpdateAdminQuestionStatusBody,
+  ): Promise<UpdateAdminQuestionStatusResponse> {
+    const record = await this.repository.updateQuestionVariantStatus(
+      questionVariantId,
+      body.status === 'active',
+    );
+
+    if (!record) {
+      throw new NotFoundException({
+        code: 'ADMIN_QUESTION_VARIANT_NOT_FOUND',
+        message: 'Admin question variant was not found',
+      });
+    }
+
+    return updateAdminQuestionStatusResponseSchema.parse(this.toTableRow(record));
+  }
+
+  async updateSortOrder(
+    body: UpdateAdminQuestionSortOrderBody,
+  ): Promise<UpdateAdminQuestionSortOrderResponse> {
+    try {
+      const records = await this.repository.updateQuestionVariantSortOrder(
+        body.questionVariantIds,
+      );
+
+      return updateAdminQuestionSortOrderResponseSchema.parse({
+        items: records.map((record) => this.toTableRow(record)),
+      });
+    } catch (error) {
+      if (error instanceof InvalidAdminQuestionSortOrderError) {
+        throw new BadRequestException({
+          code: 'ADMIN_QUESTION_SORT_ORDER_INVALID',
+          message: error.message,
+        });
+      }
+
+      throw error;
+    }
+  }
+
   private toTableRow(record: AdminQuestionRecord): AdminQuestionTableRow {
     return {
-      id: record.questionId,
+      id: record.id,
       questionId: record.questionId,
       questionVariantId: record.id,
+      sort_order: record.sortOrder,
       question: record.question.key,
       questionVariant: record.title,
       answerType: record.question.answerType,
@@ -150,7 +198,7 @@ export class AdminQuestionsService {
         record.answers,
         record.question.key,
       ),
-      visibilityConditionText: this.formatVisibilityConditions(record),
+      visibilityConditions: record.visibilityConditions,
       screen: record.screen,
       uiSection: record.uiSection,
       category: this.toCategory(record.category),
@@ -180,7 +228,6 @@ export class AdminQuestionsService {
       uiSection: variant.uiSection,
       sort_order: variant.sortOrder,
       status: variant.isActive ? 'active' : 'inactive',
-      visibilityConditionText: this.formatVisibilityConditions(variant),
       visibilityConditions: variant.visibilityConditions,
       category: this.toCategory(variant.category),
     };
@@ -207,48 +254,6 @@ export class AdminQuestionsService {
         value,
       };
     });
-  }
-
-  private formatVisibilityConditions(
-    record: Pick<
-      AdminQuestionRecord | AdminQuestionVariantRecord,
-      'screen' | 'uiSection' | 'category' | 'visibilityConditions'
-    >,
-  ): string {
-    const baseConditions = [
-      `screen EQ ${record.screen}`,
-      `ui_section EQ ${record.uiSection}`,
-      `category EQ ${record.category ?? 'all'}`,
-    ];
-
-    if (record.visibilityConditions.length === 0) {
-      return baseConditions.join(' AND ');
-    }
-
-    return [
-      ...baseConditions,
-      ...record.visibilityConditions.map((condition) => this.formatVisibilityCondition(condition)),
-    ].join(' AND ');
-  }
-
-  private formatVisibilityCondition(condition: AdminQuestionVisibilityConditionRecord): string {
-    const expression = `visibility_condition ${condition.operator} ${this.formatVisibilityValue(
-      condition,
-    )}`;
-
-    if (condition.state === ConditionState.EXCLUDED) {
-      return `NOT (${expression})`;
-    }
-
-    return expression;
-  }
-
-  private formatVisibilityValue(condition: AdminQuestionVisibilityConditionRecord): string {
-    if (condition.operator === 'IN') {
-      return `[${condition.value}]`;
-    }
-
-    return String(condition.value);
   }
 
   private toCategory(category: string | null): AdminQuestionCategory | null {

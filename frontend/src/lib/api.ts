@@ -1,4 +1,7 @@
 import {
+  type AdminQuestionsQuery,
+  type AdminQuestionsResponse,
+  adminQuestionsResponseSchema,
   type AdminRuleDetail,
   adminRuleDetailSchema,
   type AdminRuleQuestionSearchResponse,
@@ -35,6 +38,14 @@ import {
   updateAdminRuleStatusBodySchema,
   type UpdateAdminRuleStatusResponse,
   updateAdminRuleStatusResponseSchema,
+  type UpdateAdminQuestionSortOrderBody,
+  updateAdminQuestionSortOrderBodySchema,
+  type UpdateAdminQuestionSortOrderResponse,
+  updateAdminQuestionSortOrderResponseSchema,
+  type UpdateAdminQuestionStatusBody,
+  updateAdminQuestionStatusBodySchema,
+  type UpdateAdminQuestionStatusResponse,
+  updateAdminQuestionStatusResponseSchema,
   type UpsertCategoryDecisionResponsesRequest,
   upsertCategoryDecisionResponsesRequestSchema,
   type UpsertCategoryDecisionResponsesResponse,
@@ -90,6 +101,10 @@ function getCategoryDecisionUrl(path = '') {
 
 function getAdminRulesUrl(path = '') {
   return `${getApiBaseUrl()}/admin/rules${path}`;
+}
+
+function getAdminQuestionsUrl(path = '') {
+  return `${getApiBaseUrl()}/admin/questions${path}`;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -413,5 +428,82 @@ export const adminRulesApi = {
     });
 
     return handleResponse(response, updateAdminRuleSortOrderResponseSchema);
+  },
+};
+
+export const adminQuestionsApi = {
+  getQuestions: async (query: AdminQuestionsQuery = {}): Promise<AdminQuestionsResponse> => {
+    const searchParams = new URLSearchParams();
+
+    if (query.screen) {
+      searchParams.set('screen', query.screen);
+    }
+
+    if (query.uiSection) {
+      searchParams.set('uiSection', query.uiSection);
+    }
+
+    if (query.category) {
+      searchParams.set('category', query.category);
+    }
+
+    if (query.status) {
+      searchParams.set('status', query.status);
+    }
+
+    const search = searchParams.toString();
+    const response = await fetch(getAdminQuestionsUrl(search ? `?${search}` : ''), {
+      method: 'GET',
+      credentials: 'include',
+    });
+
+    return handleResponse(response, adminQuestionsResponseSchema);
+  },
+
+  updateStatus: async (
+    questionVariantId: string,
+    data: UpdateAdminQuestionStatusBody,
+  ): Promise<UpdateAdminQuestionStatusResponse> => {
+    const parsed = updateAdminQuestionStatusBodySchema.safeParse(data);
+
+    if (!parsed.success) {
+      throw new ApiValidationError(
+        `Invalid admin question status request: ${parsed.error.message}`,
+      );
+    }
+
+    const response = await fetch(getAdminQuestionsUrl(`/${questionVariantId}/status`), {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify(parsed.data),
+    });
+
+    return handleResponse(response, updateAdminQuestionStatusResponseSchema);
+  },
+
+  updateSortOrder: async (
+    data: UpdateAdminQuestionSortOrderBody,
+  ): Promise<UpdateAdminQuestionSortOrderResponse> => {
+    const parsed = updateAdminQuestionSortOrderBodySchema.safeParse(data);
+
+    if (!parsed.success) {
+      throw new ApiValidationError(
+        `Invalid admin question sort_order request: ${parsed.error.message}`,
+      );
+    }
+
+    const response = await fetch(getAdminQuestionsUrl('/sort_order'), {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify(parsed.data),
+    });
+
+    return handleResponse(response, updateAdminQuestionSortOrderResponseSchema);
   },
 };

@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
+  AdminQuestionsQuery,
+  AdminQuestionsResponse,
+  AdminQuestionStatus,
+  AdminQuestionTableRow,
   AdminRuleDetail,
   AdminRuleQuestionSearchResponse,
   AdminRulesResponse,
@@ -15,12 +19,13 @@ import type {
   QuestionUiSectionDto,
   ResetCategoryDecisionResponsesRequest,
   ResetPriorityGateResponsesRequest,
+  UpdateAdminQuestionSortOrderBody,
   UpdateAdminRuleBody,
   UpdateAdminRuleSortOrderBody,
   UpsertCategoryDecisionResponsesRequest,
   UpsertPriorityGateResponsesRequest,
 } from '@skincare-decision/shared/schemas';
-import { adminRulesApi, categoryDecisionApi, priorityGateApi } from './api';
+import { adminQuestionsApi, adminRulesApi, categoryDecisionApi, priorityGateApi } from './api';
 
 export const queryKeys = {
   priorityGate: {
@@ -37,11 +42,18 @@ export const queryKeys = {
     detail: (ruleId: string) => ['admin', 'rules', 'detail', ruleId] as const,
     questions: (q: string, limit: number) => ['admin', 'rules', 'questions', { q, limit }] as const,
   },
+  adminQuestions: {
+    all: ['admin', 'questions'] as const,
+    list: (query: AdminQuestionsQuery) => ['admin', 'questions', 'list', query] as const,
+  },
 };
 
 export const mutationKeys = {
   adminRules: {
     status: ['admin', 'rules', 'status'] as const,
+  },
+  adminQuestions: {
+    status: ['admin', 'questions', 'status'] as const,
   },
 };
 
@@ -449,10 +461,30 @@ function removeAdminRuleRow(
   };
 }
 
+function replaceAdminQuestionRow(
+  previousData: AdminQuestionsResponse | undefined,
+  nextRow: AdminQuestionTableRow,
+): AdminQuestionsResponse | undefined {
+  if (!previousData) {
+    return previousData;
+  }
+
+  return {
+    items: previousData.items.map((item) => (item.id === nextRow.id ? nextRow : item)),
+  };
+}
+
 export function useAdminRules() {
   return useQuery({
     queryKey: queryKeys.adminRules.list,
     queryFn: adminRulesApi.getRules,
+  });
+}
+
+export function useAdminQuestions(query: AdminQuestionsQuery = {}) {
+  return useQuery<AdminQuestionsResponse>({
+    queryKey: queryKeys.adminQuestions.list(query),
+    queryFn: () => adminQuestionsApi.getQuestions(query),
   });
 }
 
@@ -625,6 +657,40 @@ export function useSaveAdminRuleSortOrder() {
     onSuccess: async (response) => {
       queryClient.setQueryData<AdminRulesResponse>(queryKeys.adminRules.list, response);
       await queryClient.invalidateQueries({ queryKey: queryKeys.adminRules.all });
+    },
+  });
+}
+
+export function useUpdateAdminQuestionStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: mutationKeys.adminQuestions.status,
+    mutationFn: ({
+      questionVariantId,
+      status,
+    }: {
+      questionVariantId: string;
+      status: AdminQuestionStatus;
+    }) => adminQuestionsApi.updateStatus(questionVariantId, { status }),
+    onSuccess: async (updatedQuestion) => {
+      queryClient.setQueriesData<AdminQuestionsResponse>(
+        { queryKey: queryKeys.adminQuestions.all },
+        (previousData) => replaceAdminQuestionRow(previousData, updatedQuestion),
+      );
+      await queryClient.invalidateQueries({ queryKey: queryKeys.adminQuestions.all });
+    },
+  });
+}
+
+export function useSaveAdminQuestionSortOrder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: UpdateAdminQuestionSortOrderBody) =>
+      adminQuestionsApi.updateSortOrder(data),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.adminQuestions.all });
     },
   });
 }
