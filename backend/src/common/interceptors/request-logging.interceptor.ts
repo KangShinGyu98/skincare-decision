@@ -3,6 +3,7 @@ import type { Response } from 'express';
 import { tap } from 'rxjs';
 import type { Observable } from 'rxjs';
 import { AppLogger } from '../logger/logger.service';
+import { isHealthCheckRequest } from '../http/is-healthcheck-request';
 import type { RequestWithContext } from '../types/express-request.type';
 
 @Injectable()
@@ -13,6 +14,10 @@ export class RequestLoggingInterceptor implements NestInterceptor {
     const http = context.switchToHttp();
     const request = http.getRequest<RequestWithContext>();
     const response = http.getResponse<Response>();
+
+    if (isHealthCheckRequest(request.originalUrl)) {
+      return next.handle();
+    }
 
     return next.handle().pipe(
       tap(() => {

@@ -7,6 +7,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { AppLogger } from '../logger/logger.service';
+import { isHealthCheckRequest } from '../http/is-healthcheck-request';
 import type { MaybeRequestWithContext } from '../types/express-request.type';
 import type { Response } from 'express';
 
@@ -214,6 +215,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
   }
 
   private writeErrorLog(normalizedError: NormalizedError, request: MaybeRequestWithContext): void {
+    if (isHealthCheckRequest(request.originalUrl)) {
+      return;
+    }
+
     const payload: Record<string, unknown> = {
       method: request.method,
       path: request.originalUrl,

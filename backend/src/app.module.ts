@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -59,6 +59,9 @@ import { AdminModule } from './modules/admin/admin.module';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
-    consumer.apply(RequestContextMiddleware, DeviceSessionMiddleware).forRoutes('*');
+    consumer
+      .apply(RequestContextMiddleware, DeviceSessionMiddleware)
+      .exclude({ path: 'health', method: RequestMethod.GET })
+      .forRoutes('{*splat}');
   }
 }
