@@ -1,0 +1,123 @@
+name: Deploy to ECS
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'Assets/**'
+      - 'design_system/**'
+      - 'memory/**'
+      - '.gitignore'
+      - 'LICENSE'
+
+permissions:
+  id-token: write   # OIDC 토큰 발급에 필수
+  contents: read
+
+env:
+  AWS_REGION: ap-northeast-2
+  ECR_REGISTRY: 706922781768.dkr.ecr.ap-northeast-2.amazonaws.com
+  ECS_CLUSTER: skincare-decision-cluster
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            outside_frontend:
+              - '**'
+              - '!frontend/**'
+            outside_backend:
+              - '**'
+              - '!backend/**'
+
+      - id: set
+        env:
+          OUTSIDE_FRONTEND: ${{ steps.filter.outputs.outside_frontend }}
+          OUTSIDE_BACKEND: ${{ steps.filter.outputs.outside_backend }}
+        run: |
+          BACKEND='{"app":"backend","ecr_repo":"skincare-decision/backend","service":"backend-service","task_family":"skincare-decision-backend","container":"backend"}'
+          FRONTEND='{"app":"frontend","ecr_repo":"skincare-decision/frontend","service":"frontend-service","task_family":"skincare-decision-frontend","container":"frontend"}'
+
+          # 변경 파일이 전부 frontend/ 안에만 있을 때만 frontend 단독 배포
+          if [ "$OUTSIDE_FRONTEND" = "false" ] && [ "$OUTSIDE_BACKEND" = "true" ]; then
+            matrix=$(jq -nc --argjson f "$FRONTEND" '[$f]')
+            reason="frontend/ 만 변경 → frontend 단독 배포"
+          # 변경 파일이 전부 backend/ 안에만 있을 때만 backend 단독 배포
+          elif [ "$OUTSIDE_BACKEND" = "false" ] && [ "$OUTSIDE_FRONTEND" = "true" ]; then
+            matrix=$(jq -nc --argjson b "$BACKEND" '[$b]')
+            reason="backend/ 만 변경 → backend 단독 배포"
+          # shared/, 루트 설정, 혼합, 판단 불가 → 안전하게 둘 다
+          else
+            matrix=$(jq -nc --argjson b "$BACKEND" --argjson f "$FRONTEND" '[$b, $f]')
+            reason="shared/루트/혼합 변경 → 둘 다 배포"
+          fi
+
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+          echo "판단: $reason"
+
+  deploy:
+    needs: changes
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ${{ fromJSON(needs.changes.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::706922781768:role/github-actions-deploy
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: aws-actions/amazon-ecr-login@v2
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.target.app }}/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ${{ env.ECR_REGISTRY }}/${{ matrix.target.ecr_repo }}:${{ github.sha }}
+          cache-from: type=gha,scope=${{ matrix.target.app }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.target.app }}
+
+      - name: Download current task definition
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition ${{ matrix.target.task_family }} \
+            --query taskDefinition > task-definition.json
+
+      - name: Render task definition
+        id: render
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: ${{ matrix.target.container }}
+          image: ${{ env.ECR_REGISTRY }}/${{ matrix.target.ecr_repo }}:${{ github.sha }}
+
+      - name: Deploy to ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.render.outputs.task-definition }}
+          service: ${{ matrix.target.service }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true

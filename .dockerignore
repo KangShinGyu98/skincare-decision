@@ -1,0 +1,57 @@
+# 설치된 의존성
+**/node_modules
+.pnpm-store
+
+# 로컬 빌드 결과
+**/dist
+**/.next
+**/build
+**/out
+**/coverage
+**/.turbo
+**/.cache
+**/*.tsbuildinfo
+backend/src/generated
+
+# 환경변수와 비밀값
+.env
+.env.*
+**/.env
+**/.env.*
+*.pem
+
+# Git / IDE
+.git
+.github
+.claude
+.idea
+.vscode
+.DS_Store
+
+# 로그
+**/*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Docker image 빌드에 필요 없는 파일
+AGENTS.md
+CLAUDE.md
+Assets
+design_system
+docs
+memory
+scripts
+README*
+
+# 비밀값
+.npmrc
+*.key
+id_rsa*
+
+# 빌드에 불필요
+infra
+**/*.spec.ts
+**/*.e2e-spec.ts
+**/test
