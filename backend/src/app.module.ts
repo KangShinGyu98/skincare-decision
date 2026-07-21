@@ -12,6 +12,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ResponseEnvelopeInterceptor } from './common/interceptors/response-envelope.interceptor';
 import { CatsModule } from './modules/cats/cats.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { GoogleAuthModule } from './modules/auth/google/google-auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './common/guards/auth.guard';
 import { PermissionGuard } from './common/guards/permission.guard';
@@ -35,6 +36,7 @@ import { AdminModule } from './modules/admin/admin.module';
     CatsModule,
     SessionModule,
     AuthModule,
+    GoogleAuthModule,
     ProductCategoriesModule,
     LandingModule,
     PriorityGateModule,
