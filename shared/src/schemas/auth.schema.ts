@@ -1,10 +1,9 @@
 import { z } from 'zod';
 
-export const loginBodySchema = z
-  .object({
-    username: z.string().min(1),
-    password: z.string().min(1),
-  })
-  .strict();
+export const authenticatedUserSchema = z.object({
+  id: z.string(),
+  roles: z.array(z.enum(['USER', 'ADMIN'])),
+  permissions: z.array(z.string()),
+});
 
-export type LoginBodyDto = z.infer<typeof loginBodySchema>;
+export type AuthenticatedUserDto = z.infer<typeof authenticatedUserSchema>;
