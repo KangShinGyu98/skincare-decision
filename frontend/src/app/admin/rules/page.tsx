@@ -115,15 +115,22 @@ export default function AdminRulesPage() {
 
   if (isError) {
     return (
-      <ErrorPanel
-        message={
-          isUnauthorizedError(error)
-            ? '로그인한 사용자만 확인할 수 있습니다.'
-            : error instanceof Error
-              ? error.message
-              : 'Rule 목록을 불러오지 못했습니다.'
-        }
-      />
+      <main
+        className="min-h-screen bg-[var(--color-bg-page)] px-6 pb-10 pt-24"
+        data-fetch-state="error"
+      >
+        <div className="mx-auto w-full max-w-[1440px]">
+          <ErrorPanel
+            message={
+              isUnauthorizedError(error)
+                ? '로그인한 사용자만 확인할 수 있습니다.'
+                : error instanceof Error
+                  ? error.message
+                  : 'Rule 목록을 불러오지 못했습니다.'
+            }
+          />
+        </div>
+      </main>
     );
   }
   if (isLoading) {
