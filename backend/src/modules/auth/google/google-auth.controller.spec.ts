@@ -154,7 +154,12 @@ describe('GoogleAuthController', () => {
 
       expect(usersServiceMock.upsertFromGoogleProfile).toHaveBeenCalledWith(googleProfile);
       expect(sessionServiceMock.rotateToAuthenticatedSession).toHaveBeenCalledWith(
-        expect.objectContaining({ userId: 'user-1', roles: ['USER'], deviceId: 'device-1' }),
+        expect.objectContaining({
+          userId: 'user-1',
+          roles: ['USER'],
+          email: 'user@example.com',
+          deviceId: 'device-1',
+        }),
       );
       expect(sessionCookieServiceMock.setSessionCookie).toHaveBeenCalledWith(
         response,

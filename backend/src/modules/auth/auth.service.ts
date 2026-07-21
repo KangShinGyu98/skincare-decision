@@ -18,9 +18,24 @@ export class AuthService {
       return undefined;
     }
 
-    const roles = storedSession.roles ?? (await this.findUserRoles(storedSession.userId));
+    let roles = storedSession.roles;
+    let email = storedSession.email;
 
-    return this.toAuthenticatedUser(storedSession.userId, roles);
+    if (!roles || !email) {
+      const user = await this.usersService.findById(storedSession.userId);
+
+      if (!user) {
+        throw new UnauthorizedException({
+          code: 'INVALID_SESSION',
+          message: 'Invalid session',
+        });
+      }
+
+      roles = roles ?? [user.role];
+      email = email ?? user.email;
+    }
+
+    return this.toAuthenticatedUser(storedSession.userId, email, roles);
   }
 
   async logout(sessionToken: string | undefined): Promise<void> {
@@ -31,22 +46,10 @@ export class AuthService {
     await this.sessionService.deleteSessionByToken(sessionToken);
   }
 
-  private async findUserRoles(userId: string): Promise<UserRole[]> {
-    const user = await this.usersService.findById(userId);
-
-    if (!user) {
-      throw new UnauthorizedException({
-        code: 'INVALID_SESSION',
-        message: 'Invalid session',
-      });
-    }
-
-    return [user.role];
-  }
-
-  private toAuthenticatedUser(id: string, roles: UserRole[]): AuthenticatedUser {
+  private toAuthenticatedUser(id: string, email: string, roles: UserRole[]): AuthenticatedUser {
     return {
       id,
+      email,
       roles,
       permissions: permissionsForRoles(roles),
     };

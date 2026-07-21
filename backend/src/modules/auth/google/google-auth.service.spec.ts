@@ -35,7 +35,7 @@ describe('GoogleAuthService', () => {
     service = new GoogleAuthService(configServiceMock);
   });
 
-  it('buildAuthUrl은 openid/email/profile scope와 state를 포함한 인증 URL을 생성한다', () => {
+  it('buildAuthUrl은 openid/email/profile scope, select_account prompt, state를 포함한 인증 URL을 생성한다', () => {
     generateAuthUrlMock.mockReturnValue('https://accounts.google.com/o/oauth2/v2/auth?mock=1');
 
     const url = service.buildAuthUrl('encoded-state');
@@ -43,6 +43,7 @@ describe('GoogleAuthService', () => {
     expect(generateAuthUrlMock).toHaveBeenCalledWith({
       access_type: 'online',
       scope: ['openid', 'email', 'profile'],
+      prompt: 'select_account',
       state: 'encoded-state',
     });
     expect(url).toBe('https://accounts.google.com/o/oauth2/v2/auth?mock=1');

@@ -84,6 +84,7 @@ export class GoogleAuthController {
         deviceId: request.context.deviceId,
         userId: user.id,
         roles: [user.role],
+        email: user.email,
         entryPath: request.originalUrl,
         ...(referrer ? { referrer } : {}),
       });

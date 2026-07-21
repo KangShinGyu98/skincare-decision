@@ -34,6 +34,8 @@ export class GoogleAuthService {
     return this.client.generateAuthUrl({
       access_type: 'online',
       scope: GOOGLE_OAUTH_SCOPES,
+      // 로그아웃 후 재로그인 시 이전 계정으로 자동 로그인되지 않고 계정 선택 화면을 항상 보여준다.
+      prompt: 'select_account',
       state,
     });
   }
