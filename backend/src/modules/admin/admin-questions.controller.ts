@@ -1,4 +1,5 @@
 import { Controller, Delete, Get, Patch, Post, Put } from '@nestjs/common';
+import { Authenticated, Permissions } from '../../common/decorators/auth.decorator';
 import {
   adminQuestionParamSchema,
   adminQuestionVariantParamSchema,
@@ -29,6 +30,7 @@ import { AdminQuestionsService } from './admin-questions.service';
 export class AdminQuestionsController {
   constructor(private readonly service: AdminQuestionsService) {}
 
+  @Authenticated()
   @Get()
   findQuestions(
     @ZodQuery(adminQuestionsQuerySchema) query: AdminQuestionsQuery,
@@ -36,6 +38,7 @@ export class AdminQuestionsController {
     return this.service.findQuestions(query);
   }
 
+  @Permissions('questions:manage:any')
   @Post()
   createQuestion(
     @ZodBody(createAdminQuestionBodySchema) body: CreateAdminQuestionBody,
@@ -43,6 +46,7 @@ export class AdminQuestionsController {
     return this.service.createQuestion(body);
   }
 
+  @Permissions('questions:manage:any')
   @Patch('sort_order')
   updateSortOrder(
     @ZodBody(updateAdminQuestionSortOrderBodySchema) body: UpdateAdminQuestionSortOrderBody,
@@ -50,6 +54,7 @@ export class AdminQuestionsController {
     return this.service.updateSortOrder(body);
   }
 
+  @Authenticated()
   @Get(':questionId')
   findQuestion(
     @ZodParam(adminQuestionParamSchema) params: AdminQuestionParam,
@@ -57,6 +62,7 @@ export class AdminQuestionsController {
     return this.service.findQuestion(params.questionId);
   }
 
+  @Permissions('questions:manage:any')
   @Patch(':questionVariantId/status')
   updateStatus(
     @ZodParam(adminQuestionVariantParamSchema) params: AdminQuestionVariantParam,
@@ -65,6 +71,7 @@ export class AdminQuestionsController {
     return this.service.updateStatus(params.questionVariantId, body);
   }
 
+  @Permissions('questions:manage:any')
   @Put(':questionId')
   updateQuestion(
     @ZodParam(adminQuestionParamSchema) params: AdminQuestionParam,
@@ -73,6 +80,7 @@ export class AdminQuestionsController {
     return this.service.updateQuestion(params.questionId, body);
   }
 
+  @Permissions('questions:manage:any')
   @Delete(':questionId')
   deleteQuestion(
     @ZodParam(adminQuestionParamSchema) params: AdminQuestionParam,

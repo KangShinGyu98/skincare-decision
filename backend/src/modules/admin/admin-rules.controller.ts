@@ -1,4 +1,5 @@
 import { Controller, Delete, Get, Patch, Post, Put } from '@nestjs/common';
+import { Authenticated, Permissions } from '../../common/decorators/auth.decorator';
 import {
   type AdminRuleDetail,
   type AdminRuleParam,
@@ -28,11 +29,13 @@ import { AdminRulesService } from './admin-rules.service';
 export class AdminRulesController {
   constructor(private readonly service: AdminRulesService) {}
 
+  @Authenticated()
   @Get()
   findRules(): Promise<AdminRulesResponse> {
     return this.service.findRules();
   }
 
+  @Authenticated()
   @Get('questions')
   searchQuestions(
     @ZodQuery(adminRuleQuestionSearchQuerySchema) query: AdminRuleQuestionSearchQuery,
@@ -40,6 +43,7 @@ export class AdminRulesController {
     return this.service.searchQuestions(query);
   }
 
+  @Permissions('priority_rules:manage:any')
   @Post()
   createRule(
     @ZodBody(createAdminRuleBodySchema) body: CreateAdminRuleBody,
@@ -47,11 +51,13 @@ export class AdminRulesController {
     return this.service.createRule(body);
   }
 
+  @Authenticated()
   @Get(':ruleId')
   findRule(@ZodParam(adminRuleParamSchema) params: AdminRuleParam): Promise<AdminRuleDetail> {
     return this.service.findRule(params.ruleId);
   }
 
+  @Permissions('priority_rules:manage:any')
   @Patch('sort_order')
   updateSortOrder(
     @ZodBody(updateAdminRuleSortOrderBodySchema) body: UpdateAdminRuleSortOrderBody,
@@ -59,6 +65,7 @@ export class AdminRulesController {
     return this.service.updateSortOrder(body);
   }
 
+  @Permissions('priority_rules:manage:any')
   @Patch(':ruleId/status')
   updateStatus(
     @ZodParam(adminRuleParamSchema) params: AdminRuleParam,
@@ -67,6 +74,7 @@ export class AdminRulesController {
     return this.service.updateStatus(params.ruleId, body);
   }
 
+  @Permissions('priority_rules:manage:any')
   @Put(':ruleId')
   updateRule(
     @ZodParam(adminRuleParamSchema) params: AdminRuleParam,
@@ -75,6 +83,7 @@ export class AdminRulesController {
     return this.service.updateRule(params.ruleId, body);
   }
 
+  @Permissions('priority_rules:manage:any')
   @Delete(':ruleId')
   deleteRule(
     @ZodParam(adminRuleParamSchema) params: AdminRuleParam,
