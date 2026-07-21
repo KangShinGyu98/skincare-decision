@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
+import SiteFooter from '@/components/SiteFooter';
 import SiteHeader from '@/components/SiteHeader';
 import { AppProviders } from './providers';
 
@@ -30,7 +31,7 @@ export default function RootLayout({
         <AppProviders>
           <SiteHeader></SiteHeader>
           {children}
-          <footer></footer>
+          <SiteFooter />
         </AppProviders>
       </body>
     </html>

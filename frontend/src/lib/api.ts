@@ -215,6 +215,15 @@ export const authApi = {
     await handleResponse(response, z.object({ ok: z.boolean() }));
   },
 
+  consent: async (): Promise<void> => {
+    const response = await fetch(getAuthUrl('/consent'), {
+      method: 'POST',
+      credentials: 'include',
+    });
+
+    await handleResponse(response, z.object({ ok: z.boolean() }));
+  },
+
   getGoogleLoginUrl: (redirectTo?: string): string => {
     const searchParams = redirectTo ? `?${new URLSearchParams({ redirectTo })}` : '';
 

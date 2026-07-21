@@ -57,6 +57,7 @@ export const queryKeys = {
 export const mutationKeys = {
   auth: {
     logout: ['auth', 'logout'] as const,
+    consent: ['auth', 'consent'] as const,
   },
   adminRules: {
     status: ['admin', 'rules', 'status'] as const,
@@ -84,6 +85,18 @@ export function useLogout() {
     mutationFn: authApi.logout,
     onSuccess: () => {
       queryClient.setQueryData(queryKeys.auth.me, null);
+      void queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
+    },
+  });
+}
+
+export function useConsent() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: mutationKeys.auth.consent,
+    mutationFn: authApi.consent,
+    onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
     },
   });
