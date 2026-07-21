@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Req, Res } from '@nestjs/common';
+import { Controller, Get, Post, Req, Res, UnauthorizedException } from '@nestjs/common';
 import type { Response } from 'express';
 import { Authenticated } from '../../common/decorators/auth.decorator';
 import type { RequestWithContext } from '../../common/types/express-request.type';
 import { SessionCookieService } from '../session/session-cookie.service';
+import { UsersService } from '../users/users.service';
 import { AuthService } from './auth.service';
 
 @Controller('auth')
@@ -10,6 +11,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly sessionCookieService: SessionCookieService,
+    private readonly usersService: UsersService,
   ) {}
 
   @Authenticated()
@@ -25,7 +27,36 @@ export class AuthController {
 
   @Authenticated()
   @Get('me')
-  me(@Req() request: RequestWithContext) {
-    return request.context.user;
+  async me(@Req() request: RequestWithContext) {
+    const authenticatedUser = this.requireAuthenticatedUser(request);
+    const user = await this.usersService.findById(authenticatedUser.id);
+
+    return {
+      ...authenticatedUser,
+      consentRequired: user?.consentedAt == null,
+    };
+  }
+
+  @Authenticated()
+  @Post('consent')
+  async consent(@Req() request: RequestWithContext) {
+    const authenticatedUser = this.requireAuthenticatedUser(request);
+
+    await this.usersService.recordConsent(authenticatedUser.id);
+
+    return { ok: true };
+  }
+
+  private requireAuthenticatedUser(request: RequestWithContext) {
+    const authenticatedUser = request.context.user;
+
+    if (!authenticatedUser) {
+      throw new UnauthorizedException({
+        code: 'AUTH_REQUIRED',
+        message: 'Authentication is required',
+      });
+    }
+
+    return authenticatedUser;
   }
 }

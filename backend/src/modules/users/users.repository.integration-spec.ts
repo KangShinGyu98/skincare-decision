@@ -62,6 +62,7 @@ describe('UsersRepository', () => {
       name: 'New User',
       role: 'USER',
       googleId: 'google-sub-new',
+      consentedAt: null,
     });
 
     await expect(repository.findByGoogleId('google-sub-new')).resolves.toEqual(created);
@@ -88,6 +89,7 @@ describe('UsersRepository', () => {
       name: 'Existing User',
       role: 'ADMIN',
       googleId: 'google-sub-existing',
+      consentedAt: null,
     });
   });
 
@@ -107,6 +109,24 @@ describe('UsersRepository', () => {
       name: 'Lookup User',
       role: 'USER',
       googleId: null,
+      consentedAt: null,
     });
+  });
+
+  it('recordConsent는 consentedAt을 현재 시각으로 설정한다', async () => {
+    await prisma.user.create({
+      data: {
+        id: '01935b8f-0000-7000-8000-0000000000a4',
+        email: 'consent-user@example.com',
+        name: 'Consent User',
+        role: 'USER',
+      },
+    });
+
+    const before = new Date();
+    const result = await repository.recordConsent('01935b8f-0000-7000-8000-0000000000a4');
+
+    expect(result.consentedAt).not.toBeNull();
+    expect(result.consentedAt?.getTime()).toBeGreaterThanOrEqual(before.getTime());
   });
 });

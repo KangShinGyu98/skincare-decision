@@ -69,6 +69,7 @@ describe('GoogleAuthController', () => {
     name: 'User',
     role: 'USER',
     googleId: 'google-sub',
+    consentedAt: null,
   };
 
   beforeEach(async () => {

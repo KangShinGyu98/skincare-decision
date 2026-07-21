@@ -40,4 +40,8 @@ export class UsersService {
       googleId: profile.googleId,
     });
   }
+
+  async recordConsent(id: string): Promise<UserRecord> {
+    return this.usersRepository.recordConsent(id);
+  }
 }

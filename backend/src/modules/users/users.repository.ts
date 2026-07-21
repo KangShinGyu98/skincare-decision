@@ -9,6 +9,7 @@ export type UserRecord = {
   name: string;
   role: UserRole;
   googleId: string | null;
+  consentedAt: Date | null;
 };
 
 export type CreateUserFromGoogleInput = {
@@ -24,6 +25,7 @@ type PrismaUserRow = {
   name: string;
   role: PrismaUserRole;
   googleId: string | null;
+  consentedAt: Date | null;
 };
 
 const USER_SELECT = {
@@ -32,6 +34,7 @@ const USER_SELECT = {
   name: true,
   role: true,
   googleId: true,
+  consentedAt: true,
 } as const;
 
 @Injectable()
@@ -90,12 +93,23 @@ export class UsersRepository {
     return this.toUserRecord(row);
   }
 
+  async recordConsent(id: string): Promise<UserRecord> {
+    const row = await this.prisma.user.update({
+      where: { id },
+      data: { consentedAt: new Date() },
+      select: USER_SELECT,
+    });
+
+    return this.toUserRecord(row);
+  }
+
   private toUserRecord(row: PrismaUserRow): UserRecord {
     return {
       id: row.id,
       email: row.email,
       name: row.name,
       googleId: row.googleId,
+      consentedAt: row.consentedAt,
       role: row.role === PrismaUserRole.ADMIN ? 'ADMIN' : 'USER',
     };
   }

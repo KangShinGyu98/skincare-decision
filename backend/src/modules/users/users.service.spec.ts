@@ -20,6 +20,7 @@ describe('UsersService', () => {
     name: 'User',
     role: 'USER',
     googleId: 'google-sub-1',
+    consentedAt: null,
   };
 
   beforeEach(async () => {
