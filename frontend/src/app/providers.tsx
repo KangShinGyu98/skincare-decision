@@ -1,8 +1,10 @@
 'use client';
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MutationCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { type ReactNode, useState } from 'react';
+import { toast } from 'sonner';
 import { Toaster } from '@/components/shadcn/sonner';
+import { isForbiddenError } from '@/lib/api';
 
 function createQueryClient() {
   return new QueryClient({
@@ -16,6 +18,13 @@ function createQueryClient() {
         retry: 0,
       },
     },
+    mutationCache: new MutationCache({
+      onError: (error) => {
+        if (isForbiddenError(error)) {
+          toast.error('관리자만 사용할 수 있는 기능입니다.');
+        }
+      },
+    }),
   });
 }
 

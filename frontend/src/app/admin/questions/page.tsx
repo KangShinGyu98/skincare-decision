@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from '@/components/shadcn/select';
 import { Spinner } from '@/components/shadcn/spinner';
+import { isForbiddenError, isUnauthorizedError } from '@/lib/api';
 import {
   mutationKeys,
   useAdminQuestions,
@@ -158,7 +159,8 @@ export default function AdminQuestionsPage() {
     );
   };
 
-  const actionError = updateStatus.error ?? saveSortOrder.error;
+  const rawActionError = updateStatus.error ?? saveSortOrder.error;
+  const actionError = isForbiddenError(rawActionError) ? null : rawActionError;
 
   if (isError && !data) {
     return (
@@ -169,7 +171,11 @@ export default function AdminQuestionsPage() {
         <div className="mx-auto w-full max-w-[1440px]">
           <ErrorPanel
             message={
-              error instanceof Error ? error.message : 'Question 목록을 불러오지 못했습니다.'
+              isUnauthorizedError(error)
+                ? '로그인한 사용자만 확인할 수 있습니다.'
+                : error instanceof Error
+                  ? error.message
+                  : 'Question 목록을 불러오지 못했습니다.'
             }
           />
         </div>
@@ -248,7 +254,11 @@ export default function AdminQuestionsPage() {
         {isError ? (
           <ErrorPanel
             message={
-              error instanceof Error ? error.message : 'Question 목록을 불러오지 못했습니다.'
+              isUnauthorizedError(error)
+                ? '로그인한 사용자만 확인할 수 있습니다.'
+                : error instanceof Error
+                  ? error.message
+                  : 'Question 목록을 불러오지 못했습니다.'
             }
           />
         ) : null}
