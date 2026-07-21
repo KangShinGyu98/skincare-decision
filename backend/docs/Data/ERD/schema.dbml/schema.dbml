@@ -7,6 +7,7 @@ Table users {
   email String [unique, not null]
   name String [not null]
   role UserRole [not null]
+  googleId String [unique]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime
   deletedAt DateTime
