@@ -15,6 +15,7 @@ export type Permission = `${PermissionResource}:${PermissionAction}:${Permission
 
 export type AuthenticatedUser = {
   id: string;
+  email: string;
   roles: UserRole[];
   permissions: Permission[];
 };

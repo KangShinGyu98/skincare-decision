@@ -1,4 +1,6 @@
 import {
+  type AuthenticatedUserDto,
+  authenticatedUserSchema,
   type AdminQuestionDetail,
   adminQuestionDetailSchema,
   type AdminQuestionsQuery,
@@ -61,7 +63,7 @@ import {
   type UpsertPriorityGateResponsesResponse,
   upsertPriorityGateResponsesResponseSchema,
 } from '@skincare-decision/shared/schemas';
-import type { z } from 'zod';
+import { z } from 'zod';
 
 type ApiErrorPayload = {
   statusCode?: number;
@@ -91,6 +93,14 @@ export class ApiValidationError extends Error {
   }
 }
 
+export function isUnauthorizedError(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 401;
+}
+
+export function isForbiddenError(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 403;
+}
+
 function getApiBaseUrl() {
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:4000/api';
 
@@ -111,6 +121,10 @@ function getAdminRulesUrl(path = '') {
 
 function getAdminQuestionsUrl(path = '') {
   return `${getApiBaseUrl()}/admin/questions${path}`;
+}
+
+function getAuthUrl(path = '') {
+  return `${getApiBaseUrl()}/auth${path}`;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -185,6 +199,45 @@ async function handleResponse<TSchema extends z.ZodType>(
   return parsed.data;
 }
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+export const authApi = {
+  getMe: async (): Promise<AuthenticatedUserDto | null> => {
+    const response = await fetch(getAuthUrl('/me'), {
+      method: 'GET',
+      credentials: 'include',
+    });
+
+    if (response.status === 401) {
+      return null;
+    }
+
+    return handleResponse(response, authenticatedUserSchema);
+  },
+
+  logout: async (): Promise<void> => {
+    const response = await fetch(getAuthUrl('/logout'), {
+      method: 'POST',
+      credentials: 'include',
+    });
+
+    await handleResponse(response, z.object({ ok: z.boolean() }));
+  },
+
+  consent: async (): Promise<void> => {
+    const response = await fetch(getAuthUrl('/consent'), {
+      method: 'POST',
+      credentials: 'include',
+    });
+
+    await handleResponse(response, z.object({ ok: z.boolean() }));
+  },
+
+  getGoogleLoginUrl: (redirectTo?: string): string => {
+    const searchParams = redirectTo ? `?${new URLSearchParams({ redirectTo })}` : '';
+
+    return `${getAuthUrl('/google')}${searchParams}`;
+  },
+};
 
 export const priorityGateApi = {
   getQuestions: async (): Promise<PriorityGateResponseDto> => {

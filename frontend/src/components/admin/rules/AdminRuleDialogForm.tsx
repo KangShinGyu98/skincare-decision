@@ -25,6 +25,7 @@ import { Separator } from '@/components/shadcn/seperator';
 import { Spinner } from '@/components/shadcn/spinner';
 import { Switch } from '@/components/shadcn/switch';
 import { Textarea } from '@/components/shadcn/textarea';
+import { isUnauthorizedError } from '@/lib/api';
 import {
   useAdminRuleDialogActions,
   useAdminRuleDetail,
@@ -200,9 +201,11 @@ export function AdminRuleDialogForm({ ruleId, open, onOpenChange }: AdminRuleDia
     dialogBody = (
       <ErrorPanel
         message={
-          ruleDetailQuery.error instanceof Error
-            ? ruleDetailQuery.error.message
-            : 'Rule 상세 정보를 불러오지 못했습니다.'
+          isUnauthorizedError(ruleDetailQuery.error)
+            ? '로그인한 사용자만 확인할 수 있습니다.'
+            : ruleDetailQuery.error instanceof Error
+              ? ruleDetailQuery.error.message
+              : 'Rule 상세 정보를 불러오지 못했습니다.'
         }
       />
     );
@@ -581,7 +584,11 @@ function AdminRuleConditionsField({
             </div>
             {isInvalid && <FieldError errors={field.state.meta.errors} />}
             {questionSearchError ? (
-              <p className="text-sm text-destructive">{questionSearchError.message}</p>
+              <p className="text-sm text-destructive">
+                {isUnauthorizedError(questionSearchError)
+                  ? '로그인한 사용자만 확인할 수 있습니다.'
+                  : questionSearchError.message}
+              </p>
             ) : null}
             {field.state.value.length > 0 ? (
               <div className="grid gap-3">

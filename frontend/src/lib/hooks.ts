@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
+  AuthenticatedUserDto,
   AdminQuestionDetail,
   AdminQuestionsQuery,
   AdminQuestionsResponse,
@@ -26,9 +27,12 @@ import type {
   UpsertCategoryDecisionResponsesRequest,
   UpsertPriorityGateResponsesRequest,
 } from '@skincare-decision/shared/schemas';
-import { adminQuestionsApi, adminRulesApi, categoryDecisionApi, priorityGateApi } from './api';
+import { adminQuestionsApi, adminRulesApi, authApi, categoryDecisionApi, priorityGateApi } from './api';
 
 export const queryKeys = {
+  auth: {
+    me: ['auth', 'me'] as const,
+  },
   priorityGate: {
     all: ['priority-gate'] as const,
     questions: ['priority-gate', 'questions'] as const,
@@ -51,6 +55,10 @@ export const queryKeys = {
 };
 
 export const mutationKeys = {
+  auth: {
+    logout: ['auth', 'logout'] as const,
+    consent: ['auth', 'consent'] as const,
+  },
   adminRules: {
     status: ['admin', 'rules', 'status'] as const,
   },
@@ -60,6 +68,39 @@ export const mutationKeys = {
 };
 
 const RESPONSE_SAVE_DEBOUNCE_MS = 800;
+
+export function useAuthMe() {
+  return useQuery<AuthenticatedUserDto | null>({
+    queryKey: queryKeys.auth.me,
+    queryFn: authApi.getMe,
+    retry: false,
+  });
+}
+
+export function useLogout() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: mutationKeys.auth.logout,
+    mutationFn: authApi.logout,
+    onSuccess: () => {
+      queryClient.setQueryData(queryKeys.auth.me, null);
+      void queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
+    },
+  });
+}
+
+export function useConsent() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: mutationKeys.auth.consent,
+    mutationFn: authApi.consent,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
+    },
+  });
+}
 
 export function usePriorityGateQuestions() {
   return useQuery({

@@ -1,135 +1,62 @@
-import { Controller, Get, Post, Req, Res } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { loginBodySchema, type LoginBodyDto } from '@skincare-decision/shared/schemas';
-import type { CookieOptions, Response } from 'express';
-import { randomBytes } from 'node:crypto';
-import { Authenticated, Permissions, Public } from '../../common/decorators/auth.decorator';
-import { ZodBody } from '../../common/decorators/zod-body.decorator';
+import { Controller, Get, Post, Req, Res, UnauthorizedException } from '@nestjs/common';
+import type { Response } from 'express';
+import { Authenticated } from '../../common/decorators/auth.decorator';
 import type { RequestWithContext } from '../../common/types/express-request.type';
-import type { Env } from '../../config/env.validation';
+import { SessionCookieService } from '../session/session-cookie.service';
+import { UsersService } from '../users/users.service';
 import { AuthService } from './auth.service';
 
-/**
- * 임시 로그인 컨트롤러
- */
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly configService: ConfigService<Env, true>,
+    private readonly sessionCookieService: SessionCookieService,
+    private readonly usersService: UsersService,
   ) {}
 
-  @Public()
-  @Post('login')
-  async login(
-    @Req() request: RequestWithContext,
-    @Res({ passthrough: true }) response: Response,
-    @ZodBody(loginBodySchema) body: LoginBodyDto,
-  ) {
-    const oldSessionToken = this.readSignedCookie(request, this.getSessionCookieName());
-    const newSessionToken = this.generateSessionToken();
-    const referrer = this.readReferrer(request);
-
-    const loginResult = await this.authService.login(body.username, body.password, {
-      ...(request.context.deviceId ? { deviceId: request.context.deviceId } : {}),
-      ...(oldSessionToken ? { oldSessionToken } : {}),
-      newSessionToken,
-      entryPath: request.originalUrl,
-      ...(referrer ? { referrer } : {}),
-    });
-
-    this.setSessionCookie(response, newSessionToken);
-
-    request.context.sessionId = loginResult.sessionId;
-    request.context.user = loginResult.user;
-
-    return {
-      user: loginResult.user,
-      expiresInSeconds: loginResult.expiresInSeconds,
-    };
-  }
-
-  @Public()
+  @Authenticated()
   @Post('logout')
   async logout(@Req() request: RequestWithContext, @Res({ passthrough: true }) response: Response) {
-    const sessionToken = this.readSignedCookie(request, this.getSessionCookieName());
+    const sessionToken = this.sessionCookieService.readSessionToken(request);
 
     await this.authService.logout(sessionToken);
-    this.clearSessionCookie(response);
+    this.sessionCookieService.clearSessionCookie(response);
 
     return { ok: true };
   }
 
   @Authenticated()
   @Get('me')
-  me(@Req() request: RequestWithContext) {
-    return request.context.user;
-  }
+  async me(@Req() request: RequestWithContext) {
+    const authenticatedUser = this.requireAuthenticatedUser(request);
+    const user = await this.usersService.findById(authenticatedUser.id);
 
-  @Permissions('user_responses:update:self')
-  @Post('test/user-response')
-  testUserPermission() {
-    return { ok: true };
-  }
-
-  @Permissions('products:create:any')
-  @Post('test/product')
-  testAdminProductPermission() {
-    return { ok: true };
-  }
-
-  @Permissions('priority_rules:manage:any')
-  @Post('test/priority-rule')
-  testAdminPriorityRulePermission() {
-    return { ok: true };
-  }
-
-  private generateSessionToken(): string {
-    return randomBytes(32).toString('base64url');
-  }
-
-  private setSessionCookie(response: Response, sessionToken: string): void {
-    response.cookie(this.getSessionCookieName(), sessionToken, {
-      ...this.getSessionCookieOptions(),
-      maxAge: this.getSessionCookieMaxAgeMs(),
-    });
-  }
-
-  private clearSessionCookie(response: Response): void {
-    response.clearCookie(this.getSessionCookieName(), this.getSessionCookieOptions());
-  }
-
-  private getSessionCookieName(): string {
-    return this.configService.get('SESSION_ID_COOKIE_NAME', { infer: true });
-  }
-
-  private getSessionCookieOptions(): CookieOptions {
     return {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: this.configService.get('NODE_ENV', { infer: true }) === 'production',
-      signed: true,
+      ...authenticatedUser,
+      consentRequired: user?.consentedAt == null,
     };
   }
 
-  private getSessionCookieMaxAgeMs(): number {
-    return this.configService.get('SESSION_COOKIE_MAX_AGE_SECONDS', { infer: true }) * 1000;
+  @Authenticated()
+  @Post('consent')
+  async consent(@Req() request: RequestWithContext) {
+    const authenticatedUser = this.requireAuthenticatedUser(request);
+
+    await this.usersService.recordConsent(authenticatedUser.id);
+
+    return { ok: true };
   }
 
-  private readSignedCookie(request: RequestWithContext, name: string): string | undefined {
-    const signedCookies = request.signedCookies as Record<string, unknown> | undefined;
-    const value = signedCookies?.[name];
+  private requireAuthenticatedUser(request: RequestWithContext) {
+    const authenticatedUser = request.context.user;
 
-    return typeof value === 'string' ? value : undefined;
-  }
-
-  private readReferrer(request: RequestWithContext): string | undefined {
-    const referrer = request.headers['referer'] ?? request.headers['referrer'];
-
-    if (Array.isArray(referrer)) {
-      return referrer[0];
+    if (!authenticatedUser) {
+      throw new UnauthorizedException({
+        code: 'AUTH_REQUIRED',
+        message: 'Authentication is required',
+      });
     }
 
-    return referrer;
+    return authenticatedUser;
   }
 }

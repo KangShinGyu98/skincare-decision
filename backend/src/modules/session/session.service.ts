@@ -12,6 +12,7 @@ export type StoredSession = {
   deviceId: string;
   userId?: string;
   roles?: UserRole[];
+  email?: string;
   createdAt: string;
   lastSeenAt: string;
 };
@@ -33,6 +34,7 @@ export type RotateToAuthenticatedSessionInput = {
   deviceId: string;
   userId: string;
   roles: UserRole[];
+  email: string;
   entryPath: string;
   referrer?: string;
 };
@@ -100,6 +102,7 @@ export class SessionService {
       deviceId: input.deviceId,
       userId: input.userId,
       roles: input.roles,
+      email: input.email,
       createdAt: now.toISOString(),
       lastSeenAt: now.toISOString(),
     });
@@ -199,6 +202,7 @@ export class SessionService {
     const deviceId = record['deviceId'];
     const userId = record['userId'];
     const roles = record['roles'];
+    const email = record['email'];
     const createdAt = record['createdAt'];
     const lastSeenAt = record['lastSeenAt'];
 
@@ -219,6 +223,10 @@ export class SessionService {
       return undefined;
     }
 
+    if (email !== undefined && typeof email !== 'string') {
+      return undefined;
+    }
+
     const storedSession: StoredSession = {
       userSessionId,
       deviceId,
@@ -228,6 +236,10 @@ export class SessionService {
 
     if (typeof userId === 'string') {
       storedSession.userId = userId;
+    }
+
+    if (typeof email === 'string') {
+      storedSession.email = email;
     }
 
     if (this.isUserRoleArray(roles)) {

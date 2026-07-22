@@ -12,6 +12,7 @@ import { ErrorPanel } from '@/components/common/ErrorPanel';
 import { AdminRulesPageSkeleton } from '@/components/common/skeleton/AdminRulesPageSkeleton';
 import { Button } from '@/components/shadcn/button';
 import { Spinner } from '@/components/shadcn/spinner';
+import { isForbiddenError, isUnauthorizedError } from '@/lib/api';
 import { mutationKeys, useAdminRules, useSaveAdminRuleSortOrder, useUpdateAdminRuleStatus, } from '@/lib/hooks';
 
 export default function AdminRulesPage() {
@@ -109,13 +110,27 @@ export default function AdminRulesPage() {
     window.location.reload();
   };
 
-  const actionError = updateStatus.error ?? saveSortOrder.error;
+  const rawActionError = updateStatus.error ?? saveSortOrder.error;
+  const actionError = isForbiddenError(rawActionError) ? null : rawActionError;
 
   if (isError) {
     return (
-      <ErrorPanel
-        message={error instanceof Error ? error.message : 'Rule 목록을 불러오지 못했습니다.'}
-      />
+      <main
+        className="min-h-screen bg-[var(--color-bg-page)] px-6 pb-10 pt-24"
+        data-fetch-state="error"
+      >
+        <div className="mx-auto w-full max-w-[1440px]">
+          <ErrorPanel
+            message={
+              isUnauthorizedError(error)
+                ? '로그인한 사용자만 확인할 수 있습니다.'
+                : error instanceof Error
+                  ? error.message
+                  : 'Rule 목록을 불러오지 못했습니다.'
+            }
+          />
+        </div>
+      </main>
     );
   }
   if (isLoading) {
