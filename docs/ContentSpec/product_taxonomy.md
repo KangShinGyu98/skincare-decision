@@ -11,12 +11,11 @@
 
 ## 카테고리 구조
 
-서비스는 다음 6개 카테고리로 구성된다.
+서비스는 다음 5개 카테고리로 구성된다.
 
 toner
 sunscreen
 serum
-lipcare
 moisturizer
 cleanser
 그 외
@@ -80,30 +79,7 @@ label: 세럼
 
 ---
 
-## 4. Lipcare (립케어)
-
-key: lipcare  
-label: 립케어
-
-### 포함
-
-- 립밤
-- 립마스크
-- 립에센스
-
-### 제외
-
-- 립스틱
-- 틴트
-- 색조 립 제품
-
-### 설명
-
-입술 보습 및 보호를 위한 제품
-
----
-
-## 5. Moisturizer (로션 / 크림)
+## 4. Moisturizer (로션 / 크림)
 
 key: moisturizer  
 label: 로션 / 크림
@@ -127,7 +103,7 @@ label: 로션 / 크림
 
 ---
 
-## 6. Cleanser (클렌저)
+## 5. Cleanser (클렌저)
 
 key: cleanser  
 label: 클렌저
@@ -146,7 +122,7 @@ label: 클렌저
 
 ---
 
-## 7. 그 외
+## 6. 그 외
 
 ### 포함
 
