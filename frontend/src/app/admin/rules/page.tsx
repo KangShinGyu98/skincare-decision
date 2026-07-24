@@ -116,7 +116,7 @@ export default function AdminRulesPage() {
   if (isError) {
     return (
       <main
-        className="min-h-screen bg-[var(--color-bg-page)] px-6 pb-10 pt-24"
+        className="min-h-below-header bg-[var(--color-bg-page)] px-6 pb-10 pt-10"
         data-fetch-state="error"
       >
         <div className="mx-auto w-full max-w-[1440px]">
@@ -139,7 +139,7 @@ export default function AdminRulesPage() {
 
   return (
     <main
-      className="min-h-screen bg-[var(--color-bg-page)] px-6 pb-10 pt-24"
+      className="min-h-below-header bg-[var(--color-bg-page)] px-6 pb-10 pt-10"
       aria-busy={saveSortOrder.isPending}
       data-fetch-state="success"
     >

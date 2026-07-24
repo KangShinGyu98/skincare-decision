@@ -78,7 +78,7 @@ export type QuestionSectionDto = z.infer<typeof questionSectionSchema>;
 export const priorityGateResponseSchema = z
   .object({
     sections: z.array(questionSectionSchema),
-    previewResults: z.array(priorityGatePreviewResultSchema).max(3),
+    previewResults: z.array(priorityGatePreviewResultSchema),
   })
   .strict();
 

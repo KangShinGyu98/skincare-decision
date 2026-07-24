@@ -60,6 +60,17 @@ export interface PriorityRuleConditionSeed {
   state: 'REQUIRED' | 'EXCLUDED';
 }
 
+export interface QuestionVisibilityConditionSeed {
+  targetQuestionKey: string;
+  targetScreen: SeedQuestionVariantScreen;
+  targetUiSection: SeedQuestionVariantUiSection;
+  targetSortOrder: number;
+  conditionQuestionKey: string;
+  operator: SeedComparisonOperator;
+  value: number;
+  state: 'REQUIRED' | 'EXCLUDED';
+}
+
 export interface PriorityRuleSeed {
   key: string;
   name: string;

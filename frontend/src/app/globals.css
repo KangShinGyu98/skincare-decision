@@ -11,6 +11,16 @@
   display: none;
 }
 
+/* SiteHeader(sticky) 아래 "화면 전체" 높이. Tailwind 임의값 대신 plain 클래스로 둬서
+   클래스/CSS 청크가 어긋나 height가 사라지는 문제를 방지한다. --header-height는 :root 정의. */
+.h-below-header {
+  height: calc(100dvh - var(--header-height));
+}
+
+.min-h-below-header {
+  min-height: calc(100dvh - var(--header-height));
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -34,6 +44,10 @@
 }
 
 :root {
+  /* Layout: SiteHeader 높이. 헤더는 sticky라 흐름에서 이 높이를 차지한다.
+     "헤더 아래 전체 화면" 영역은 calc(100dvh - var(--header-height))로 계산한다. */
+  --header-height: 4rem;
+
   /* Daybreak Blue (Brand Primary) */
   --blue-1: #e6f7ff;
   --blue-2: #bae7ff;

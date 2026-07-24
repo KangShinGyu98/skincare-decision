@@ -165,7 +165,7 @@ export default function AdminQuestionsPage() {
   if (isError && !data) {
     return (
       <main
-        className="min-h-screen bg-[var(--color-bg-page)] px-6 pb-10 pt-24"
+        className="min-h-below-header bg-[var(--color-bg-page)] px-6 pb-10 pt-10"
         data-fetch-state="error"
       >
         <div className="mx-auto w-full max-w-[1440px]">
@@ -186,7 +186,7 @@ export default function AdminQuestionsPage() {
   if (isLoading) {
     return (
       <main
-        className="flex min-h-screen items-center justify-center bg-[var(--color-bg-page)]"
+        className="flex min-h-below-header items-center justify-center bg-[var(--color-bg-page)]"
         aria-busy="true"
         data-fetch-state="loading"
       >
@@ -197,7 +197,7 @@ export default function AdminQuestionsPage() {
 
   return (
     <main
-      className="min-h-screen bg-[var(--color-bg-page)] px-6 pb-10 pt-24"
+      className="min-h-below-header bg-[var(--color-bg-page)] px-6 pb-10 pt-10"
       aria-busy={isFetching || saveSortOrder.isPending}
       data-fetch-state={isFetching ? 'fetching' : 'success'}
     >

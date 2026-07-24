@@ -19,6 +19,7 @@ import {
   QUESTION_FILTER_MAPPING_SEEDS,
   QUESTION_SEEDS,
   QUESTION_VARIANT_SEEDS,
+  QUESTION_VISIBILITY_CONDITION_SEEDS,
 } from './data';
 import { categoryScopedKey, inputJson, newSeedId, nullableJson } from './utils';
 
@@ -39,6 +40,8 @@ export interface ReferenceSeedResult {
 }
 
 export async function seedReferenceData(prisma: PrismaClient): Promise<ReferenceSeedResult> {
+  await resetQuestionReferenceData(prisma);
+
   const categories = await seedProductCategories(prisma);
   await softDeactivateDeprecatedTonerSeedDefinitions(prisma, categories);
 
@@ -46,6 +49,7 @@ export async function seedReferenceData(prisma: PrismaClient): Promise<Reference
   const questions = await seedQuestions(prisma);
 
   await seedQuestionVariants(prisma, questions);
+  await seedQuestionVisibilityConditions(prisma, questions);
   await seedPriorityRules(prisma, questions);
 
   const productFilters = await seedProductFilters(prisma, attributes);
@@ -67,6 +71,21 @@ export async function seedReferenceData(prisma: PrismaClient): Promise<Reference
     matrixFilters,
     ingredientGroups,
   };
+}
+
+/**
+ * v10 룰셋으로 질문/룰을 전면 교체하기 위해 기존 질문 계열 reference data를 전부 삭제한다.
+ * FK(Restrict) 순서: 조건/룰 → 노출조건 → 필터매핑 → 사용자응답 → 변형 → 질문.
+ * 제품 카탈로그(카테고리·속성·제품·필터 정의)는 삭제하지 않는다.
+ */
+export async function resetQuestionReferenceData(prisma: PrismaClient): Promise<void> {
+  await prisma.priorityRuleCondition.deleteMany({});
+  await prisma.priorityRule.deleteMany({});
+  await prisma.questionVisibilityCondition.deleteMany({});
+  await prisma.questionFilterMapping.deleteMany({});
+  await prisma.userResponse.deleteMany({});
+  await prisma.questionVariant.deleteMany({});
+  await prisma.question.deleteMany({});
 }
 
 export async function seedProductCategories(prisma: PrismaClient): Promise<CategoryMap> {
@@ -294,6 +313,53 @@ export async function seedQuestionVariants(
           ...data,
         },
       });
+    }
+  }
+}
+
+export async function seedQuestionVisibilityConditions(
+  prisma: PrismaClient,
+  questions: QuestionMap,
+): Promise<void> {
+  for (const seed of QUESTION_VISIBILITY_CONDITION_SEEDS) {
+    const targetQuestion = requireQuestion(questions, seed.targetQuestionKey);
+    const conditionQuestion = requireQuestion(questions, seed.conditionQuestionKey);
+    const variant = await prisma.questionVariant.findFirst({
+      where: {
+        questionId: targetQuestion.id,
+        screen: seed.targetScreen,
+        uiSection: seed.targetUiSection,
+        sortOrder: seed.targetSortOrder,
+      },
+    });
+
+    if (!variant) {
+      throw new Error(
+        `Missing seeded question variant for visibility target: ${seed.targetQuestionKey}`,
+      );
+    }
+
+    const data = {
+      questionVariantId: variant.id,
+      conditionQuestionId: conditionQuestion.id,
+      operator: seed.operator,
+      value: seed.value,
+      state: seed.state,
+    };
+    const existing = await prisma.questionVisibilityCondition.findFirst({
+      where: {
+        questionVariantId: variant.id,
+        conditionQuestionId: conditionQuestion.id,
+        operator: seed.operator,
+        value: seed.value,
+        state: seed.state,
+      },
+    });
+
+    if (existing) {
+      await prisma.questionVisibilityCondition.update({ where: { id: existing.id }, data });
+    } else {
+      await prisma.questionVisibilityCondition.create({ data: { id: newSeedId(), ...data } });
     }
   }
 }

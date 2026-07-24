@@ -276,10 +276,6 @@ export class PriorityGateService {
       }
 
       previewResults.push(await this.toPreviewResult(rule));
-
-      if (previewResults.length >= 3) {
-        return previewResults;
-      }
     }
 
     if (previewResults.length === 0) {
@@ -429,10 +425,7 @@ export class PriorityGateService {
       title: '현재 답변에서는 우선 확인할 신호가 없습니다',
       description:
         '지금까지 선택한 내용만으로는 새 제품 선택을 멈추거나 특정 제품군을 먼저 볼 조건이 발견되지 않았습니다.',
-      cta: {
-        label: '제품군 고르기',
-        target: '/category-decision',
-      },
+      cta: null,
       recommendCategory: null,
       holdCategories: [],
     };

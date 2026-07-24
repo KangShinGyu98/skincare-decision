@@ -465,7 +465,7 @@ describe('PriorityGateService', () => {
     });
   });
 
-  it('getResponseReaction는 매칭된 priority rule 결과를 최대 3개까지 반환한다', async () => {
+  it('getResponseReaction는 매칭된 priority rule 결과를 모두 반환한다', async () => {
     const questionId = '018f0000-0000-7000-8000-000000000201';
     const body = {
       responses: {
@@ -510,6 +510,7 @@ describe('PriorityGateService', () => {
       'matched rule 1',
       'matched rule 2',
       'matched rule 3',
+      'matched rule 4',
     ]);
   });
 
@@ -576,8 +577,6 @@ describe('PriorityGateService', () => {
       resultTitle: '현재 답변에서는 우선 확인할 신호가 없습니다',
       resultDescription:
         '지금까지 선택한 내용만으로는 새 제품 선택을 멈추거나 특정 제품군을 먼저 볼 조건이 발견되지 않았습니다.',
-      ctaLabel: '제품군 고르기',
-      ctaTarget: '/category-decision',
       inputSnapshot: {
         responses: [
           {
@@ -593,10 +592,7 @@ describe('PriorityGateService', () => {
         title: '현재 답변에서는 우선 확인할 신호가 없습니다',
         description:
           '지금까지 선택한 내용만으로는 새 제품 선택을 멈추거나 특정 제품군을 먼저 볼 조건이 발견되지 않았습니다.',
-        cta: {
-          label: '제품군 고르기',
-          target: '/category-decision',
-        },
+        cta: null,
         recommendCategory: null,
         holdCategories: [],
       },

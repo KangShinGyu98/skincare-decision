@@ -97,7 +97,7 @@ function CategoryDecisionPageContent() {
 
   return (
     <main
-      className="flex min-h-screen w-full flex-col items-center justify-center bg-[var(--color-bg-page)] p-10"
+      className="flex min-h-below-header w-full flex-col items-center justify-center bg-[var(--color-bg-page)] p-10"
       aria-busy={isLoading || isCategoryDecisionActionPending}
       data-fetch-state={isLoading ? 'loading' : isError ? 'error' : 'success'}
     >
@@ -250,7 +250,7 @@ function CategoryDecisionPageContent() {
 
 function CategoryDecisionPageFallback() {
   return (
-    <main className="flex min-h-screen w-full items-center justify-center bg-[var(--color-bg-page)] p-10">
+    <main className="flex min-h-below-header w-full items-center justify-center bg-[var(--color-bg-page)] p-10">
       <Spinner className="size-7 text-[var(--color-primary)]" />
     </main>
   );

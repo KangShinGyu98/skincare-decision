@@ -5,9 +5,13 @@ import {
   DEPRECATED_TONER_ATTRIBUTE_KEYS,
   INGREDIENT_GROUP_SEEDS,
   PRODUCT_CATEGORY_SEEDS,
+  PRIORITY_RULE_SEEDS,
   PRODUCT_FILTER_SEEDS,
   PRODUCT_MATRIX_FILTER_SEEDS,
   QUESTION_FILTER_MAPPING_SEEDS,
+  QUESTION_SEEDS,
+  QUESTION_VARIANT_SEEDS,
+  QUESTION_VISIBILITY_CONDITION_SEEDS,
   REQUIRED_TONER_ATTRIBUTE_KEYS,
   TONER_PRODUCT_SEEDS,
   seedIngredient,
@@ -191,6 +195,94 @@ describe('seed data validation', () => {
         deletedAt: null,
       },
     });
+  });
+});
+
+describe('v10 priority gate seed integrity', () => {
+  const questionByKey = new Map<string, (typeof QUESTION_SEEDS)[number]>(
+    QUESTION_SEEDS.map((question) => [question.key, question]),
+  );
+
+  it('binds every variant to a known question with a matching answer count', () => {
+    // question_variants.answer_count == questions.answer_count 복합 FK 위반을 시드 전에 잡는다.
+    for (const variant of QUESTION_VARIANT_SEEDS) {
+      const question = questionByKey.get(variant.questionKey);
+      expect(question).toBeDefined();
+      expect(variant.answers.length).toBe(question?.answerValues.length);
+    }
+  });
+
+  it('gives every question at least one variant to render', () => {
+    for (const question of QUESTION_SEEDS) {
+      const variants = QUESTION_VARIANT_SEEDS.filter(
+        (variant) => variant.questionKey === question.key,
+      );
+      expect(variants.length).toBeGreaterThanOrEqual(1);
+    }
+  });
+
+  it('keeps every rule condition value within its question answer range', () => {
+    for (const rule of PRIORITY_RULE_SEEDS) {
+      for (const condition of rule.conditions) {
+        const question = questionByKey.get(condition.questionKey);
+        expect(question).toBeDefined();
+        expect(condition.value.length).toBeGreaterThanOrEqual(1);
+
+        for (const value of condition.value) {
+          expect(question?.answerValues).toContain(value);
+        }
+
+        if (condition.operator === 'GTE' || condition.operator === 'LTE') {
+          expect(condition.value).toHaveLength(1);
+        }
+
+        // EQ/NEQ/GTE/LTE는 단일선택 질문에만 쓴다(첫 원소·집합 완전일치 의미).
+        if (['EQ', 'NEQ', 'GTE', 'LTE'].includes(condition.operator)) {
+          expect(question?.answerType).toBe('SINGLE_CHOICE');
+        }
+      }
+    }
+  });
+
+  it('makes every non-PASS rule reachable with at least one REQUIRED condition', () => {
+    // REQUIRED가 0개인 비-PASS 룰은 엔진에서 절대 발동하지 않는다.
+    for (const rule of PRIORITY_RULE_SEEDS) {
+      if (rule.resultType === 'PASS') {
+        continue;
+      }
+
+      const requiredCount = rule.conditions.filter(
+        (condition) => condition.state === 'REQUIRED',
+      ).length;
+      expect(requiredCount).toBeGreaterThanOrEqual(1);
+    }
+  });
+
+  it('uses unique rule names and sort orders', () => {
+    const names = PRIORITY_RULE_SEEDS.map((rule) => rule.name);
+    const sortOrders = PRIORITY_RULE_SEEDS.map((rule) => rule.sortOrder);
+
+    expect(new Set(names).size).toBe(names.length);
+    expect(new Set(sortOrders).size).toBe(sortOrders.length);
+  });
+
+  it('resolves every visibility condition reference within range', () => {
+    for (const visibility of QUESTION_VISIBILITY_CONDITION_SEEDS) {
+      expect(questionByKey.get(visibility.targetQuestionKey)).toBeDefined();
+
+      const conditionQuestion = questionByKey.get(visibility.conditionQuestionKey);
+      expect(conditionQuestion).toBeDefined();
+      expect(conditionQuestion?.answerValues).toContain(visibility.value);
+
+      const variant = QUESTION_VARIANT_SEEDS.find(
+        (candidate) =>
+          candidate.questionKey === visibility.targetQuestionKey &&
+          candidate.screen === visibility.targetScreen &&
+          candidate.uiSection === visibility.targetUiSection &&
+          candidate.sortOrder === visibility.targetSortOrder,
+      );
+      expect(variant).toBeDefined();
+    }
   });
 });
 

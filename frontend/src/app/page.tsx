@@ -5,9 +5,9 @@ import Link from 'next/link';
 
 export default function Home() {
   return (
-    <main className="h-screen overflow-y-scroll snap-y snap-proximity scroll-smooth">
+    <main className="h-below-header overflow-y-scroll snap-y snap-proximity scroll-smooth">
       {/*랜딩페이지1*/}
-      <section className="snap-start flex min-h-screen w-full items-center justify-center bg-[var(--color-bg-page)] p-10">
+      <section className="snap-start flex min-h-below-header w-full items-center justify-center bg-[var(--color-bg-page)] p-10">
         <div className="flex h-[70vh] w-full max-w-[1200px] translate-y-8 overflow-hidden rounded-3xl bg-[var(--color-bg-component)] shadow-lg">
           <article className="grid flex-[5] grid-cols-2 grid-rows-[6.5fr_3.5fr] gap-4 p-20">
             <div className="col-span-2 flex flex-col gap-2">
@@ -55,7 +55,7 @@ export default function Home() {
         </div>
       </section>
       {/*랜딩페이지2*/}
-      <section className="snap-start flex min-h-screen w-full items-center justify-center bg-[var(--gray-5)] p-10">
+      <section className="snap-start flex min-h-below-header w-full items-center justify-center bg-[var(--gray-5)] p-10">
         <div className="flex h-[70vh] w-full max-w-[1200px] translate-y-8 overflow-hidden rounded-3xl bg-[var(--color-bg-component)] shadow-lg">
           <aside className="flex-[5] py-8 pr-8 ">
             <div className="h-full w-full rounded-r-3xl bg-[var(--gray-5)] ">이미지</div>
@@ -86,7 +86,7 @@ export default function Home() {
         </div>
       </section>
       {/*랜딩페이지3*/}
-      <section className="snap-start flex min-h-screen w-full items-center justify-center bg-[var(--color-bg-page)] p-10">
+      <section className="snap-start flex min-h-below-header w-full items-center justify-center bg-[var(--color-bg-page)] p-10">
         <div className="flex h-[70vh] w-full max-w-[1200px] translate-y-8 overflow-hidden rounded-3xl bg-[var(--color-bg-component)] shadow-lg">
           <article className="flex-[5] pr-8 py-8 ">
             <div className="h-full w-full flex flex-col justify-center pl-28 gap-2">

@@ -3,7 +3,7 @@ import { PRIVACY_POLICY_TEXT, TERMS_OF_SERVICE_TEXT } from '@/lib/legalContent';
 
 export default function SiteFooter() {
   return (
-    <footer className="w-full bg-[var(--color-bg-dark)] px-6 py-8 text-[var(--color-text-inverse)]">
+    <footer className="w-full shrink-0 bg-[var(--color-bg-dark)] px-6 py-8 text-[var(--color-text-inverse)]">
       <div className="mx-auto flex max-w-[1200px] flex-col gap-3 text-sm">
         <div className="flex flex-wrap gap-x-6 gap-y-1 opacity-70">
           <span>이메일: support@skincare-decision.example</span>

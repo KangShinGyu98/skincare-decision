@@ -26,7 +26,7 @@ export type UpsertPriorityGateResponsesRequest = z.infer<
 export const upsertPriorityGateResponsesResponseSchema = z
   .object({
     responses: z.record(z.uuid(), priorityGateResponseValueSchema),
-    previewResults: z.array(priorityGatePreviewResultSchema).min(1).max(3),
+    previewResults: z.array(priorityGatePreviewResultSchema).min(1),
   })
   .strict();
 
