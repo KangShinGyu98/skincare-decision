@@ -57,13 +57,14 @@ describe('CategoryDecisionRepository', () => {
 
   it('findCategoryDecisionQuestions returns active context questions only', async () => {
     await createQuestionVariant({
-      questionKey: 'category.selected',
-      title: 'Choose category',
+      questionKey: 'context.eye_sting',
+      title: 'Eye sting',
       answerType: QuestionAnswerType.SINGLE_CHOICE,
       answerValues: [0, 1],
-      answers: ['Toner', 'Sunscreen'],
+      answers: ['No', 'Yes'],
       screen: Screen.context,
       uiSection: UiSection.category,
+      category: 'sunscreen',
       sortOrder: 10,
     });
     await createQuestionVariant({
@@ -84,7 +85,7 @@ describe('CategoryDecisionRepository', () => {
     const result = await repository.findCategoryDecisionQuestions();
 
     expect(result.map((question) => question.question.key)).toEqual([
-      'category.selected',
+      'context.eye_sting',
       'context.skin_type',
     ]);
   });
@@ -142,21 +143,13 @@ describe('CategoryDecisionRepository', () => {
     expect(result.map((response) => response.value)).toEqual([[0], [1]]);
   });
 
-  it('findProductCategoryByKey and findQuestionByKey return active records', async () => {
+  it('findProductCategoryByKey returns active records', async () => {
     await prisma.productCategory.create({
       data: {
         id: '018f0000-0000-7000-8000-000000000301',
         key: 'sunscreen',
         name: 'Sunscreen',
         description: null,
-      },
-    });
-    await prisma.question.create({
-      data: {
-        id: '018f0000-0000-7000-8000-000000000201',
-        key: 'category.selected',
-        answerType: QuestionAnswerType.SINGLE_CHOICE,
-        answerValues: [0, 1],
       },
     });
 
@@ -166,9 +159,6 @@ describe('CategoryDecisionRepository', () => {
       name: 'Sunscreen',
       description: null,
       sortOrder: 0,
-    });
-    await expect(repository.findQuestionByKey('category.selected')).resolves.toEqual({
-      id: '018f0000-0000-7000-8000-000000000201',
     });
   });
 

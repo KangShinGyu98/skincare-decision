@@ -12,17 +12,11 @@ describe('CategoryDecisionService', () => {
   let repositoryMock: jest.Mocked<
     Pick<
       CategoryDecisionRepository,
-      | 'findCategoryDecisionQuestions'
-      | 'findCurrentResponses'
-      | 'findProductCategoryByKey'
-      | 'findQuestionByKey'
+      'findCategoryDecisionQuestions' | 'findCurrentResponses' | 'findProductCategoryByKey'
     >
   >;
   let userResponsesServiceMock: jest.Mocked<
-    Pick<
-      UserResponsesService,
-      'upsertCurrentResponse' | 'upsertCurrentResponses' | 'deleteCurrentResponses'
-    >
+    Pick<UserResponsesService, 'upsertCurrentResponses' | 'deleteCurrentResponses'>
   >;
 
   beforeEach(async () => {
@@ -30,10 +24,8 @@ describe('CategoryDecisionService', () => {
       findCategoryDecisionQuestions: jest.fn(),
       findCurrentResponses: jest.fn(),
       findProductCategoryByKey: jest.fn(),
-      findQuestionByKey: jest.fn(),
     };
     userResponsesServiceMock = {
-      upsertCurrentResponse: jest.fn(),
       upsertCurrentResponses: jest.fn(),
       deleteCurrentResponses: jest.fn(),
     };
@@ -55,25 +47,14 @@ describe('CategoryDecisionService', () => {
     service = testingModule.get(CategoryDecisionService);
   });
 
-  it('getCategoryDecision saves category query as category.selected response', async () => {
-    const categoryQuestion = createQuestionRecord({
+  it('getCategoryDecision resolves the selected category from the query param without persisting it', async () => {
+    const dailyUseQuestion = createQuestionRecord({
       id: '018f0000-0000-7000-8000-000000000101',
       questionId: '018f0000-0000-7000-8000-000000000201',
-      key: 'category.selected',
-      title: 'Choose category',
-      answerType: QuestionAnswerType.SINGLE_CHOICE,
-      answers: ['Toner', 'Sunscreen', 'Serum', 'Lipcare', 'Moisturizer', 'Cleanser'],
-      answerValues: [0, 1, 2, 3, 4, 5],
-      uiSection: UiSection.category,
-      sortOrder: 10,
-    });
-    const skinQuestion = createQuestionRecord({
-      id: '018f0000-0000-7000-8000-000000000102',
-      questionId: '018f0000-0000-7000-8000-000000000202',
-      key: 'context.skin_type',
-      title: 'Skin type',
+      key: 'context.daily_use',
+      title: 'Looking for a daily product?',
       uiSection: UiSection.basic,
-      sortOrder: 20,
+      sortOrder: 10,
     });
     const category = {
       id: '018f0000-0000-7000-8000-000000000301',
@@ -84,14 +65,10 @@ describe('CategoryDecisionService', () => {
     };
 
     repositoryMock.findProductCategoryByKey.mockResolvedValue(category);
-    repositoryMock.findQuestionByKey.mockResolvedValue({ id: categoryQuestion.questionId });
-    repositoryMock.findCategoryDecisionQuestions.mockResolvedValue([
-      categoryQuestion,
-      skinQuestion,
-    ]);
+    repositoryMock.findCategoryDecisionQuestions.mockResolvedValue([dailyUseQuestion]);
     repositoryMock.findCurrentResponses.mockResolvedValue([
       {
-        questionId: categoryQuestion.questionId,
+        questionId: dailyUseQuestion.questionId,
         value: [1],
       },
     ]);
@@ -102,29 +79,15 @@ describe('CategoryDecisionService', () => {
       category: 'sunscreen',
     });
 
-    expect(userResponsesServiceMock.upsertCurrentResponse).toHaveBeenCalledWith({
-      deviceId: '018f0000-0000-7000-8000-000000000001',
-      userId: '018f0000-0000-7000-8000-000000000002',
-      questionId: categoryQuestion.questionId,
-      value: [1],
-      source: UserResponseSource.context,
-    });
+    expect(repositoryMock.findProductCategoryByKey).toHaveBeenCalledWith('sunscreen');
+    expect(userResponsesServiceMock.upsertCurrentResponses).not.toHaveBeenCalled();
     expect(result.selectedCategory).toEqual(category);
     expect(result.sections).toEqual([
       {
         key: 'basic',
         questions: [
           expect.objectContaining({
-            key: 'context.skin_type',
-            currentResponse: null,
-          }),
-        ],
-      },
-      {
-        key: 'category',
-        questions: [
-          expect.objectContaining({
-            key: 'category.selected',
+            key: 'context.daily_use',
             currentResponse: [1],
           }),
         ],
@@ -141,7 +104,7 @@ describe('CategoryDecisionService', () => {
         },
         selectedCategory: category,
         answeredQuestionCount: 1,
-        totalQuestionCount: 2,
+        totalQuestionCount: 1,
       },
     ]);
   });
@@ -150,8 +113,9 @@ describe('CategoryDecisionService', () => {
     const categoryQuestion = createQuestionRecord({
       id: '018f0000-0000-7000-8000-000000000101',
       questionId: '018f0000-0000-7000-8000-000000000201',
-      key: 'category.selected',
+      key: 'product.sunscreen_type',
       uiSection: UiSection.category,
+      category: 'sunscreen',
     });
     const skinQuestion = createQuestionRecord({
       id: '018f0000-0000-7000-8000-000000000102',
@@ -183,13 +147,10 @@ describe('CategoryDecisionService', () => {
   });
 
   it('getCategoryDecision returns common questions and selected category questions only', async () => {
-    const categoryQuestion = createQuestionRecord({
+    const dailyUseQuestion = createQuestionRecord({
       questionId: '018f0000-0000-7000-8000-000000000201',
-      key: 'category.selected',
-      answerType: QuestionAnswerType.SINGLE_CHOICE,
-      answers: ['Toner', 'Sunscreen', 'Serum', 'Lipcare', 'Moisturizer', 'Cleanser'],
-      answerValues: [0, 1, 2, 3, 4, 5],
-      uiSection: UiSection.category,
+      key: 'context.daily_use',
+      uiSection: UiSection.basic,
       sortOrder: 10,
       category: null,
     });
@@ -220,15 +181,14 @@ describe('CategoryDecisionService', () => {
     };
 
     repositoryMock.findProductCategoryByKey.mockResolvedValue(category);
-    repositoryMock.findQuestionByKey.mockResolvedValue({ id: categoryQuestion.questionId });
     repositoryMock.findCategoryDecisionQuestions.mockResolvedValue([
-      categoryQuestion,
+      dailyUseQuestion,
       sunscreenQuestion,
       lipcareQuestion,
     ]);
     repositoryMock.findCurrentResponses.mockResolvedValue([
       {
-        questionId: categoryQuestion.questionId,
+        questionId: dailyUseQuestion.questionId,
         value: [1],
       },
     ]);
@@ -240,7 +200,7 @@ describe('CategoryDecisionService', () => {
 
     expect(
       result.sections.flatMap((section) => section.questions.map((question) => question.key)),
-    ).toEqual(['category.selected', 'context.eye_sting']);
+    ).toEqual(['context.daily_use', 'context.eye_sting']);
     expect(result.previewResults[0]).toEqual(
       expect.objectContaining({
         answeredQuestionCount: 1,
@@ -249,15 +209,7 @@ describe('CategoryDecisionService', () => {
     );
   });
 
-  it('getCategoryDecision returns empty previewResults when no answer is saved', async () => {
-    const categoryQuestion = createQuestionRecord({
-      questionId: '018f0000-0000-7000-8000-000000000201',
-      key: 'category.selected',
-      answerType: QuestionAnswerType.SINGLE_CHOICE,
-      answers: ['Toner', 'Sunscreen', 'Serum', 'Lipcare', 'Moisturizer', 'Cleanser'],
-      answerValues: [0, 1, 2, 3, 4, 5],
-      uiSection: UiSection.category,
-    });
+  it('getCategoryDecision returns null selected category and empty previewResults when category is omitted', async () => {
     const skinQuestion = createQuestionRecord({
       id: '018f0000-0000-7000-8000-000000000102',
       questionId: '018f0000-0000-7000-8000-000000000202',
@@ -265,51 +217,38 @@ describe('CategoryDecisionService', () => {
       uiSection: UiSection.basic,
     });
 
-    repositoryMock.findCategoryDecisionQuestions.mockResolvedValue([
-      categoryQuestion,
-      skinQuestion,
-    ]);
+    repositoryMock.findCategoryDecisionQuestions.mockResolvedValue([skinQuestion]);
     repositoryMock.findCurrentResponses.mockResolvedValue([]);
 
     const result = await service.getCategoryDecision({
       deviceId: '018f0000-0000-7000-8000-000000000001',
     });
 
+    expect(repositoryMock.findProductCategoryByKey).not.toHaveBeenCalled();
     expect(result.selectedCategory).toBeNull();
     expect(result.previewResults).toEqual([]);
   });
 
-  it('getResponseReaction saves context answer and returns product matrix CTA when category is selected', async () => {
-    const categoryQuestion = createQuestionRecord({
-      questionId: '018f0000-0000-7000-8000-000000000201',
-      key: 'category.selected',
-      answerType: QuestionAnswerType.SINGLE_CHOICE,
-      answers: ['Toner', 'Sunscreen', 'Serum', 'Lipcare', 'Moisturizer', 'Cleanser'],
-      answerValues: [0, 1, 2, 3, 4, 5],
-      uiSection: UiSection.category,
-    });
+  it('getResponseReaction saves answers and returns product matrix CTA for the requested category', async () => {
     const skinQuestion = createQuestionRecord({
-      id: '018f0000-0000-7000-8000-000000000102',
       questionId: '018f0000-0000-7000-8000-000000000202',
       key: 'context.skin_type',
       uiSection: UiSection.basic,
     });
     const body = {
+      category: 'sunscreen',
       responses: {
-        [categoryQuestion.id]: {
-          questionId: categoryQuestion.questionId,
+        [skinQuestion.id]: {
+          questionId: skinQuestion.questionId,
           value: [1],
         },
       },
     };
 
-    repositoryMock.findCategoryDecisionQuestions.mockResolvedValue([
-      categoryQuestion,
-      skinQuestion,
-    ]);
+    repositoryMock.findCategoryDecisionQuestions.mockResolvedValue([skinQuestion]);
     repositoryMock.findCurrentResponses.mockResolvedValue([
       {
-        questionId: categoryQuestion.questionId,
+        questionId: skinQuestion.questionId,
         value: [1],
       },
     ]);
@@ -329,11 +268,12 @@ describe('CategoryDecisionService', () => {
     expect(userResponsesServiceMock.upsertCurrentResponses).toHaveBeenCalledWith([
       {
         deviceId: '018f0000-0000-7000-8000-000000000001',
-        questionId: categoryQuestion.questionId,
+        questionId: skinQuestion.questionId,
         value: [1],
         source: UserResponseSource.context,
       },
     ]);
+    expect(repositoryMock.findProductCategoryByKey).toHaveBeenCalledWith('sunscreen');
     expect(result.responses).toEqual(body.responses);
     expect(result.previewResults).toEqual([
       {
@@ -352,7 +292,7 @@ describe('CategoryDecisionService', () => {
           sortOrder: 20,
         },
         answeredQuestionCount: 1,
-        totalQuestionCount: 2,
+        totalQuestionCount: 1,
       },
     ]);
   });

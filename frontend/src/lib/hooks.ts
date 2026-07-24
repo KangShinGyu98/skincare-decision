@@ -301,7 +301,7 @@ export function useSubmitCategoryDecision(category?: string) {
   });
 }
 
-export function useDebouncedCategoryDecisionResponseBatch(category?: string) {
+export function useDebouncedCategoryDecisionResponseBatch(category: string) {
   const queryClient = useQueryClient();
   const timeoutIdRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const requestMapRef = useRef(new Map<string, CategoryDecisionResponseValue>());
@@ -378,8 +378,8 @@ export function useDebouncedCategoryDecisionResponseBatch(category?: string) {
       return;
     }
 
-    submitCategoryDecisionResponses({ responses });
-  }, [submitCategoryDecisionResponses]);
+    submitCategoryDecisionResponses({ category, responses });
+  }, [category, submitCategoryDecisionResponses]);
 
   const saveResponse = useCallback(
     (questionVariantId: string, response: CategoryDecisionResponseValue) => {
@@ -438,7 +438,7 @@ export function useResetCategoryDecisionResponses(category?: string) {
   });
 }
 
-export function useCategoryDecisionActions(category?: string) {
+export function useCategoryDecisionActions(category: string) {
   const batch = useDebouncedCategoryDecisionResponseBatch(category);
   const reset = useResetCategoryDecisionResponses(category);
 

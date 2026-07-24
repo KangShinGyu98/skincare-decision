@@ -30,10 +30,6 @@ export type CategoryDecisionProductCategoryRecord = {
   sortOrder: number;
 };
 
-export type QuestionIdentityRecord = {
-  id: string;
-};
-
 @Injectable()
 export class CategoryDecisionRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -113,19 +109,6 @@ export class CategoryDecisionRepository {
         name: true,
         description: true,
         sortOrder: true,
-      },
-    });
-  }
-
-  async findQuestionByKey(key: string): Promise<QuestionIdentityRecord | null> {
-    return this.prisma.question.findFirst({
-      where: {
-        key,
-        isActive: true,
-        deletedAt: null,
-      },
-      select: {
-        id: true,
       },
     });
   }

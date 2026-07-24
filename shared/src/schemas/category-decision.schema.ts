@@ -84,6 +84,7 @@ export type CategoryDecisionResponseValue = z.infer<typeof categoryDecisionRespo
 
 export const upsertCategoryDecisionResponsesRequestSchema = z
   .object({
+    category: z.string().min(1),
     responses: z.record(z.uuid(), categoryDecisionResponseValueSchema),
   })
   .strict();

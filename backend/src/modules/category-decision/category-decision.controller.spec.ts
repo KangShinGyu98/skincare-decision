@@ -68,6 +68,7 @@ describe('CategoryDecisionController', () => {
 
   it('selectChecklist records event and passes body to service', async () => {
     const body = {
+      category: 'sunscreen',
       responses: {
         '018f0000-0000-7000-8000-000000000101': {
           questionId: '018f0000-0000-7000-8000-000000000201',

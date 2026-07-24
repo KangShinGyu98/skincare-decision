@@ -25,19 +25,6 @@ import {
   type CategoryDecisionQuestionRecord,
 } from './category-decision.repository';
 
-const CATEGORY_VALUE_BY_KEY: ReadonlyMap<string, number> = new Map([
-  ['toner', 0],
-  ['sunscreen', 1],
-  ['serum', 2],
-  ['lipcare', 3],
-  ['moisturizer', 4],
-  ['cleanser', 5],
-]);
-
-const CATEGORY_KEY_BY_VALUE: ReadonlyMap<number, string> = new Map(
-  Array.from(CATEGORY_VALUE_BY_KEY, ([key, value]) => [value, key]),
-);
-
 type GetInput = {
   deviceId: string;
   userId?: string;
@@ -59,6 +46,7 @@ type ResetResponsesInput = {
 type CalculatePreviewResultsInput = {
   deviceId: string;
   userId?: string;
+  category: string;
 };
 
 type PreviewResult = CategoryDecisionPreviewResult;
@@ -71,7 +59,7 @@ export class CategoryDecisionService {
   ) {}
 
   async getCategoryDecision(input: GetInput): Promise<CategoryDecisionResponse> {
-    const selectedCategoryFromQuery = await this.saveSelectedCategoryFromQuery(input);
+    const selectedCategory = await this.resolveCategory(input.category);
     const questions = await this.repository.findCategoryDecisionQuestions();
     const questionIds = questions.map((question) => question.questionId);
     const responseRecords = await this.repository.findCurrentResponses(
@@ -80,12 +68,6 @@ export class CategoryDecisionService {
       input.userId,
     );
     const responseMap = this.toResponseMap(responseRecords);
-    const selectedCategory =
-      selectedCategoryFromQuery ?? (await this.findSelectedCategory(questions, responseMap));
-
-    if (selectedCategoryFromQuery) {
-      this.setSelectedCategoryResponse(questions, responseMap, selectedCategoryFromQuery);
-    }
 
     const visibleQuestions = this.filterQuestionsByCategory(questions, selectedCategory?.key);
     const visibleQuestionIds = visibleQuestions.map((question) => question.questionId);
@@ -123,6 +105,7 @@ export class CategoryDecisionService {
     const previewResults = await this.calculatePreviewResults({
       deviceId: input.deviceId,
       ...(input.userId ? { userId: input.userId } : {}),
+      category: input.body.category,
     });
 
     return upsertCategoryDecisionResponsesResponseSchema.parse({
@@ -152,38 +135,16 @@ export class CategoryDecisionService {
     });
   }
 
-  private async saveSelectedCategoryFromQuery(
-    input: GetInput,
-  ): Promise<ProductCategoryItemDto | null> {
-    if (!input.category) {
+  private async resolveCategory(categoryKey?: string): Promise<ProductCategoryItemDto | null> {
+    if (!categoryKey) {
       return null;
     }
 
-    const category = await this.repository.findProductCategoryByKey(input.category);
+    const category = await this.repository.findProductCategoryByKey(categoryKey);
 
     if (!category) {
       throw new NotFoundException('Product category not found');
     }
-
-    const value = CATEGORY_VALUE_BY_KEY.get(category.key);
-
-    if (!value) {
-      throw new NotFoundException('Product category is not supported');
-    }
-
-    const question = await this.repository.findQuestionByKey('category.selected');
-
-    if (!question) {
-      throw new Error('Missing category.selected question');
-    }
-
-    await this.userResponsesService.upsertCurrentResponse({
-      deviceId: input.deviceId,
-      ...(input.userId ? { userId: input.userId } : {}),
-      questionId: question.id,
-      value: [value],
-      source: UserResponseSource.context,
-    });
 
     return this.toProductCategoryItem(category);
   }
@@ -269,7 +230,7 @@ export class CategoryDecisionService {
     );
     const responseMap = this.toResponseMap(responseRecords);
 
-    const selectedCategory = await this.findSelectedCategory(questions, responseMap);
+    const selectedCategory = await this.resolveCategory(input.category);
     const visibleQuestions = this.filterQuestionsByCategory(questions, selectedCategory?.key);
     const visibleQuestionIds = visibleQuestions.map((question) => question.questionId);
 
@@ -291,35 +252,6 @@ export class CategoryDecisionService {
 
       return question.category === categoryKey;
     });
-  }
-
-  private async findSelectedCategory(
-    questions: CategoryDecisionQuestionRecord[],
-    responseMap: Map<string, number[]>,
-  ): Promise<ProductCategoryItemDto | null> {
-    const categoryQuestion = questions.find(
-      (question) => question.question.key === 'category.selected',
-    );
-
-    if (!categoryQuestion) {
-      return null;
-    }
-
-    const selectedValue = responseMap.get(categoryQuestion.questionId)?.[0];
-
-    if (selectedValue === undefined) {
-      return null;
-    }
-
-    const categoryKey = CATEGORY_KEY_BY_VALUE.get(selectedValue);
-
-    if (!categoryKey) {
-      return null;
-    }
-
-    const category = await this.repository.findProductCategoryByKey(categoryKey);
-
-    return category ? this.toProductCategoryItem(category) : null;
   }
 
   private createPreviewResults(input: {
@@ -372,23 +304,6 @@ export class CategoryDecisionService {
 
       return response !== undefined && response.length > 0;
     }).length;
-  }
-
-  private setSelectedCategoryResponse(
-    questions: CategoryDecisionQuestionRecord[],
-    responseMap: Map<string, number[]>,
-    selectedCategory: ProductCategoryItemDto,
-  ) {
-    const categoryQuestion = questions.find(
-      (question) => question.question.key === 'category.selected',
-    );
-    const selectedValue = CATEGORY_VALUE_BY_KEY.get(selectedCategory.key);
-
-    if (!categoryQuestion || !selectedValue) {
-      return;
-    }
-
-    responseMap.set(categoryQuestion.questionId, [selectedValue]);
   }
 
   private toResponseMap(responses: CategoryDecisionCurrentResponseRecord[]): Map<string, number[]> {
