@@ -4,6 +4,7 @@ import type { CategoryDecisionUiSection } from '@skincare-decision/shared/schema
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect } from 'react';
 import { CategoryDecisionResultCard } from '@/components/CategoryDecisionResultCard';
+import { ErrorPanel } from '@/components/common/ErrorPanel';
 import { PriorityGateQuestionItem } from '@/components/PriorityGateQuestionItem';
 import { SectionResetButton } from '@/components/SectionResetButton';
 import {
@@ -61,6 +62,31 @@ function CategoryDecisionPageContent() {
     saveResponse,
   } = useCategoryDecisionActions(category);
 
+  useEffect(() => {
+    if (categoryParam) {
+      return;
+    }
+
+    const nextSearchParams = new URLSearchParams(searchParamsString);
+    nextSearchParams.set('category', DEFAULT_CATEGORY_KEY);
+    router.replace(`/category-decision?${nextSearchParams.toString()}`);
+  }, [categoryParam, router, searchParamsString]);
+
+  if (isError) {
+    return (
+      <main
+        className="flex h-below-header w-full items-center justify-center bg-[var(--color-bg-page)] p-6"
+        data-fetch-state="error"
+      >
+        <ErrorPanel
+          message={
+            error instanceof Error ? error.message : '카테고리 질문 데이터를 불러오지 못했습니다.'
+          }
+        />
+      </main>
+    );
+  }
+
   const sections = data?.sections ?? [];
   const basicSection = sections.find((section) => section.key === 'basic');
   const categorySection = sections.find((section) => section.key === 'category');
@@ -85,21 +111,11 @@ function CategoryDecisionPageContent() {
     router.push(`/category-decision?${nextSearchParams.toString()}`);
   };
 
-  useEffect(() => {
-    if (categoryParam) {
-      return;
-    }
-
-    const nextSearchParams = new URLSearchParams(searchParamsString);
-    nextSearchParams.set('category', DEFAULT_CATEGORY_KEY);
-    router.replace(`/category-decision?${nextSearchParams.toString()}`);
-  }, [categoryParam, router, searchParamsString]);
-
   return (
     <main
       className="flex h-below-header w-full shrink-0 flex-col items-center gap-4 overflow-hidden bg-[var(--color-bg-page)] p-6"
       aria-busy={isLoading || isCategoryDecisionActionPending}
-      data-fetch-state={isLoading ? 'loading' : isError ? 'error' : 'success'}
+      data-fetch-state={isLoading ? 'loading' : 'success'}
     >
       <div className="flex min-h-0 w-full max-w-[1200px] flex-[1] flex-col items-center justify-center gap-3 text-center">
         <h2 className="mb-0!">제품군 선택 기준을 정리합니다.</h2>
@@ -239,11 +255,6 @@ function CategoryDecisionPageContent() {
           </div>
         </div>
       </div>
-      {isError ? (
-        <p className="shrink-0 text-sm text-[var(--color-error)]">
-          {error instanceof Error ? error.message : '카테고리 질문 데이터를 불러오지 못했습니다.'}
-        </p>
-      ) : null}
     </main>
   );
 }
