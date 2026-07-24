@@ -97,12 +97,12 @@ function CategoryDecisionPageContent() {
 
   return (
     <main
-      className="flex min-h-below-header w-full flex-col items-center justify-center bg-[var(--color-bg-page)] p-10"
+      className="flex h-below-header w-full shrink-0 flex-col items-center gap-4 overflow-hidden bg-[var(--color-bg-page)] p-6"
       aria-busy={isLoading || isCategoryDecisionActionPending}
       data-fetch-state={isLoading ? 'loading' : isError ? 'error' : 'success'}
     >
-      <div className="col-span-2 flex flex-col items-center gap-3">
-        <h2>제품군 선택 기준을 정리합니다.</h2>
+      <div className="flex min-h-0 w-full max-w-[1200px] flex-[1] flex-col items-center justify-center gap-3 text-center">
+        <h2 className="mb-0!">제품군 선택 기준을 정리합니다.</h2>
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Select
             value={selectedCategoryKey}
@@ -129,11 +129,11 @@ function CategoryDecisionPageContent() {
           </span>
         </div>
       </div>
-      <div className="flex h-[70vh] w-full max-w-[1200px] translate-y-8 gap-6 overflow-hidden shadow-lg">
+      <div className="flex min-h-0 w-full max-w-[1200px] flex-[6] gap-6 overflow-hidden shadow-lg">
         <div
           id={basicSection?.key ?? 'basic'}
           data-question-count={basicSection?.questions.length ?? 0}
-          className="flex h-full w-full flex-1 flex-col gap-4 overflow-y-auto rounded-xl border border-[var(--color-border-light)] border-t-[3px] border-t-[var(--color-primary-border)] bg-[var(--color-bg-white)] p-4 shadow-sm"
+          className="flex h-full min-h-0 w-full flex-1 flex-col gap-4 overflow-y-auto rounded-xl border border-[var(--color-border-light)] border-t-[3px] border-t-[var(--color-primary-border)] bg-[var(--color-bg-white)] p-4 shadow-sm"
         >
           <div className="flex items-center justify-between gap-3">
             <h3 className="text-lg font-semibold text-[var(--color-text-heading)]">
@@ -173,7 +173,7 @@ function CategoryDecisionPageContent() {
         <div
           id={categorySection?.key ?? 'category'}
           data-question-count={categorySection?.questions.length ?? 0}
-          className="flex h-full w-full flex-1 flex-col gap-4 overflow-y-auto rounded-xl border border-[var(--color-border-light)] border-t-[3px] border-t-[var(--gold-3)] bg-[var(--color-bg-white)] p-4 shadow-sm"
+          className="flex h-full min-h-0 w-full flex-1 flex-col gap-4 overflow-y-auto rounded-xl border border-[var(--color-border-light)] border-t-[3px] border-t-[var(--gold-3)] bg-[var(--color-bg-white)] p-4 shadow-sm"
         >
           <div className="flex items-center justify-between gap-3">
             <h3 className="text-lg font-semibold text-[var(--color-text-heading)]">
@@ -212,7 +212,7 @@ function CategoryDecisionPageContent() {
         </div>
         <div
           id="category-results"
-          className="flex h-full w-full flex-1 flex-col gap-4 rounded-xl border border-[var(--color-border-light)] border-t-[3px] border-t-[var(--green-3)] bg-[var(--color-bg-white)] p-4 shadow-sm"
+          className="flex h-full min-h-0 w-full flex-1 flex-col gap-4 rounded-xl border border-[var(--color-border-light)] border-t-[3px] border-t-[var(--green-3)] bg-[var(--color-bg-white)] p-4 shadow-sm"
         >
           <h3 className="text-lg font-semibold text-[var(--color-text-heading)]">결론</h3>
           <div className="flex min-h-0 flex-1 items-start justify-center overflow-y-auto">
@@ -240,7 +240,7 @@ function CategoryDecisionPageContent() {
         </div>
       </div>
       {isError ? (
-        <p className="mt-6 text-sm text-[var(--color-error)]">
+        <p className="shrink-0 text-sm text-[var(--color-error)]">
           {error instanceof Error ? error.message : '카테고리 질문 데이터를 불러오지 못했습니다.'}
         </p>
       ) : null}
@@ -250,7 +250,7 @@ function CategoryDecisionPageContent() {
 
 function CategoryDecisionPageFallback() {
   return (
-    <main className="flex min-h-below-header w-full items-center justify-center bg-[var(--color-bg-page)] p-10">
+    <main className="flex h-below-header w-full items-center justify-center overflow-hidden bg-[var(--color-bg-page)] p-10">
       <Spinner className="size-7 text-[var(--color-primary)]" />
     </main>
   );
