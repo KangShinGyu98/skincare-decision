@@ -92,10 +92,6 @@ const CTA_TARGET_OPTIONS = [
     value: '/category-decision?category=serum',
   },
   {
-    label: '구매 체크리스트 - 립케어',
-    value: '/category-decision?category=lipcare',
-  },
-  {
     label: '구매 체크리스트 - 로션 / 크림',
     value: '/category-decision?category=moisturizer',
   },

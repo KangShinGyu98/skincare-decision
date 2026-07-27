@@ -256,11 +256,39 @@ export class PriorityGateService {
     return previewResult ?? this.createFallbackPassResult();
   }
 
+  // 구매 체크리스트가 같은 룰 평가를 재사용한다(docs/ContentSpec/purchase_checklist_v1.md §0.2).
+  // sortOrder 부분집합만 평가하고, fallback PASS 카드는 붙이지 않는다.
+  async calculatePreviewResultsForRules(input: {
+    deviceId: string;
+    userId?: string;
+    ruleSortOrders: readonly number[];
+  }): Promise<PreviewResult[]> {
+    const rules = await this.repository.findPriorityRules();
+    const sortOrders = new Set(input.ruleSortOrders);
+
+    return this.evaluateRules(
+      rules.filter((rule) => sortOrders.has(rule.sortOrder)),
+      input,
+    );
+  }
+
   private async calculatePreviewResults(
     input: CalculatePreviewResultInput,
   ): Promise<PreviewResult[]> {
     const rules = await this.repository.findPriorityRules();
-    //rules 에서 필요한 questionsId 추출
+    const previewResults = await this.evaluateRules(rules, input);
+
+    if (previewResults.length === 0) {
+      return [this.createFallbackPassResult()];
+    }
+
+    return previewResults;
+  }
+
+  private async evaluateRules(
+    rules: PriorityRuleRecord[],
+    input: { deviceId: string; userId?: string },
+  ): Promise<PreviewResult[]> {
     const conditionQuestionIds = this.collectConditionQuestionIds(rules);
     const responseRecords = await this.repository.findCurrentResponses(
       input.deviceId,
@@ -276,10 +304,6 @@ export class PriorityGateService {
       }
 
       previewResults.push(await this.toPreviewResult(rule));
-    }
-
-    if (previewResults.length === 0) {
-      return [this.createFallbackPassResult()];
     }
 
     return previewResults;

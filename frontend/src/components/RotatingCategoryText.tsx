@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-const categories = ['선크림', '토너', '세럼', '립케어', '로션 / 크림', '클렌저'];
+const categories = ['선크림', '토너', '세럼', '로션 / 크림', '클렌저'];
 
 export function RotatingCategoryText() {
   const [index, setIndex] = useState(0);

@@ -37,11 +37,6 @@ export const menuItems: MenuItem[] = [
         link: '/category-decision?category=serum',
       },
       {
-        id: 'lipcare',
-        label: '립케어',
-        link: '/category-decision?category=lipcare',
-      },
-      {
         id: 'moisturizer',
         label: '로션 / 크림',
         link: '/category-decision?category=moisturizer',

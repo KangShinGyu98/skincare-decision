@@ -116,6 +116,9 @@ export function useSubmitPriorityGate() {
     mutationFn: (data: UpsertPriorityGateResponsesRequest) => priorityGateApi.submitResponses(data),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.priorityGate.questions });
+      // 루틴 점검과 구매 체크리스트는 같은 user_responses를 공유한다.
+      // 상대 화면의 캐시를 stale로 표시해 다음 진입 시 자동 refetch되게 한다.
+      await queryClient.invalidateQueries({ queryKey: queryKeys.categoryDecision.all });
     },
   });
 }
@@ -187,6 +190,9 @@ export function useDebouncedPriorityGateResponseBatch() {
     },
     onSettled: async () => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.priorityGate.questions });
+      // 루틴 점검과 구매 체크리스트는 같은 user_responses를 공유한다.
+      // 상대 화면의 캐시를 stale로 표시해 다음 진입 시 자동 refetch되게 한다.
+      await queryClient.invalidateQueries({ queryKey: queryKeys.categoryDecision.all });
     },
   });
 
@@ -254,6 +260,9 @@ export function useResetPriorityGateResponses() {
     mutationFn: (data: ResetPriorityGateResponsesRequest) => priorityGateApi.resetResponses(data),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.priorityGate.questions });
+      // 루틴 점검과 구매 체크리스트는 같은 user_responses를 공유한다.
+      // 상대 화면의 캐시를 stale로 표시해 다음 진입 시 자동 refetch되게 한다.
+      await queryClient.invalidateQueries({ queryKey: queryKeys.categoryDecision.all });
     },
   });
 }
@@ -297,6 +306,7 @@ export function useSubmitCategoryDecision(category?: string) {
       await queryClient.invalidateQueries({
         queryKey: queryKeys.categoryDecision.detail(category),
       });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.priorityGate.questions });
     },
   });
 }
@@ -365,6 +375,7 @@ export function useDebouncedCategoryDecisionResponseBatch(category: string) {
     },
     onSettled: async () => {
       await queryClient.invalidateQueries({ queryKey });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.priorityGate.questions });
     },
   });
 
@@ -434,6 +445,7 @@ export function useResetCategoryDecisionResponses(category?: string) {
       categoryDecisionApi.resetResponses(data),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.priorityGate.questions });
     },
   });
 }

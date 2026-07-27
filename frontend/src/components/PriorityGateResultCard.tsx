@@ -1,4 +1,7 @@
+'use client';
+
 import type { PriorityGatePreviewResultDto } from '@skincare-decision/shared/schemas';
+import { toast } from 'sonner';
 import {
   Card,
   CardContent,
@@ -11,9 +14,14 @@ import { Button } from '@/components/shadcn/button';
 
 type PriorityGateResultCardProps = {
   previewResult: PriorityGatePreviewResultDto;
+  // 'dev-notice': 링크 대신 "개발중입니다" 토스트만 띄운다(구매 체크리스트 화면용).
+  ctaBehavior?: 'link' | 'dev-notice';
 };
 
-export function PriorityGateResultCard({ previewResult }: PriorityGateResultCardProps) {
+export function PriorityGateResultCard({
+  previewResult,
+  ctaBehavior = 'link',
+}: PriorityGateResultCardProps) {
   const categories = [
     ...(previewResult.recommendCategory
       ? [
@@ -51,9 +59,20 @@ export function PriorityGateResultCard({ previewResult }: PriorityGateResultCard
       ) : null}
       {previewResult.cta ? (
         <CardFooter className="border-[var(--color-border-light)] bg-[var(--gray-3)]">
-          <Button asChild size="sm" className="w-full">
-            <a href={previewResult.cta.target}>{previewResult.cta.label}</a>
-          </Button>
+          {ctaBehavior === 'dev-notice' ? (
+            <Button
+              type="button"
+              size="sm"
+              className="w-full"
+              onClick={() => toast('개발중입니다.')}
+            >
+              {previewResult.cta.label}
+            </Button>
+          ) : (
+            <Button asChild size="sm" className="w-full">
+              <a href={previewResult.cta.target}>{previewResult.cta.label}</a>
+            </Button>
+          )}
         </CardFooter>
       ) : null}
     </Card>

@@ -280,12 +280,13 @@ export async function seedQuestionVariants(
 ): Promise<void> {
   for (const seed of QUESTION_VARIANT_SEEDS) {
     const question = requireQuestion(questions, seed.questionKey);
-    const category = (seed as { category?: string | null }).category ?? null;
+    const category = seed.category ?? null;
     const existing = await prisma.questionVariant.findFirst({
       where: {
         questionId: question.id,
         screen: seed.screen,
         uiSection: seed.uiSection,
+        category,
         sortOrder: seed.sortOrder,
       },
     });

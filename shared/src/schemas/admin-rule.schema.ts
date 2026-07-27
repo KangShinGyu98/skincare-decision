@@ -26,7 +26,6 @@ export const adminRuleCtaTargetValues = [
   '/category-decision?category=toner',
   '/category-decision?category=sunscreen',
   '/category-decision?category=serum',
-  '/category-decision?category=lipcare',
   '/category-decision?category=moisturizer',
   '/category-decision?category=cleanser',
 ] as const;
@@ -37,7 +36,6 @@ export const adminRuleCtaTargetOptions = [
   { label: '구매 체크리스트 - 토너', value: '/category-decision?category=toner' },
   { label: '구매 체크리스트 - 선크림', value: '/category-decision?category=sunscreen' },
   { label: '구매 체크리스트 - 세럼', value: '/category-decision?category=serum' },
-  { label: '구매 체크리스트 - 립케어', value: '/category-decision?category=lipcare' },
   { label: '구매 체크리스트 - 로션 / 크림', value: '/category-decision?category=moisturizer' },
   { label: '구매 체크리스트 - 클렌저', value: '/category-decision?category=cleanser' },
 ] as const satisfies ReadonlyArray<{

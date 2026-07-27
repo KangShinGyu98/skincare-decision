@@ -3,8 +3,8 @@
 import type { CategoryDecisionUiSection } from '@skincare-decision/shared/schemas';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect } from 'react';
-import { CategoryDecisionResultCard } from '@/components/CategoryDecisionResultCard';
 import { ErrorPanel } from '@/components/common/ErrorPanel';
+import { PriorityGateResultCard } from '@/components/PriorityGateResultCard';
 import { PriorityGateQuestionItem } from '@/components/PriorityGateQuestionItem';
 import { SectionResetButton } from '@/components/SectionResetButton';
 import {
@@ -27,7 +27,6 @@ const CATEGORY_SELECT_ITEMS = [
   { id: 'toner', key: 'toner', name: '토너' },
   { id: 'sunscreen', key: 'sunscreen', name: '선크림' },
   { id: 'serum', key: 'serum', name: '세럼' },
-  { id: 'lipcare', key: 'lipcare', name: '립케어' },
   { id: 'moisturizer', key: 'moisturizer', name: '로션 / 크림' },
   { id: 'cleanser', key: 'cleanser', name: '클렌저' },
 ] as const;
@@ -241,9 +240,10 @@ function CategoryDecisionPageContent() {
             ) : previewResults.length > 0 ? (
               <div className="flex w-full flex-col gap-3">
                 {previewResults.map((previewResult) => (
-                  <CategoryDecisionResultCard
-                    key={`${previewResult.title}-${previewResult.selectedCategory?.key ?? 'none'}`}
+                  <PriorityGateResultCard
+                    key={`${previewResult.resultType}-${previewResult.title}`}
                     previewResult={previewResult}
+                    ctaBehavior="dev-notice"
                   />
                 ))}
               </div>

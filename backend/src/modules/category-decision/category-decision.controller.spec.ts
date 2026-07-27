@@ -80,22 +80,12 @@ describe('CategoryDecisionController', () => {
       responses: body.responses,
       previewResults: [
         {
-          title: 'Ready to narrow Sunscreen',
-          description:
-            'The saved answers will be used to prepare the initial product matrix filters.',
-          cta: {
-            label: 'View product matrix',
-            target: '/product-matrix?category=sunscreen&source=CATEGORY_DECISION_CTA',
-          },
-          selectedCategory: {
-            id: '018f0000-0000-7000-8000-000000000301',
-            key: 'sunscreen',
-            name: 'Sunscreen',
-            description: null,
-            sortOrder: 20,
-          },
-          answeredQuestionCount: 1,
-          totalQuestionCount: 2,
+          resultType: 'CAUTION',
+          title: '썬크림의 백탁·발림성이 고민이라면',
+          description: '쿠션이나 파우더를 사용해보거나, 유기·혼합자차를 고려해볼 수 있습니다.',
+          cta: null,
+          recommendCategory: null,
+          holdCategories: [],
         },
       ],
     };

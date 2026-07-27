@@ -1,11 +1,25 @@
+import { NotFoundException } from '@nestjs/common';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { QuestionAnswerType, UiSection, UserResponseSource } from '../../generated/prisma/enums';
+import { PriorityGateService } from '../priority-gate/priority-gate.service';
 import { UserResponsesService } from '../user-responses/user-responses.service';
 import {
   CategoryDecisionRepository,
   type CategoryDecisionQuestionRecord,
 } from './category-decision.repository';
 import { CategoryDecisionService } from './category-decision.service';
+
+// docs/ContentSpec/purchase_checklist_v1.md §1.5 썬크림 룰 목록
+const SUNSCREEN_RULE_SORT_ORDERS = [10, 20, 160, 280, 410, 420, 430, 440, 450, 460, 470, 480, 610];
+
+const RULE_PREVIEW_RESULT = {
+  resultType: 'CAUTION' as const,
+  title: '썬크림의 백탁·발림성이 고민이라면',
+  description: '쿠션이나 파우더를 사용해보거나, 유기·혼합자차를 고려해볼 수 있습니다.',
+  cta: null,
+  recommendCategory: null,
+  holdCategories: [],
+};
 
 describe('CategoryDecisionService', () => {
   let service: CategoryDecisionService;
@@ -18,6 +32,9 @@ describe('CategoryDecisionService', () => {
   let userResponsesServiceMock: jest.Mocked<
     Pick<UserResponsesService, 'upsertCurrentResponses' | 'deleteCurrentResponses'>
   >;
+  let priorityGateServiceMock: jest.Mocked<
+    Pick<PriorityGateService, 'calculatePreviewResultsForRules'>
+  >;
 
   beforeEach(async () => {
     repositoryMock = {
@@ -28,6 +45,9 @@ describe('CategoryDecisionService', () => {
     userResponsesServiceMock = {
       upsertCurrentResponses: jest.fn(),
       deleteCurrentResponses: jest.fn(),
+    };
+    priorityGateServiceMock = {
+      calculatePreviewResultsForRules: jest.fn(),
     };
 
     const testingModule: TestingModule = await Test.createTestingModule({
@@ -41,13 +61,17 @@ describe('CategoryDecisionService', () => {
           provide: UserResponsesService,
           useValue: userResponsesServiceMock,
         },
+        {
+          provide: PriorityGateService,
+          useValue: priorityGateServiceMock,
+        },
       ],
     }).compile();
 
     service = testingModule.get(CategoryDecisionService);
   });
 
-  it('getCategoryDecision resolves the selected category from the query param without persisting it', async () => {
+  it('getCategoryDecision resolves the selected category and returns priority rule preview cards', async () => {
     const dailyUseQuestion = createQuestionRecord({
       id: '018f0000-0000-7000-8000-000000000101',
       questionId: '018f0000-0000-7000-8000-000000000201',
@@ -72,6 +96,9 @@ describe('CategoryDecisionService', () => {
         value: [1],
       },
     ]);
+    priorityGateServiceMock.calculatePreviewResultsForRules.mockResolvedValue([
+      RULE_PREVIEW_RESULT,
+    ]);
 
     const result = await service.getCategoryDecision({
       deviceId: '018f0000-0000-7000-8000-000000000001',
@@ -81,6 +108,11 @@ describe('CategoryDecisionService', () => {
 
     expect(repositoryMock.findProductCategoryByKey).toHaveBeenCalledWith('sunscreen');
     expect(userResponsesServiceMock.upsertCurrentResponses).not.toHaveBeenCalled();
+    expect(priorityGateServiceMock.calculatePreviewResultsForRules).toHaveBeenCalledWith({
+      deviceId: '018f0000-0000-7000-8000-000000000001',
+      userId: '018f0000-0000-7000-8000-000000000002',
+      ruleSortOrders: SUNSCREEN_RULE_SORT_ORDERS,
+    });
     expect(result.selectedCategory).toEqual(category);
     expect(result.sections).toEqual([
       {
@@ -93,20 +125,24 @@ describe('CategoryDecisionService', () => {
         ],
       },
     ]);
-    expect(result.previewResults).toEqual([
-      {
-        title: 'Ready to narrow Sunscreen',
-        description:
-          'The saved answers will be used to prepare the initial product matrix filters.',
-        cta: {
-          label: 'View product matrix',
-          target: '/product-matrix?category=sunscreen&source=CATEGORY_DECISION_CTA',
-        },
-        selectedCategory: category,
-        answeredQuestionCount: 1,
-        totalQuestionCount: 1,
-      },
-    ]);
+    expect(result.previewResults).toEqual([RULE_PREVIEW_RESULT]);
+  });
+
+  it('getCategoryDecision rejects categories without a checklist rule mapping', async () => {
+    repositoryMock.findProductCategoryByKey.mockResolvedValue({
+      id: '018f0000-0000-7000-8000-000000000302',
+      key: 'lipcare',
+      name: 'Lipcare',
+      description: null,
+      sortOrder: 40,
+    });
+
+    await expect(
+      service.getCategoryDecision({
+        deviceId: '018f0000-0000-7000-8000-000000000001',
+        category: 'lipcare',
+      }),
+    ).rejects.toThrow(NotFoundException);
   });
 
   it('resetResponses deletes current answers for the selected ui section', async () => {
@@ -120,7 +156,7 @@ describe('CategoryDecisionService', () => {
     const skinQuestion = createQuestionRecord({
       id: '018f0000-0000-7000-8000-000000000102',
       questionId: '018f0000-0000-7000-8000-000000000202',
-      key: 'context.skin_type',
+      key: 'routine.recent_irritation',
       uiSection: UiSection.basic,
     });
 
@@ -149,7 +185,7 @@ describe('CategoryDecisionService', () => {
   it('getCategoryDecision returns common questions and selected category questions only', async () => {
     const dailyUseQuestion = createQuestionRecord({
       questionId: '018f0000-0000-7000-8000-000000000201',
-      key: 'context.daily_use',
+      key: 'diagnosis.skin_problems',
       uiSection: UiSection.basic,
       sortOrder: 10,
       category: null,
@@ -157,19 +193,19 @@ describe('CategoryDecisionService', () => {
     const sunscreenQuestion = createQuestionRecord({
       id: '018f0000-0000-7000-8000-000000000102',
       questionId: '018f0000-0000-7000-8000-000000000202',
-      key: 'context.eye_sting',
+      key: 'product.eye_sting',
       title: 'Eye sting',
       uiSection: UiSection.category,
       category: 'sunscreen',
       sortOrder: 20,
     });
-    const lipcareQuestion = createQuestionRecord({
+    const tonerQuestion = createQuestionRecord({
       id: '018f0000-0000-7000-8000-000000000103',
       questionId: '018f0000-0000-7000-8000-000000000203',
-      key: 'preference.menthol_sensitive',
-      title: 'Menthol sensitive',
+      key: 'product.toner_type',
+      title: 'Toner type',
       uiSection: UiSection.category,
-      category: 'lipcare',
+      category: 'toner',
       sortOrder: 30,
     });
     const category = {
@@ -184,7 +220,7 @@ describe('CategoryDecisionService', () => {
     repositoryMock.findCategoryDecisionQuestions.mockResolvedValue([
       dailyUseQuestion,
       sunscreenQuestion,
-      lipcareQuestion,
+      tonerQuestion,
     ]);
     repositoryMock.findCurrentResponses.mockResolvedValue([
       {
@@ -192,6 +228,7 @@ describe('CategoryDecisionService', () => {
         value: [1],
       },
     ]);
+    priorityGateServiceMock.calculatePreviewResultsForRules.mockResolvedValue([]);
 
     const result = await service.getCategoryDecision({
       deviceId: '018f0000-0000-7000-8000-000000000001',
@@ -200,20 +237,15 @@ describe('CategoryDecisionService', () => {
 
     expect(
       result.sections.flatMap((section) => section.questions.map((question) => question.key)),
-    ).toEqual(['context.daily_use', 'context.eye_sting']);
-    expect(result.previewResults[0]).toEqual(
-      expect.objectContaining({
-        answeredQuestionCount: 1,
-        totalQuestionCount: 2,
-      }),
-    );
+    ).toEqual(['diagnosis.skin_problems', 'product.eye_sting']);
+    expect(result.previewResults).toEqual([]);
   });
 
   it('getCategoryDecision returns null selected category and empty previewResults when category is omitted', async () => {
     const skinQuestion = createQuestionRecord({
       id: '018f0000-0000-7000-8000-000000000102',
       questionId: '018f0000-0000-7000-8000-000000000202',
-      key: 'context.skin_type',
+      key: 'routine.recent_irritation',
       uiSection: UiSection.basic,
     });
 
@@ -225,14 +257,15 @@ describe('CategoryDecisionService', () => {
     });
 
     expect(repositoryMock.findProductCategoryByKey).not.toHaveBeenCalled();
+    expect(priorityGateServiceMock.calculatePreviewResultsForRules).not.toHaveBeenCalled();
     expect(result.selectedCategory).toBeNull();
     expect(result.previewResults).toEqual([]);
   });
 
-  it('getResponseReaction saves answers and returns product matrix CTA for the requested category', async () => {
+  it('getResponseReaction saves answers and returns rule preview cards for the requested category', async () => {
     const skinQuestion = createQuestionRecord({
       questionId: '018f0000-0000-7000-8000-000000000202',
-      key: 'context.skin_type',
+      key: 'routine.recent_irritation',
       uiSection: UiSection.basic,
     });
     const body = {
@@ -245,20 +278,9 @@ describe('CategoryDecisionService', () => {
       },
     };
 
-    repositoryMock.findCategoryDecisionQuestions.mockResolvedValue([skinQuestion]);
-    repositoryMock.findCurrentResponses.mockResolvedValue([
-      {
-        questionId: skinQuestion.questionId,
-        value: [1],
-      },
+    priorityGateServiceMock.calculatePreviewResultsForRules.mockResolvedValue([
+      RULE_PREVIEW_RESULT,
     ]);
-    repositoryMock.findProductCategoryByKey.mockResolvedValue({
-      id: '018f0000-0000-7000-8000-000000000301',
-      key: 'sunscreen',
-      name: 'Sunscreen',
-      description: null,
-      sortOrder: 20,
-    });
 
     const result = await service.getResponseReaction({
       deviceId: '018f0000-0000-7000-8000-000000000001',
@@ -273,28 +295,12 @@ describe('CategoryDecisionService', () => {
         source: UserResponseSource.context,
       },
     ]);
-    expect(repositoryMock.findProductCategoryByKey).toHaveBeenCalledWith('sunscreen');
+    expect(priorityGateServiceMock.calculatePreviewResultsForRules).toHaveBeenCalledWith({
+      deviceId: '018f0000-0000-7000-8000-000000000001',
+      ruleSortOrders: SUNSCREEN_RULE_SORT_ORDERS,
+    });
     expect(result.responses).toEqual(body.responses);
-    expect(result.previewResults).toEqual([
-      {
-        title: 'Ready to narrow Sunscreen',
-        description:
-          'The saved answers will be used to prepare the initial product matrix filters.',
-        cta: {
-          label: 'View product matrix',
-          target: '/product-matrix?category=sunscreen&source=CATEGORY_DECISION_CTA',
-        },
-        selectedCategory: {
-          id: '018f0000-0000-7000-8000-000000000301',
-          key: 'sunscreen',
-          name: 'Sunscreen',
-          description: null,
-          sortOrder: 20,
-        },
-        answeredQuestionCount: 1,
-        totalQuestionCount: 1,
-      },
-    ]);
+    expect(result.previewResults).toEqual([RULE_PREVIEW_RESULT]);
   });
 });
 
@@ -321,7 +327,7 @@ function createQuestionRecord(
     category: overrides.category ?? null,
     sortOrder: overrides.sortOrder ?? 10,
     question: {
-      key: overrides.key ?? 'context.skin_type',
+      key: overrides.key ?? 'routine.recent_irritation',
       answerType: overrides.answerType ?? QuestionAnswerType.SINGLE_CHOICE,
       answerValues: overrides.answerValues ?? [0, 1],
     },

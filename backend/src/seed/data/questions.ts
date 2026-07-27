@@ -1,4 +1,9 @@
-import { QuestionSeed, QuestionVariantSeed, QuestionVisibilityConditionSeed } from '../types';
+import {
+  QuestionSeed,
+  QuestionVariantSeed,
+  QuestionVisibilityConditionSeed,
+  SeedCategoryKey,
+} from '../types';
 
 const answerValues = (count: number): number[] =>
   Array.from({ length: count }, (_, index) => index);
@@ -26,7 +31,7 @@ export const QUESTION_SEEDS = [
   // 개선 목적
   { key: 'goal.improve', answerType: 'MULTI_CHOICE', answerValues: answerValues(5) },
   // 사용제품
-  { key: 'product.cleanser_type', answerType: 'SINGLE_CHOICE', answerValues: answerValues(5) },
+  { key: 'product.cleanser_type', answerType: 'SINGLE_CHOICE', answerValues: answerValues(3) },
   { key: 'product.cleanser_ph', answerType: 'SINGLE_CHOICE', answerValues: answerValues(3) },
   { key: 'product.cleanser_exfoliant', answerType: 'SINGLE_CHOICE', answerValues: answerValues(4) },
   { key: 'product.first_cleanser', answerType: 'SINGLE_CHOICE', answerValues: answerValues(4) },
@@ -49,7 +54,7 @@ export const QUESTION_SEEDS = [
   { key: 'product.eye_sting', answerType: 'SINGLE_CHOICE', answerValues: [0, 1] },
 ] as const satisfies readonly QuestionSeed[];
 
-export const QUESTION_VARIANT_SEEDS = [
+const PRIORITY_GATE_QUESTION_VARIANT_SEEDS = [
   // 인적 --------------------------------------------------------------
   {
     questionKey: 'demographic.gender',
@@ -204,8 +209,8 @@ export const QUESTION_VARIANT_SEEDS = [
   // 사용제품 -----------------------------------------------------------
   {
     questionKey: 'product.cleanser_type',
-    title: '클렌저 종류는?',
-    answers: ['폼/젤', '오일/밤', '워터/패드', '비누', '없음(물세안)'],
+    title: '기초 세안 제품(폼·젤 등)으로 무엇을 쓰나요?',
+    answers: ['폼/젤', '비누', '없음(물세안)'],
     screen: 'priority_gate',
     uiSection: 'owned_products',
     sortOrder: 10,
@@ -362,6 +367,199 @@ export const QUESTION_VARIANT_SEEDS = [
     sortOrder: 170,
   },
 ] as const satisfies readonly QuestionVariantSeed[];
+
+// 구매 체크리스트(screen=context) 변형 배치 — docs/ContentSpec/purchase_checklist_v1.md §1 역추적 결과.
+// 문구·선택지는 priority_gate 변형과 동일(재탕)하며 배치(섹션·카테고리·순서)만 정의한다.
+// basic = 게이트·피부 상태(공통 Q-D1·Q-D5는 category=null로 전 카테고리 노출), category = 제품·목적 질문.
+const CHECKLIST_QUESTION_VARIANT_PLACEMENTS: readonly {
+  questionKey: string;
+  uiSection: 'basic' | 'category';
+  category: SeedCategoryKey | null;
+  sortOrder: number;
+}[] = [
+  // 공통 게이트(룰 010·020 + 티어 EXCLUDED)
+  { questionKey: 'diagnosis.skin_problems', uiSection: 'basic', category: null, sortOrder: 10 },
+  { questionKey: 'diagnosis.treatment_status', uiSection: 'basic', category: null, sortOrder: 20 },
+  // 클렌저
+  {
+    questionKey: 'routine.recent_irritation',
+    uiSection: 'basic',
+    category: 'cleanser',
+    sortOrder: 30,
+  },
+  {
+    questionKey: 'routine.makeup_frequency',
+    uiSection: 'basic',
+    category: 'cleanser',
+    sortOrder: 40,
+  },
+  { questionKey: 'routine.daytime_oily', uiSection: 'basic', category: 'cleanser', sortOrder: 50 },
+  {
+    questionKey: 'product.cleanser_type',
+    uiSection: 'category',
+    category: 'cleanser',
+    sortOrder: 10,
+  },
+  {
+    questionKey: 'product.cleanser_ph',
+    uiSection: 'category',
+    category: 'cleanser',
+    sortOrder: 20,
+  },
+  {
+    questionKey: 'product.cleanser_exfoliant',
+    uiSection: 'category',
+    category: 'cleanser',
+    sortOrder: 30,
+  },
+  {
+    questionKey: 'product.first_cleanser',
+    uiSection: 'category',
+    category: 'cleanser',
+    sortOrder: 40,
+  },
+  {
+    questionKey: 'product.cleanse_residue',
+    uiSection: 'category',
+    category: 'cleanser',
+    sortOrder: 50,
+  },
+  // 토너
+  {
+    questionKey: 'routine.recent_irritation',
+    uiSection: 'basic',
+    category: 'toner',
+    sortOrder: 30,
+  },
+  { questionKey: 'routine.post_wash_tight', uiSection: 'basic', category: 'toner', sortOrder: 40 },
+  { questionKey: 'product.toner_type', uiSection: 'category', category: 'toner', sortOrder: 10 },
+  {
+    questionKey: 'product.moisturizer_type',
+    uiSection: 'category',
+    category: 'toner',
+    sortOrder: 20,
+  },
+  { questionKey: 'product.serum_actives', uiSection: 'category', category: 'toner', sortOrder: 30 },
+  // 세럼
+  {
+    questionKey: 'routine.recent_irritation',
+    uiSection: 'basic',
+    category: 'serum',
+    sortOrder: 30,
+  },
+  { questionKey: 'product.serum_actives', uiSection: 'category', category: 'serum', sortOrder: 10 },
+  { questionKey: 'product.toner_type', uiSection: 'category', category: 'serum', sortOrder: 20 },
+  { questionKey: 'goal.improve', uiSection: 'category', category: 'serum', sortOrder: 30 },
+  {
+    questionKey: 'product.sunscreen_type',
+    uiSection: 'category',
+    category: 'serum',
+    sortOrder: 40,
+  },
+  // 로션·크림
+  {
+    questionKey: 'routine.post_wash_tight',
+    uiSection: 'basic',
+    category: 'moisturizer',
+    sortOrder: 30,
+  },
+  {
+    questionKey: 'routine.daytime_oily',
+    uiSection: 'basic',
+    category: 'moisturizer',
+    sortOrder: 40,
+  },
+  {
+    questionKey: 'product.moisturizer_type',
+    uiSection: 'category',
+    category: 'moisturizer',
+    sortOrder: 10,
+  },
+  // 썬크림
+  {
+    questionKey: 'routine.recent_irritation',
+    uiSection: 'basic',
+    category: 'sunscreen',
+    sortOrder: 30,
+  },
+  {
+    questionKey: 'routine.post_wash_tight',
+    uiSection: 'basic',
+    category: 'sunscreen',
+    sortOrder: 40,
+  },
+  { questionKey: 'routine.daytime_oily', uiSection: 'basic', category: 'sunscreen', sortOrder: 50 },
+  {
+    questionKey: 'routine.makeup_frequency',
+    uiSection: 'basic',
+    category: 'sunscreen',
+    sortOrder: 60,
+  },
+  {
+    questionKey: 'product.sunscreen_type',
+    uiSection: 'category',
+    category: 'sunscreen',
+    sortOrder: 10,
+  },
+  {
+    questionKey: 'product.outdoor_range',
+    uiSection: 'category',
+    category: 'sunscreen',
+    sortOrder: 20,
+  },
+  {
+    questionKey: 'product.sunscreen_reapply',
+    uiSection: 'category',
+    category: 'sunscreen',
+    sortOrder: 30,
+  },
+  {
+    questionKey: 'product.white_cast_complaint',
+    uiSection: 'category',
+    category: 'sunscreen',
+    sortOrder: 40,
+  },
+  { questionKey: 'product.eye_sting', uiSection: 'category', category: 'sunscreen', sortOrder: 50 },
+  {
+    questionKey: 'product.first_cleanser',
+    uiSection: 'category',
+    category: 'sunscreen',
+    sortOrder: 60,
+  },
+  {
+    questionKey: 'product.cleanse_residue',
+    uiSection: 'category',
+    category: 'sunscreen',
+    sortOrder: 70,
+  },
+  { questionKey: 'goal.improve', uiSection: 'category', category: 'sunscreen', sortOrder: 80 },
+];
+
+const CHECKLIST_QUESTION_VARIANT_SEEDS: readonly QuestionVariantSeed[] =
+  CHECKLIST_QUESTION_VARIANT_PLACEMENTS.map((placement) => {
+    const base = PRIORITY_GATE_QUESTION_VARIANT_SEEDS.find(
+      (variant) => variant.questionKey === placement.questionKey,
+    );
+
+    if (!base) {
+      throw new Error(`Missing priority_gate variant for ${placement.questionKey}`);
+    }
+
+    return {
+      questionKey: placement.questionKey,
+      title: base.title,
+      answers: base.answers,
+      screen: 'context',
+      uiSection: placement.uiSection,
+      category: placement.category,
+      sortOrder: placement.sortOrder,
+    };
+  });
+
+export const QUESTION_VARIANT_SEEDS: readonly QuestionVariantSeed[] = [
+  ...PRIORITY_GATE_QUESTION_VARIANT_SEEDS,
+  ...CHECKLIST_QUESTION_VARIANT_SEEDS,
+];
 
 // Q-D3(호르몬 패턴)은 여성에게만 노출한다. 변형을 (screen, uiSection, sortOrder)로 식별한다.
 export const QUESTION_VISIBILITY_CONDITION_SEEDS = [

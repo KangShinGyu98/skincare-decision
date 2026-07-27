@@ -26,7 +26,6 @@ export const adminQuestionCategorySchema = z.enum([
   'toner',
   'sunscreen',
   'serum',
-  'lipcare',
   'moisturizer',
   'cleanser',
 ]);

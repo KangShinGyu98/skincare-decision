@@ -17,6 +17,7 @@ import {
   upsertCategoryDecisionResponsesResponseSchema,
 } from '@skincare-decision/shared/schemas';
 import { UserResponseSource } from '../../generated/prisma/enums';
+import { PriorityGateService } from '../priority-gate/priority-gate.service';
 import { UserResponsesService } from '../user-responses/user-responses.service';
 import {
   CategoryDecisionRepository,
@@ -24,6 +25,16 @@ import {
   type CategoryDecisionProductCategoryRecord,
   type CategoryDecisionQuestionRecord,
 } from './category-decision.repository';
+
+// 카테고리별 노출 룰(sortOrder) — docs/ContentSpec/purchase_checklist_v1.md §1이 원본.
+// priority gate 룰을 가공 없이 부분집합만 재사용한다. 10·20은 공통 게이트(의료·치료).
+export const CHECKLIST_RULE_SORT_ORDERS: ReadonlyMap<string, readonly number[]> = new Map([
+  ['cleanser', [10, 20, 130, 190, 210, 220, 230, 260, 270, 290]],
+  ['toner', [10, 20, 120, 510, 520, 540]],
+  ['serum', [10, 20, 110, 170, 180, 530, 540, 550, 610, 620, 630, 640, 650, 660, 670, 680, 690]],
+  ['moisturizer', [10, 20, 310, 320, 330]],
+  ['sunscreen', [10, 20, 160, 280, 410, 420, 430, 440, 450, 460, 470, 480, 610]],
+]);
 
 type GetInput = {
   deviceId: string;
@@ -46,7 +57,7 @@ type ResetResponsesInput = {
 type CalculatePreviewResultsInput = {
   deviceId: string;
   userId?: string;
-  category: string;
+  categoryKey: string | undefined;
 };
 
 type PreviewResult = CategoryDecisionPreviewResult;
@@ -56,6 +67,7 @@ export class CategoryDecisionService {
   constructor(
     private readonly repository: CategoryDecisionRepository,
     private readonly userResponsesService: UserResponsesService,
+    private readonly priorityGateService: PriorityGateService,
   ) {}
 
   async getCategoryDecision(input: GetInput): Promise<CategoryDecisionResponse> {
@@ -70,16 +82,15 @@ export class CategoryDecisionService {
     const responseMap = this.toResponseMap(responseRecords);
 
     const visibleQuestions = this.filterQuestionsByCategory(questions, selectedCategory?.key);
-    const visibleQuestionIds = visibleQuestions.map((question) => question.questionId);
     const questionsWithResponses = this.combineQuestionsWithResponses(
       visibleQuestions,
       responseMap,
     );
     const sections = this.groupQuestionsBySections(questionsWithResponses);
-    const previewResults = this.createPreviewResults({
-      selectedCategory,
-      answeredQuestionCount: this.countAnsweredQuestions(visibleQuestionIds, responseMap),
-      totalQuestionCount: visibleQuestionIds.length,
+    const previewResults = await this.calculatePreviewResults({
+      deviceId: input.deviceId,
+      ...(input.userId ? { userId: input.userId } : {}),
+      categoryKey: selectedCategory?.key,
     });
 
     return categoryDecisionResponseSchema.parse({
@@ -105,7 +116,7 @@ export class CategoryDecisionService {
     const previewResults = await this.calculatePreviewResults({
       deviceId: input.deviceId,
       ...(input.userId ? { userId: input.userId } : {}),
-      category: input.body.category,
+      categoryKey: input.body.category,
     });
 
     return upsertCategoryDecisionResponsesResponseSchema.parse({
@@ -144,6 +155,10 @@ export class CategoryDecisionService {
 
     if (!category) {
       throw new NotFoundException('Product category not found');
+    }
+
+    if (!CHECKLIST_RULE_SORT_ORDERS.has(category.key)) {
+      throw new NotFoundException('Product category is not supported');
     }
 
     return this.toProductCategoryItem(category);
@@ -218,26 +233,23 @@ export class CategoryDecisionService {
     });
   }
 
+  // 결론 카드 = 해당 카테고리에 매핑된 priority gate 룰의 평가 결과 그대로.
+  // 미지원 카테고리이거나 매칭 룰이 없으면 빈 배열(별도 fallback 카드 없음).
   private async calculatePreviewResults(
     input: CalculatePreviewResultsInput,
   ): Promise<PreviewResult[]> {
-    const questions = await this.repository.findCategoryDecisionQuestions();
-    const questionIds = questions.map((question) => question.questionId);
-    const responseRecords = await this.repository.findCurrentResponses(
-      input.deviceId,
-      questionIds,
-      input.userId,
-    );
-    const responseMap = this.toResponseMap(responseRecords);
+    const ruleSortOrders = input.categoryKey
+      ? CHECKLIST_RULE_SORT_ORDERS.get(input.categoryKey)
+      : undefined;
 
-    const selectedCategory = await this.resolveCategory(input.category);
-    const visibleQuestions = this.filterQuestionsByCategory(questions, selectedCategory?.key);
-    const visibleQuestionIds = visibleQuestions.map((question) => question.questionId);
+    if (!ruleSortOrders) {
+      return [];
+    }
 
-    return this.createPreviewResults({
-      selectedCategory,
-      answeredQuestionCount: this.countAnsweredQuestions(visibleQuestionIds, responseMap),
-      totalQuestionCount: visibleQuestionIds.length,
+    return this.priorityGateService.calculatePreviewResultsForRules({
+      deviceId: input.deviceId,
+      ...(input.userId ? { userId: input.userId } : {}),
+      ruleSortOrders,
     });
   }
 
@@ -252,58 +264,6 @@ export class CategoryDecisionService {
 
       return question.category === categoryKey;
     });
-  }
-
-  private createPreviewResults(input: {
-    selectedCategory: ProductCategoryItemDto | null;
-    answeredQuestionCount: number;
-    totalQuestionCount: number;
-  }): PreviewResult[] {
-    if (input.answeredQuestionCount === 0) {
-      return [];
-    }
-
-    return [this.createPreviewResult(input)];
-  }
-
-  private createPreviewResult(input: {
-    selectedCategory: ProductCategoryItemDto | null;
-    answeredQuestionCount: number;
-    totalQuestionCount: number;
-  }): PreviewResult {
-    if (!input.selectedCategory) {
-      return {
-        title: 'Choose a product category first',
-        description: 'The answer was saved. Select a category to prepare product filters.',
-        cta: null,
-        selectedCategory: null,
-        answeredQuestionCount: input.answeredQuestionCount,
-        totalQuestionCount: input.totalQuestionCount,
-      };
-    }
-
-    return {
-      title: `Ready to narrow ${input.selectedCategory.name}`,
-      description: 'The saved answers will be used to prepare the initial product matrix filters.',
-      cta: {
-        label: 'View product matrix',
-        target: `/product-matrix?category=${input.selectedCategory.key}&source=CATEGORY_DECISION_CTA`,
-      },
-      selectedCategory: input.selectedCategory,
-      answeredQuestionCount: input.answeredQuestionCount,
-      totalQuestionCount: input.totalQuestionCount,
-    };
-  }
-
-  private countAnsweredQuestions(
-    questionIds: readonly string[],
-    responseMap: Map<string, number[]>,
-  ): number {
-    return questionIds.filter((questionId) => {
-      const response = responseMap.get(questionId);
-
-      return response !== undefined && response.length > 0;
-    }).length;
   }
 
   private toResponseMap(responses: CategoryDecisionCurrentResponseRecord[]): Map<string, number[]> {

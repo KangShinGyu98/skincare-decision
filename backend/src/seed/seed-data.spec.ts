@@ -18,6 +18,7 @@ import {
   seedProductCatalog,
   seedReferenceData,
 } from './index';
+import { CHECKLIST_RULE_SORT_ORDERS } from '../modules/category-decision/category-decision.service';
 
 describe('seed data validation', () => {
   const activeTonerAttributeKeys = new Set(
@@ -198,7 +199,7 @@ describe('seed data validation', () => {
   });
 });
 
-describe('v10 priority gate seed integrity', () => {
+describe('v12 priority gate seed integrity', () => {
   const questionByKey = new Map<string, (typeof QUESTION_SEEDS)[number]>(
     QUESTION_SEEDS.map((question) => [question.key, question]),
   );
@@ -264,6 +265,30 @@ describe('v10 priority gate seed integrity', () => {
 
     expect(new Set(names).size).toBe(names.length);
     expect(new Set(sortOrders).size).toBe(sortOrders.length);
+  });
+
+  it('keeps variant identity tuples unique so idempotent upsert cannot overwrite a sibling', () => {
+    // seedQuestionVariants는 (questionKey, screen, uiSection, category, sortOrder)로 기존 행을 찾는다.
+    const identities = QUESTION_VARIANT_SEEDS.map(
+      (variant) =>
+        `${variant.questionKey}|${variant.screen}|${variant.uiSection}|${variant.category ?? ''}|${variant.sortOrder}`,
+    );
+    expect(new Set(identities).size).toBe(identities.length);
+  });
+
+  it('maps every checklist rule sortOrder to a seeded rule', () => {
+    // 구매 체크리스트(카테고리별 룰 부분집합)가 시드와 어긋나면 카드가 조용히 사라진다.
+    const seededSortOrders = new Set(PRIORITY_RULE_SEEDS.map((rule) => rule.sortOrder));
+
+    for (const [category, sortOrders] of CHECKLIST_RULE_SORT_ORDERS) {
+      for (const sortOrder of sortOrders) {
+        expect({ category, sortOrder, seeded: seededSortOrders.has(sortOrder) }).toEqual({
+          category,
+          sortOrder,
+          seeded: true,
+        });
+      }
+    }
   });
 
   it('resolves every visibility condition reference within range', () => {

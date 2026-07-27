@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '../../prisma/prisma.module';
+import { PriorityGateModule } from '../priority-gate/priority-gate.module';
 import { SessionModule } from '../session/session.module';
 import { UserResponsesModule } from '../user-responses/user-responses.module';
 import { CategoryDecisionController } from './category-decision.controller';
@@ -7,7 +8,7 @@ import { CategoryDecisionRepository } from './category-decision.repository';
 import { CategoryDecisionService } from './category-decision.service';
 
 @Module({
-  imports: [PrismaModule, SessionModule, UserResponsesModule],
+  imports: [PrismaModule, SessionModule, UserResponsesModule, PriorityGateModule],
   controllers: [CategoryDecisionController],
   providers: [CategoryDecisionService, CategoryDecisionRepository],
 })

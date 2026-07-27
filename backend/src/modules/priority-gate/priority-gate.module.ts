@@ -10,5 +10,6 @@ import { PriorityGateService } from './priority-gate.service';
   imports: [PrismaModule, SessionModule, UserResponsesModule],
   controllers: [PriorityGateController],
   providers: [PriorityGateService, PriorityGateRepository],
+  exports: [PriorityGateService],
 })
 export class PriorityGateModule {}

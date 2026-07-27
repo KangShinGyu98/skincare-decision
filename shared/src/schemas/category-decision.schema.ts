@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { productCategoryItemSchema } from './product-category.schema.js';
 import {
   currentResponseSchema,
+  priorityGatePreviewResultSchema,
   questionAnswerSchema,
   questionAnswerTypeSchema,
 } from './priority-gate.schema.js';
@@ -43,23 +44,9 @@ export const categoryDecisionSectionSchema = z
 
 export type CategoryDecisionSection = z.infer<typeof categoryDecisionSectionSchema>;
 
-const categoryDecisionCtaSchema = z
-  .object({
-    label: z.string().min(1),
-    target: z.string().min(1),
-  })
-  .strict();
-
-export const categoryDecisionPreviewResultSchema = z
-  .object({
-    title: z.string().min(1),
-    description: z.string().min(1),
-    cta: categoryDecisionCtaSchema.nullable(),
-    selectedCategory: productCategoryItemSchema.nullable(),
-    answeredQuestionCount: z.number().int().nonnegative(),
-    totalQuestionCount: z.number().int().nonnegative(),
-  })
-  .strict();
+// 구매 체크리스트 결론 카드는 priority gate 룰 카드를 가공 없이 재사용한다
+// (docs/ContentSpec/purchase_checklist_v1.md §0.2).
+export const categoryDecisionPreviewResultSchema = priorityGatePreviewResultSchema;
 
 export type CategoryDecisionPreviewResult = z.infer<typeof categoryDecisionPreviewResultSchema>;
 
@@ -67,7 +54,7 @@ export const categoryDecisionResponseSchema = z
   .object({
     selectedCategory: productCategoryItemSchema.nullable(),
     sections: z.array(categoryDecisionSectionSchema),
-    previewResults: z.array(categoryDecisionPreviewResultSchema).max(3),
+    previewResults: z.array(categoryDecisionPreviewResultSchema),
   })
   .strict();
 
@@ -96,7 +83,7 @@ export type UpsertCategoryDecisionResponsesRequest = z.infer<
 export const upsertCategoryDecisionResponsesResponseSchema = z
   .object({
     responses: z.record(z.uuid(), categoryDecisionResponseValueSchema),
-    previewResults: z.array(categoryDecisionPreviewResultSchema).max(3),
+    previewResults: z.array(categoryDecisionPreviewResultSchema),
   })
   .strict();
 
