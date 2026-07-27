@@ -2,6 +2,7 @@
 
 import type { QuestionUiSectionDto } from '@skincare-decision/shared/schemas';
 import { useCallback } from 'react';
+import { ErrorPanel } from '@/components/common/ErrorPanel';
 import { PriorityGateQuestionItem } from '@/components/PriorityGateQuestionItem';
 import { PriorityGateResultCard } from '@/components/PriorityGateResultCard';
 import { SectionResetButton } from '@/components/SectionResetButton';
@@ -36,6 +37,21 @@ export default function PriorityGatePage() {
     },
     [resetPriorityGateSection],
   );
+
+  if (isError) {
+    return (
+      <main
+        className="flex h-below-header w-full shrink-0 flex-col items-center justify-center bg-[var(--color-bg-page)] p-6"
+        data-fetch-state="error"
+      >
+        <div className="w-full max-w-[1200px]">
+          <ErrorPanel
+            message={error instanceof Error ? error.message : '질문 데이터를 불러오지 못했습니다.'}
+          />
+        </div>
+      </main>
+    );
+  }
 
   return (
     <TooltipProvider>
@@ -150,11 +166,6 @@ export default function PriorityGatePage() {
             </div>
           </div>
         </div>
-        {isError ? (
-          <p className="shrink-0 text-sm text-[var(--color-error)]">
-            {error instanceof Error ? error.message : '질문 데이터를 불러오지 못했습니다.'}
-          </p>
-        ) : null}
       </main>
     </TooltipProvider>
   );
