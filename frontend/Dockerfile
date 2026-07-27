@@ -16,6 +16,9 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 
 FROM deps AS build
 WORKDIR /repo
+# NEXT_PUBLIC_* 값은 next build 시점에 번들에 하드코딩되므로 build arg 로 주입해야 한다
+ARG NEXT_PUBLIC_API_BASE_URL
+ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
 COPY tsconfig.base.json ./
 COPY shared ./shared
 COPY frontend ./frontend
