@@ -11,7 +11,7 @@ import { authApi } from '@/lib/api';
 import { useAuthMe, useLogout } from '@/lib/hooks';
 
 const NAV_LINK_CLASS =
-  'flex items-center gap-1 text-[var(--color-text-inverse)] underline underline-offset-4 hover:text-[var(--color-primary)]';
+  'flex cursor-pointer items-center gap-1 text-[var(--color-text-inverse)] underline underline-offset-4 hover:text-[var(--color-primary)]';
 
 export default function LoginButton() {
   const pathname = usePathname();
