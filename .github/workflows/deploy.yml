@@ -95,6 +95,9 @@ jobs:
           context: .
           file: ${{ matrix.target.app }}/Dockerfile
           platforms: linux/amd64
+          # 프론트 전용 build arg (백엔드 Dockerfile 은 무시). 클라이언트 번들에 노출되는 공개값이라 secret 아님
+          build-args: |
+            NEXT_PUBLIC_API_BASE_URL=https://gumaejigi.com/api
           push: true
           tags: ${{ env.ECR_REGISTRY }}/${{ matrix.target.ecr_repo }}:${{ github.sha }}
           cache-from: type=gha,scope=${{ matrix.target.app }}
