@@ -1,6 +1,6 @@
 import LoginButton from '@/components/LoginButton';
 import NavMenu from '@/components/NavMenu';
-import { WalletIcon } from '@/components/icons/Icons';
+import Image from 'next/image';
 import Link from 'next/link';
 import { Suspense } from 'react';
 
@@ -11,8 +11,15 @@ export default function SiteHeader() {
       <div className="flex w-full h-full items-center justify-between px-6 max-w-[1200px]">
         <div className="flex gap-8 justify-center items-center">
           <Link className="flex gap-2 items-center cursor-pointer" href="/">
-            <WalletIcon className="size-12 text-white" />
-            <div className="text-white text-[24px]">Logo</div>
+            <Image
+              src="/web-app-manifest-192x192.png"
+              alt="구매지기"
+              width={192}
+              height={192}
+              priority
+              className="size-10 rounded-lg"
+            />
+            <div className="text-white text-[24px] font-bold">구매지기</div>
           </Link>
           <Suspense fallback={null}>
             <NavMenu />

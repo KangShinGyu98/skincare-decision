@@ -51,17 +51,17 @@ export const menuItems: MenuItem[] = [
   {
     id: 'admin',
     label: '관리자',
-    link: '/admin/rules',
+    link: '/admin/questions',
     children: [
-      {
-        id: 'admin-rules',
-        label: 'Rule Check',
-        link: '/admin/rules',
-      },
       {
         id: 'admin-questions',
         label: 'Questions',
         link: '/admin/questions',
+      },
+      {
+        id: 'admin-rules',
+        label: 'Rule Check',
+        link: '/admin/rules',
       },
     ],
   },
