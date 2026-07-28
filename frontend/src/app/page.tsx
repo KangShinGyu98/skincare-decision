@@ -1,6 +1,7 @@
 import { LandingActionCard } from '@/components/LandingActionCard';
 import { RotatingCategoryText } from '@/components/RotatingCategoryText';
 import '../style/landingPageAnimation.css';
+import Image from 'next/image';
 import Link from 'next/link';
 
 export default function Home() {
@@ -48,9 +49,15 @@ export default function Home() {
             <div className="bg-red-300"></div>
           </article>
           <aside className="flex-[5] py-8 pl-8 ">
-            <div className="h-full w-full rounded-l-3xl bg-[var(--color-bg-page)] ">
-              이미지 영역
-            </div>
+            <video
+              className="h-full w-full rounded-l-3xl object-cover"
+              src="/main-demo-web.mp4"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+            />
           </aside>
         </div>
       </section>
@@ -58,7 +65,15 @@ export default function Home() {
       <section className="snap-start flex min-h-below-header w-full items-center justify-center bg-[var(--gray-5)] p-10">
         <div className="flex h-[70vh] w-full max-w-[1200px] translate-y-8 overflow-hidden rounded-3xl bg-[var(--color-bg-component)] shadow-lg">
           <aside className="flex-[5] py-8 pr-8 ">
-            <div className="h-full w-full rounded-r-3xl bg-[var(--gray-5)] ">이미지</div>
+            <div className="relative h-full w-full overflow-hidden rounded-r-3xl">
+              <Image
+                src="/priority-gate-demo-screen.png"
+                alt="루틴 점검 데모 화면"
+                fill
+                sizes="(max-width: 768px) 100vw, 600px"
+                className="object-cover transition-transform duration-500 ease-out hover:scale-110"
+              />
+            </div>
           </aside>
           <article className="flex-[5] pl-8 py-8 ">
             <div className="h-full w-full flex flex-col justify-center pr-28 gap-2">
@@ -113,8 +128,14 @@ export default function Home() {
             </div>
           </article>
           <aside className="flex-[5] py-8 pl-8 ">
-            <div className="h-full w-full rounded-l-3xl bg-[var(--color-bg-page)] ">
-              이미지 영역
+            <div className="relative h-full w-full overflow-hidden rounded-l-3xl">
+              <Image
+                src="/category-decision-demo-screen.png"
+                alt="카테고리 체크리스트 데모 화면"
+                fill
+                sizes="(max-width: 768px) 100vw, 600px"
+                className="object-cover transition-transform duration-500 ease-out hover:scale-110"
+              />
             </div>
           </aside>
         </div>
