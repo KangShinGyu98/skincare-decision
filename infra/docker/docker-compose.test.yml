@@ -13,8 +13,6 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       TZ: ${TZ:-UTC}
     volumes:
-      # postgres:18+ 이미지는 PGDATA를 /var/lib/postgresql/<major>/docker 에 둔다.
-      # 마운트 지점은 /var/lib/postgresql 이어야 하며, /var/lib/postgresql/data 로 마운트하면 기동에 실패한다.
       - skincare_decision_test_postgres_data:/var/lib/postgresql
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
