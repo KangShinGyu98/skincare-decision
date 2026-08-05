@@ -4,11 +4,6 @@ generator client {
   moduleFormat = "cjs"
 }
 
-generator dbml {
-  provider = "prisma-dbml-generator"
-  output   = "../docs/Data/ERD/schema.dbml"
-}
-
 datasource db {
   provider = "postgresql"
 }

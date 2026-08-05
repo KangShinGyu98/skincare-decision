@@ -1,6 +1,6 @@
 # 프로젝트 목적
 
-> **"더 많은 추천이 아닌 더 적은 선택"** — 사용자의 피부·루틴·고민에서 출발해 *지금 사야 하는지*부터 정리하고, 필요할 때만 6개 카테고리(토너·선크림·세럼·립케어·로션크림·클렌저) 안에서 후보를 좁혀
+> **"더 많은 추천이 아닌 더 적은 선택"** — 사용자의 피부·루틴·고민에서 출발해 *지금 사야 하는지*부터 정리하고, 필요할 때만 5개 카테고리(토너·선크림·세럼·로션크림·클렌저) 안에서 후보를 좁혀
 > 보여주는 웹 서비스.
 
 ---
@@ -9,19 +9,21 @@
 
 | 영역             | 스택                                                                         |
 |----------------|----------------------------------------------------------------------------|
-| Backend API    | TypeScript · NestJS · Prisma                                               |
+| Backend API    | TypeScript · NestJS 11 · Prisma 7                                          |
 | Database       | AWS RDS PostgreSQL 16 (products.attributes는 JSONB)                         |
-| Cache          | AWS ElastiCache Redis 7                                                    |
-| Frontend Web   | Next.js App Router · React · TypeScript                                    |
+| Cache          | AWS ElastiCache Redis 7 (ioredis)                                          |
+| Frontend Web   | Next.js 16 App Router · React 19 · TypeScript                              |
 | Rendering      | SSR · SSG · ISR                                                            |
-| Validation     | Zod (FE 입력, BE DTO ↔ Prisma 모델 contract)                                   |
-| 상태 관리          | TanStack Query · Zustand                                                   |
-| UI             | Tailwind CSS · shadcn/ui                                                   |
+| Validation     | Zod 4 (FE 입력, BE DTO ↔ Prisma 모델 contract)                             |
+| 폼             | TanStack Form (+ Zod 검증)                                                 |
+| 서버 상태          | TanStack Query                                                            |
+| 테이블 / DnD      | TanStack Table · dnd-kit (Admin 목록·정렬)                                 |
+| UI             | Tailwind CSS v4 · shadcn/ui · Radix UI · lucide-react · next-themes · sonner |
 | Storage        | AWS S3                                                                     |
 | CDN / Edge     | CloudFront                                                                 |
-| Infra          | Docker · AWS ECS Fargate · ECR · ALB · RDS · ElastiCache · S3 · CloudFront |
+| Infra          | Docker · AWS ECS on EC2 · ECR · ALB · RDS · ElastiCache · S3 · CloudFront  |
 | Domain / HTTPS | Route 53 · ACM                                                             |
-| CI/CD          | GitHub Actions → ECR → ECS Fargate 배포                                      |
+| CI/CD          | GitHub Actions → ECR → ECS 배포                                            |
 
 ---
 

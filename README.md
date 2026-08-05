@@ -7,16 +7,14 @@
 
 ## 프로젝트 설명
 
-| 기능               | 설명                                                                                       |
-| ------------------ | ------------------------------------------------------------------------------------------ |
-| Priority Gate      | 최근 자극·루틴·보유 제품을 점검해 "지금 새 제품을 사도 될 상태"인지 HOLD/CAUTION/PASS 판정 |
-| Concern Mapper     | 고민 키워드(예: 여드름·각질·갈라짐) → 우선순위 게이트 또는 추천 카테고리로 라우팅          |
-| Category Decision  | 카테고리별 핵심 질문만 보여주고 답변을 자동 필터로 변환                                    |
-| Product Matrix     | BASIC + PERSONALIZED + TRACEBACK 필터를 결합해 제품 비교, 가격대 띠 노출                   |
-| Reaction Traceback | 문제 제품 / 괜찮은 제품 비교로 원인 후보 성분군 추적, `avoidance_rules` 자동 생성          |
-| Anonymous Identity | `device_id` 기반 비로그인 → 로그인 시 자동 병합                                            |
+| 기능              | 설명                                                                                       |
+| ----------------- | ------------------------------------------------------------------------------------------ |
+| Priority Gate     | 최근 자극·루틴·보유 제품을 점검해 "지금 새 제품을 사도 될 상태"인지 HOLD/CAUTION/PASS 판정 |
+| Category Decision | 카테고리별 핵심 질문만 보여주고 답변을 구매 판단 체크리스트로 정리                         |
+| 익명 세션 / 인증  | `device_id` 기반 익명 세션으로 시작 → Google 로그인 시 기존 응답 자동 병합                 |
+| Admin 콘솔        | 우선순위 룰·질문을 생성·수정·정렬하는 내부 관리 화면                                       |
 
-대상 카테고리: `toner`, `sunscreen`, `serum`, `lipcare`, `moisturizer`, `cleanser` (6개).
+대상 카테고리: `toner`, `sunscreen`, `serum`, `moisturizer`, `cleanser` (5개).
 
 ---
 
@@ -24,21 +22,22 @@
 
 | 영역           | 스택                                                                       |
 | -------------- | -------------------------------------------------------------------------- |
-| Backend API    | TypeScript · NestJS · Prisma                                               |
+| Backend API    | TypeScript · NestJS 11 · Prisma 7                                          |
 | Database       | AWS RDS PostgreSQL 16 (products.attributes는 JSONB)                        |
-| Cache          | AWS ElastiCache Redis 7                                                    |
-| Frontend Web   | Next.js App Router · React · TypeScript                                    |
-| Rendering      | SSR · SSG · ISR                                                            |
-| Validation     | Zod (FE 입력, BE DTO ↔ Prisma 모델 contract)                               |
-| 상태 관리      | TanStack Query · Zustand                                                   |
-| UI             | Tailwind CSS · shadcn/ui                                                   |
+| Cache          | AWS ElastiCache Redis 7 (ioredis)                                          |
+| Frontend Web   | Next.js 16 App Router · React 19 · TypeScript                             |
+| Validation     | Zod 4 (FE 입력, BE DTO ↔ Prisma 모델 contract)                            |
+| 폼             | TanStack Form (+ Zod 검증)                                                 |
+| 서버 상태       | TanStack Query                                                            |
+| 테이블 / DnD    | TanStack Table · dnd-kit (Admin 목록·정렬)                                 |
+| UI             | Tailwind CSS v4 · shadcn/ui · Radix UI · lucide-react · next-themes · sonner |
 | Storage        | AWS S3                                                                     |
-| CDN / Edge     | CloudFront                                                                 |
-| Infra          | Docker · AWS ECS Fargate · ECR · ALB · RDS · ElastiCache · S3 · CloudFront |
+| Infra          | Docker · AWS ECS on EC2 · ECR · ALB · RDS · ElastiCache                    |
 | Domain / HTTPS | Route 53 · ACM                                                             |
-| CI/CD          | GitHub Actions → ECR → ECS Fargate 배포                                    |
+| CI/CD          | GitHub Actions → ECR → ECS 배포                                            |
 
 상세 디렉터리 매핑 / 레이어 규칙은 [CLAUDE.md](CLAUDE.md) 참조.
+
 
 ---
 
