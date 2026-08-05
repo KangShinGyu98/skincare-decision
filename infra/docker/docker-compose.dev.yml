@@ -2,7 +2,7 @@ name: skincare-decision-dev
 
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:18.4-alpine
     container_name: skincare-decision-dev-postgres
     restart: unless-stopped
     ports:
@@ -13,7 +13,9 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       TZ: ${TZ:-UTC}
     volumes:
-      - skincare_decision_dev_postgres_data:/var/lib/postgresql/data
+      # postgres:18+ 이미지는 PGDATA를 /var/lib/postgresql/<major>/docker 에 둔다.
+      # 마운트 지점은 /var/lib/postgresql 이어야 하며, /var/lib/postgresql/data 로 마운트하면 기동에 실패한다.
+      - skincare_decision_dev_postgres_data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s

@@ -10,7 +10,7 @@
 | 영역             | 스택                                                                         |
 |----------------|----------------------------------------------------------------------------|
 | Backend API    | TypeScript · NestJS 11 · Prisma 7                                          |
-| Database       | AWS RDS PostgreSQL 16 (products.attributes는 JSONB)                         |
+| Database       | AWS RDS PostgreSQL 18.4 (products.attributes는 JSONB)                       |
 | Cache          | AWS ElastiCache Redis 7 (ioredis)                                          |
 | Frontend Web   | Next.js 16 App Router · React 19 · TypeScript                              |
 | Rendering      | SSR · SSG · ISR                                                            |
