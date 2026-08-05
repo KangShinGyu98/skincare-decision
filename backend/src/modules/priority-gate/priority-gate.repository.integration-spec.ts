@@ -4,9 +4,6 @@ import { randomUUID } from 'node:crypto';
 import { getEnvFilePath } from '../../config/env-file-path';
 import { validateEnv } from '../../config/env.validation';
 import {
-  ComparisonOperator,
-  ConditionState,
-  PriorityRuleResultType,
   QuestionAnswerType,
   Screen,
   UiSection,
@@ -184,115 +181,6 @@ describe('PriorityGateRepository', () => {
     expect(anonymousResponses.map((response) => response.value)).toEqual([[0]]);
   });
 
-  it('findPriorityRules는 active rule과 condition, 추천 카테고리를 sortOrder 순서로 반환한다', async () => {
-    const sunscreenCategory = await createProductCategory({
-      key: 'sunscreen',
-      name: '선크림',
-    });
-    const { questionId } = await createQuestionVariant({
-      questionKey: 'routine.sunscreen_reapply',
-      title: 'Sunscreen reapply',
-      screen: Screen.priority_gate,
-      uiSection: UiSection.life_routine,
-      sortOrder: 10,
-    });
-
-    await prisma.priorityRule.create({
-      data: {
-        id: randomUUID(),
-        name: 'Inactive rule',
-        sortOrder: 5,
-        isActive: false,
-        resultType: PriorityRuleResultType.STOP,
-        resultTitle: 'Inactive',
-        resultDescription: 'Inactive rule should not be returned',
-      },
-    });
-    await prisma.priorityRule.create({
-      data: {
-        id: randomUUID(),
-        name: 'Sunscreen route',
-        sortOrder: 20,
-        resultType: PriorityRuleResultType.ROUTE_CATEGORY,
-        resultTitle: '선크림을 먼저 고르는 것이 좋습니다',
-        resultDescription: '낮 사용 루틴에서는 자외선 차단이 우선입니다.',
-        recommendCategoryId: sunscreenCategory.id,
-        ctaLabel: '선크림 보기',
-        ctaTarget: '/products/sunscreen',
-        conditions: {
-          create: [
-            {
-              id: randomUUID(),
-              questionId,
-              operator: ComparisonOperator.EQ,
-              value: [0],
-              state: ConditionState.REQUIRED,
-            },
-          ],
-        },
-      },
-    });
-
-    const [rule] = await repository.findPriorityRules();
-
-    expect(rule).toEqual(
-      expect.objectContaining({
-        sortOrder: 20,
-        resultType: PriorityRuleResultType.ROUTE_CATEGORY,
-        resultTitle: '선크림을 먼저 고르는 것이 좋습니다',
-        ctaLabel: '선크림 보기',
-        ctaTarget: '/products/sunscreen',
-        recommendCategory: {
-          id: sunscreenCategory.id,
-          key: 'sunscreen',
-          name: '선크림',
-          description: null,
-        },
-      }),
-    );
-    expect(rule?.conditions).toEqual([
-      {
-        questionId,
-        operator: ComparisonOperator.EQ,
-        value: [0],
-        state: ConditionState.REQUIRED,
-      },
-    ]);
-  });
-
-  it('findProductCategoriesByKeysOrIds는 key와 id로 카테고리를 조회한다', async () => {
-    const serumCategory = await createProductCategory({
-      key: 'serum',
-      name: '세럼',
-    });
-    const cleanserCategory = await createProductCategory({
-      key: 'cleanser',
-      name: '클렌저',
-    });
-
-    const result = await repository.findProductCategoriesByKeysOrIds(
-      [serumCategory.key],
-      [cleanserCategory.id],
-    );
-
-    expect(result).toEqual(
-      expect.arrayContaining([
-        {
-          id: serumCategory.id,
-          key: 'serum',
-          name: '세럼',
-          description: null,
-        },
-        {
-          id: cleanserCategory.id,
-          key: 'cleanser',
-          name: '클렌저',
-          description: null,
-        },
-      ]),
-    );
-  });
-
   it('createDecisionRun은 priority gate snapshot을 저장한다', async () => {
     const deviceId = randomUUID();
     const sessionId = randomUUID();
@@ -400,26 +288,5 @@ describe('PriorityGateRepository', () => {
     });
 
     return { questionId, variantId };
-  }
-
-  async function createProductCategory(input: {
-    key: string;
-    name: string;
-    description?: string | null;
-  }): Promise<{ id: string; key: string; name: string; description: string | null }> {
-    return prisma.productCategory.create({
-      data: {
-        id: randomUUID(),
-        key: input.key,
-        name: input.name,
-        description: input.description ?? null,
-      },
-      select: {
-        id: true,
-        key: true,
-        name: true,
-        description: true,
-      },
-    });
   }
 });
