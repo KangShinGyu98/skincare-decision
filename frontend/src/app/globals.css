@@ -21,6 +21,12 @@
   min-height: calc(100dvh - var(--header-height));
 }
 
+/* 랜딩 섹션 1장의 높이. below-header보다 4rem 작게 잡아 다음 섹션 상단이 살짝 보이게 하고,
+   그것으로 "아래에 더 있다"는 신호를 준다. 노출량 조절은 이 4rem 하나만 바꾼다. */
+.min-h-section {
+  min-height: calc(100dvh - var(--header-height) - 4rem);
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
