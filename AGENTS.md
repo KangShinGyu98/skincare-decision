@@ -12,74 +12,91 @@ AI 세션 시작 시 읽는 프로젝트 문서 인덱스 파일이다. 파일 �
 | memory/external_apis.md | 외부 API 인터페이스 계약 및 Provider 정보                  |
 | memory/task_plan.md     | 현재 작업의 임시 계획 및 current state (작업 완료 후 삭제) |
 
+## docs/code-conventions/ — 코드 구조 규칙
+
+해당 영역의 코드를 쓰기 전에 먼저 읽는다. 린트로 강제되지 않는 구조 규칙의 유일한 기준 문서다.
+
+| 파일        | 설명                                                                                            |
+| ----------- | ----------------------------------------------------------------------------------------------- |
+| frontend.md | 레이어 의존 방향, shadcn 조합, useQuery/useMutation, queryKey 팩토리, use\*Actions, 네이밍      |
+| backend.md  | `modules/<domain>` co-location, Controller-Service-Repository, Zod 검증, 응답/에러 포맷, 테스트 |
+| shared.md   | 공용 zod 스키마 작성 규칙, 배럴, import 경로, 빌드 순서                                         |
+
 ## docs/Data/ — DB 모델
 
-| 파일                        | 설명                                |
-| --------------------------- | ----------------------------------- |
-| db_modeling.md              | DB 테이블 모델 (Prisma schema 대응) |
-| db_schema_validation.md     | DB 스키마 검증 기록                 |
-| screen_data_specification.md | 화면별 데이터 사양                 |
-| backend_api_list.md         | 화면별 백엔드 API 초안              |
+| 파일                         | 설명                                |
+| ---------------------------- | ----------------------------------- |
+| db_modeling.md               | DB 테이블 모델 (Prisma schema 대응) |
+| db_schema_validation.md      | DB 스키마 검증 기록                 |
+| screen_data_specification.md | 화면별 데이터 사양                  |
+| backend_api_list.md          | 화면별 백엔드 API 초안              |
+| ERD/                         | ERD 다이어그램                      |
 
 ## docs/ContentSpec/ — 콘텐츠·룰 명세
 
-| 파일                            | 설명                                                              |
-| ------------------------------- | ----------------------------------------------------------------- |
-| product_attribute_schema.md     | `products.attributes` JSONB 키 사전 (카테고리별)                  |
-| matching_rules_revised.md       | Priority Gate / Question visibility / Filter mapping 룰 시드      |
-| page_content_specification.md   | 화면별 카피·질문·CTA·동적 슬롯                                    |
-| wireframe_summary.md            | 와이어프레임 흐름 요약                                            |
-| product_taxonomy.md             | MVP 6개 카테고리 정의                                             |
-| skincare_product_selection_rule.md | 카테고리별 선택 기준 원자료                                    |
-| admin_product_input_spec.md     | 관리자 제품 등록 폼 명세 (필드 + S3 업로드 + 자동 판정)           |
+| 파일                          | 설명                            |
+| ----------------------------- | ------------------------------- |
+| page_content_specification.md | 화면별 카피·질문·CTA·동적 슬롯  |
+| wireframe_summary.md          | 와이어프레임 흐름 요약          |
+| product_taxonomy.md           | MVP 카테고리 정의               |
+| purchase_checklist_v1.md      | 구매 체크리스트 명세            |
+| skincare_ruleset_v10~v12.md   | Priority Gate 룰셋 (v12가 최신) |
 
 ## docs/DocumentIngredients/ — 성분
 
-| 파일                          | 설명                            |
-| ----------------------------- | ------------------------------- |
+| 파일                            | 설명                          |
+| ------------------------------- | ----------------------------- |
 | skincare_rules_from_articles.md | 아티클에서 추출한 스킨케어 룰 |
 
 ## docs/Rejected/ — 보류 / 참고 자료
 
-| 파일                            | 설명                                                       |
-| ------------------------------- | ---------------------------------------------------------- |
-| data_source_catalog.md          | 외부 데이터 출처 카탈로그 (Naver / 식약처 / AIHub / 브랜드) |
-| ingredient_efficacy_thresholds.md | 성분 유효 농도 기준 (식약처 별표4 기반 시드)             |
-| product_scope_and_limits.md     | 제품 범위·제외 항목                                        |
+| 파일                               | 설명                                                         |
+| ---------------------------------- | ------------------------------------------------------------ |
+| data_source_catalog.md             | 외부 데이터 출처 카탈로그 (Naver / 식약처 / AIHub / 브랜드)  |
+| ingredient_efficacy_thresholds.md  | 성분 유효 농도 기준 (식약처 별표4 기반 시드)                 |
+| product_scope_and_limits.md        | 제품 범위·제외 항목                                          |
+| product_attribute_schema.md        | `products.attributes` JSONB 키 사전 (카테고리별)             |
+| matching_rules_revised.md          | Priority Gate / Question visibility / Filter mapping 룰 시드 |
+| skincare_product_selection_rule.md | 카테고리별 선택 기준 원자료                                  |
+| admin_product_input_spec.md        | 관리자 제품 등록 폼 명세                                     |
 
 ## docs/Codex_Research/ — 배경 조사
 
-| 폴더               | 설명                                            |
-| ------------------ | ----------------------------------------------- |
-| `00~23` `*.md`     | 시장·UX·결정 여정 조사 (00 인덱스부터 순서대로) |
+| 폴더           | 설명                                            |
+| -------------- | ----------------------------------------------- |
+| `00~23` `*.md` | 시장·UX·결정 여정 조사 (00 인덱스부터 순서대로) |
 
 ## design_system/ — 디자인 / UI 참고
 
-| 파일 / 폴더         | 설명                      |
-| ------------------- | ------------------------- |
-| colors_and_type.css | 색상·타이포 CSS 토큰      |
-| preview/            | 디자인 토큰 HTML 프리뷰   |
-| ui_kits/webapp/     | 웹앱 UI 킷 목업           |
+| 파일 / 폴더         | 설명                    |
+| ------------------- | ----------------------- |
+| colors_and_type.css | 색상·타이포 CSS 토큰    |
+| preview/            | 디자인 토큰 HTML 프리뷰 |
+| ui_kits/webapp/     | 웹앱 UI 킷 목업         |
 
 ## scripts/ — Python 유틸 (크롤링 산출물)
 
-| 파일                       | 설명                       |
-| -------------------------- | -------------------------- |
-| crawl_articles.py          | 아티클 본문 크롤러         |
-| crawl_titles.py            | 아티클 제목 크롤러         |
-| organize_articles.py       | 크롤링 결과 정리           |
-| find_api.py / find_api2.py | 외부 API 탐색 스크립트     |
+| 파일                       | 설명                   |
+| -------------------------- | ---------------------- |
+| crawl_articles.py          | 아티클 본문 크롤러     |
+| crawl_titles.py            | 아티클 제목 크롤러     |
+| organize_articles.py       | 크롤링 결과 정리       |
+| find_api.py / find_api2.py | 외부 API 탐색 스크립트 |
 
 ## Assets/ — 이미지
 
-| 폴더    | 설명                       |
-| ------- | -------------------------- |
+| 폴더    | 설명                        |
+| ------- | --------------------------- |
 | Assets/ | 와이어프레임/UX 참고 이미지 |
 
-## 구현 코드 (예정)
+## 구현 코드
 
-| 폴더      | 설명                              |
-| --------- | --------------------------------- |
-| backend/  | NestJS + Prisma 앱 (재구축 예정)  |
-| frontend/ | Next.js App Router 앱 (예정)      |
-| infra/    | Docker / IaC / GitHub Actions (예정) |
+코드를 쓰기 전에 위 `docs/code-conventions/` 의 해당 영역 문서를 읽는다.
+
+| 폴더      | 설명                                                                             |
+| --------- | -------------------------------------------------------------------------------- |
+| backend/  | NestJS 11 + Prisma 7 API (`src/modules/` 도메인 단위, `src/common/` 횡단 관심사) |
+| frontend/ | Next.js 16 App Router 앱 (`src/lib/{api,hooks}.ts` + `src/components/shadcn/`)   |
+| shared/   | FE/BE 공용 zod 스키마·DTO 타입 (`@skincare-decision/shared/schemas`)             |
+| infra/    | Docker Compose / ECS 배포 리소스                                                 |
+| .github/  | GitHub Actions 워크플로                                                          |

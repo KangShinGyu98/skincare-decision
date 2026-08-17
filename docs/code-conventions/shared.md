@@ -53,13 +53,13 @@ export type ProductCategoryItemDto = z.infer<typeof productCategoryItemSchema>;
 
 ### 네이밍
 
-| 대상 | 스키마 | 타입 |
-|---|---|---|
-| 요청 body | `<action>BodySchema` | `<Action>BodyDto` / `<Action>Request` |
-| 쿼리스트링 | `<action>QuerySchema` | `<Action>Query` |
-| path param | `<action>ParamSchema` | `<Action>Param` |
-| 응답 | `<action>ResponseSchema` | `<Action>ResponseDto` / `<Action>Response` |
-| 값 객체 | `<noun>Schema` | `<Noun>Dto` |
+| 대상       | 스키마                   | 타입                                       |
+| ---------- | ------------------------ | ------------------------------------------ |
+| 요청 body  | `<action>BodySchema`     | `<Action>BodyDto` / `<Action>Request`      |
+| 쿼리스트링 | `<action>QuerySchema`    | `<Action>Query`                            |
+| path param | `<action>ParamSchema`    | `<Action>Param`                            |
+| 응답       | `<action>ResponseSchema` | `<Action>ResponseDto` / `<Action>Response` |
+| 값 객체    | `<noun>Schema`           | `<Noun>Dto`                                |
 
 ---
 

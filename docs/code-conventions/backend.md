@@ -31,11 +31,11 @@ backend/src/
 
 파일명과 클래스명은 1:1로 대응한다.
 
-| 파일 | 클래스 |
-|---|---|
-| `product-categories.controller.ts` | `ProductCategoriesController` |
+| 파일                                    | 클래스                            |
+| --------------------------------------- | --------------------------------- |
+| `product-categories.controller.ts`      | `ProductCategoriesController`     |
 | `landing-concern-selections.service.ts` | `LandingConcernSelectionsService` |
-| `priority-gate.module.ts` | `PriorityGateModule` |
+| `priority-gate.module.ts`               | `PriorityGateModule`              |
 
 ---
 
@@ -68,7 +68,11 @@ export class ProductCategoriesService {
   async findAll(): Promise<ProductCategoriesResponseDto> {
     const categories = await this.repository.findAll();
 
-    return { items: categories.map((category) => ({ /* ... */ })) };
+    return {
+      items: categories.map((category) => ({
+        /* ... */
+      })),
+    };
   }
 }
 ```
@@ -78,14 +82,19 @@ export class ProductCategoriesService {
 ```ts
 import { PrismaService } from 'src/prisma/prisma.service';
 
-export type ProductCategoryRepositoryItem = { id: string; key: string; /* ... */ };
+export type ProductCategoryRepositoryItem = { id: string; key: string /* ... */ };
 
 @Injectable()
 export class ProductCategoriesRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll(): Promise<ProductCategoryRepositoryItem[]> {
-    return this.prisma.productCategory.findMany({ where: { deletedAt: null }, select: { /* ... */ } });
+    return this.prisma.productCategory.findMany({
+      where: { deletedAt: null },
+      select: {
+        /* ... */
+      },
+    });
   }
 }
 ```
@@ -146,7 +155,11 @@ async selectChecklist(
 throw new BadRequestException({
   code: 'VALIDATION_ERROR',
   message: 'Invalid request input',
-  details: result.error.issues.map((issue) => ({ path: issue.path.join('.'), code: issue.code, message: issue.message })),
+  details: result.error.issues.map((issue) => ({
+    path: issue.path.join('.'),
+    code: issue.code,
+    message: issue.message,
+  })),
 });
 ```
 
@@ -223,11 +236,11 @@ const { deviceId, sessionId, user } = request.context;
 
 - 테스트는 **대상 파일 옆에 co-locate** 한다. `backend/tests/` 같은 별도 폴더는 만들지 않는다(e2e만 `backend/test/`).
 
-| 종류 | 파일명 | 대상 | 실행 |
-|---|---|---|---|
-| 단위 | `*.spec.ts` | service / controller / repository (mock 기반) | `pnpm --filter backend test:unit` |
-| 통합 | `*.integration-spec.ts` | repository (실제 테스트 DB) | `pnpm --filter backend test:integration` (`--runInBand`) |
-| e2e | `test/*.e2e-spec.ts` | 앱 전체 | `pnpm --filter backend test:e2e` |
+| 종류 | 파일명                  | 대상                                          | 실행                                                     |
+| ---- | ----------------------- | --------------------------------------------- | -------------------------------------------------------- |
+| 단위 | `*.spec.ts`             | service / controller / repository (mock 기반) | `pnpm --filter backend test:unit`                        |
+| 통합 | `*.integration-spec.ts` | repository (실제 테스트 DB)                   | `pnpm --filter backend test:integration` (`--runInBand`) |
+| e2e  | `test/*.e2e-spec.ts`    | 앱 전체                                       | `pnpm --filter backend test:e2e`                         |
 
 - **테스트 설명(`describe`/`it`)은 한국어로 쓴다.** 예: `'findAll은 repository.findAll 결과를 응답 DTO 형태로 반환한다'`.
 - 단위 테스트는 `Test.createTestingModule` + `useValue` mock, mock 타입은 `jest.Mocked<Pick<Repo, 'findAll'>>` 로 필요한 메서드만 좁힌다.
@@ -270,11 +283,11 @@ describe('ProductCategoriesService', () => {
 
 ## 알려진 예외 (새 코드에서 따라 하지 말 것)
 
-| 항목 | 현상 |
-|---|---|
-| `session.service.ts`, `session-event.service.ts`, `user-responses.service.ts` | repository 없이 Prisma를 직접 쓴다. repository 파일 자체가 없는 인프라성 서비스라 남아 있는 형태이며, **도메인 모듈은 예외 없이 repository를 경유한다.** |
-| `modules/landing/` | 파일은 `landing-concern-selections.*` 인데 모듈만 `landing.module.ts` / `LandingModule` 로 축약되어 있다. |
-| `main.ts` 의 전역 `ValidationPipe` | class-validator DTO가 코드에 하나도 없는 잔존 설정이다. 검증은 Zod 데코레이터로만 한다. |
-| `modules/cats/` | 초기 레퍼런스용 샘플 모듈이다. 실제 도메인 규칙의 근거로 삼지 않는다. |
-| `CLAUDE.md` 의 레이어 표기 | `Utils(app/lib) → Types(models) → … → Runtime(controllers)` 서술과 `backend/app/services/…`·`backend/tests/…` 예시 경로는 실제 구조와 다르다. 실제 기준은 이 문서다. |
-| import 경로 | 상대경로(`../../prisma/prisma.service`)와 `src/` alias가 혼재한다. **아직 통일 규칙이 정해지지 않았다** — 새 파일은 같은 폴더의 기존 스타일을 따르고, 통일이 필요하면 별도 결정으로 다룬다. |
+| 항목                                                                          | 현상                                                                                                                                                                                        |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `session.service.ts`, `session-event.service.ts`, `user-responses.service.ts` | repository 없이 Prisma를 직접 쓴다. repository 파일 자체가 없는 인프라성 서비스라 남아 있는 형태이며, **도메인 모듈은 예외 없이 repository를 경유한다.**                                    |
+| `modules/landing/`                                                            | 파일은 `landing-concern-selections.*` 인데 모듈만 `landing.module.ts` / `LandingModule` 로 축약되어 있다.                                                                                   |
+| `main.ts` 의 전역 `ValidationPipe`                                            | class-validator DTO가 코드에 하나도 없는 잔존 설정이다. 검증은 Zod 데코레이터로만 한다.                                                                                                     |
+| `modules/cats/`                                                               | 초기 레퍼런스용 샘플 모듈이다. 실제 도메인 규칙의 근거로 삼지 않는다.                                                                                                                       |
+| `CLAUDE.md` 의 레이어 표기                                                    | `Utils(app/lib) → Types(models) → … → Runtime(controllers)` 서술과 `backend/app/services/…`·`backend/tests/…` 예시 경로는 실제 구조와 다르다. 실제 기준은 이 문서다.                        |
+| import 경로                                                                   | 상대경로(`../../prisma/prisma.service`)와 `src/` alias가 혼재한다. **아직 통일 규칙이 정해지지 않았다** — 새 파일은 같은 폴더의 기존 스타일을 따르고, 통일이 필요하면 별도 결정으로 다룬다. |

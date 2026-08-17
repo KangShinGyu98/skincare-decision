@@ -143,14 +143,14 @@ export const queryKeys = {
 
 파사드의 불변 조건:
 
-| 항목 | 규칙 |
-|---|---|
-| 반환 형태 | `{ error, isPending, ...액션들 }` 단일 객체 |
-| `error` | 하위 mutation의 error를 `??` 체인으로 병합 |
-| `isPending` | 하위 mutation의 isPending을 `\|\|` 로 병합 |
-| 액션 함수 | 전부 `useCallback` |
-| 반환 키 순서 | 알파벳 순 |
-| 노출 범위 | 컴포넌트는 개별 mutation 훅을 보지 못한다 |
+| 항목         | 규칙                                        |
+| ------------ | ------------------------------------------- |
+| 반환 형태    | `{ error, isPending, ...액션들 }` 단일 객체 |
+| `error`      | 하위 mutation의 error를 `??` 체인으로 병합  |
+| `isPending`  | 하위 mutation의 isPending을 `\|\|` 로 병합  |
+| 액션 함수    | 전부 `useCallback`                          |
+| 반환 키 순서 | 알파벳 순                                   |
+| 노출 범위    | 컴포넌트는 개별 mutation 훅을 보지 못한다   |
 
 `frontend/src/lib/hooks.ts:270-290`
 
@@ -272,15 +272,15 @@ type AdminRuleDialogFormApi = ReturnType<typeof useAdminRuleDialogForm>;
 
 ## 8. 네이밍
 
-| 대상 | 규칙 | 예 |
-|---|---|---|
-| 라우트 폴더 | kebab-case | `app/priority-gate/`, `app/category-decision/` |
-| Next 파일 | 소문자 고정 | `page.tsx`, `layout.tsx`, `route.ts`, `providers.tsx` |
-| 도메인 컴포넌트 | PascalCase 파일 = PascalCase named export (1 파일 1 컴포넌트 계열) | `PriorityGateResultCard.tsx` |
-| shadcn 프리미티브 | kebab-case | `alert-dialog.tsx`, `radio-group.tsx` |
-| 그룹 폴더 | 소문자, 도메인(`admin/rules`) 또는 역할(`common`, `icons`, `shadcn`) | — |
-| 팩토리 파일 | export 이름과 동일 (camelCase) | `createAdminRuleColumns.tsx` |
-| 훅 | `use<Domain><Verb>` / 파사드는 `use<Domain>Actions` | `useUpdateAdminRuleStatus` |
+| 대상              | 규칙                                                                 | 예                                                    |
+| ----------------- | -------------------------------------------------------------------- | ----------------------------------------------------- |
+| 라우트 폴더       | kebab-case                                                           | `app/priority-gate/`, `app/category-decision/`        |
+| Next 파일         | 소문자 고정                                                          | `page.tsx`, `layout.tsx`, `route.ts`, `providers.tsx` |
+| 도메인 컴포넌트   | PascalCase 파일 = PascalCase named export (1 파일 1 컴포넌트 계열)   | `PriorityGateResultCard.tsx`                          |
+| shadcn 프리미티브 | kebab-case                                                           | `alert-dialog.tsx`, `radio-group.tsx`                 |
+| 그룹 폴더         | 소문자, 도메인(`admin/rules`) 또는 역할(`common`, `icons`, `shadcn`) | —                                                     |
+| 팩토리 파일       | export 이름과 동일 (camelCase)                                       | `createAdminRuleColumns.tsx`                          |
+| 훅                | `use<Domain><Verb>` / 파사드는 `use<Domain>Actions`                  | `useUpdateAdminRuleStatus`                            |
 
 - `app/` 안의 `page.tsx` 만 default export. 그 외에는 **named export만** 쓴다.
 - **배럴 파일 금지.** `frontend/src` 에 `index.ts` 는 0개다. 모든 import는 `@/*` 절대 경로(`frontend/tsconfig.json` paths)로 쓰고, 상대 경로는 `lib/` 내부(`./api`)에서만 쓴다.
@@ -302,10 +302,10 @@ type AdminRuleDialogFormApi = ReturnType<typeof useAdminRuleDialogForm>;
 
 ## 알려진 예외 (새 코드에서 따라 하지 말 것)
 
-| 항목 | 현상 |
-|---|---|
-| `frontend/src/components.json` | 패키지 루트가 아니라 `src/` 에 있고, `ui` alias(`@/components/ui`)와 css 경로(`src/styles/globals.css`)가 **실존하지 않는 경로**를 가리킨다. 실제는 `@/components/shadcn/*` 과 `src/app/globals.css` 다. |
-| `components/shadcn/bedge.tsx`, `seperator.tsx` | 오타 파일명이 실제로 import되고 있다. 새로 추가하는 프리미티브는 정확한 철자를 쓴다. |
-| `components/shadcn/Table.tsx` | 이 폴더에서 유일한 PascalCase 파일. 신규 프리미티브는 kebab-case. |
-| `CLAUDE.md` 의 `Runtime(store)` 레이어 | Zustand는 설치되어 있지 않고 store 구현도 없다. 서버 상태는 TanStack Query 캐시가 사실상의 store다. |
-| `lib/api.ts` 의 `sleep` | 로딩 UI 확인용 인위적 지연이 3곳(`api.ts:357`, `:452`, `:546`)에 남아 있다. 새 API에 넣지 않는다. |
+| 항목                                           | 현상                                                                                                                                                                                                     |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `frontend/src/components.json`                 | 패키지 루트가 아니라 `src/` 에 있고, `ui` alias(`@/components/ui`)와 css 경로(`src/styles/globals.css`)가 **실존하지 않는 경로**를 가리킨다. 실제는 `@/components/shadcn/*` 과 `src/app/globals.css` 다. |
+| `components/shadcn/bedge.tsx`, `seperator.tsx` | 오타 파일명이 실제로 import되고 있다. 새로 추가하는 프리미티브는 정확한 철자를 쓴다.                                                                                                                     |
+| `components/shadcn/Table.tsx`                  | 이 폴더에서 유일한 PascalCase 파일. 신규 프리미티브는 kebab-case.                                                                                                                                        |
+| `CLAUDE.md` 의 `Runtime(store)` 레이어         | Zustand는 설치되어 있지 않고 store 구현도 없다. 서버 상태는 TanStack Query 캐시가 사실상의 store다.                                                                                                      |
+| `lib/api.ts` 의 `sleep`                        | 로딩 UI 확인용 인위적 지연이 3곳(`api.ts:357`, `:452`, `:546`)에 남아 있다. 새 API에 넣지 않는다.                                                                                                        |
