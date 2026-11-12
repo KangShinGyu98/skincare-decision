@@ -63,7 +63,10 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
     consumer
       .apply(RequestContextMiddleware, DeviceSessionMiddleware)
-      .exclude({ path: 'health', method: RequestMethod.GET })
+      .exclude(
+        { path: 'health', method: RequestMethod.GET },
+        { path: 'health/db', method: RequestMethod.GET },
+      )
       .forRoutes('{*splat}');
   }
 }
