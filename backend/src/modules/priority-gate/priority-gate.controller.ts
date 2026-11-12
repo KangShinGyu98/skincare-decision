@@ -10,9 +10,9 @@ import {
   resetPriorityGateResponsesRequestSchema,
   upsertPriorityGateResponsesRequestSchema,
 } from '@skincare-decision/shared/schemas';
-import type { RequestWithContext } from 'src/common/types/express-request.type';
+import type { RequestWithContext } from '../../common/types/express-request.type';
 import { PriorityGateService } from './priority-gate.service';
-import { ZodBody, ZodQuery } from 'src/common/decorators/zod-body.decorator';
+import { ZodBody, ZodQuery } from '../../common/decorators/zod-body.decorator';
 import { SessionEventService } from '../session/session-event.service';
 
 @Public()

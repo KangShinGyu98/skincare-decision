@@ -1,7 +1,7 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Response, NextFunction } from 'express';
-import { Env } from 'src/config/env.validation';
+import { Env } from '../../config/env.validation';
 import { validate as isUuid, v7 as uuidv7 } from 'uuid';
 import { RequestContext } from '../types/request-context.type';
 import { MaybeRequestWithContext } from '../types/express-request.type';

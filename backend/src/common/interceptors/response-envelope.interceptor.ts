@@ -2,7 +2,7 @@ import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nes
 import type { Observable } from 'rxjs';
 import { map } from 'rxjs';
 import type { RequestWithContext } from '../types/express-request.type';
-import { isHealthCheckRequest } from 'src/common/http/is-healthcheck-request';
+import { isHealthCheckRequest } from '../http/is-healthcheck-request';
 
 type ResponseEnvelope<T> = {
   success: true;

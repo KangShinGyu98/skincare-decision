@@ -7,7 +7,7 @@ import {
   type CreateCatBodyDto,
   type ListCatsQueryDto,
 } from '@skincare-decision/shared/schemas';
-import { ZodBody, ZodParam, ZodQuery } from 'src/common/decorators/zod-body.decorator';
+import { ZodBody, ZodParam, ZodQuery } from '../../common/decorators/zod-body.decorator';
 
 @Controller('cats')
 export class CatsController {
