@@ -28,6 +28,7 @@ Redis 는 세션 저장 한 가지 용도로만 쓰고 있었다(`get` / `set EX
 5. **Supabase 무료 플랜의 비활성 일시정지는 Vercel Cron 으로 막는다.** `GET /api/health/db` 가 `SELECT 1` 을 보내고, cron 이 하루 3번 호출한다(Hobby 플랜은 cron 하나당 하루 1번이라 3개를 둔다).
 6. **DNS 는 Cloudflare** 로 옮긴다(Route 53 호스팅존 제거, 도메인 등록은 유지).
 7. Vercel 의 NestJS 런타임은 tsconfig path alias(`src/...`)를 해석하지 못하는 문제가 보고되어 있어, 배포되는 코드의 import 는 상대 경로로 쓴다. 테스트 파일은 예외다.
+8. Vercel 의 Node 런타임은 CommonJS 코드가 ESM 전용 패키지를 `require` 하는 것을 막는다(`--no-experimental-require-module`). 백엔드는 CommonJS 로 컴파일되므로, 백엔드가 불러오는 패키지는 CommonJS 로 불러올 수 있어야 한다. 그래서 `uuid` 는 11 버전대를 쓰고(12 부터 ESM 전용), `shared` 는 CommonJS 로 빌드한다(`"type": "module"` 을 두지 않는다).
 
 ## Consequences
 
@@ -37,6 +38,7 @@ Redis 는 세션 저장 한 가지 용도로만 쓰고 있었다(`get` / `set EX
 - 프론트와 API 가 cross-origin 이 된다. 기존 CORS 설정(`CORS_ORIGIN`, credentials 허용)으로 동작하고, JSON 요청에는 preflight(OPTIONS)가 붙는다.
 - `*.vercel.app` 주소끼리는 cross-site 라 세션 쿠키가 실리지 않는다. 세션·로그인 확인은 `gumaejigi.com` 의 서브도메인을 연결한 뒤에만 할 수 있다.
 - 오래 쉬었다가 들어오는 첫 요청은 Function cold start 만큼 느리다.
+- 백엔드 의존성을 올릴 때 ESM 전용으로 바뀐 버전은 쓸 수 없다. 로컬(Node 22)에서는 문제없이 뜨므로 `node --no-experimental-require-module dist/main.js` 로 띄워 확인한다.
 - 만료된 세션 row 는 자동으로 지워지지 않는다. 지금도 익명 세션마다 row 가 생기므로 증가 속도는 같지만, Supabase 무료 플랜의 DB 용량(500MB)을 기준으로 정리 정책이 필요해질 수 있다.
 - Vercel Hobby 플랜은 비상업용이다. 수익화 시점에 유료 전환을 다시 검토한다.
 - CI/CD 는 Vercel Git 연동으로 바뀐다. GitHub Actions ECS 배포 workflow 와 Redis 용 compose 는 삭제했다.
