@@ -60,7 +60,7 @@ skincare-decision/
 ├── scripts/                # 룰 추출용 크롤링/유틸 Python 스크립트
 ├── backend/                # NestJS 앱 (docs 기준 재구축 예정)
 ├── frontend/               # Next.js App Router 앱 (예정)
-└── infra/                  # Docker / IaC / GitHub Actions (예정)
+└── infra/                  # 로컬 개발·테스트용 Docker Compose
 ```
 
 ---
@@ -88,7 +88,7 @@ skincare-decision/
 | `scripts/`       | 룰 추출용 크롤링/유틸 Python 스크립트               | 영구      |
 | `backend/`       | NestJS 앱 (docs 기준 재구축 예정)                   | 영구      |
 | `frontend/`      | Next.js App Router 앱 (예정)                        | 영구      |
-| `infra/`         | Docker / IaC / GitHub Actions (예정)                | 영구      |
+| `infra/`         | 로컬 개발·테스트용 Docker Compose                    | 영구      |
 
 ---
 
