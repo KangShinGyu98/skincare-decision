@@ -15,4 +15,13 @@ export class AppController {
       ok: true,
     };
   }
+
+  @Get('health/db')
+  async healthDb() {
+    await this.appService.pingDatabase();
+
+    return {
+      ok: true,
+    };
+  }
 }

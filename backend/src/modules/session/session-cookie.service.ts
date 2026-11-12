@@ -7,7 +7,7 @@ import type { RequestWithContext } from '../../common/types/express-request.type
 
 /**
  * skincare_session_id 쿠키 발급/삭제/조회를 캡슐화한다.
- * ADR-0004 세션 정책(Redis opaque session)에 따라 로그인 경로(임시 로그인, Google OAuth 등)가
+ * ADR-0004/ADR-0008 세션 정책(opaque session)에 따라 로그인 경로(임시 로그인, Google OAuth 등)가
  * 공통으로 재사용하는 세션 쿠키 로직을 한 곳에 모은다.
  */
 @Injectable()

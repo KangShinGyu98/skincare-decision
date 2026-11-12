@@ -3,5 +3,5 @@ export function isHealthCheckRequest(path: string | undefined): boolean {
     return false;
   }
 
-  return path === '/api/health' || path.startsWith('/api/health?');
+  return /^\/api\/health(\/db)?(\?|$)/.test(path);
 }

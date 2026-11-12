@@ -5,7 +5,6 @@ import { v7 as uuidv7 } from 'uuid';
 import type { UserRole } from '../../common/types/auth.type';
 import type { Env } from '../../config/env.validation';
 import { PrismaService } from '../../prisma/prisma.service';
-import { RedisService } from '../redis/redis.service';
 
 export type StoredSession = {
   userSessionId: string;
@@ -13,8 +12,6 @@ export type StoredSession = {
   userId?: string;
   roles?: UserRole[];
   email?: string;
-  createdAt: string;
-  lastSeenAt: string;
 };
 
 export type EnsureDeviceSessionInput = {
@@ -43,13 +40,16 @@ export type RotateToAuthenticatedSessionResult = {
   sessionId: string;
 };
 
+/**
+ * ADR-0008: opaque session 의 저장소는 Postgres `user_sessions` 다.
+ * cookie 의 token 은 `sha256(token)` 으로만 저장하고(`token_hash`), 수명은 `expires_at` 로 관리한다.
+ */
 @Injectable()
 export class SessionService {
   private readonly sessionTtlSeconds: number;
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly redis: RedisService,
     configService: ConfigService<Env, true>,
   ) {
     this.sessionTtlSeconds = configService.get('SESSION_COOKIE_MAX_AGE_SECONDS', { infer: true });
@@ -58,16 +58,11 @@ export class SessionService {
   async ensureDeviceSession(input: EnsureDeviceSessionInput): Promise<EnsureDeviceSessionResult> {
     await this.ensureDevice(input.deviceId);
 
-    const storedSession = await this.getStoredSessionByToken(input.sessionToken);
+    const sessionId = await this.extendActiveSession(input.sessionToken, input.deviceId);
 
-    if (storedSession && storedSession.deviceId === input.deviceId) {
-      await this.storeSession(input.sessionToken, {
-        ...storedSession,
-        lastSeenAt: new Date().toISOString(),
-      });
-
+    if (sessionId) {
       return {
-        sessionId: storedSession.userSessionId,
+        sessionId,
       };
     }
 
@@ -83,7 +78,6 @@ export class SessionService {
 
     await this.ensureDevice(input.deviceId, input.userId);
 
-    const now = new Date();
     const sessionId = uuidv7();
 
     await this.prisma.userSession.create({
@@ -93,18 +87,10 @@ export class SessionService {
         userId: input.userId,
         entryPath: this.truncate(input.entryPath, 255),
         referrer: input.referrer ?? null,
-        loggedInAt: now,
+        loggedInAt: new Date(),
+        tokenHash: this.hashSessionToken(input.newSessionToken),
+        expiresAt: this.nextExpiresAt(),
       },
-    });
-
-    await this.storeSession(input.newSessionToken, {
-      userSessionId: sessionId,
-      deviceId: input.deviceId,
-      userId: input.userId,
-      roles: input.roles,
-      email: input.email,
-      createdAt: now.toISOString(),
-      lastSeenAt: now.toISOString(),
     });
 
     return {
@@ -113,31 +99,91 @@ export class SessionService {
   }
 
   async getStoredSessionByToken(sessionToken: string): Promise<StoredSession | undefined> {
-    const raw = await this.redis.get(this.sessionRedisKey(sessionToken));
+    const row = await this.prisma.userSession.findUnique({
+      where: {
+        tokenHash: this.hashSessionToken(sessionToken),
+      },
+      select: {
+        id: true,
+        deviceId: true,
+        userId: true,
+        expiresAt: true,
+        deletedAt: true,
+        user: {
+          select: {
+            email: true,
+            role: true,
+          },
+        },
+      },
+    });
 
-    if (!raw) {
+    if (!row || row.deletedAt || !row.expiresAt || row.expiresAt <= new Date()) {
       return undefined;
     }
 
-    try {
-      return this.parseStoredSession(JSON.parse(raw) as unknown);
-    } catch {
-      return undefined;
+    const storedSession: StoredSession = {
+      userSessionId: row.id,
+      deviceId: row.deviceId,
+    };
+
+    if (row.userId && row.user) {
+      storedSession.userId = row.userId;
+      storedSession.email = row.user.email;
+      storedSession.roles = [row.user.role];
     }
+
+    return storedSession;
   }
 
+  /** token 을 row 에서 떼어 내 무효화한다. row 자체는 분석/이력용으로 남긴다. */
   async deleteSessionByToken(sessionToken: string): Promise<void> {
-    await this.redis.delete(this.sessionRedisKey(sessionToken));
+    await this.prisma.userSession.updateMany({
+      where: {
+        tokenHash: this.hashSessionToken(sessionToken),
+      },
+      data: {
+        tokenHash: null,
+        expiresAt: new Date(),
+      },
+    });
   }
 
   getSessionTtlSeconds(): number {
     return this.sessionTtlSeconds;
   }
 
+  /** 유효한 session 이면 만료 시각을 sliding 연장하고 id 를 돌려준다. 조회와 연장을 쿼리 1번으로 처리한다. */
+  private async extendActiveSession(
+    sessionToken: string,
+    deviceId: string,
+  ): Promise<string | undefined> {
+    const rows = await this.prisma.userSession.updateManyAndReturn({
+      where: {
+        tokenHash: this.hashSessionToken(sessionToken),
+        deviceId,
+        deletedAt: null,
+        expiresAt: {
+          gt: new Date(),
+        },
+      },
+      data: {
+        expiresAt: this.nextExpiresAt(),
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    return rows[0]?.id;
+  }
+
   private async createAnonymousSession(
     input: EnsureDeviceSessionInput,
   ): Promise<EnsureDeviceSessionResult> {
-    const now = new Date();
+    // 만료됐거나 다른 device 에 묶인 row 가 같은 token 을 쥐고 있으면 unique 제약에 걸리므로 먼저 떼어 낸다.
+    await this.deleteSessionByToken(input.sessionToken);
+
     const sessionId = uuidv7();
 
     await this.prisma.userSession.create({
@@ -146,14 +192,9 @@ export class SessionService {
         deviceId: input.deviceId,
         entryPath: this.truncate(input.entryPath, 255),
         referrer: input.referrer ?? null,
+        tokenHash: this.hashSessionToken(input.sessionToken),
+        expiresAt: this.nextExpiresAt(),
       },
-    });
-
-    await this.storeSession(input.sessionToken, {
-      userSessionId: sessionId,
-      deviceId: input.deviceId,
-      createdAt: now.toISOString(),
-      lastSeenAt: now.toISOString(),
     });
 
     return {
@@ -180,81 +221,12 @@ export class SessionService {
     });
   }
 
-  private async storeSession(sessionToken: string, session: StoredSession): Promise<void> {
-    await this.redis.setJson(this.sessionRedisKey(sessionToken), session, this.sessionTtlSeconds);
-  }
-
-  private sessionRedisKey(sessionToken: string): string {
-    return `session:${this.hashSessionToken(sessionToken)}`;
+  private nextExpiresAt(): Date {
+    return new Date(Date.now() + this.sessionTtlSeconds * 1000);
   }
 
   private hashSessionToken(sessionToken: string): string {
     return createHash('sha256').update(sessionToken).digest('hex');
-  }
-
-  private parseStoredSession(value: unknown): StoredSession | undefined {
-    if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-      return undefined;
-    }
-
-    const record = value as Record<string, unknown>;
-    const userSessionId = record['userSessionId'];
-    const deviceId = record['deviceId'];
-    const userId = record['userId'];
-    const roles = record['roles'];
-    const email = record['email'];
-    const createdAt = record['createdAt'];
-    const lastSeenAt = record['lastSeenAt'];
-
-    if (
-      typeof userSessionId !== 'string' ||
-      typeof deviceId !== 'string' ||
-      typeof createdAt !== 'string' ||
-      typeof lastSeenAt !== 'string'
-    ) {
-      return undefined;
-    }
-
-    if (userId !== undefined && typeof userId !== 'string') {
-      return undefined;
-    }
-
-    if (roles !== undefined && !this.isUserRoleArray(roles)) {
-      return undefined;
-    }
-
-    if (email !== undefined && typeof email !== 'string') {
-      return undefined;
-    }
-
-    const storedSession: StoredSession = {
-      userSessionId,
-      deviceId,
-      createdAt,
-      lastSeenAt,
-    };
-
-    if (typeof userId === 'string') {
-      storedSession.userId = userId;
-    }
-
-    if (typeof email === 'string') {
-      storedSession.email = email;
-    }
-
-    if (this.isUserRoleArray(roles)) {
-      storedSession.roles = roles;
-    }
-
-    return storedSession;
-  }
-
-  private isUserRoleArray(value: unknown): value is UserRole[] {
-    return Array.isArray(value) && value.every((role): role is UserRole => this.isUserRole(role));
-  }
-
-  private isUserRole(value: unknown): value is UserRole {
-    return value === 'USER' || value === 'ADMIN';
   }
 
   private truncate(value: string, maxLength: number): string {

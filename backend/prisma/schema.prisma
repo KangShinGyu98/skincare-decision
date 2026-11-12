@@ -192,6 +192,8 @@ model UserSession {
   userId        String?        @map("user_id") @db.Uuid
   entryPath     String         @map("entry_path") @db.VarChar(255)
   referrer      String?        @db.Text
+  tokenHash     String?        @unique(map: "uq_user_sessions_token_hash") @map("token_hash") @db.VarChar(64)
+  expiresAt     DateTime?      @map("expires_at") @db.Timestamptz()
   loggedInAt    DateTime?      @map("logged_in_at") @db.Timestamptz()
   createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz()
   deletedAt     DateTime?      @map("deleted_at") @db.Timestamptz()

@@ -10,8 +10,7 @@
 | 영역             | 스택                                                                         |
 |----------------|----------------------------------------------------------------------------|
 | Backend API    | TypeScript · NestJS 11 · Prisma 7                                          |
-| Database       | AWS RDS PostgreSQL 18.4 (products.attributes는 JSONB)                       |
-| Cache          | AWS ElastiCache Redis 7 (ioredis)                                          |
+| Database       | Supabase Postgres (products.attributes는 JSONB, 세션 저장 포함)                   |
 | Frontend Web   | Next.js 16 App Router · React 19 · TypeScript                              |
 | Rendering      | SSR · SSG · ISR                                                            |
 | Validation     | Zod 4 (FE 입력, BE DTO ↔ Prisma 모델 contract)                             |
@@ -21,9 +20,9 @@
 | UI             | Tailwind CSS v4 · shadcn/ui · Radix UI · lucide-react · next-themes · sonner |
 | Storage        | AWS S3                                                                     |
 | CDN / Edge     | CloudFront                                                                 |
-| Infra          | Docker · AWS ECS on EC2 · ECR · ALB · RDS · ElastiCache · S3 · CloudFront  |
-| Domain / HTTPS | Route 53 · ACM                                                             |
-| CI/CD          | GitHub Actions → ECR → ECS 배포                                            |
+| Infra          | Vercel (Next.js · NestJS 각각 프로젝트) · Supabase · 로컬은 Docker                  |
+| Domain / HTTPS | Cloudflare DNS · Vercel 인증서                                                |
+| CI/CD          | Vercel Git 연동 (main push 시 자동 배포)                                        |
 
 ---
 
@@ -92,7 +91,7 @@ Utils → Types → Config → Repo(api) → Service(hooks) → Runtime(store) �
 
 2. 개별 패키지의 `package.json`은 해당 패키지 실행에 필요한 설정만 가진다.
 
-- `backend/package.json`: NestJS, Prisma, Redis, backend test/build/lint 의존성.
+- `backend/package.json`: NestJS, Prisma, backend test/build/lint 의존성.
 - `frontend/package.json`: Next.js, React, Tailwind, TanStack Query, Zustand, frontend lint/build/dev 의존성.
 - `shared/package.json`: FE/BE가 함께 쓰는 Zod schema, DTO type, 공용 도메인 상수와 `exports`.
 

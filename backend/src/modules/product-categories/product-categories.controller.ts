@@ -1,6 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 import type { ProductCategoriesResponseDto } from '@skincare-decision/shared/schemas';
-import { Public } from 'src/common/decorators/auth.decorator';
+import { Public } from '../../common/decorators/auth.decorator';
 import { ProductCategoriesService } from './product-categories.service';
 
 @Public()

@@ -1,16 +1,16 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Response, NextFunction } from 'express';
-import { Env } from 'src/config/env.validation';
+import { Env } from '../../config/env.validation';
 import { validate as isUuid, v7 as uuidv7 } from 'uuid';
 import { RequestWithContext } from '../types/express-request.type';
-import { SessionService } from 'src/modules/session/session.service';
+import { SessionService } from '../../modules/session/session.service';
 import { randomBytes } from 'node:crypto';
 
 /**
  * Device/Session 식별 미들웨어
  * deviceId, sessionId 없으면 생성해서 cookie 설정,
- * ensureDeviceSession로 devices, sessions DB row 보장 (Redis에 있으면 lastSeenAt 업데이트, 없으면 Redis, DB 에 익명 세션 생성)
+ * ensureDeviceSession로 devices, sessions DB row 보장 (유효한 세션이면 만료 시각 sliding 연장, 없으면 익명 세션 생성)
  * sessionId 없으면 무조건 비로그인 사용자
  */
 @Injectable()

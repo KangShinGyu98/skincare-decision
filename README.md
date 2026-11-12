@@ -26,8 +26,7 @@ https://kangshingyu.notion.site/3a0b4b46558280278513e6254efc90e4
 | 영역           | 스택                                                                       |
 | -------------- | -------------------------------------------------------------------------- |
 | Backend API    | TypeScript · NestJS 11 · Prisma 7                                          |
-| Database       | AWS RDS PostgreSQL 18.4 (products.attributes는 JSONB)                      |
-| Cache          | AWS ElastiCache Redis 7 (ioredis)                                          |
+| Database       | Supabase Postgres (products.attributes는 JSONB, 세션 저장 포함)                  |
 | Frontend Web   | Next.js 16 App Router · React 19 · TypeScript                             |
 | Validation     | Zod 4 (FE 입력, BE DTO ↔ Prisma 모델 contract)                            |
 | 폼             | TanStack Form (+ Zod 검증)                                                 |
@@ -35,9 +34,9 @@ https://kangshingyu.notion.site/3a0b4b46558280278513e6254efc90e4
 | 테이블 / DnD    | TanStack Table · dnd-kit (Admin 목록·정렬)                                 |
 | UI             | Tailwind CSS v4 · shadcn/ui · Radix UI · lucide-react · next-themes · sonner |
 | Storage        | AWS S3                                                                     |
-| Infra          | Docker · AWS ECS on EC2 · ECR · ALB · RDS · ElastiCache                    |
-| Domain / HTTPS | Route 53 · ACM                                                             |
-| CI/CD          | GitHub Actions → ECR → ECS 배포                                            |
+| Infra          | Vercel (Next.js · NestJS 각각 프로젝트) · Supabase · 로컬은 Docker                  |
+| Domain / HTTPS | Cloudflare DNS · Vercel 인증서                                                |
+| CI/CD          | Vercel Git 연동 (main push 시 자동 배포)                                        |
 
 상세 디렉터리 매핑 / 레이어 규칙은 [CLAUDE.md](CLAUDE.md) 참조.
 
@@ -108,7 +107,7 @@ skincare-decision/
 pnpm --filter frontend add @tanstack/react-query
 
 # 백엔드 전용
-pnpm --filter backend add ioredis
+pnpm --filter backend add helmet
 
 # FE/BE 공용 schema/type 패키지
 pnpm --filter @skincare-decision/shared add zod
@@ -164,8 +163,8 @@ root의 env 파일 4개는 모두 git에 올리지 않습니다.
 ### Development
 
 ```bash
-# 1) 인프라 (Postgres 5432, Redis 6379)
-docker compose --env-file .env.development -f infra/docker/docker-compose.dev.yml up -d postgres redis
+# 1) 인프라 (Postgres 5432)
+docker compose --env-file .env.development -f infra/docker/docker-compose.dev.yml up -d postgres
 
 # 2) 백엔드
 pnpm install
@@ -185,8 +184,8 @@ pnpm --filter frontend run dev         # http://localhost:3000
 ### Test
 
 ```bash
-# 테스트 인프라 (Postgres 5433, Redis 6380)
-docker compose --env-file .env.test -f infra/docker/docker-compose.test.yml up -d postgres redis
+# 테스트 인프라 (Postgres 5433)
+docker compose --env-file .env.test -f infra/docker/docker-compose.test.yml up -d postgres
 
 # 백엔드 테스트
 cd backend
@@ -214,17 +213,12 @@ NODE_ENV=development pnpm --filter backend exec prisma studio --browser none --p
 
 ### Production
 
-```bash
-# production DB는 AWS RDS를 사용합니다. Docker Compose는 Redis만 실행합니다.
-# 실행 전 .env.production 의 DATABASE_URL과 CHANGE_ME 값을 실제 운영 값으로 교체합니다.
-docker compose --env-file .env.production -f infra/docker/docker-compose.prod.yml up -d redis
+배포는 Vercel 이 `main` push 를 받아 자동으로 한다. 프론트(`frontend/`)와 백엔드(`backend/`)는 Vercel 프로젝트가 따로이고, DB 는 Supabase Postgres 다. 결정 배경은 `memory/ADR/ADR-0008-free-tier-infra-and-postgres-session.md` 참고.
 
-# 백엔드 production 실행
+```bash
+# 스키마가 바뀌었을 때만: Supabase 의 Session pooler(5432) 주소로 migration 적용
 cd backend
-pnpm install
-NODE_ENV=production pnpm prisma migrate deploy
-NODE_ENV=production pnpm run build
-NODE_ENV=production pnpm run start:prod
+NODE_ENV=production DATABASE_URL='<Supabase session pooler URL>' pnpm exec prisma migrate deploy
 ```
 
 ### 공통
@@ -239,7 +233,6 @@ pnpm --filter backend exec prisma generate
 # 환경별 인프라 종료
 docker compose --env-file .env.development -f infra/docker/docker-compose.dev.yml down
 docker compose --env-file .env.test -f infra/docker/docker-compose.test.yml down
-docker compose --env-file .env.production -f infra/docker/docker-compose.prod.yml down
 ```
 
 ---
