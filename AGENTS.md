@@ -82,4 +82,4 @@ AI 세션 시작 시 읽는 프로젝트 문서 인덱스 파일이다. 파일 �
 | --------- | --------------------------------- |
 | backend/  | NestJS + Prisma 앱 (재구축 예정)  |
 | frontend/ | Next.js App Router 앱 (예정)      |
-| infra/    | Docker / IaC / GitHub Actions (예정) |
+| infra/    | 로컬 개발·테스트용 Docker Compose (배포는 Vercel, `*/vercel.json`) |
